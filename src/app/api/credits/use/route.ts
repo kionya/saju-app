@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
 
   const result = await deductCredits(user.id, feature as Feature);
   if (!result.success) {
-    return NextResponse.json({ error: '크레딧이 부족합니다.', remaining: result.remaining }, { status: 402 });
+    return NextResponse.json({ error: '코인이 부족합니다.', remaining: result.remaining }, { status: 402 });
   }
 
   // feature에 따라 콘텐츠 생성

@@ -1,6 +1,6 @@
 export const SITE_NAME = '사주명리';
 export const DEFAULT_DESCRIPTION =
-  '생년월일시를 바탕으로 사주팔자와 오행 분석을 확인하고, 상세 해석과 상담 기능까지 이용할 수 있는 사주 웹앱입니다.';
+  '오늘의 운세부터 정통 사주 리포트, 타로, 궁합, 멤버십까지 앱처럼 이어지는 운세 플랫폼 사주명리입니다.';
 export const DEFAULT_OG_IMAGE = '/og-image.png';
 
 const FALLBACK_SITE_URL = 'https://saju-app-lac.vercel.app';

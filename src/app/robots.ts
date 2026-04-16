@@ -8,8 +8,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/', '/credits'],
-        disallow: ['/api/', '/login', '/credits/success', '/saju/'],
+        allow: ['/', '/credits', '/today-fortune', '/tarot/daily', '/zodiac', '/zodiac/', '/star-sign', '/star-sign/', '/dream-interpretation', '/dream-interpretation/'],
+        disallow: ['/api/', '/login', '/credits/success', '/saju/', '/my'],
       },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,

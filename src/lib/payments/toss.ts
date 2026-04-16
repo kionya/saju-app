@@ -1,8 +1,8 @@
 export const CREDIT_PACKAGES = [
-  { id: 'credit_1', name: '체험 1 크레딧', credits: 1, price: 500 },
-  { id: 'credit_3', name: '소액 3 크레딧', credits: 3, price: 990 },
-  { id: 'credit_7', name: '기본 7 크레딧', credits: 7, price: 2000 },
-  { id: 'subscription_30', name: '월 구독 30 크레딧', credits: 30, price: 9900, isSubscription: true },
+  { id: 'credit_1', name: '체험 1 코인', credits: 1, price: 500 },
+  { id: 'credit_3', name: '스타터 3 코인', credits: 3, price: 990 },
+  { id: 'credit_7', name: '기본 7 코인', credits: 7, price: 2000 },
+  { id: 'subscription_30', name: 'Plus 30 코인', credits: 30, price: 9900, isSubscription: true },
 ] as const;
 
 export type PackageId = typeof CREDIT_PACKAGES[number]['id'];

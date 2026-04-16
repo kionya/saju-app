@@ -24,7 +24,7 @@ function LoginContent() {
     <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-2xl p-8 text-center space-y-4">
       <div className="mb-2">
         <h1 className="text-2xl font-bold mb-2">✦ 사주명리</h1>
-        <p className="text-white/50 text-sm">로그인하면 크레딧 3개를 무료로 드려요</p>
+        <p className="text-white/50 text-sm">로그인하면 코인 3개를 무료로 드려요</p>
       </div>
 
       {/* 카카오 로그인 */}

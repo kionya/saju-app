@@ -9,7 +9,7 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
-  const [credits, setCredits] = useState(0);
+  const [coins, setCoins] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
@@ -37,7 +37,7 @@ function SuccessContent() {
       .then(r => r.json())
       .then(data => {
         if (data.success) {
-          setCredits(data.credits);
+          setCoins(data.credits);
           setStatus('success');
         } else {
           setStatus('error');
@@ -75,9 +75,9 @@ function SuccessContent() {
   return (
     <div className="text-center space-y-4">
       <div className="text-5xl">✅</div>
-      <h2 className="text-2xl font-bold">결제 완료!</h2>
+      <h2 className="text-2xl font-bold">결제가 완료됐어요</h2>
       <p className="text-white/70">
-        <span className="text-indigo-400 font-bold text-xl">{credits}개</span> 크레딧이 충전되었습니다.
+        <span className="text-indigo-400 font-bold text-xl">{coins}개</span> 코인이 충전되었습니다.
       </p>
       <div className="flex gap-3 justify-center pt-2">
         <Button onClick={() => router.push('/')} variant="outline" className="border-white/20 text-white hover:bg-white/10">

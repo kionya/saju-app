@@ -67,7 +67,7 @@ export default function DetailUnlock({ slug }: Props) {
         <div className="flex items-center justify-between">
           <h2 className="font-semibold">상세 해석 리포트</h2>
           {remaining !== null && (
-            <span className="text-xs text-white/40">잔여 크레딧 {remaining}개</span>
+            <span className="text-xs text-white/40">잔여 코인 {remaining}개</span>
           )}
         </div>
 
@@ -103,9 +103,9 @@ export default function DetailUnlock({ slug }: Props) {
         <p className="text-red-400 font-medium">{errorMsg}</p>
         {errorMsg.includes('부족') && (
           <>
-            <p className="text-sm text-white/50">잔여 크레딧: {remaining}개</p>
+            <p className="text-sm text-white/50">잔여 코인: {remaining}개</p>
             <a href="/credits">
-              <Button className="bg-indigo-600 hover:bg-indigo-500">크레딧 충전하기</Button>
+              <Button className="bg-indigo-600 hover:bg-indigo-500">코인 충전하기</Button>
             </a>
           </>
         )}
@@ -138,9 +138,9 @@ export default function DetailUnlock({ slug }: Props) {
           disabled={state === 'loading'}
           className="bg-indigo-600 hover:bg-indigo-500 px-8"
         >
-          {state === 'loading' ? '처리 중...' : '크레딧 1개로 열기'}
+          {state === 'loading' ? '처리 중...' : '코인 1개로 열기'}
         </Button>
-        <p className="text-xs text-white/30">가입 시 무료 크레딧 3개 지급</p>
+        <p className="text-xs text-white/30">가입 시 무료 코인 3개 지급</p>
       </div>
     </div>
   );

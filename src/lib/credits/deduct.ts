@@ -40,7 +40,7 @@ export async function deductCredits(
   });
 
   if (error || !data?.success) {
-    return { success: false, remaining: 0, error: error?.message ?? '크레딧이 부족합니다.' };
+    return { success: false, remaining: 0, error: error?.message ?? '코인이 부족합니다.' };
   }
 
   return { success: true, remaining: data.remaining };

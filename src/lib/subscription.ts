@@ -1,0 +1,180 @@
+import { createServiceClient } from '@/lib/supabase/server';
+
+export type SubscriptionStatus = 'active' | 'cancelled' | 'expired';
+
+export interface ManagedSubscription {
+  status: SubscriptionStatus;
+  plan: string;
+  renewsAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface SubscriptionRow {
+  status: SubscriptionStatus;
+  plan: string;
+  renews_at: string | null;
+  created_at: string;
+  updated_at: string;
+  toss_billing_key: string | null;
+  toss_customer_key: string | null;
+}
+
+function mapSubscription(row: SubscriptionRow): ManagedSubscription {
+  return {
+    status: row.status,
+    plan: row.plan,
+    renewsAt: row.renews_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function isExpired(row: Pick<SubscriptionRow, 'renews_at'>) {
+  return !!row.renews_at && new Date(row.renews_at).getTime() <= Date.now();
+}
+
+function addDays(base: Date, days: number) {
+  const next = new Date(base);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next.toISOString();
+}
+
+async function readSubscription(userId: string) {
+  const service = await createServiceClient();
+  const { data, error } = await service
+    .from('subscriptions')
+    .select('status, plan, renews_at, created_at, updated_at, toss_billing_key, toss_customer_key')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data as SubscriptionRow | null;
+}
+
+async function expireIfNeeded(userId: string, subscription: SubscriptionRow) {
+  if (!isExpired(subscription) || subscription.status === 'expired') {
+    return subscription;
+  }
+
+  const service = await createServiceClient();
+  const { data, error } = await service
+    .from('subscriptions')
+    .update({
+      status: 'expired',
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .select('status, plan, renews_at, created_at, updated_at, toss_billing_key, toss_customer_key')
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? '구독 상태를 갱신하지 못했습니다.');
+  }
+
+  return data as SubscriptionRow;
+}
+
+export async function getManagedSubscription(userId: string): Promise<ManagedSubscription | null> {
+  const subscription = await readSubscription(userId);
+
+  if (!subscription) {
+    return null;
+  }
+
+  const normalized = await expireIfNeeded(userId, subscription);
+  return mapSubscription(normalized);
+}
+
+export async function activatePlusSubscription(
+  userId: string,
+  options: { customerKey?: string | null; billingKey?: string | null } = {}
+) {
+  const service = await createServiceClient();
+  const existing = await readSubscription(userId);
+  const now = new Date();
+  const baseDate =
+    existing?.renews_at && new Date(existing.renews_at).getTime() > now.getTime()
+      ? new Date(existing.renews_at)
+      : now;
+
+  const { data, error } = await service
+    .from('subscriptions')
+    .upsert(
+      {
+        user_id: userId,
+        status: 'active',
+        plan: 'plus_monthly',
+        renews_at: addDays(baseDate, 30),
+        toss_customer_key: options.customerKey ?? existing?.toss_customer_key ?? null,
+        toss_billing_key: options.billingKey ?? existing?.toss_billing_key ?? null,
+        updated_at: now.toISOString(),
+      },
+      { onConflict: 'user_id' }
+    )
+    .select('status, plan, renews_at, created_at, updated_at, toss_billing_key, toss_customer_key')
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? 'Plus 상태를 시작하지 못했습니다.');
+  }
+
+  return mapSubscription(data as SubscriptionRow);
+}
+
+export async function updateSubscriptionStatus(
+  userId: string,
+  nextStatus: Extract<SubscriptionStatus, 'active' | 'cancelled'>
+) {
+  const current = await readSubscription(userId);
+
+  if (!current) {
+    throw new Error('구독 정보가 없습니다.');
+  }
+
+  const normalized = await expireIfNeeded(userId, current);
+  if (normalized.status === 'expired') {
+    throw new Error('이미 만료된 Plus입니다. 다시 시작해 주세요.');
+  }
+
+  const service = await createServiceClient();
+  const { data, error } = await service
+    .from('subscriptions')
+    .update({
+      status: nextStatus,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .select('status, plan, renews_at, created_at, updated_at, toss_billing_key, toss_customer_key')
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? '구독 상태를 바꾸지 못했습니다.');
+  }
+
+  return mapSubscription(data as SubscriptionRow);
+}
+
+export function getSubscriptionStatusLabel(status: SubscriptionStatus) {
+  switch (status) {
+    case 'active':
+      return '이용 중';
+    case 'cancelled':
+      return '해지 예약';
+    case 'expired':
+      return '만료';
+    default:
+      return status;
+  }
+}
+
+export function getSubscriptionPlanLabel(plan: string) {
+  if (plan === 'plus_monthly') {
+    return 'Plus 월간 멤버십';
+  }
+
+  return plan;
+}

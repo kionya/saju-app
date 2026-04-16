@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { DREAM_ENTRIES, STAR_SIGN_FORTUNES, ZODIAC_FORTUNES } from '@/lib/free-content-pages';
 import { getSiteUrl } from '@/lib/site';
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -19,6 +20,42 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${siteUrl}/today-fortune`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
+      url: `${siteUrl}/tarot/daily`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.85,
+    },
+    {
+      url: `${siteUrl}/zodiac`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/star-sign`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/dream-interpretation`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${siteUrl}/membership`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
       url: `${siteUrl}/terms`,
       lastModified: now,
       changeFrequency: 'yearly',
@@ -30,5 +67,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'yearly',
       priority: 0.4,
     },
+    ...ZODIAC_FORTUNES.map((item) => ({
+      url: `${siteUrl}/zodiac/${item.slug}`,
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.72,
+    })),
+    ...STAR_SIGN_FORTUNES.map((item) => ({
+      url: `${siteUrl}/star-sign/${item.slug}`,
+      lastModified: now,
+      changeFrequency: 'daily' as const,
+      priority: 0.72,
+    })),
+    ...DREAM_ENTRIES.map((item) => ({
+      url: `${siteUrl}/dream-interpretation/${item.slug}`,
+      lastModified: now,
+      changeFrequency: 'weekly' as const,
+      priority: 0.7,
+    })),
   ];
 }
