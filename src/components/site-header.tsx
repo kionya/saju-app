@@ -1,11 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import type { User } from '@supabase/supabase-js';
 
 export default function SiteHeader() {
+  const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
 
@@ -29,7 +32,7 @@ export default function SiteHeader() {
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    location.href = '/';
+    router.push('/');
   }
 
   return (
@@ -51,7 +54,7 @@ export default function SiteHeader() {
             </Button>
           </>
         ) : (
-          <a href={`/login?next=${encodeURIComponent(location.pathname)}`}>
+          <a href={`/login?next=${encodeURIComponent(pathname)}`}>
             <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
               로그인
             </Button>
