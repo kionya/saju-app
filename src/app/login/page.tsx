@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Suspense } from 'react';
+import LegalLinks from '@/components/legal-links';
 
 function LoginContent() {
   const searchParams = useSearchParams();
@@ -53,7 +54,7 @@ function LoginContent() {
       </Button>
 
       <p className="text-xs text-white/30 pt-2">
-        로그인 시 이용약관 및 개인정보처리방침에 동의합니다.
+        로그인 시 <LegalLinks className="text-white/40" />에 동의합니다.
       </p>
     </div>
   );

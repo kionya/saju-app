@@ -1,32 +1,37 @@
 import { notFound } from 'next/navigation';
-import { calculateSaju, fromSlug } from '@/lib/saju/pillars';
 import { ELEMENT_INFO, getPersonality, getLuckyElements } from '@/lib/saju/elements';
 import { Badge } from '@/components/ui/badge';
 import DetailUnlock from '@/components/detail-unlock';
 import SiteHeader from '@/components/site-header';
 import type { Metadata } from 'next';
 import type { Element } from '@/lib/saju/types';
+import { resolveReading } from '@/lib/saju/readings';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const input = fromSlug(slug);
-  if (!input) return {};
   return {
-    title: `${input.year}년 ${input.month}월 ${input.day}일 사주풀이 | 사주명리`,
-    description: `${input.year}년 ${input.month}월 ${input.day}일생 무료 사주팔자 분석. 오행 분석, 일간 성격, 운세 확인.`,
+    title: '사주 분석 결과 | 사주명리',
+    description: '개인 사주 분석 결과 페이지입니다.',
+    robots: {
+      index: false,
+      follow: false,
+      googleBot: {
+        index: false,
+        follow: false,
+      },
+    },
   };
 }
 
 export default async function SajuResultPage({ params }: Props) {
   const { slug } = await params;
-  const input = fromSlug(slug);
-  if (!input) notFound();
+  const reading = await resolveReading(slug);
+  if (!reading) notFound();
 
-  const result = calculateSaju(input);
+  const { input, result } = reading;
   const luckyElements = getLuckyElements(result);
   const personality = getPersonality(result);
 

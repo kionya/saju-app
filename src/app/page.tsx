@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toSlug } from '@/lib/saju/pillars';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,22 +24,47 @@ const HOUR_OPTIONS = [
   { label: '해시 (21~23시)', value: '22' },
 ];
 
+const FORM_ERROR_ID = 'birth-form-error';
+
 export default function HomePage() {
   const router = useRouter();
   const [form, setForm] = useState({ year: '', month: '', day: '', hour: '', gender: 'male' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const { year, month, day, hour, gender } = form;
     if (!year || !month || !day) return;
-    const slug = toSlug({
-      year: parseInt(year),
-      month: parseInt(month),
-      day: parseInt(day),
-      hour: hour ? parseInt(hour) : undefined,
-      gender: gender as 'male' | 'female',
-    });
-    router.push(`/saju/${slug}`);
+
+    setIsSubmitting(true);
+    setFormError('');
+
+    try {
+      const response = await fetch('/api/readings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          year: parseInt(year, 10),
+          month: parseInt(month, 10),
+          day: parseInt(day, 10),
+          hour: hour ? parseInt(hour, 10) : undefined,
+          gender,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.id) {
+        setFormError(data.error ?? '사주 결과를 생성하지 못했습니다.');
+        return;
+      }
+
+      router.push(`/saju/${data.id}`);
+    } catch {
+      setFormError('네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -64,16 +88,24 @@ export default function HomePage() {
         {/* 입력 폼 */}
         <form
           onSubmit={handleSubmit}
+          aria-busy={isSubmitting}
+          aria-describedby={formError ? FORM_ERROR_ID : undefined}
           className="w-full max-w-md bg-white/5 border border-white/10 rounded-2xl p-6 space-y-4"
         >
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <Label className="text-white/70 text-sm mb-1 block">년도</Label>
+              <Label htmlFor="birth-year" className="text-white/70 text-sm mb-1 block">
+                년도
+              </Label>
               <Input
+                id="birth-year"
+                name="birthYear"
                 type="number"
                 placeholder="1990"
                 min={1900}
                 max={2010}
+                inputMode="numeric"
+                autoComplete="bday-year"
                 value={form.year}
                 onChange={e => setForm(f => ({ ...f, year: e.target.value }))}
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/30"
@@ -81,12 +113,18 @@ export default function HomePage() {
               />
             </div>
             <div>
-              <Label className="text-white/70 text-sm mb-1 block">월</Label>
+              <Label htmlFor="birth-month" className="text-white/70 text-sm mb-1 block">
+                월
+              </Label>
               <Input
+                id="birth-month"
+                name="birthMonth"
                 type="number"
                 placeholder="5"
                 min={1}
                 max={12}
+                inputMode="numeric"
+                autoComplete="bday-month"
                 value={form.month}
                 onChange={e => setForm(f => ({ ...f, month: e.target.value }))}
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/30"
@@ -94,12 +132,18 @@ export default function HomePage() {
               />
             </div>
             <div>
-              <Label className="text-white/70 text-sm mb-1 block">일</Label>
+              <Label htmlFor="birth-day" className="text-white/70 text-sm mb-1 block">
+                일
+              </Label>
               <Input
+                id="birth-day"
+                name="birthDay"
                 type="number"
                 placeholder="15"
                 min={1}
                 max={31}
+                inputMode="numeric"
+                autoComplete="bday-day"
                 value={form.day}
                 onChange={e => setForm(f => ({ ...f, day: e.target.value }))}
                 className="bg-white/10 border-white/20 text-white placeholder:text-white/30"
@@ -109,8 +153,13 @@ export default function HomePage() {
           </div>
 
           <div>
-            <Label className="text-white/70 text-sm mb-1 block">태어난 시간 (선택)</Label>
+            <Label htmlFor="birth-hour" className="text-white/70 text-sm mb-1 block">
+              태어난 시간 (선택)
+            </Label>
             <select
+              id="birth-hour"
+              name="birthHour"
+              autoComplete="off"
               value={form.hour}
               onChange={e => setForm(f => ({ ...f, hour: e.target.value }))}
               className="w-full bg-white/10 border border-white/20 text-white rounded-md px-3 py-2 text-sm"
@@ -121,26 +170,50 @@ export default function HomePage() {
             </select>
           </div>
 
-          <div className="flex gap-3">
-            {['male', 'female'].map(g => (
-              <button
-                key={g}
-                type="button"
-                onClick={() => setForm(f => ({ ...f, gender: g }))}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors ${
-                  form.gender === g
-                    ? 'bg-indigo-600 border-indigo-500 text-white'
-                    : 'bg-white/5 border-white/20 text-white/60 hover:bg-white/10'
-                }`}
-              >
-                {g === 'male' ? '남성' : '여성'}
-              </button>
-            ))}
-          </div>
+          <fieldset className="space-y-2">
+            <legend className="text-white/70 text-sm">성별</legend>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { value: 'male', label: '남성' },
+                { value: 'female', label: '여성' },
+              ].map(option => (
+                <label
+                  key={option.value}
+                  htmlFor={`gender-${option.value}`}
+                  className={`flex cursor-pointer items-center justify-center rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                    form.gender === option.value
+                      ? 'bg-indigo-600 border-indigo-500 text-white'
+                      : 'bg-white/5 border-white/20 text-white/70 hover:bg-white/10'
+                  }`}
+                >
+                  <input
+                    id={`gender-${option.value}`}
+                    name="gender"
+                    type="radio"
+                    value={option.value}
+                    autoComplete="sex"
+                    checked={form.gender === option.value}
+                    onChange={e => setForm(f => ({ ...f, gender: e.target.value }))}
+                    className="sr-only"
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
           <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-3 text-base font-semibold">
-            무료 사주 보기 →
+            {isSubmitting ? '결과 생성 중...' : '무료 사주 보기 →'}
           </Button>
+          {formError && (
+            <p
+              id={FORM_ERROR_ID}
+              role="alert"
+              className="text-sm text-red-300 text-center"
+            >
+              {formError}
+            </p>
+          )}
         </form>
       </section>
 

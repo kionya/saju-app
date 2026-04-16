@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { deductCredits, type Feature } from '@/lib/credits/deduct';
-import { calculateSaju, fromSlug } from '@/lib/saju/pillars';
+import { resolveReading } from '@/lib/saju/readings';
 import { ELEMENT_INFO, getLuckyElements } from '@/lib/saju/elements';
 
 export async function POST(req: NextRequest) {
@@ -21,9 +21,9 @@ export async function POST(req: NextRequest) {
   // feature에 따라 콘텐츠 생성
   let content = null;
   if (feature === 'detail_report' && slug) {
-    const input = fromSlug(slug);
-    if (input) {
-      const saju = calculateSaju(input);
+    const reading = await resolveReading(slug);
+    if (reading) {
+      const saju = reading.result;
       const lucky = getLuckyElements(saju);
       const dominant = ELEMENT_INFO[saju.dominantElement];
       const weakest = ELEMENT_INFO[saju.weakestElement];

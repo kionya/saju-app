@@ -5,6 +5,8 @@ import { loadTossPayments, ANONYMOUS } from '@tosspayments/tosspayments-sdk';
 import { createClient } from '@/lib/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import SiteHeader from '@/components/site-header';
+import LegalLinks from '@/components/legal-links';
 
 interface Package {
   id: string;
@@ -62,9 +64,7 @@ export default function CreditsPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 text-white">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-        <a href="/" className="text-xl font-bold tracking-tight">✦ 사주명리</a>
-      </header>
+      <SiteHeader />
 
       <div className="max-w-lg mx-auto px-4 py-12">
         <div className="text-center mb-10">
@@ -120,6 +120,9 @@ export default function CreditsPage() {
 
         <p className="text-center text-xs text-white/30 mt-8">
           토스페이먼츠 보안 결제 · 카드/계좌이체/간편결제 지원
+        </p>
+        <p className="text-center text-xs text-white/30 mt-3">
+          결제 진행 시 <LegalLinks className="text-white/40" />에 동의한 것으로 봅니다.
         </p>
       </div>
     </main>
