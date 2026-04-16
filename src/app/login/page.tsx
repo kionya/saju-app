@@ -10,9 +10,9 @@ function LoginContent() {
   const next = searchParams.get('next') ?? '/';
   const supabase = createClient();
 
-  async function signInWithGoogle() {
+  async function signInWithProvider(provider: 'google' | 'kakao') {
     await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider,
       options: {
         redirectTo: `${location.origin}/api/auth/callback?next=${encodeURIComponent(next)}`,
       },
@@ -20,14 +20,27 @@ function LoginContent() {
   }
 
   return (
-    <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-2xl p-8 text-center space-y-6">
-      <div>
+    <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-2xl p-8 text-center space-y-4">
+      <div className="mb-2">
         <h1 className="text-2xl font-bold mb-2">✦ 사주명리</h1>
         <p className="text-white/50 text-sm">로그인하면 크레딧 3개를 무료로 드려요</p>
       </div>
 
+      {/* 카카오 로그인 */}
       <Button
-        onClick={signInWithGoogle}
+        onClick={() => signInWithProvider('kakao')}
+        className="w-full font-medium flex items-center justify-center gap-3"
+        style={{ backgroundColor: '#FEE500', color: '#191919' }}
+      >
+        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#191919">
+          <path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.709 1.6 5.09 4.008 6.535l-.96 3.584a.3.3 0 0 0 .448.328L9.74 19.05A11.6 11.6 0 0 0 12 19.2c5.523 0 10-3.358 10-7.5S17.523 3 12 3z"/>
+        </svg>
+        카카오로 계속하기
+      </Button>
+
+      {/* 구글 로그인 */}
+      <Button
+        onClick={() => signInWithProvider('google')}
         className="w-full bg-white text-slate-900 hover:bg-white/90 font-medium flex items-center justify-center gap-3"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -39,7 +52,7 @@ function LoginContent() {
         Google로 계속하기
       </Button>
 
-      <p className="text-xs text-white/30">
+      <p className="text-xs text-white/30 pt-2">
         로그인 시 이용약관 및 개인정보처리방침에 동의합니다.
       </p>
     </div>
