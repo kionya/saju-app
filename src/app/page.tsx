@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import SiteHeader from '@/components/site-header';
 
 const HOUR_OPTIONS = [
   { label: '모름', value: '' },
@@ -44,13 +45,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 text-white">
-      {/* 헤더 */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-        <span className="text-xl font-bold tracking-tight">✦ 사주명리</span>
-        <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
-          로그인
-        </Button>
-      </header>
+      <SiteHeader />
 
       {/* 히어로 */}
       <section className="flex flex-col items-center justify-center px-4 pt-20 pb-12 text-center">

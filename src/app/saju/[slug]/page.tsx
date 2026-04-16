@@ -2,8 +2,8 @@ import { notFound } from 'next/navigation';
 import { calculateSaju, fromSlug } from '@/lib/saju/pillars';
 import { ELEMENT_INFO, getPersonality, getLuckyElements } from '@/lib/saju/elements';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import DetailUnlock from '@/components/detail-unlock';
+import SiteHeader from '@/components/site-header';
 import type { Metadata } from 'next';
 import type { Element } from '@/lib/saju/types';
 
@@ -41,13 +41,7 @@ export default async function SajuResultPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 text-white">
-      {/* 헤더 */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-        <a href="/" className="text-xl font-bold tracking-tight">✦ 사주명리</a>
-        <Button variant="outline" size="sm" className="border-white/20 text-white hover:bg-white/10">
-          로그인
-        </Button>
-      </header>
+      <SiteHeader />
 
       <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
         {/* 제목 */}
