@@ -1,7 +1,7 @@
 import type { FocusTopic } from '@/lib/saju/report';
 
 export const HOUR_OPTIONS = [
-  { label: '모름', value: '' },
+  { label: '모름 (시주 미입력)', value: '' },
   { label: '자시 (23~01시)', value: '0' },
   { label: '축시 (01~03시)', value: '2' },
   { label: '인시 (03~05시)', value: '4' },
@@ -17,17 +17,18 @@ export const HOUR_OPTIONS = [
 ] as const;
 
 export const QUESTION_CHIPS: Array<{ key: FocusTopic; label: string; hook: string }> = [
-  { key: 'today', label: '오늘', hook: '지금 체감되는 흐름 먼저 보기' },
-  { key: 'love', label: '연애', hook: '연락 타이밍과 감정 온도' },
-  { key: 'wealth', label: '재물', hook: '지출, 기회, 수입 흐름' },
-  { key: 'career', label: '직장', hook: '성과, 협업, 이직 판단' },
-  { key: 'relationship', label: '관계', hook: '가까운 사람과의 거리감' },
+  { key: 'today', label: '오늘의 흐름', hook: '지금 체감되는 흐름 먼저 보기' },
+  { key: 'love', label: '연애운', hook: '연락 타이밍과 감정 온도' },
+  { key: 'wealth', label: '재물운', hook: '지출, 기회, 수입 흐름' },
+  { key: 'career', label: '직장운', hook: '성과, 협업, 이직 판단' },
+  { key: 'relationship', label: '인간관계', hook: '가까운 사람과의 거리감' },
 ];
 
 export const TRUST_POINTS = [
-  '태어난 시간 몰라도 시작 가능',
+  '생년월일만으로 바로 시작',
+  '태어난 시간 몰라도 OK',
   '결과 자동 저장',
-  '심화 리포트는 코인으로 확장',
+  '30초 이내 첫 결과',
 ];
 
 export const HERO_REPORT_PREVIEW: Record<
@@ -68,24 +69,24 @@ export const HERO_REPORT_PREVIEW: Record<
 
 export const SERVICE_ENTRY_CARDS = [
   {
-    eyebrow: 'Core Report',
-    title: '정통 사주 리포트',
-    body: '생년월일만으로 먼저 총운, 연애, 재물, 직장을 요약 카드 형태로 받아보는 핵심 시작선입니다.',
-    cta: '사주 시작',
+    eyebrow: '정통 사주',
+    title: '사주팔자 리포트',
+    body: '생년월일만으로 총운·연애·재물·직장 흐름을 요약 카드로 받아보세요. 태어난 시간을 더하면 시주까지 반영한 정밀 결과로 이어집니다.',
+    cta: '사주 시작하기',
     href: '/saju/new',
   },
   {
-    eyebrow: 'Compatibility Lite',
-    title: '궁합은 가볍게 먼저',
-    body: '상대와의 템포, 감정 거리, 주의 포인트를 Lite 구조로 먼저 보고 필요할 때 상세로 이어갑니다.',
-    cta: '궁합 구조 보기',
+    eyebrow: '궁합 분석',
+    title: '두 사람의 사주 궁합',
+    body: '두 사람의 오행 구조와 일간의 조화를 분석합니다. 감정 온도, 가치관의 충돌 지점, 장기적 궁합 포인트까지 살펴볼 수 있습니다.',
+    cta: '궁합 보기',
     href: '/#compatibility-lab',
   },
   {
-    eyebrow: 'Retention',
-    title: '저장과 다시보기',
-    body: '결과 보관함, 코인, 멤버십을 묶어 단발성 조회가 아니라 반복 효용이 생기는 서비스로 바꿉니다.',
-    cta: 'MY 보기',
+    eyebrow: '저장 · 관리',
+    title: '내 리포트 보관함',
+    body: '로그인 후 생성한 리포트를 언제든 다시 꺼내볼 수 있습니다. 코인으로 심화 해석을 추가하거나, 멤버십으로 매달 새 리포트를 받으세요.',
+    cta: 'MY 보관함',
     href: '/my',
   },
 ] as const;
@@ -93,26 +94,26 @@ export const SERVICE_ENTRY_CARDS = [
 export const FREE_EXPERIENCES = [
   {
     title: '오늘의 운세',
-    body: '검색에서 가장 먼저 닿는 무료 입구입니다. 짧고 빠른 오늘 운세로 첫 경험을 만듭니다.',
-    status: 'SEO 입구',
+    body: '로그인 없이 오늘 날짜 기반으로 바로 확인할 수 있는 무료 일일 운세입니다.',
+    status: '무료',
     href: '/today-fortune',
   },
   {
-    title: '오늘의 무료 타로',
-    body: '질문 없이 한 장만 뽑아도 오늘의 기분과 흐름을 바로 읽을 수 있는 무입력 콘텐츠입니다.',
-    status: '무입력',
+    title: '오늘의 타로',
+    body: '질문 없이 한 장만 뽑아도 오늘의 기분과 흐름을 바로 읽을 수 있는 무료 타로입니다.',
+    status: '무료',
     href: '/tarot/daily',
   },
   {
     title: '띠별 · 별자리',
-    body: '로그인 없이 가볍게 훑어보는 루틴형 콘텐츠로, 홈의 본 서비스보다 한 단계 뒤에 두는 유입선입니다.',
-    status: '가벼운 보기',
+    body: '띠와 별자리로 간단하게 운세 흐름을 살펴보는 가벼운 콘텐츠입니다.',
+    status: '무료',
     href: '/zodiac',
   },
   {
     title: '꿈해몽',
-    body: 'SEO와 바이럴에 강한 메뉴입니다. 짧은 답과 연관 키워드 구조가 핵심입니다.',
-    status: '검색 유입',
+    body: '꿈에서 본 상징과 상황의 의미를 풀어드립니다. 무료로 바로 검색해보세요.',
+    status: '무료',
     href: '/dream-interpretation',
   },
 ] as const;
@@ -130,15 +131,16 @@ export const TAROT_TOPICS = [
   },
   {
     title: '이직 타로',
-    desc: '지금 떠나는 편이 맞는지, 조금 더 준비해야 하는지 판단을 돕는 타로 확장선',
+    desc: '지금 떠나는 편이 맞는지, 조금 더 준비해야 하는지 판단을 돕는 타로',
     status: '곧 오픈',
   },
 ] as const;
 
 export const MEMBERSHIP_POINTS = [
-  '광고 없이 보는 데일리 리포트',
-  '월간 심화 리포트 2회',
-  '결과 보관함과 운세 캘린더',
+  '광고 없는 데일리 리포트',
+  '매월 심화 리포트 2회',
+  '리포트 보관함 무제한',
+  '운세 캘린더 제공',
 ];
 
 export const MOBILE_HOME_DOCK_ITEMS = [
