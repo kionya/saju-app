@@ -1,52 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { isValidBirthInput } from '@/lib/saju/pillars';
+import { parseBirthInputDraft } from '@/domain/saju/validators/birth-input';
 import { createReading } from '@/lib/saju/readings';
-import type { BirthInput } from '@/lib/saju/types';
-
-function toInt(value: unknown): number | null {
-  const parsed = Number(value);
-  return Number.isInteger(parsed) ? parsed : null;
-}
-
-function parseBirthInput(payload: unknown): BirthInput | null {
-  if (!payload || typeof payload !== 'object') return null;
-
-  const record = payload as Record<string, unknown>;
-  const year = toInt(record.year);
-  const month = toInt(record.month);
-  const day = toInt(record.day);
-  const hour =
-    record.hour === undefined || record.hour === null || record.hour === ''
-      ? undefined
-      : toInt(record.hour);
-  const gender =
-    record.gender === 'male' || record.gender === 'female'
-      ? record.gender
-      : undefined;
-
-  if (year === null || month === null || day === null || hour === null) {
-    return null;
-  }
-
-  const input: BirthInput = {
-    year,
-    month,
-    day,
-    hour,
-    gender,
-  };
-
-  return isValidBirthInput(input) ? input : null;
-}
 
 export async function POST(req: NextRequest) {
-  const input = parseBirthInput(await req.json().catch(() => null));
+  const parsed = parseBirthInputDraft(await req.json().catch(() => null));
 
-  if (!input) {
+  if (!parsed.ok) {
     return NextResponse.json(
-      { error: '생년월일시 정보가 올바르지 않습니다.' },
+      { error: parsed.error },
       { status: 400 }
+    );
+  }
+
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          'Supabase 환경변수가 없어 로컬에서 reading 저장을 진행할 수 없습니다.',
+      },
+      { status: 503 }
     );
   }
 
@@ -56,7 +33,7 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser();
 
   try {
-    const id = await createReading(input, user?.id ?? null);
+    const id = await createReading(parsed.input, user?.id ?? null);
     return NextResponse.json({ id });
   } catch (error) {
     return NextResponse.json(

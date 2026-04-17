@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import SiteHeader from '@/components/site-header';
+import SiteHeader from '@/features/shared-navigation/site-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ZODIAC_FORTUNES } from '@/lib/free-content-pages';
@@ -83,7 +83,7 @@ export default async function ZodiacDetailPage({ params }: Props) {
             <p>더 개인화된 해석이 필요하면 생년월일 기준 사주 리포트로 이어지는 것이 자연스럽습니다.</p>
           </div>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link href="/#personalized-reading">
+            <Link href="/saju/new">
               <Button className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]">
                 맞춤 사주 리포트 보기
               </Button>

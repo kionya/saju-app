@@ -1,5 +1,6 @@
 import { Solar } from 'lunar-typescript';
 import type { Stem, Branch, Element, YinYang, Pillar, SajuResult, BirthInput } from './types';
+import { isValidBirthInput } from '@/domain/saju/validators/birth-input';
 
 const STEMS: Stem[] = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
 const BRANCHES: Branch[] = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
@@ -33,37 +34,6 @@ function isStem(value: string): value is Stem {
 
 function isBranch(value: string): value is Branch {
   return BRANCHES.includes(value as Branch);
-}
-
-function getDaysInMonth(year: number, month: number): number {
-  return new Date(Date.UTC(year, month, 0)).getUTCDate();
-}
-
-export function isValidBirthInput(input: BirthInput): boolean {
-  const { year, month, day, hour } = input;
-
-  if (
-    !Number.isInteger(year) ||
-    !Number.isInteger(month) ||
-    !Number.isInteger(day) ||
-    year < 1900 ||
-    year > 2100 ||
-    month < 1 ||
-    month > 12 ||
-    day < 1 ||
-    day > getDaysInMonth(year, month)
-  ) {
-    return false;
-  }
-
-  if (
-    hour !== undefined &&
-    (!Number.isInteger(hour) || hour < 0 || hour > 23)
-  ) {
-    return false;
-  }
-
-  return true;
 }
 
 function toPillar(stemValue: string, branchValue: string): Pillar {

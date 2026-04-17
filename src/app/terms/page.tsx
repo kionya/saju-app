@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import SiteHeader from '@/components/site-header';
+import SiteHeader from '@/features/shared-navigation/site-header';
 
 export const metadata: Metadata = {
   title: '이용약관',

@@ -1,8 +1,11 @@
-import type { Metadata } from 'next';
+﻿import type { Metadata } from 'next';
+import SiteHeader from '@/features/shared-navigation/site-header';
+import AccountShellNav from '@/features/account/account-shell-nav';
+import { AppPage, AppShell } from '@/shared/layout/app-shell';
 
 export const metadata: Metadata = {
   title: 'MY',
-  description: '내 사주 결과, 코인 잔액, 결제 및 구독 상태를 관리하는 페이지입니다.',
+  description: '사주 결과, 코인 잔액, 결제 및 구독 상태를 관리하는 개인 공간입니다.',
   robots: {
     index: false,
     follow: false,
@@ -16,5 +19,12 @@ export const metadata: Metadata = {
 export default function MyLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return children;
+  return (
+    <AppShell header={<SiteHeader />}>
+      <AppPage className="space-y-6 lg:space-y-8">
+        <AccountShellNav />
+        {children}
+      </AppPage>
+    </AppShell>
+  );
 }

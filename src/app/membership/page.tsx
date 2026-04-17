@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import SiteHeader from '@/components/site-header';
+import SiteHeader from '@/features/shared-navigation/site-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -81,7 +81,7 @@ export default function MembershipPage() {
                   Plus 시작하기
                 </Button>
               </Link>
-              <Link href="/#personalized-reading">
+              <Link href="/saju/new">
                 <Button
                   variant="outline"
                   className="h-12 rounded-full border-white/15 bg-white/5 px-6 text-sm text-white hover:bg-white/10 hover:text-white"

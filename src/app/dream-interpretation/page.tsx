@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import SiteHeader from '@/components/site-header';
+import SiteHeader from '@/features/shared-navigation/site-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DREAM_ENTRIES } from '@/lib/free-content-pages';
@@ -66,7 +66,7 @@ export default function DreamInterpretationPage() {
                 오늘의 타로 보기
               </Button>
             </Link>
-            <Link href="/#personalized-reading">
+            <Link href="/saju/new">
               <Button
                 variant="outline"
                 className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
