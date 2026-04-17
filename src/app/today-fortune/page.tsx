@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import SiteHeader from '@/components/site-header';
+import SiteHeader from '@/features/shared-navigation/site-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { buildTodayFortune } from '@/lib/free-content-pages';
@@ -62,7 +62,7 @@ export default function TodayFortunePage() {
             오늘의 운세는 가볍게 들어오는 무료 입구입니다. 내 생년월일로 보는 개인화 리포트가 필요하다면 질문형 사주 결과로 바로 이어질 수 있습니다.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link href="/#personalized-reading">
+            <Link href="/saju/new">
               <Button className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]">
                 맞춤 사주 리포트 보기
               </Button>

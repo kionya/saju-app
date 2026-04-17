@@ -81,6 +81,22 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --app-ink: #020817;
+  --app-ink-strong: #071327;
+  --app-surface: rgba(7, 19, 39, 0.78);
+  --app-surface-strong: rgba(10, 18, 36, 0.94);
+  --app-surface-soft: rgba(255, 255, 255, 0.04);
+  --app-surface-muted: rgba(255, 255, 255, 0.03);
+  --app-line: rgba(255, 255, 255, 0.1);
+  --app-line-strong: rgba(210, 176, 114, 0.18);
+  --app-gold: #d2b072;
+  --app-gold-soft: rgba(210, 176, 114, 0.12);
+  --app-gold-text: #f5dfaa;
+  --app-ivory: #f8f1df;
+  --app-copy: rgba(255, 255, 255, 0.68);
+  --app-copy-muted: rgba(255, 255, 255, 0.58);
+  --app-copy-soft: rgba(255, 255, 255, 0.45);
+  --app-shadow: 0 24px 80px rgba(2, 6, 23, 0.42);
 }
 
 .dark {
@@ -124,8 +140,167 @@
   }
   body {
     @apply bg-background text-foreground;
+    min-height: 100%;
+    background-color: var(--app-ink);
+    color: white;
+    text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans;
+  }
+
+  ::selection {
+    background: rgba(210, 176, 114, 0.28);
+    color: var(--app-ivory);
+  }
+}
+
+@layer components {
+  .app-shell {
+    position: relative;
+    min-height: 100vh;
+    color: white;
+    background:
+      linear-gradient(180deg, rgba(7, 19, 39, 0.9), rgba(2, 8, 23, 0.98));
+    isolation: isolate;
+  }
+
+  .app-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(210, 176, 114, 0.18), transparent 28%),
+      radial-gradient(circle at 86% 14%, rgba(129, 140, 248, 0.14), transparent 24%),
+      linear-gradient(180deg, rgba(7, 19, 39, 0.92), rgba(2, 8, 23, 0.98));
+  }
+
+  .app-shell::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 96px 96px;
+    mask-image: radial-gradient(circle at center, black 28%, transparent 86%);
+    opacity: 0.18;
+  }
+
+  .app-shell > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .app-page {
+    margin-inline: auto;
+    width: min(100%, 88rem);
+    padding-inline: 1rem;
+  }
+
+  .app-page-spacious {
+    padding-top: 2.5rem;
+    padding-bottom: 5rem;
+  }
+
+  .app-hero-card {
+    border: 1px solid var(--app-line-strong);
+    background:
+      radial-gradient(circle at top left, rgba(210, 176, 114, 0.14), transparent 30%),
+      linear-gradient(180deg, rgba(7, 19, 39, 0.94), rgba(10, 18, 36, 0.96));
+    border-radius: 2rem;
+    box-shadow: var(--app-shadow);
+  }
+
+  .app-panel {
+    border: 1px solid var(--app-line);
+    background: var(--app-surface-soft);
+    border-radius: 1.75rem;
+    box-shadow: 0 16px 44px rgba(2, 6, 23, 0.26);
+    backdrop-filter: blur(18px);
+  }
+
+  .app-panel-muted {
+    border: 1px solid var(--app-line);
+    background: var(--app-surface-muted);
+    border-radius: 1.5rem;
+  }
+
+  .app-section-stack {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .app-subnav {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 0.5rem;
+    border: 1px solid var(--app-line);
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px);
+    scrollbar-width: none;
+  }
+
+  .app-subnav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-subnav-link {
+    flex-shrink: 0;
+    border-radius: 9999px;
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.66);
+    transition:
+      color 150ms ease,
+      background-color 150ms ease,
+      border-color 150ms ease;
+    border: 1px solid transparent;
+  }
+
+  .app-subnav-link:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+  }
+
+  .app-subnav-link[data-active="true"] {
+    border-color: rgba(210, 176, 114, 0.4);
+    background: rgba(210, 176, 114, 0.12);
+    color: #fff0c6;
+  }
+
+  .app-caption {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: rgba(210, 176, 114, 0.78);
+  }
+
+  .app-body-copy {
+    color: var(--app-copy);
+    line-height: 1.9;
+  }
+
+  .app-micro-copy {
+    color: var(--app-copy-soft);
+  }
+}
+
+@media (min-width: 640px) {
+  .app-page {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app-page {
+    padding-inline: 2rem;
   }
 }

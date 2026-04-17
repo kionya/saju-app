@@ -5,7 +5,7 @@ import { loadTossPayments, ANONYMOUS } from '@tosspayments/tosspayments-sdk';
 import { createClient } from '@/lib/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import SiteHeader from '@/components/site-header';
+import SiteHeader from '@/features/shared-navigation/site-header';
 import LegalLinks from '@/components/legal-links';
 import Link from 'next/link';
 

@@ -1,7 +1,7 @@
-import Link from 'next/link';
-import SiteHeader from '@/components/site-header';
+﻿import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { getAccountDashboardData } from '@/lib/account';
+import { PageHero } from '@/shared/layout/app-shell';
 
 function formatCreatedAt(value: string) {
   return new Intl.DateTimeFormat('ko-KR', {
@@ -38,54 +38,46 @@ export default async function MyResultsPage() {
   });
 
   return (
-    <main className="min-h-screen bg-[#020817] text-white">
-      <SiteHeader />
-
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        <section className="rounded-[32px] border border-[#d2b072]/18 bg-[linear-gradient(180deg,rgba(7,19,39,0.94),rgba(10,18,36,0.96))] p-7">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className="border-[#d2b072]/30 bg-[#d2b072]/10 text-[#f5dfaa]">
+    <>
+      <PageHero
+        badges={
+          <>
+            <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]">
               Result Archive
             </Badge>
-            <Badge className="border-white/10 bg-white/5 text-white/62">
-              로그인 후 생성된 결과 자동 저장
+            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+              로그인 후 생성한 결과 자동 보관
             </Badge>
-          </div>
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[#f8f1df] sm:text-5xl">
-            결과보관함
-          </h1>
-          <p className="mt-4 max-w-3xl text-base leading-8 text-white/64">
-            저장된 결과는 다시보기와 비교가 쉬워야 합니다. 그래서 이 공간은 한 번 보고 끝나는 결과가 아니라, 나중에 다시 열어보며 패턴을 확인하는 아카이브 역할을 합니다.
-          </p>
-        </section>
+          </>
+        }
+        title="결과보관함"
+        description="저장된 결과를 다시 보고, 질문 포커스를 바꿔 비교하면서 이어 읽을 수 있게 구성했습니다. 한 번 본 결과가 흩어지지 않고 자연스럽게 다음 행동으로 이어지는 아카이브입니다."
+      />
 
-        <section className="mt-8">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {dashboard.recentReadings.length > 0 ? (
-              dashboard.recentReadings.map((reading) => (
-                <Link
-                  key={reading.id}
-                  href={`/saju/${reading.id}`}
-                  className="rounded-[28px] border border-white/10 bg-white/[0.04] p-6 transition-colors hover:bg-white/[0.07]"
-                >
-                  <div className="text-sm text-white/45">저장일 {formatCreatedAt(reading.createdAt)}</div>
-                  <h2 className="mt-3 text-2xl font-semibold text-[#f8f1df]">
-                    {reading.birthMonth}월 {reading.birthDay}일 리포트
-                  </h2>
-                  <p className="mt-4 text-sm leading-7 text-white/60">
-                    {formatBirthLabel(reading)}
-                  </p>
-                  <div className="mt-6 text-sm text-[#d2b072]">리포트 다시 열기</div>
-                </Link>
-              ))
-            ) : (
-              <div className="rounded-[28px] border border-dashed border-white/15 bg-white/[0.03] p-7 text-sm leading-7 text-white/58">
-                아직 저장된 결과가 없습니다. 홈에서 새 사주 리포트를 만들면 이곳에 자동으로 보관됩니다.
-              </div>
-            )}
-          </div>
-        </section>
-      </div>
-    </main>
+      <section>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {dashboard.recentReadings.length > 0 ? (
+            dashboard.recentReadings.map((reading) => (
+              <Link
+                key={reading.id}
+                href={`/saju/${reading.id}`}
+                className="app-panel block p-6 transition-colors hover:bg-[var(--app-surface-strong)]"
+              >
+                <div className="app-caption">저장일 {formatCreatedAt(reading.createdAt)}</div>
+                <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
+                  {reading.birthMonth}월 {reading.birthDay}일 리포트
+                </h2>
+                <p className="app-body-copy mt-4 text-sm">{formatBirthLabel(reading)}</p>
+                <div className="mt-6 text-sm text-[var(--app-gold-soft)]">리포트 다시 열기</div>
+              </Link>
+            ))
+          ) : (
+            <div className="app-panel-muted border-dashed p-7 text-sm leading-7 text-[var(--app-copy-muted)]">
+              아직 저장된 결과가 없습니다. 새 사주 리포트를 만들면 결과보관함에 자동으로 쌓입니다.
+            </div>
+          )}
+        </div>
+      </section>
+    </>
   );
 }

@@ -14,6 +14,7 @@ export default function SiteHeader() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
+  const [currentHash, setCurrentHash] = useState('');
 
   useEffect(() => {
     const supabase = createClient();
@@ -32,6 +33,21 @@ export default function SiteHeader() {
     });
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncHash = () => {
+      setCurrentHash(window.location.hash);
+    };
+
+    syncHash();
+    window.addEventListener('hashchange', syncHash);
+
+    return () => {
+      window.removeEventListener('hashchange', syncHash);
+    };
+  }, [pathname]);
+
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -39,6 +55,15 @@ export default function SiteHeader() {
   }
 
   const authHref = `/login?next=${encodeURIComponent(pathname)}`;
+
+  function isActiveHref(href: string) {
+    if (href.startsWith('/#')) {
+      const targetHash = href.slice(1);
+      return pathname === '/' && currentHash === targetHash;
+    }
+
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#07101f]/85 backdrop-blur supports-[backdrop-filter]:bg-[#07101f]/75">
@@ -60,9 +85,7 @@ export default function SiteHeader() {
             <nav className="hidden items-center gap-1 lg:flex">
               {PRIMARY_NAV_ITEMS.map((item) => {
                 const href = item.href as string;
-                const active = href.startsWith('/#')
-                  ? pathname === '/'
-                  : pathname === href || pathname.startsWith(href);
+                const active = isActiveHref(href);
                 return (
                   <Link
                     key={item.label}

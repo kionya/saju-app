@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import SiteHeader from '@/components/site-header';
+import SiteHeader from '@/features/shared-navigation/site-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TAROT_TOPICS, getCardOfTheDay } from '@/lib/home-content';
@@ -46,7 +46,7 @@ export default function DailyTarotPage() {
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link href="/#personalized-reading">
+              <Link href="/saju/new">
                 <Button className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]">
                   내 사주와 함께 보기
                 </Button>
