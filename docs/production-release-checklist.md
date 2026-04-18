@@ -34,6 +34,10 @@
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
   - `SUPABASE_SERVICE_ROLE_KEY`
+  - `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`
+  - `WEB_PUSH_PRIVATE_KEY`
+  - `WEB_PUSH_SUBJECT`
+  - `CRON_SECRET`
   - `NEXT_PUBLIC_TOSS_CLIENT_KEY`
   - `TOSS_SECRET_KEY`
   - `NEXT_PUBLIC_SITE_URL`
@@ -41,10 +45,17 @@
   - `001_initial.sql`
   - `002_subscriptions.sql`
   - `003_profiles.sql`
+  - `004_notifications.sql`
+- Confirm the push setup guide has been completed:
+  - `docs/push-notifications-setup.md`
 - Re-check a production reading flow after deploy:
   - `/saju/new`
   - `POST /api/readings`
   - `/saju/[uuid]`
+- Re-check the notification flow after deploy:
+  - `/notifications`
+  - `POST /api/notifications/test`
+  - `GET /api/notifications/dispatch?dryRun=true`
 - Re-check `MY` routes after deploy:
   - `/my`
   - `/my/profile`
