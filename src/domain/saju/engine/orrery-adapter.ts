@@ -228,33 +228,33 @@ const BRANCH_PUNISHMENTS = new Set<string>([
   '亥-亥',
 ]);
 
-const HALF_HARMONY_GROUPS = [
+const HALF_HARMONY_GROUPS: Array<{ pairs: string[]; detail: string }> = [
   { pairs: ['申-子', '子-辰'], detail: '수 반합' },
   { pairs: ['亥-卯', '卯-未'], detail: '목 반합' },
   { pairs: ['寅-午', '午-戌'], detail: '화 반합' },
   { pairs: ['巳-酉', '酉-丑'], detail: '금 반합' },
-] as const;
+];
 
-const TRIPLE_HARMONIES = [
+const TRIPLE_HARMONIES: Array<{ branches: Branch[]; detail: string }> = [
   { branches: ['申', '子', '辰'], detail: '수 삼합' },
   { branches: ['亥', '卯', '未'], detail: '목 삼합' },
   { branches: ['寅', '午', '戌'], detail: '화 삼합' },
   { branches: ['巳', '酉', '丑'], detail: '금 삼합' },
-] as const;
+];
 
-const DIRECTIONAL_COMBINATIONS = [
+const DIRECTIONAL_COMBINATIONS: Array<{ branches: Branch[]; detail: string }> = [
   { branches: ['亥', '子', '丑'], detail: '수 방합' },
   { branches: ['寅', '卯', '辰'], detail: '목 방합' },
   { branches: ['巳', '午', '未'], detail: '화 방합' },
   { branches: ['申', '酉', '戌'], detail: '금 방합' },
-] as const;
+];
 
 const DOHWA_GROUPS: Array<{ roots: Branch[]; target: Branch }> = [
   { roots: ['申', '子', '辰'], target: '酉' },
   { roots: ['寅', '午', '戌'], target: '卯' },
   { roots: ['巳', '酉', '丑'], target: '午' },
   { roots: ['亥', '卯', '未'], target: '子' },
-];
+] ;
 
 const YANGIN_BY_DAY_STEM: Record<Stem, Branch> = {
   '甲': '卯',
@@ -649,7 +649,7 @@ function buildRelations(
       }
 
       for (const group of HALF_HARMONY_GROUPS) {
-        if (group.pairs.includes(branchKey as (typeof group.pairs)[number])) {
+        if (group.pairs.includes(branchKey)) {
           relations.push({
             category: 'pair',
             label: '반합',
