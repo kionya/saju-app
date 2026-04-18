@@ -25,14 +25,14 @@ export default function DreamInterpretationPage() {
               꿈해몽
             </Badge>
             <Badge className="border-white/10 bg-white/5 text-white/62">
-              검색과 바이럴에 강한 무료 메뉴
+              마음에 남은 장면을 풀어보는 무료 해석
             </Badge>
           </div>
           <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[#f8f1df] sm:text-5xl">
             자주 찾는 꿈해몽
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-8 text-white/66">
-            꿈해몽은 정답을 단정하는 페이지보다, 상징을 짧게 이해하고 현재 감정 상태와 연결해보는 입구가 더 유용합니다. 그래서 자주 찾는 꿈 장면을 짧고 읽기 쉽게 정리했습니다.
+            꿈은 정답보다 마음의 결을 비추는 장면에 가깝습니다. 자주 떠오르는 꿈의 상징을 짧고 읽기 쉽게 정리해, 지금 감정과 조용히 이어보실 수 있게 했습니다.
           </p>
         </section>
 
@@ -58,7 +58,7 @@ export default function DreamInterpretationPage() {
         <section className="mt-8 rounded-[30px] border border-white/10 bg-white/[0.04] p-6">
           <h2 className="text-2xl font-semibold text-[#f8f1df]">감정 흐름을 더 정교하게 보고 싶다면</h2>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-white/60">
-            꿈해몽은 상징을 빠르게 이해하는 무료 메뉴입니다. 더 개인화된 질문이나 현재 흐름이 궁금하다면 오늘의 타로나 사주 리포트로 연결해보는 편이 좋습니다.
+            꿈해몽은 상징을 가볍게 헤아리는 첫 걸음입니다. 더 개인화된 질문이나 지금 흐름이 궁금하시다면 오늘의 타로나 사주 리포트로 이어보시면 좋습니다.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link href="/tarot/daily">

@@ -1,6 +1,12 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import {
+  createClient,
+  hasSupabaseServerEnv,
+  hasSupabaseServiceEnv,
+} from '@/lib/supabase/server';
 import { getManagedSubscription } from '@/lib/subscription';
+import { normalizeToSajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
+import type { BirthInput, Stem } from '@/lib/saju/types';
 
 export interface AccountCredits {
   balance: number;
@@ -23,6 +29,8 @@ export interface AccountReading {
   birthHour: number | null;
   gender: 'male' | 'female' | null;
   createdAt: string;
+  dayMasterStem: Stem | null;
+  dayPillarLabel: string | null;
 }
 
 export interface AccountTransaction {
@@ -45,6 +53,23 @@ export interface AccountDashboardData {
   recentTransactions: AccountTransaction[];
 }
 
+function buildLocalPreviewDashboard(): AccountDashboardData {
+  return {
+    user: {
+      id: 'local-preview',
+      email: 'preview@dalbit.local',
+    },
+    credits: {
+      balance: 0,
+      subscriptionBalance: 0,
+      total: 0,
+    },
+    subscription: null,
+    recentReadings: [],
+    recentTransactions: [],
+  };
+}
+
 export async function requireAccount(redirectPath: string) {
   const supabase = await createClient();
   const {
@@ -62,6 +87,10 @@ export async function getAccountDashboardData(
   redirectPath: string,
   options: { readingLimit?: number; transactionLimit?: number } = {}
 ): Promise<AccountDashboardData> {
+  if (!hasSupabaseServerEnv || !hasSupabaseServiceEnv) {
+    return buildLocalPreviewDashboard();
+  }
+
   const { supabase, user } = await requireAccount(redirectPath);
   const readingLimit = options.readingLimit ?? 5;
   const transactionLimit = options.transactionLimit ?? 6;
@@ -76,7 +105,7 @@ export async function getAccountDashboardData(
       getManagedSubscription(user.id),
       supabase
         .from('readings')
-        .select('id, birth_year, birth_month, birth_day, birth_hour, gender, created_at')
+        .select('id, birth_year, birth_month, birth_day, birth_hour, gender, created_at, result_json')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(readingLimit),
@@ -111,6 +140,22 @@ export async function getAccountDashboardData(
       : null,
     recentReadings:
       readingsResponse.data?.map((reading) => ({
+        ...(function readSajuSnapshot() {
+          const input: BirthInput = {
+            year: reading.birth_year,
+            month: reading.birth_month,
+            day: reading.birth_day,
+            hour: reading.birth_hour ?? undefined,
+            gender: reading.gender ?? undefined,
+          };
+
+          const sajuData = normalizeToSajuDataV1(input, reading.result_json);
+
+          return {
+            dayMasterStem: sajuData.dayMaster.stem,
+            dayPillarLabel: `${sajuData.pillars.day.stem}${sajuData.pillars.day.branch}일주`,
+          };
+        })(),
         id: reading.id,
         birthYear: reading.birth_year,
         birthMonth: reading.birth_month,

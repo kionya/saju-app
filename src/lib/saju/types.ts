@@ -2,6 +2,7 @@ export type Stem = '甲' | '乙' | '丙' | '丁' | '戊' | '己' | '庚' | '辛'
 export type Branch = '子' | '丑' | '寅' | '卯' | '辰' | '巳' | '午' | '未' | '申' | '酉' | '戌' | '亥';
 export type Element = '목' | '화' | '토' | '금' | '수';
 export type YinYang = '양' | '음';
+export type JasiMethod = 'split' | 'unified';
 
 export interface Pillar {
   stem: Stem;
@@ -27,5 +28,8 @@ export interface BirthInput {
   month: number;
   day: number;
   hour?: number;   // 0~23, undefined이면 시주 없음
+  minute?: number;
+  unknownTime?: boolean;
+  jasiMethod?: JasiMethod;
   gender?: 'male' | 'female';
 }

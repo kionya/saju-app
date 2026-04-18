@@ -1,6 +1,12 @@
 import { createServiceClient } from '@/lib/supabase/server';
-import { calculateSaju, fromSlug } from './pillars';
-import type { BirthInput, SajuResult } from './types';
+import { fromSlug } from './pillars';
+import type { BirthInput, SajuResult as LegacySajuResult } from './types';
+import {
+  calculateSajuDataV1,
+  deriveLegacySajuResult,
+  normalizeToSajuDataV1,
+  type SajuDataV1,
+} from '@/domain/saju/engine/saju-data-v1';
 
 const READING_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -13,14 +19,31 @@ interface ReadingRow {
   birth_day: number;
   birth_hour: number | null;
   gender: 'male' | 'female' | null;
-  result_json: SajuResult;
+  result_json: unknown;
 }
 
 export interface ReadingRecord {
   id: string;
   userId: string | null;
   input: BirthInput;
-  result: SajuResult;
+  sajuData: SajuDataV1;
+  result: LegacySajuResult;
+}
+
+function deriveBirthInputFromSajuData(
+  fallback: BirthInput,
+  sajuData: SajuDataV1
+): BirthInput {
+  return {
+    year: sajuData.input.birth.year,
+    month: sajuData.input.birth.month,
+    day: sajuData.input.birth.day,
+    hour: sajuData.input.hourKnown ? sajuData.input.birth.hour ?? undefined : undefined,
+    minute: sajuData.input.hourKnown ? sajuData.input.birth.minute ?? undefined : undefined,
+    unknownTime: !sajuData.input.hourKnown,
+    jasiMethod: sajuData.input.jasiMethod ?? sajuData.extensions?.orrery?.input.jasiMethod ?? fallback.jasiMethod,
+    gender: sajuData.input.gender ?? fallback.gender ?? undefined,
+  };
 }
 
 export function isReadingId(value: string): boolean {
@@ -28,17 +51,22 @@ export function isReadingId(value: string): boolean {
 }
 
 function mapReadingRow(row: ReadingRow): ReadingRecord {
+  const input: BirthInput = {
+    year: row.birth_year,
+    month: row.birth_month,
+    day: row.birth_day,
+    hour: row.birth_hour ?? undefined,
+    gender: row.gender ?? undefined,
+  };
+  const sajuData = normalizeToSajuDataV1(input, row.result_json);
+
   return {
     id: row.id,
     userId: row.user_id,
-    input: {
-      year: row.birth_year,
-      month: row.birth_month,
-      day: row.birth_day,
-      hour: row.birth_hour ?? undefined,
-      gender: row.gender ?? undefined,
-    },
-    result: row.result_json,
+    input: deriveBirthInputFromSajuData(input, sajuData),
+    sajuData,
+    // Keep the legacy shape available while screens migrate to SajuDataV1.
+    result: deriveLegacySajuResult(sajuData),
   };
 }
 
@@ -47,7 +75,7 @@ export async function createReading(
   userId: string | null
 ): Promise<string> {
   const supabase = await createServiceClient();
-  const result = calculateSaju(input);
+  const sajuData = calculateSajuDataV1(input);
 
   const { data, error } = await supabase
     .from('readings')
@@ -58,7 +86,7 @@ export async function createReading(
       birth_day: input.day,
       birth_hour: input.hour ?? null,
       gender: input.gender ?? null,
-      result_json: result,
+      result_json: sajuData,
     })
     .select('id')
     .single();
@@ -97,10 +125,13 @@ export async function resolveReading(
   const input = fromSlug(identifier);
   if (!input) return null;
 
+  const sajuData = calculateSajuDataV1(input);
+
   return {
     id: identifier,
     userId: null,
-    input,
-    result: calculateSaju(input),
+    input: deriveBirthInputFromSajuData(input, sajuData),
+    sajuData,
+    result: deriveLegacySajuResult(sajuData),
   };
 }

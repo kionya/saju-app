@@ -1,5 +1,10 @@
-﻿import { ELEMENT_INFO, getLuckyElements, getPersonality } from '@/lib/saju/elements';
-import type { BirthInput, Element, SajuResult } from '@/lib/saju/types';
+﻿import type { SajuDataV1, SajuSymbolRef, TenGodCode } from '@/domain/saju/engine/saju-data-v1';
+import {
+  ELEMENT_INFO,
+  getLuckyElementsFromSajuData,
+  getPersonalityFromSajuData,
+} from '@/lib/saju/elements';
+import type { BirthInput, Element } from '@/lib/saju/types';
 import type {
   FocusTopic,
   FocusTopicMeta,
@@ -53,33 +58,226 @@ const SCORE_LABELS: Record<ReportScore['key'], string> = {
   career: '직장',
 };
 
+const STRENGTH_INTERPRETATION: Record<'신강' | '중화' | '신약', string> = {
+  신강:
+    '기본적으로 스스로 판을 끌고 가는 힘이 강한 편이라, 장점은 추진력으로 드러나지만 과하면 혼자 짊어지는 피로로 바뀌기 쉽습니다.',
+  중화:
+    '밀고 당기는 힘이 크게 한쪽으로 치우치지 않아 상황을 읽고 조율하는 감각이 살아 있습니다. 다만 결정이 늦어지지 않도록 기준을 먼저 세우는 편이 좋습니다.',
+  신약:
+    '외부 환경과 관계의 온도에 영향을 더 많이 받는 명식이라, 무리해서 버티기보다 나를 돕는 환경과 사람을 잘 고르는 것이 성패를 크게 가릅니다.',
+};
+
+const TEN_GOD_INTERPRETATION: Record<TenGodCode, string> = {
+  비견: '나와 비슷한 사람, 동료, 형제 같은 결의 관계가 삶에서 자주 부각됩니다. 스스로 서려는 마음이 강하지만 양보가 어려워질 때도 있습니다.',
+  겁재: '가까운 사람과 재물이나 역할을 나누는 문제에서 갈등이 생기기 쉬운 십신입니다. 정이 깊을수록 경계를 분명히 할 필요가 있습니다.',
+  식신: '내가 키워내고 길러내는 힘이 좋아 자녀, 취미, 결과물, 생활의 여유 같은 주제가 삶을 따뜻하게 만듭니다.',
+  상관: '표현력과 재주는 뛰어나지만 답답한 틀을 견디기 어려운 편입니다. 재능이 잘 쓰이면 매력이 되고, 억눌리면 불편함이 커집니다.',
+  편재: '사람과 기회를 넓게 움직이며 돈과 활동의 물결이 크게 드나드는 흐름입니다. 잘 맞으면 기회가 크지만 흩어지지 않게 관리가 필요합니다.',
+  정재: '꾸준히 쌓아 안정적으로 지키는 재물 감각이 돋보입니다. 한 번 믿은 구조를 오래 가져가지만 변화에는 시간이 걸릴 수 있습니다.',
+  편관: '경쟁, 압박, 책임 속에서 단련되며 힘이 생기는 십신입니다. 버텨내는 힘은 강하지만 긴장을 오래 품지 않도록 조절이 필요합니다.',
+  정관: '자리, 책임, 명예, 질서를 중시하는 흐름이라 역할을 바르게 감당하려는 마음이 큽니다. 스스로 기준이 높아 피로가 쌓일 수 있습니다.',
+  편인: '남다른 감각과 직관, 혼자 깊이 파고드는 힘이 강합니다. 보통 사람보다 다른 방식으로 이해하고 받아들이는 재능이 있습니다.',
+  정인: '돌봄, 후원, 배움의 흐름이 삶에서 중요한 힘으로 작용합니다. 누군가를 품고, 또 누군가에게 도움을 받는 인연이 크게 남습니다.',
+};
+
 function clampScore(value: number) {
   return Math.max(48, Math.min(92, Math.round(value)));
 }
 
-function getElementEntries(result: SajuResult) {
-  return (Object.entries(result.elements) as [Element, number][]).sort((a, b) => b[1] - a[1]);
+function hasBatchim(value: string) {
+  const trimmed = value.trim();
+  const lastChar = trimmed.charAt(trimmed.length - 1);
+  if (!lastChar) return false;
+
+  const code = lastChar.charCodeAt(0) - 0xac00;
+  if (code < 0 || code > 11171) return false;
+
+  return code % 28 !== 0;
+}
+
+function withParticle(value: string, consonantParticle: string, vowelParticle: string) {
+  return `${value}${hasBatchim(value) ? consonantParticle : vowelParticle}`;
+}
+
+function getElementEntries(data: SajuDataV1) {
+  return (Object.entries(data.fiveElements.byElement) as [Element, SajuDataV1['fiveElements']['byElement'][Element]][])
+    .map(([element, value]) => [element, value.count] as [Element, number])
+    .sort((a, b) => b[1] - a[1]);
 }
 
 function getElementTone(element: Element) {
   const info = ELEMENT_INFO[element];
   const label = info.name.split(' ')[0];
+  const firstTrait = info.traits[0] ?? label;
+  const secondTrait = info.traits[1] ?? '장점';
 
   return {
     label,
-    move: `${label} 기운이 강한 날이라 ${info.traits[0]}과 ${info.traits[1]}을 살려서 작게라도 바로 움직이는 편이 좋습니다.`,
+    move: `${label} 기운이 강한 날이라 ${withParticle(firstTrait, '과', '와')} ${withParticle(secondTrait, '을', '를')} 살려서 작게라도 바로 움직이는 편이 좋습니다.`,
     avoid: `${label}의 장점만 밀어붙이기보다 ${info.keywords[0]}처럼 속도를 한 번 정리하고 과한 확신은 줄이는 편이 안정적입니다.`,
     cue: info.keywords[0],
   };
 }
 
-function buildScores(input: BirthInput, result: SajuResult): ReportScore[] {
-  const entries = getElementEntries(result);
+function describeStrengthNarrative(strength: SajuDataV1['strength']) {
+  if (!strength) return '';
+  return `${strength.level}으로 읽혀 ${STRENGTH_INTERPRETATION[strength.level]} ${strength.rationale[0] ?? ''}`.trim();
+}
+
+function describePatternNarrative(pattern: SajuDataV1['pattern']) {
+  if (!pattern) return '';
+  return `${pattern.name} 기준으로 읽기 시작하는 명식이라 ${pattern.tenGod ? `${pattern.tenGod}의 역할감과 관계 패턴이 삶의 전면에 나오기 쉽습니다.` : '월령의 성격이 해석의 첫머리를 잡습니다.'} ${pattern.rationale[1] ?? ''}`.trim();
+}
+
+function describeYongsinNarrative(yongsin: SajuDataV1['yongsin']) {
+  if (!yongsin) return '';
+  return `용신은 ${formatSymbolList([yongsin.primary, ...yongsin.secondary])} 쪽으로 잡혀 있어, 삶에서는 이 기운을 보태는 환경과 리듬을 만들수록 균형이 좋아집니다. ${yongsin.rationale[0] ?? ''}`.trim();
+}
+
+function describeCurrentLuckNarrative(currentLuck: SajuDataV1['currentLuck']) {
+  if (!currentLuck) return '';
+
+  const currentMajor = currentLuck.currentMajorLuck;
+  const saewoon = currentLuck.saewoon;
+  const wolwoon = currentLuck.wolwoon;
+  const parts = [
+    currentMajor?.ganzi ? `현재는 ${currentMajor.ganzi} 대운권에 있어 삶의 큰 방향을 길게 보는 편이 좋습니다.` : '',
+    saewoon?.ganzi ? `${saewoon.ganzi} 세운이 겹친 해라 해당 주제와 관련된 사건이 눈앞에 드러나기 쉽습니다.` : '',
+    wolwoon?.ganzi ? `${wolwoon.ganzi} 월운 기준으로는 이번 달에는 말과 행동의 속도를 조금만 조절해도 체감 차이가 납니다.` : '',
+  ].filter(Boolean);
+
+  return parts.join(' ');
+}
+
+function getOrreryExtension(data: SajuDataV1) {
+  return data.extensions?.orrery ?? null;
+}
+
+function describeRelationNarrative(data: SajuDataV1) {
+  const relations = getOrreryExtension(data)?.relations;
+  if (!relations?.length) return '';
+
+  const tension = relations.find((relation) =>
+    ['충', '형', '해', '파', '천간충'].includes(relation.label)
+  );
+  const support = relations.find((relation) =>
+    ['천간합', '육합', '반합', '삼합', '방합'].includes(relation.label)
+  );
+  const selected = [tension, support].filter(
+    (relation, index, array): relation is NonNullable<typeof relation> =>
+      Boolean(relation) && array.findIndex((item) => item === relation) === index
+  );
+
+  if (selected.length === 0) return '';
+
+  return selected
+    .map((relation) => {
+      if (relation.target) {
+        return `${relation.source}와 ${relation.target} 사이에는 ${relation.label}이 보여 ${relation.detail ?? '기운의 맞물림이 또렷하게 드러납니다.'}`;
+      }
+
+      return `${relation.source} 글자가 함께 모여 ${relation.label}이 성립하니 ${relation.detail ?? '한 방향으로 기운이 묶이는 흐름이 확인됩니다.'}`;
+    })
+    .join(' ');
+}
+
+function describeGongmangNarrative(data: SajuDataV1) {
+  const gongmang = getOrreryExtension(data)?.gongmang;
+  if (!gongmang?.branches) return '';
+
+  const branches = gongmang.branches.join('·');
+  const slots = gongmang.pillarSlots
+    .map((slot) => {
+      switch (slot) {
+        case 'year':
+          return '년주';
+        case 'month':
+          return '월주';
+        case 'day':
+          return '일주';
+        case 'hour':
+          return '시주';
+      }
+    })
+    .join('·');
+
+  if (slots) {
+    return `공망은 ${branches}로 잡히고 ${slots}에 닿아 있어, 겉으로 드러난 일정이나 약속일수록 한 번 더 확인하고 마무리할수록 허술함을 줄이기 좋습니다.`;
+  }
+
+  return `공망은 ${branches}로 잡혀 있어 이 글자가 운에서 겹칠 때는 성급히 확정하기보다 한 템포 늦춰 점검하는 편이 더 안전합니다.`;
+}
+
+function hasIndexedSpecialSal(value: number[] | null | undefined) {
+  return Boolean(value && value.length > 0);
+}
+
+function describeSpecialSalsNarrative(data: SajuDataV1) {
+  const specialSals = getOrreryExtension(data)?.specialSals;
+  if (!specialSals) return '';
+
+  const supportive: string[] = [];
+  const cautionary: string[] = [];
+
+  if (hasIndexedSpecialSal(specialSals.cheonul)) supportive.push('천을귀인');
+  if (hasIndexedSpecialSal(specialSals.cheonduk)) supportive.push('천덕귀인');
+  if (hasIndexedSpecialSal(specialSals.wolduk)) supportive.push('월덕귀인');
+  if (hasIndexedSpecialSal(specialSals.munchang)) supportive.push('문창귀인');
+  if (hasIndexedSpecialSal(specialSals.geumyeo)) supportive.push('금여');
+  if (hasIndexedSpecialSal(specialSals.dohwa)) cautionary.push('도화');
+  if (hasIndexedSpecialSal(specialSals.yangin)) cautionary.push('양인');
+  if (specialSals.baekho) cautionary.push('백호');
+  if (specialSals.goegang) cautionary.push('괴강');
+  if (specialSals.hongyeom) cautionary.push('홍염');
+
+  const parts: string[] = [];
+
+  if (supportive.length > 0) {
+    parts.push(
+      `신살로는 ${supportive.join('·')}이 보여 도움을 받는 통로, 위기 완충력, 배움과 표현의 복이 함께 살아 있는 편입니다.`
+    );
+  }
+
+  if (cautionary.length > 0) {
+    parts.push(
+      `${cautionary.join('·')} 기운도 함께 보여 끌어당기는 힘과 돌파력은 강하지만, 감정과 속도를 다루는 방식에 따라 체감의 온도 차이가 크게 납니다.`
+    );
+  }
+
+  return parts.join(' ');
+}
+
+function buildOrreryEvidenceNarrative(data: SajuDataV1) {
+  return [
+    describeRelationNarrative(data),
+    describeGongmangNarrative(data),
+    describeSpecialSalsNarrative(data),
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
+function describeTenGodNarrative(tenGods: SajuDataV1['tenGods']) {
+  if (!tenGods?.dominant) return '';
+  return TEN_GOD_INTERPRETATION[tenGods.dominant];
+}
+
+function formatElementDistribution(data: SajuDataV1) {
+  const dominant = data.fiveElements.byElement[data.fiveElements.dominant];
+  const weakest = data.fiveElements.byElement[data.fiveElements.weakest];
+  const dominantLabel = ELEMENT_INFO[data.fiveElements.dominant].name.split(' ')[0];
+  const weakestLabel = ELEMENT_INFO[data.fiveElements.weakest].name.split(' ')[0];
+
+  return `${dominantLabel} 기운이 ${dominant.percentage}%로 전면에 서 있고, ${weakestLabel} 기운은 ${weakest.percentage}% 수준이라 이 약한 축을 어떻게 보완하느냐가 해석의 핵심이 됩니다.`;
+}
+
+function buildScores(input: BirthInput, data: SajuDataV1): ReportScore[] {
+  const entries = getElementEntries(data);
   const strongest = entries[0]?.[1] ?? 0;
   const weakest = entries.at(-1)?.[1] ?? 0;
   const spread = strongest - weakest;
   const uniqueCount = entries.filter(([, count]) => count > 0).length;
-  const hourBonus = result.hour ? 4 : 0;
+  const hourBonus = data.pillars.hour ? 4 : 0;
   const datePulse = ((input.day + input.month) % 7) - 3;
   const yearPulse = (input.year % 6) - 2;
   const balanceBase = 66 + uniqueCount * 3 - spread * 4 + hourBonus;
@@ -150,22 +348,25 @@ function getHeadline(topic: FocusTopic, scoreMap: Record<ReportScore['key'], num
   }
 }
 
-function buildInsights(result: SajuResult, topic: FocusTopic): ReportInsight[] {
-  const supportElements = getLuckyElements(result);
+function buildInsights(data: SajuDataV1, topic: FocusTopic): ReportInsight[] {
+  const supportElements = getLuckyElementsFromSajuData(data);
   const supportLabels = supportElements.map((element) => ELEMENT_INFO[element].name.split(' ')[0]).join(', ');
-  const dominant = ELEMENT_INFO[result.dominantElement].name.split(' ')[0];
-  const weakest = ELEMENT_INFO[result.weakestElement].name.split(' ')[0];
+  const dominant = ELEMENT_INFO[data.fiveElements.dominant].name.split(' ')[0];
+  const weakest = ELEMENT_INFO[data.fiveElements.weakest].name.split(' ')[0];
+  const dayHiddenStems = data.pillars.day.hiddenStems.map((item) => item.stem).join(' · ');
 
-  return [
+  const insights: ReportInsight[] = [
     {
       eyebrow: '일간 성향',
-      title: `${result.dayMaster} 일간의 기본 태도`,
-      body: getPersonality(result),
+      title: data.dayMaster.metaphor
+        ? `${data.dayMaster.stem} 일간 · ${data.dayMaster.metaphor}`
+        : `${data.dayMaster.stem} 일간의 기본 태도`,
+      body: `${getPersonalityFromSajuData(data)}${dayHiddenStems ? ` 일지 안쪽에는 ${dayHiddenStems} 기운이 숨어 있어 겉으로 드러나는 성향과 속마음의 결이 완전히 같지만은 않습니다.` : ''}`,
     },
     {
       eyebrow: '오행 흐름',
       title: `${dominant}가 강하고 ${weakest} 보완이 필요한 흐름입니다.`,
-      body: `${dominant}의 장점을 살릴수록 흐름이 부드럽게 풀리고, ${weakest} 기운을 생활 리듬 안에서 보완할수록 결과가 더 안정됩니다.`,
+      body: `${formatElementDistribution(data)} ${dominant}의 장점을 살릴수록 흐름이 부드럽게 풀리고, ${weakest} 기운을 생활 리듬 안에서 보완할수록 결과가 더 안정됩니다.`,
     },
     {
       eyebrow: '질문 포커스',
@@ -173,28 +374,68 @@ function buildInsights(result: SajuResult, topic: FocusTopic): ReportInsight[] {
       body: `${FOCUS_TOPIC_META[topic].subtitle} 먼저 체감되는 장점을 살리고, 조급함보다는 반복 가능한 행동으로 연결하는 편이 좋습니다.`,
     },
   ];
+
+  if (data.tenGods?.dominant) {
+    insights.push({
+      eyebrow: '십신 패턴',
+      title: `${data.tenGods.dominant} 기운이 자주 드러나는 명식입니다.`,
+      body: describeTenGodNarrative(data.tenGods),
+    });
+  }
+
+  if (data.pattern || data.yongsin || data.strength || data.currentLuck) {
+    insights.push({
+      eyebrow: '명리 심화',
+      title: data.pattern
+        ? `${data.pattern.name} 흐름을 기준으로 읽습니다.`
+        : '강약과 용신 기준의 해석이 이어집니다.',
+      body: buildStructuredReadingNote(data, topic),
+    });
+  }
+
+  const orreryEvidence = buildOrreryEvidenceNarrative(data);
+  if (orreryEvidence) {
+    insights.push({
+      eyebrow: '합충과 신살',
+      title: '명식 안쪽에서 맞물리는 관계와 완충 장치도 함께 봅니다.',
+      body: orreryEvidence,
+    });
+  }
+
+  return insights;
 }
 
-function buildTimeline(result: SajuResult, topic: FocusTopic): ReportTimelineItem[] {
-  const bestTone = getElementTone(getLuckyElements(result)[0] ?? result.dominantElement);
-  const cautionTone = getElementTone(result.weakestElement);
-  const dominant = ELEMENT_INFO[result.dominantElement].name.split(' ')[0];
+function buildTimeline(data: SajuDataV1, topic: FocusTopic): ReportTimelineItem[] {
+  const bestTone = getElementTone(
+    getLuckyElementsFromSajuData(data)[0] ?? data.fiveElements.dominant
+  );
+  const cautionTone = getElementTone(data.fiveElements.weakest);
+  const dominant = ELEMENT_INFO[data.fiveElements.dominant].name.split(' ')[0];
+  const currentMajor = data.currentLuck?.currentMajorLuck;
+  const saewoon = data.currentLuck?.saewoon;
+  const wolwoon = data.currentLuck?.wolwoon;
 
   return [
     {
       label: '오늘',
       headline: `${bestTone.cue}을 먼저 살리는 날`,
-      body: `${FOCUS_TOPIC_META[topic].subtitle} 오늘은 ${bestTone.move}`,
-    },
-    {
-      label: '이번 주',
-      headline: `${dominant} 중심 루틴을 만들면 흐름이 붙습니다.`,
-      body: '초반에는 정리와 조율, 후반에는 실행과 연결에 힘이 붙는 패턴입니다. 중요한 선택은 한 번에 몰지 않는 편이 안정적입니다.',
+      body: `${FOCUS_TOPIC_META[topic].subtitle} 오늘은 ${bestTone.move}${wolwoon?.ganzi ? ` 현재 월운은 ${wolwoon.ganzi}라 작은 말투와 생활 리듬의 조절이 실제 체감 차이로 이어집니다.` : ''}`,
     },
     {
       label: '이번 달',
-      headline: `${cautionTone.label} 보완이 성과 차이를 만듭니다.`,
-      body: cautionTone.avoid,
+      headline: `${dominant} 중심 루틴을 만들면 흐름이 붙습니다.`,
+      body: saewoon?.ganzi
+        ? `${saewoon.ganzi} 세운이 들어온 해라 ${topic === 'wealth' ? '돈의 흐름을 넓히기보다 새는 지출을 먼저 정리하는 편이' : topic === 'love' || topic === 'relationship' ? '관계의 결론을 서두르기보다 반복되는 감정 패턴을 읽어보는 편이' : topic === 'career' ? '일의 방향을 길게 보고 역할 정리를 먼저 하는 편이' : '우선순위를 나눠 보는 편이'} 더 유리합니다.`
+        : '초반에는 정리와 조율, 후반에는 실행과 연결에 힘이 붙는 패턴입니다. 중요한 선택은 한 번에 몰지 않는 편이 안정적입니다.',
+    },
+    {
+      label: '대운 흐름',
+      headline: currentMajor?.ganzi
+        ? `${currentMajor.ganzi} 대운의 큰 방향을 읽어야 할 시기입니다.`
+        : `${cautionTone.label} 보완이 성과 차이를 만듭니다.`,
+      body: currentMajor
+        ? `${currentMajor.notes.slice(0, 2).join(' ')} 지금은 단기 결과 하나보다 앞으로 몇 해를 끌고 갈 선택의 결을 먼저 보는 편이 좋습니다.`
+        : cautionTone.avoid,
     },
   ];
 }
@@ -211,8 +452,8 @@ function formatDateChip(month: number, day: number) {
   return `${month}월 ${day}일`;
 }
 
-function buildDates(input: BirthInput, result: SajuResult) {
-  const entries = getElementEntries(result);
+function buildDates(input: BirthInput, data: SajuDataV1) {
+  const entries = getElementEntries(data);
   const strongest = entries[0]?.[1] ?? 0;
   const weakest = entries.at(-1)?.[1] ?? 0;
   const hourSeed = input.hour ?? 6;
@@ -238,27 +479,33 @@ export function normalizeFocusTopic(value?: string): FocusTopic {
   return 'today';
 }
 
-export function buildSajuReport(input: BirthInput, result: SajuResult, topicValue?: string): SajuReport {
+export function buildSajuReport(
+  input: BirthInput,
+  data: SajuDataV1,
+  topicValue?: string
+): SajuReport {
   const focusTopic = normalizeFocusTopic(topicValue);
   const meta = FOCUS_TOPIC_META[focusTopic];
-  const scores = buildScores(input, result);
+  const scores = buildScores(input, data);
   const scoreMap = Object.fromEntries(scores.map((score) => [score.key, score.score])) as Record<
     ReportScore['key'],
     number
   >;
-  const supportElements = getLuckyElements(result);
-  const dominant = ELEMENT_INFO[result.dominantElement].name.split(' ')[0];
-  const weakest = ELEMENT_INFO[result.weakestElement].name.split(' ')[0];
-  const bestTone = getElementTone(supportElements[0] ?? result.dominantElement);
-  const cautionTone = getElementTone(result.weakestElement);
-  const { luckyDates, cautionDates } = buildDates(input, result);
+  const supportElements = getLuckyElementsFromSajuData(data);
+  const dominant = ELEMENT_INFO[data.fiveElements.dominant].name.split(' ')[0];
+  const weakest = ELEMENT_INFO[data.fiveElements.weakest].name.split(' ')[0];
+  const bestTone = getElementTone(supportElements[0] ?? data.fiveElements.dominant);
+  const cautionTone = getElementTone(data.fiveElements.weakest);
+  const { luckyDates, cautionDates } = buildDates(input, data);
+
+  const structuredSummary = buildStructuredSummary(data, meta.label, dominant, weakest);
 
   return {
     focusTopic,
     focusLabel: meta.label,
     focusBadge: meta.badge,
     headline: getHeadline(focusTopic, scoreMap),
-    summary: `${dominant} 기운이 전면에 서 있는 명식이라 추진력과 표현력이 강점으로 작동합니다. 반대로 ${weakest} 보완을 의식할수록 ${meta.label} 흐름이 더 안정적으로 이어집니다.`,
+    summary: structuredSummary,
     scores,
     primaryAction: {
       title: `${bestTone.label} 기운을 살리는 한 가지`,
@@ -268,10 +515,68 @@ export function buildSajuReport(input: BirthInput, result: SajuResult, topicValu
       title: `오늘 피할 흐름`,
       description: cautionTone.avoid,
     },
-    insights: buildInsights(result, focusTopic),
-    timeline: buildTimeline(result, focusTopic),
+    insights: buildInsights(data, focusTopic),
+    timeline: buildTimeline(data, focusTopic),
     luckyDates,
     cautionDates,
     supportElements,
   };
+}
+
+function buildStructuredSummary(
+  data: SajuDataV1,
+  focusLabel: string,
+  dominant: string,
+  weakest: string
+) {
+  const segments = [
+    data.dayMaster.metaphor
+      ? `${data.dayMaster.stem} 일간은 ${data.dayMaster.metaphor}의 결을 지녀 ${data.dayMaster.description ?? getPersonalityFromSajuData(data)}`
+      : getPersonalityFromSajuData(data),
+    `${dominant} 기운이 전면에 서 있어 장점은 빠르게 드러나지만, ${weakest} 보완을 의식할수록 ${focusLabel} 흐름이 더 오래 안정적으로 이어집니다.`,
+    formatElementDistribution(data),
+  ];
+
+  segments.push(describeStrengthNarrative(data.strength));
+  segments.push(describePatternNarrative(data.pattern));
+  segments.push(describeYongsinNarrative(data.yongsin));
+  segments.push(describeCurrentLuckNarrative(data.currentLuck));
+  segments.push(buildOrreryEvidenceNarrative(data));
+
+  return segments.filter(Boolean).join(' ');
+}
+
+function buildStructuredReadingNote(data: SajuDataV1, topic: FocusTopic) {
+  const notes: string[] = [];
+
+  if (data.strength) {
+    notes.push(describeStrengthNarrative(data.strength));
+  }
+
+  if (data.pattern) {
+    notes.push(`${data.pattern.name}으로 정리되며${data.pattern.tenGod ? ` ${data.pattern.tenGod} 중심 흐름을 봅니다.` : ' 월령의 성격을 중심으로 해석합니다.'}`);
+  }
+
+  if (data.yongsin) {
+    notes.push(`${formatSymbolList([data.yongsin.primary, ...data.yongsin.secondary])}을(를) 보완 축으로 두는 구조라 ${topic === 'wealth' ? '재물 판단도 속도보다 균형을 먼저 맞출수록' : topic === 'love' || topic === 'relationship' ? '관계도 감정만 앞세우기보다 리듬을 맞출수록' : topic === 'career' ? '일도 확장보다 쓰임을 정확히 고를수록' : '생활 리듬도 무리보다 균형을 지킬수록'} 유리합니다.`);
+  }
+
+  if (data.currentLuck) {
+    notes.push(describeCurrentLuckNarrative(data.currentLuck));
+  }
+
+  const orreryEvidence = buildOrreryEvidenceNarrative(data);
+  if (orreryEvidence) {
+    notes.push(orreryEvidence);
+  }
+
+  if (notes.length === 0) {
+    return '현재 저장본은 오행과 일간 중심의 seed 데이터이며, 격국과 용신 값이 채워지면 이 카드가 즉시 실제 해석으로 바뀝니다.';
+  }
+
+  return notes.join(' ');
+}
+
+function formatSymbolList(symbols: SajuSymbolRef[]) {
+  return symbols.map((symbol) => symbol.label).join(' · ');
 }

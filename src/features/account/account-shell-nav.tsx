@@ -6,9 +6,10 @@ import { cn } from '@/lib/utils';
 
 const ACCOUNT_NAV_ITEMS = [
   { label: 'MY 홈', href: '/my' },
-  { label: '프로필', href: '/my/profile' },
+  { label: '가족 사주', href: '/my/profile' },
   { label: '결과보관함', href: '/my/results' },
   { label: '결제 관리', href: '/my/billing' },
+  { label: '설정', href: '/my/settings' },
 ] as const;
 
 function isActive(pathname: string, href: string) {

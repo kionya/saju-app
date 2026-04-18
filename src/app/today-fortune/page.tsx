@@ -27,7 +27,7 @@ export default function TodayFortunePage() {
               무료 운세
             </Badge>
             <Badge className="border-white/10 bg-white/5 text-white/62">
-              검색 유입용 빠른 입구
+              가볍게 펼쳐보는 오늘의 흐름
             </Badge>
           </div>
           <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[#f8f1df] sm:text-5xl">
@@ -59,7 +59,7 @@ export default function TodayFortunePage() {
         <section className="mt-8 rounded-[30px] border border-white/10 bg-white/[0.04] p-6">
           <h2 className="text-2xl font-semibold text-[#f8f1df]">맞춤 결과로 더 깊게 보기</h2>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-white/60">
-            오늘의 운세는 가볍게 들어오는 무료 입구입니다. 내 생년월일로 보는 개인화 리포트가 필요하다면 질문형 사주 결과로 바로 이어질 수 있습니다.
+            오늘의 운세는 하루의 결을 먼저 살피는 가벼운 한 장입니다. 선생님만의 생년월일로 더 차분한 이야기를 보고 싶으시다면 맞춤 사주 리포트로 이어보세요.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link href="/saju/new">

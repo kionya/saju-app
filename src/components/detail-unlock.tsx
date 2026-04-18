@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,10 +19,10 @@ interface Props {
 }
 
 const SECTIONS = [
-  { key: 'wealth', icon: '💰', label: '재물운' },
-  { key: 'love',   icon: '💕', label: '애정운' },
-  { key: 'career', icon: '💼', label: '직업운' },
-  { key: 'health', icon: '🌿', label: '건강운' },
+  { key: 'wealth', label: '재물운' },
+  { key: 'love', label: '애정운' },
+  { key: 'career', label: '직업운' },
+  { key: 'health', label: '건강운' },
 ] as const;
 
 export default function DetailUnlock({ slug }: Props) {
@@ -63,85 +64,180 @@ export default function DetailUnlock({ slug }: Props) {
 
   if (state === 'unlocked' && content) {
     return (
-      <div className="bg-white/5 border border-indigo-500/30 rounded-2xl p-6 space-y-5">
-        <div className="flex items-center justify-between">
-          <h2 className="font-semibold">상세 해석 리포트</h2>
-          {remaining !== null && (
-            <span className="text-xs text-white/40">잔여 코인 {remaining}개</span>
-          )}
+      <section className="app-panel space-y-5 p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="app-caption">상세 해석 리포트</div>
+            <h2 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
+              확장 해석이 열렸습니다
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+              해금 완료
+            </Badge>
+            {remaining !== null ? (
+              <span className="text-xs text-[var(--app-copy-soft)]">잔여 코인 {remaining}개</span>
+            ) : null}
+          </div>
         </div>
 
-        {SECTIONS.map(({ key, icon, label }) => (
-          <div key={key} className="border-t border-white/10 pt-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span>{icon}</span>
-              <span className="text-sm font-medium text-white/80">{label}</span>
-            </div>
-            <p className="text-sm text-white/65 leading-relaxed">
-              {content[key as keyof Pick<DetailContent, 'wealth' | 'love' | 'career' | 'health'>]}
-            </p>
-          </div>
-        ))}
+        <p className="app-body-copy text-sm">
+          재물, 애정, 직업, 건강 흐름을 현재 명식과 운세 문맥에 맞춰 확장해서 읽은 결과입니다.
+        </p>
 
-        <div className="border-t border-white/10 pt-4">
-          <div className="text-xs text-white/40 mb-2">행운 키워드</div>
-          <div className="flex gap-2 flex-wrap">
-            {content.luckyKeywords.map(kw => (
-              <Badge key={kw} className="text-xs" style={{ backgroundColor: content.luckyColor + '25', borderColor: content.luckyColor + '50', color: content.luckyColor }}>
+        <div className="grid gap-3">
+          {SECTIONS.map(({ key, label }) => (
+            <article
+              key={key}
+              className="rounded-[24px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-sm font-medium text-[var(--app-ivory)]">{label}</div>
+                <Badge className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-copy-muted)]">
+                  심화
+                </Badge>
+              </div>
+              <p className="app-body-copy mt-3 text-sm leading-relaxed">
+                {content[key as keyof Pick<DetailContent, 'wealth' | 'love' | 'career' | 'health'>]}
+              </p>
+            </article>
+          ))}
+        </div>
+
+        <div className="rounded-[24px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-sm font-medium text-[var(--app-ivory)]">행운 키워드</div>
+            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-copy-muted)]">
+              추천 포인트
+            </Badge>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {content.luckyKeywords.map((kw) => (
+              <Badge
+                key={kw}
+                className="border text-xs"
+                style={{
+                  backgroundColor: `${content.luckyColor}18`,
+                  borderColor: `${content.luckyColor}45`,
+                  color: content.luckyColor,
+                }}
+              >
                 {kw}
               </Badge>
             ))}
           </div>
         </div>
-      </div>
+      </section>
     );
   }
 
   if (state === 'error') {
     return (
-      <div className="bg-white/5 border border-red-500/30 rounded-2xl p-6 text-center space-y-4">
-        <p className="text-red-400 font-medium">{errorMsg}</p>
-        {errorMsg.includes('부족') && (
+      <section className="app-panel space-y-4 border-rose-400/20 p-6 text-center">
+        <div className="app-caption text-rose-200/80">상세 해석 오류</div>
+        <p className="font-medium text-rose-200">{errorMsg}</p>
+        {errorMsg.includes('부족') ? (
           <>
-            <p className="text-sm text-white/50">잔여 코인: {remaining}개</p>
-            <a href="/credits">
-              <Button className="bg-indigo-600 hover:bg-indigo-500">코인 충전하기</Button>
-            </a>
+            <p className="app-body-copy text-sm">잔여 코인: {remaining}개</p>
+            <Link href="/credits">
+              <Button className="border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)] hover:bg-[var(--app-gold)]/18">
+                코인 충전하기
+              </Button>
+            </Link>
           </>
-        )}
-        {!errorMsg.includes('부족') && (
-          <Button onClick={() => setState('locked')} variant="outline" className="border-white/20 text-white">
+        ) : (
+          <Button
+            onClick={() => setState('locked')}
+            variant="outline"
+            className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] hover:bg-[var(--app-surface-strong)]"
+          >
             다시 시도
           </Button>
         )}
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="relative bg-white/5 border border-indigo-500/30 rounded-2xl p-6 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950/90 z-10" />
-      <h2 className="text-sm text-white/50 font-medium mb-3">상세 해석 리포트</h2>
-      <div className="space-y-2 blur-sm select-none pointer-events-none">
-        <p className="text-white/70">💰 재물운: 이 시기는 금전적으로 안정적인 흐름이...</p>
-        <p className="text-white/70">💕 애정운: 인연의 실마리가 보이는 시기로...</p>
-        <p className="text-white/70">💼 직업운: 새로운 기회가 찾아올 가능성이...</p>
-        <p className="text-white/70">🌿 건강운: 몸의 균형을 맞추는 것이 중요한...</p>
-      </div>
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3">
-        <div className="text-center">
-          <p className="font-semibold mb-1">상세 해석 보기</p>
-          <p className="text-sm text-white/50 mb-4">재물·애정·직업·건강 운세 전체 분석</p>
+    <section className="relative overflow-hidden rounded-[28px] border border-[var(--app-line-strong)] bg-[linear-gradient(180deg,rgba(7,19,39,0.92),rgba(4,10,24,0.98))] p-6">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(210,176,114,0.16),transparent_42%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(2,8,23,0.72))]" />
+
+      <div className="relative z-10">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="app-caption">상세 해석 잠금</div>
+            <h2 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
+              저장된 명식을 더 깊게 읽어보세요
+            </h2>
+          </div>
+          <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+            코인 1개
+          </Badge>
         </div>
-        <Button
-          onClick={handleUnlock}
-          disabled={state === 'loading'}
-          className="bg-indigo-600 hover:bg-indigo-500 px-8"
-        >
-          {state === 'loading' ? '처리 중...' : '코인 1개로 열기'}
-        </Button>
-        <p className="text-xs text-white/30">가입 시 무료 코인 3개 지급</p>
+
+        <p className="app-body-copy mt-4 max-w-2xl text-sm">
+          재물, 애정, 직업, 건강 흐름을 현재 대운·세운 문맥과 함께 더 구체적으로 풀이합니다.
+        </p>
+
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          {[
+            '현재 대운과 세운을 붙여 “왜 지금 이런가”를 읽습니다.',
+            '재물·애정·직업·건강을 분야별로 나눠 바로 이해하기 쉽게 풉니다.',
+            '행운 키워드까지 함께 열려 오늘 바로 실천할 포인트가 남습니다.',
+          ].map((item) => (
+            <div
+              key={item}
+              className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4 text-sm leading-7 text-[var(--app-copy)]"
+            >
+              {item}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 grid gap-3 blur-[1.5px] select-none pointer-events-none">
+          {SECTIONS.map(({ key, label }) => (
+            <div
+              key={key}
+              className="rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] p-4"
+            >
+              <div className="text-sm font-medium text-[var(--app-ivory)]">{label}</div>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--app-copy)]">
+                {getPreviewCopy(key)}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="relative z-20 mt-6 rounded-[24px] border border-[var(--app-line)] bg-[rgba(2,8,23,0.56)] p-5 text-center backdrop-blur-sm">
+          <p className="font-semibold text-[var(--app-ivory)]">상세 해석 열기</p>
+          <p className="mt-2 text-sm text-[var(--app-copy-muted)]">
+            재물·애정·직업·건강 4개 영역을 한 번에 열고, 현재 운 흐름까지 이어서 봅니다
+          </p>
+          <Button
+            onClick={handleUnlock}
+            disabled={state === 'loading'}
+            className="mt-5 h-12 min-w-[200px] rounded-full border border-[var(--app-gold)]/40 bg-[var(--app-gold)]/16 px-10 text-base font-semibold text-[var(--app-gold-text)] shadow-[0_16px_48px_rgba(210,176,114,0.14)] hover:bg-[var(--app-gold)]/22"
+          >
+            {state === 'loading' ? '처리 중...' : '코인 1개로 지금 열기'}
+          </Button>
+          <p className="mt-3 text-xs text-[var(--app-copy-soft)]">가입 시 무료 코인 3개 지급</p>
+        </div>
       </div>
-    </div>
+    </section>
   );
+}
+
+function getPreviewCopy(key: (typeof SECTIONS)[number]['key']) {
+  switch (key) {
+    case 'wealth':
+      return '현재 운 흐름 안에서 금전 감각이 살아나는 구간과 지출을 조심할 구간을 함께 읽습니다.';
+    case 'love':
+      return '관계의 속도와 표현 강약을 지금 시점의 운세 문맥에 맞춰 차분하게 풀어드립니다.';
+    case 'career':
+      return '대운과 세운을 바탕으로 포지션 변화, 확장 타이밍, 일의 결을 더 구체적으로 읽습니다.';
+    case 'health':
+      return '과한 기운과 약한 기운을 함께 보고 생활 리듬에서 먼저 손볼 포인트를 제안합니다.';
+  }
 }

@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase/server';
+import { createServiceClient, hasSupabaseServerEnv, hasSupabaseServiceEnv } from '@/lib/supabase/server';
 import { requireAccount } from '@/lib/account';
 
 export interface BirthProfileFields {
@@ -27,7 +27,41 @@ function toNumberOrNull(value: number | null | undefined) {
   return value ?? null;
 }
 
+function isMissingFamilyProfilesTableError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+
+  const code = 'code' in error ? String(error.code ?? '') : '';
+  const message = 'message' in error ? String(error.message ?? '') : '';
+
+  return (
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    message.includes('public.family_profiles') ||
+    message.includes("relation 'family_profiles' does not exist") ||
+    message.includes('relation "family_profiles" does not exist')
+  );
+}
+
 export async function getProfileSettingsData(redirectPath: string) {
+  if (!hasSupabaseServerEnv || !hasSupabaseServiceEnv) {
+    return {
+      user: {
+        id: 'local-preview',
+        email: 'preview@dalbit.local',
+      },
+      profile: {
+        displayName: '',
+        birthYear: null,
+        birthMonth: null,
+        birthDay: null,
+        birthHour: null,
+        gender: null,
+        note: '',
+      } satisfies UserProfile,
+      familyProfiles: [] satisfies FamilyProfile[],
+    };
+  }
+
   const { supabase, user } = await requireAccount(redirectPath);
 
   const [profileResponse, familyResponse] = await Promise.all([
@@ -53,19 +87,25 @@ export async function getProfileSettingsData(redirectPath: string) {
     note: profileResponse.data?.note ?? '',
   };
 
+  if (familyResponse.error && !isMissingFamilyProfilesTableError(familyResponse.error)) {
+    throw new Error(familyResponse.error.message);
+  }
+
   const familyProfiles: FamilyProfile[] =
-    familyResponse.data?.map((item) => ({
-      id: item.id,
-      label: item.label,
-      relationship: item.relationship,
-      birthYear: toNumberOrNull(item.birth_year),
-      birthMonth: toNumberOrNull(item.birth_month),
-      birthDay: toNumberOrNull(item.birth_day),
-      birthHour: toNumberOrNull(item.birth_hour),
-      gender: item.gender ?? null,
-      note: item.note ?? '',
-      createdAt: item.created_at,
-    })) ?? [];
+    familyResponse.error && isMissingFamilyProfilesTableError(familyResponse.error)
+      ? []
+      : familyResponse.data?.map((item) => ({
+          id: item.id,
+          label: item.label,
+          relationship: item.relationship,
+          birthYear: toNumberOrNull(item.birth_year),
+          birthMonth: toNumberOrNull(item.birth_month),
+          birthDay: toNumberOrNull(item.birth_day),
+          birthHour: toNumberOrNull(item.birth_hour),
+          gender: item.gender ?? null,
+          note: item.note ?? '',
+          createdAt: item.created_at,
+        })) ?? [];
 
   return {
     user: {
@@ -121,6 +161,9 @@ export async function createFamilyProfile(
     .single();
 
   if (error || !data) {
+    if (isMissingFamilyProfilesTableError(error)) {
+      throw new Error('운영 DB에 가족 프로필 테이블이 아직 적용되지 않았습니다. 003_profiles.sql 마이그레이션이 필요합니다.');
+    }
     throw new Error(error?.message ?? '가족 프로필을 저장하지 못했습니다.');
   }
 
@@ -136,6 +179,9 @@ export async function deleteFamilyProfile(userId: string, familyProfileId: strin
     .eq('user_id', userId);
 
   if (error) {
+    if (isMissingFamilyProfilesTableError(error)) {
+      throw new Error('운영 DB에 가족 프로필 테이블이 아직 적용되지 않았습니다. 003_profiles.sql 마이그레이션이 필요합니다.');
+    }
     throw new Error(error.message);
   }
 }

@@ -9,6 +9,10 @@ import SiteHeader from '@/features/shared-navigation/site-header';
 import LegalLinks from '@/components/legal-links';
 import Link from 'next/link';
 
+const hasSupabaseBrowserEnv = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
 interface Package {
   id: string;
   label: string;
@@ -31,6 +35,11 @@ export default function CreditsPage() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
+    if (!hasSupabaseBrowserEnv) {
+      setIsLoggedIn(false);
+      return;
+    }
+
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       setIsLoggedIn(!!data.user);
@@ -72,23 +81,22 @@ export default function CreditsPage() {
           <section className="rounded-[32px] border border-[#d2b072]/18 bg-[radial-gradient(circle_at_top_left,_rgba(210,176,114,0.14),_transparent_28%),linear-gradient(180deg,rgba(7,19,39,0.94),rgba(10,18,36,0.96))] p-7">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="border-[#d2b072]/35 bg-[#d2b072]/10 text-[#f2d9a2]">
-                코인 소비형 micro unlock
+                코인 센터
               </Badge>
-              <Badge className="border-white/10 bg-white/5 text-white/60">첫 유료 전환 구간</Badge>
+              <Badge className="border-white/10 bg-white/5 text-white/60">원하실 때만 조용히 여는 심화 해석</Badge>
             </div>
             <h1 className="mt-5 text-4xl font-semibold leading-tight tracking-tight text-[#f8f1df] sm:text-5xl">
               코인 센터
             </h1>
             <p className="mt-4 max-w-3xl text-base leading-8 text-white/66">
-              500원과 990원은 매번 결제하는 상품이 아니라, 결과 안에서 바로 열어보게 만드는 소비 단위입니다.
-              외부 결제는 묶음 충전으로, 실제 콘텐츠 소비는 코인 언락으로 이어지게 설계합니다.
+              코인은 필요하실 때만 심화 해석을 여는 작은 열쇠입니다. 자주 찾는 주제는 가볍게 충전해서 쓰시고, 더 넓게 이어보실 분은 Plus로 옮겨가실 수 있게 준비했습니다.
             </p>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-3">
               {[
-                { title: '무료 결과', body: '요약 카드와 기본 해석을 먼저 경험합니다.' },
-                { title: '코인 언락', body: '연애·재물·직장 심화 리포트를 결과 안에서 즉시 엽니다.' },
-                { title: '멤버십 전환', body: '반복 사용자는 Plus로 자연스럽게 올라갑니다.' },
+                { title: '먼저 가볍게', body: '요약 카드와 기본 해석으로 오늘의 결을 먼저 살펴봅니다.' },
+                { title: '마음 가는 만큼', body: '연애·재물·직장처럼 더 궁금한 주제만 결과 안에서 바로 엽니다.' },
+                { title: '자주 찾으신다면', body: '반복해서 읽게 되는 분은 Plus로 더 넉넉하게 이어가실 수 있습니다.' },
               ].map((item) => (
                 <div key={item.title} className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
                   <div className="text-sm font-medium text-[#f8f1df]">{item.title}</div>
@@ -100,11 +108,11 @@ export default function CreditsPage() {
 
           <aside className="rounded-[32px] border border-white/10 bg-white/[0.04] p-7">
             <div className="text-sm uppercase tracking-[0.22em] text-[#d2b072]/78">Before You Pay</div>
-            <h2 className="mt-3 text-2xl font-semibold text-[#f8f1df]">결제 전에 보이는 정보</h2>
+            <h2 className="mt-3 text-2xl font-semibold text-[#f8f1df]">결제 전에 먼저 보시는 것</h2>
             <div className="mt-5 space-y-3 text-sm leading-7 text-white/60">
-              <p>무엇이 열리는지, 어떤 결과가 저장되는지, 구독이면 다음 결제와 해지 방식을 먼저 보여줘야 합니다.</p>
-              <p>코인은 심화 리포트와 주제 확장용, Plus는 반복 효용용으로 역할이 다릅니다.</p>
-              <p>지금 MVP에서는 코인 충전과 Plus 결제를 먼저 제공하고, MY 관리 화면은 단계적으로 연결합니다.</p>
+              <p>무엇이 열리는지, 어떤 결과가 저장되는지, 자동 결제 여부는 결제 전에 먼저 보여드립니다.</p>
+              <p>코인은 필요한 해석을 그때그때 여는 용도이고, Plus는 자주 다시 보는 분께 더 잘 맞는 방식입니다.</p>
+              <p>결제 뒤에는 마이 화면에서 상태와 이용 흐름을 다시 확인하실 수 있습니다.</p>
             </div>
             <div className="mt-6 rounded-2xl border border-[#d2b072]/16 bg-[#d2b072]/8 p-4 text-sm leading-7 text-white/64">
               지원 결제: 토스페이먼츠 계좌이체 기반 결제
@@ -175,8 +183,8 @@ export default function CreditsPage() {
               <div className="mt-4 space-y-3">
                 {[
                   '1코인: 오늘의 심화 풀이 한 번 열기',
-                  '3코인: 연애·재물·직장 세 주제 연속 보기',
-                  '7코인: 월간 테마나 상세 해석 여러 번 소비',
+                  '3코인: 연애·재물·직장 세 주제를 이어서 보기',
+                  '7코인: 월간 테마나 상세 해석을 넉넉히 펼쳐보기',
                 ].map((item) => (
                   <div key={item} className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/68">
                     {item}
@@ -187,9 +195,9 @@ export default function CreditsPage() {
 
             <article className="rounded-[28px] border border-[#d2b072]/18 bg-[#d2b072]/8 p-6">
               <div className="text-sm uppercase tracking-[0.22em] text-[#d2b072]/82">Membership Bridge</div>
-              <h3 className="mt-3 text-2xl font-semibold text-[#f8f1df]">Plus는 리포트 1개가 아니라 반복 효용</h3>
+              <h3 className="mt-3 text-2xl font-semibold text-[#f8f1df]">Plus는 해석 한 번보다 오래 곁에 두는 흐름입니다</h3>
               <p className="mt-4 text-sm leading-7 text-white/62">
-                월 9,900원은 데일리 리포트, 광고 제거, 자동 코인 충전, 결과 보관과 캘린더처럼 재방문 가치를 묶어야 설득력이 생깁니다.
+                월 9,900원은 데일리 리포트, 광고 제거, 자동 코인 충전, 결과 보관처럼 자주 다시 펼쳐보는 가치를 함께 묶어둔 플랜입니다.
               </p>
               <div className="mt-6 flex flex-col gap-2 text-sm">
                 <Link href="/membership" className="text-[#f8f1df] underline underline-offset-4 hover:text-[#e3c68d]">
@@ -204,7 +212,7 @@ export default function CreditsPage() {
         </div>
 
         <p className="mt-8 text-center text-xs text-white/32">
-          토스페이먼츠 보안 결제 · 실제 구매는 묶음 충전으로, 콘텐츠 소비는 코인 언락 구조로 운영합니다.
+          토스페이먼츠 보안 결제 · 코인은 묶음 충전으로, 해석은 원하실 때만 조용히 열어보실 수 있습니다.
         </p>
       </div>
     </main>

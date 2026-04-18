@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
 
 export async function proxy(req: NextRequest) {
   let response = NextResponse.next({ request: req });
+  const { pathname } = req.nextUrl;
+
+  if (process.env.NODE_ENV !== 'production') {
+    return response;
+  }
 
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -10,6 +14,12 @@ export async function proxy(req: NextRequest) {
   ) {
     return response;
   }
+
+  if (!pathname.startsWith('/dashboard')) {
+    return response;
+  }
+
+  const { createServerClient } = await import('@supabase/ssr');
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -30,15 +40,12 @@ export async function proxy(req: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  // /dashboard/* 보호
-  const { pathname } = req.nextUrl;
-  if (pathname.startsWith('/dashboard')) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.redirect(new URL('/login', req.url));
-    }
+  if (!user) {
+    return NextResponse.redirect(new URL('/login', req.url));
   }
 
   return response;
