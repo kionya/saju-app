@@ -1,3 +1,4 @@
+import type { SajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
 import type { Element, Stem, SajuResult } from './types';
 
 // 오행 한글 이름 및 속성
@@ -63,8 +64,18 @@ const DAY_MASTER_PERSONALITY: Record<Stem, string> = {
   '癸': '사려깊고 직관력이 뛰어납니다. 감성이 풍부하며 타인의 감정을 잘 읽습니다.',
 };
 
+function getSupportElements(weak: Element): Element[] {
+  const support = (Object.entries(GENERATES) as [Element, Element][])
+    .find(([, value]) => value === weak)?.[0];
+  return support ? [weak, support] : [weak];
+}
+
 export function getPersonality(result: SajuResult): string {
   return DAY_MASTER_PERSONALITY[result.dayMaster];
+}
+
+export function getPersonalityFromSajuData(data: SajuDataV1): string {
+  return data.dayMaster.description ?? DAY_MASTER_PERSONALITY[data.dayMaster.stem];
 }
 
 export function getElementBalance(elements: Record<Element, number>): string {
@@ -79,9 +90,9 @@ export function getElementBalance(elements: Record<Element, number>): string {
 }
 
 export function getLuckyElements(result: SajuResult): Element[] {
-  // 용신: 가장 약한 오행과 그것을 생하는 오행
-  const weak = result.weakestElement;
-  const support = (Object.entries(GENERATES) as [Element, Element][])
-    .find(([, v]) => v === weak)?.[0];
-  return support ? [weak, support] : [weak];
+  return getSupportElements(result.weakestElement);
+}
+
+export function getLuckyElementsFromSajuData(data: SajuDataV1): Element[] {
+  return getSupportElements(data.fiveElements.weakest);
 }
