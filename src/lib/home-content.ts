@@ -59,10 +59,16 @@ export const FREE_EXPERIENCES = [
 
 export const TAROT_CARDS = [
   {
-    name: 'The Star',
-    theme: '회복',
-    message: '오늘은 결과를 서두르기보다 마음을 정리할수록 더 좋은 선택이 보입니다.',
-    focus: '감정이 맑아지는 타이밍을 기다리세요.',
+    name: 'The Fool',
+    theme: '시작',
+    message: '새로운 흐름은 늘 작은 한 걸음에서 시작됩니다. 오늘은 너무 겁내지 말고 가볍게 문을 열어보세요.',
+    focus: '생각만 하던 일을 작게라도 시작해보세요.',
+  },
+  {
+    name: 'The Moon',
+    theme: '직관',
+    message: '겉으로 보이는 장면보다 숨은 마음과 분위기를 읽을수록 더 좋은 선택이 보이는 날입니다.',
+    focus: '서두르지 말고 한 박자 쉬어 속뜻을 살피세요.',
   },
   {
     name: 'The Sun',
@@ -71,22 +77,22 @@ export const TAROT_CARDS = [
     focus: '먼저 말 걸고 먼저 제안하는 쪽이 유리합니다.',
   },
   {
-    name: 'Wheel of Fortune',
-    theme: '전환',
-    message: '흐름이 바뀌는 날에는 작아 보여도 바로 잡은 기회가 크게 이어집니다.',
-    focus: '우연처럼 온 제안을 흘려보내지 마세요.',
-  },
-  {
-    name: 'Justice',
-    theme: '정리',
-    message: '기준을 다시 세우는 것이 중요합니다. 모호한 관계와 지출부터 정리하세요.',
-    focus: '한 번 더 확인하고 결정하면 손실을 줄일 수 있습니다.',
+    name: 'The Hermit',
+    theme: '성찰',
+    message: '사람들 사이의 소음보다 혼자 정리한 생각에서 더 정확한 답이 떠오르는 날입니다.',
+    focus: '고요한 시간을 조금 확보해보세요.',
   },
   {
     name: 'The Lovers',
     theme: '선택',
     message: '누구와 무엇을 가까이 둘지 선명하게 정해야 마음도 가벼워집니다.',
     focus: '좋아하는 방향을 분명히 말할수록 관계가 편해집니다.',
+  },
+  {
+    name: 'Death',
+    theme: '변화',
+    message: '정리해야 할 것을 정리하면 다음 흐름이 열립니다. 끝처럼 보여도 새 시작에 가깝습니다.',
+    focus: '묵은 방식을 내려놓고 새 리듬을 받아들여보세요.',
   },
 ] as const;
 
@@ -105,4 +111,26 @@ export const MEMBERSHIP_POINTS = [
 export function getCardOfTheDay() {
   const dayIndex = new Date().getDate() % TAROT_CARDS.length;
   return TAROT_CARDS[dayIndex];
+}
+
+function hashQuestion(question: string) {
+  let value = 0;
+
+  for (const char of question) {
+    value = (value * 31 + char.charCodeAt(0)) % TAROT_CARDS.length;
+  }
+
+  return value;
+}
+
+export function getTarotCardForQuestion(question?: string) {
+  const normalized = question?.trim();
+
+  if (!normalized) {
+    return getCardOfTheDay();
+  }
+
+  const todayKey = new Intl.DateTimeFormat('sv-SE').format(new Date());
+  const index = hashQuestion(`${todayKey}:${normalized}`);
+  return TAROT_CARDS[index];
 }
