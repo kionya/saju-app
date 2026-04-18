@@ -84,6 +84,21 @@ function clampScore(value: number) {
   return Math.max(48, Math.min(92, Math.round(value)));
 }
 
+function hasBatchim(value: string) {
+  const trimmed = value.trim();
+  const lastChar = trimmed.charAt(trimmed.length - 1);
+  if (!lastChar) return false;
+
+  const code = lastChar.charCodeAt(0) - 0xac00;
+  if (code < 0 || code > 11171) return false;
+
+  return code % 28 !== 0;
+}
+
+function withParticle(value: string, consonantParticle: string, vowelParticle: string) {
+  return `${value}${hasBatchim(value) ? consonantParticle : vowelParticle}`;
+}
+
 function getElementEntries(data: SajuDataV1) {
   return (Object.entries(data.fiveElements.byElement) as [Element, SajuDataV1['fiveElements']['byElement'][Element]][])
     .map(([element, value]) => [element, value.count] as [Element, number])
@@ -93,10 +108,12 @@ function getElementEntries(data: SajuDataV1) {
 function getElementTone(element: Element) {
   const info = ELEMENT_INFO[element];
   const label = info.name.split(' ')[0];
+  const firstTrait = info.traits[0] ?? label;
+  const secondTrait = info.traits[1] ?? '장점';
 
   return {
     label,
-    move: `${label} 기운이 강한 날이라 ${info.traits[0]}과 ${info.traits[1]}을 살려서 작게라도 바로 움직이는 편이 좋습니다.`,
+    move: `${label} 기운이 강한 날이라 ${withParticle(firstTrait, '과', '와')} ${withParticle(secondTrait, '을', '를')} 살려서 작게라도 바로 움직이는 편이 좋습니다.`,
     avoid: `${label}의 장점만 밀어붙이기보다 ${info.keywords[0]}처럼 속도를 한 번 정리하고 과한 확신은 줄이는 편이 안정적입니다.`,
     cue: info.keywords[0],
   };
@@ -117,10 +134,7 @@ function describeYongsinNarrative(yongsin: SajuDataV1['yongsin']) {
   return `용신은 ${formatSymbolList([yongsin.primary, ...yongsin.secondary])} 쪽으로 잡혀 있어, 삶에서는 이 기운을 보태는 환경과 리듬을 만들수록 균형이 좋아집니다. ${yongsin.rationale[0] ?? ''}`.trim();
 }
 
-function describeCurrentLuckNarrative(
-  currentLuck: SajuDataV1['currentLuck'],
-  focusLabel: string
-) {
+function describeCurrentLuckNarrative(currentLuck: SajuDataV1['currentLuck']) {
   if (!currentLuck) return '';
 
   const currentMajor = currentLuck.currentMajorLuck;
@@ -128,8 +142,8 @@ function describeCurrentLuckNarrative(
   const wolwoon = currentLuck.wolwoon;
   const parts = [
     currentMajor?.ganzi ? `현재는 ${currentMajor.ganzi} 대운권에 있어 삶의 큰 방향을 길게 보는 편이 좋습니다.` : '',
-    saewoon?.ganzi ? `${saewoon.ganzi} 세운이 겹친 해라 ${focusLabel}와 관련된 사건이 눈앞에 드러나기 쉽습니다.` : '',
-    wolwoon?.ganzi ? `${wolwoon.ganzi} 월운 기준으로는 이번 달 말과 행동의 속도를 조금만 조절해도 체감 차이가 납니다.` : '',
+    saewoon?.ganzi ? `${saewoon.ganzi} 세운이 겹친 해라 해당 주제와 관련된 사건이 눈앞에 드러나기 쉽습니다.` : '',
+    wolwoon?.ganzi ? `${wolwoon.ganzi} 월운 기준으로는 이번 달에는 말과 행동의 속도를 조금만 조절해도 체감 차이가 납니다.` : '',
   ].filter(Boolean);
 
   return parts.join(' ');
@@ -409,7 +423,7 @@ function buildStructuredSummary(
   segments.push(describeStrengthNarrative(data.strength));
   segments.push(describePatternNarrative(data.pattern));
   segments.push(describeYongsinNarrative(data.yongsin));
-  segments.push(describeCurrentLuckNarrative(data.currentLuck, focusLabel));
+  segments.push(describeCurrentLuckNarrative(data.currentLuck));
 
   return segments.filter(Boolean).join(' ');
 }
@@ -430,7 +444,7 @@ function buildStructuredReadingNote(data: SajuDataV1, topic: FocusTopic) {
   }
 
   if (data.currentLuck) {
-    notes.push(describeCurrentLuckNarrative(data.currentLuck, FOCUS_TOPIC_META[topic].label));
+    notes.push(describeCurrentLuckNarrative(data.currentLuck));
   }
 
   if (notes.length === 0) {
