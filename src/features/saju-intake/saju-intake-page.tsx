@@ -1,85 +1,200 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { FocusTopic } from '@/lib/saju/report';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { HOUR_OPTIONS } from '@/features/home/content';
 import {
-  FREE_EXPERIENCES,
-  HOUR_OPTIONS,
-  QUESTION_CHIPS,
-} from '@/features/home/content';
+  ONBOARDING_CONSENTS,
+  ONBOARDING_THOUGHTS,
+  ONBOARDING_TONE_OPTIONS,
+} from '@/content/moonlight';
 import { parseBirthInputDraft } from '@/domain/saju/validators/birth-input';
-import { FOCUS_TOPIC_META } from '@/lib/saju/report';
+import { toSlug } from '@/lib/saju/pillars';
 import { cn } from '@/lib/utils';
+import {
+  buildTonePreview,
+  clearOnboardingDraft,
+  createInitialOnboardingDraft,
+  getHonorificLabel,
+  loadOnboardingDraft,
+  saveOnboardingDraft,
+  type OnboardingSpeechTone,
+  type SajuOnboardingDraft,
+} from './onboarding-storage';
 
-type IntakeMode = 'free' | 'light' | 'precise';
+export type OnboardingStep = 'splash' | 'empathy' | 'birth' | 'nickname' | 'consent';
 
-interface IntakeFormState {
-  year: string;
-  month: string;
-  day: string;
-  hour: string;
-  gender: string;
-}
-
-const INTAKE_STEPS: Array<{
-  key: IntakeMode;
-  label: string;
-  eyebrow: string;
-  summary: string;
-  recommendation?: string;
-}> = [
-  {
-    key: 'free',
-    label: '무입력',
-    eyebrow: 'Free Entry',
-    summary: '오늘의 운세, 무료 타로, 띠별, 꿈해몽처럼 바로 둘러보는 입구입니다.',
-  },
-  {
-    key: 'light',
-    label: '저입력',
-    eyebrow: 'Recommended',
-    summary: '생년월일만 넣고 먼저 요약 리포트를 보는 가장 빠른 본 서비스 시작선입니다.',
-    recommendation: '추천',
-  },
-  {
-    key: 'precise',
-    label: '정밀입력',
-    eyebrow: 'More Context',
-    summary: '태어난 시간과 성별까지 반영해 조금 더 촘촘한 결과를 여는 단계입니다.',
-  },
-] as const;
-
-const INITIAL_FORM: IntakeFormState = {
-  year: '',
-  month: '',
-  day: '',
-  hour: '',
-  gender: '',
+const STEP_META: Record<
+  Exclude<OnboardingStep, 'splash' | 'empathy'>,
+  { count: string; active: 1 | 2 | 3 }
+> = {
+  birth: { count: '1 / 3', active: 1 },
+  nickname: { count: '2 / 3', active: 2 },
+  consent: { count: '3 / 3', active: 3 },
 };
 
-export default function SajuIntakePage() {
+const STEP_PATHS: Record<OnboardingStep, string> = {
+  splash: '/saju/new',
+  empathy: '/saju/new/empathy',
+  birth: '/saju/new/birth',
+  nickname: '/saju/new/nickname',
+  consent: '/saju/new/consent',
+};
+
+function getPrevPath(step: OnboardingStep) {
+  switch (step) {
+    case 'birth':
+      return STEP_PATHS.empathy;
+    case 'nickname':
+      return STEP_PATHS.birth;
+    case 'consent':
+      return STEP_PATHS.nickname;
+    default:
+      return null;
+  }
+}
+
+function getNextPath(step: OnboardingStep) {
+  switch (step) {
+    case 'splash':
+      return STEP_PATHS.empathy;
+    case 'empathy':
+      return STEP_PATHS.birth;
+    case 'birth':
+      return STEP_PATHS.nickname;
+    case 'nickname':
+      return STEP_PATHS.consent;
+    default:
+      return null;
+  }
+}
+
+function buildBirthPayload(form: SajuOnboardingDraft) {
+  return {
+    year: form.year,
+    month: form.month,
+    day: form.day,
+    hour: form.hour,
+    gender: form.gender,
+  };
+}
+
+function hasValidBirth(form: SajuOnboardingDraft) {
+  return parseBirthInputDraft(buildBirthPayload(form), {
+    requireGender: false,
+  }).ok;
+}
+
+function hasValidNickname(form: SajuOnboardingDraft) {
+  return form.nickname.trim().length > 0;
+}
+
+function StepIndicator({ active }: { active: 1 | 2 | 3 }) {
+  return (
+    <div className="flex items-center gap-2 text-xs tracking-[0.24em] text-[var(--app-gold)]/72">
+      <span className={cn('h-2.5 w-2.5 rounded-full', active >= 1 ? 'bg-[var(--app-gold)]' : 'bg-[var(--app-line)]')} />
+      <span className={cn('h-px w-8', active >= 2 ? 'bg-[var(--app-gold)]/60' : 'bg-[var(--app-line)]')} />
+      <span className={cn('h-2.5 w-2.5 rounded-full', active >= 2 ? 'bg-[var(--app-gold)]' : 'bg-[var(--app-line)]')} />
+      <span className={cn('h-px w-8', active >= 3 ? 'bg-[var(--app-gold)]/60' : 'bg-[var(--app-line)]')} />
+      <span className={cn('h-2.5 w-2.5 rounded-full', active >= 3 ? 'bg-[var(--app-gold)]' : 'bg-[var(--app-line)]')} />
+    </div>
+  );
+}
+
+export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
   const router = useRouter();
   const maxYear = new Date().getFullYear();
-  const [selectedTopic, setSelectedTopic] = useState<FocusTopic>('today');
-  const [intakeMode, setIntakeMode] = useState<IntakeMode>('light');
-  const [form, setForm] = useState<IntakeFormState>(INITIAL_FORM);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [form, setForm] = useState<SajuOnboardingDraft>(createInitialOnboardingDraft());
+  const [isHydrated, setIsHydrated] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const honorific = useMemo(() => getHonorificLabel(form.nickname), [form.nickname]);
+  const tonePreview = useMemo(
+    () => buildTonePreview(form.tone, form.nickname),
+    [form.nickname, form.tone]
+  );
 
-  function updateField(field: keyof IntakeFormState, value: string) {
+  useEffect(() => {
+    const draft = loadOnboardingDraft();
+    setForm(draft);
+    setIsHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    saveOnboardingDraft(form);
+  }, [form, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (step === 'splash') {
+      const timer = window.setTimeout(() => {
+        router.replace(STEP_PATHS.empathy);
+      }, 2000);
+
+      return () => window.clearTimeout(timer);
+    }
+
+    if (step === 'nickname' && !hasValidBirth(form)) {
+      router.replace(STEP_PATHS.birth);
+      return;
+    }
+
+    if (step === 'consent' && (!hasValidBirth(form) || !hasValidNickname(form))) {
+      router.replace(hasValidBirth(form) ? STEP_PATHS.nickname : STEP_PATHS.birth);
+    }
+  }, [form, isHydrated, router, step]);
+
+  function updateField<K extends Exclude<keyof SajuOnboardingDraft, 'consents'>>(
+    field: K,
+    value: SajuOnboardingDraft[K]
+  ) {
     setForm((current) => ({ ...current, [field]: value }));
   }
 
-  async function submit(mode: 'light' | 'precise') {
-    const parsed = parseBirthInputDraft(form, {
-      requireGender: mode === 'precise',
+  function validateBirthStep() {
+    const parsed = parseBirthInputDraft(buildBirthPayload(form), {
+      requireGender: false,
+    });
+
+    if (!parsed.ok) {
+      setErrorMessage(parsed.error);
+      return false;
+    }
+
+    setErrorMessage('');
+    return true;
+  }
+
+  function validateNicknameStep() {
+    if (!form.nickname.trim()) {
+      setErrorMessage('어떻게 불러드리면 좋을지 한 번만 적어주세요.');
+      return false;
+    }
+
+    setErrorMessage('');
+    return true;
+  }
+
+  async function submit() {
+    const requiredConsentMissing = ONBOARDING_CONSENTS.some(
+      (item) => item.required && !form.consents[item.title]
+    );
+
+    if (requiredConsentMissing) {
+      setErrorMessage('필수 동의 항목을 확인해 주세요.');
+      return;
+    }
+
+    const parsed = parseBirthInputDraft(buildBirthPayload(form), {
+      requireGender: false,
     });
 
     if (!parsed.ok) {
@@ -103,368 +218,379 @@ export default function SajuIntakePage() {
         return;
       }
 
-      router.push(`/saju/${data.id}?topic=${selectedTopic}`);
+      clearOnboardingDraft();
+      void fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          displayName: form.nickname.trim(),
+          birthYear: parsed.input.year,
+          birthMonth: parsed.input.month,
+          birthDay: parsed.input.day,
+          birthHour: parsed.input.hour ?? null,
+          gender: parsed.input.gender ?? null,
+        }),
+      }).catch(() => undefined);
+
+      router.push(`/saju/${data.id}`);
     } catch {
-      setErrorMessage('네트워크 오류가 발생했습니다. 잠시 뒤 다시 시도해 주세요.');
+      router.push(`/saju/${toSlug(parsed.input)}`);
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  const focusMeta = FOCUS_TOPIC_META[selectedTopic];
+  const stepMeta = step === 'birth' || step === 'nickname' || step === 'consent' ? STEP_META[step] : null;
+  const prevPath = getPrevPath(step);
+  const nextPath = getNextPath(step);
 
   return (
-    <main className="min-h-screen bg-[#020817] text-white">
+    <main className="min-h-screen bg-[var(--app-ink)] text-white">
       <SiteHeader />
 
-      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-        <section className="rounded-[32px] border border-[#d2b072]/18 bg-[radial-gradient(circle_at_top_left,_rgba(210,176,114,0.16),_transparent_30%),linear-gradient(180deg,rgba(7,19,39,0.94),rgba(10,18,36,0.96))] p-7">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className="border-[#d2b072]/30 bg-[#d2b072]/10 text-[#f5dfaa]">
-              Day 4 Intake Flow
-            </Badge>
-            <Badge className="border-emerald-400/20 bg-emerald-400/10 text-emerald-200">
-              추천 시작선: 저입력
-            </Badge>
-          </div>
-
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[#f8f1df] sm:text-5xl">
-            무입력에서 정밀입력까지,
-            <span className="block text-[#d9bc7f]">사용자 부담을 단계적으로 여는 사주 시작 화면</span>
-          </h1>
-
-          <p className="mt-4 max-w-3xl text-base leading-8 text-white/66">
-            무료 콘텐츠로 먼저 감을 잡고, 생년월일만으로 요약 리포트를 본 다음, 필요하면 시간과 성별까지 더해 정밀하게 보는
-            구조입니다. 지금 단계에서는 질문형 포커스를 먼저 고르고, 그에 맞는 결과로 바로 이어집니다.
-          </p>
-
-          <div className="mt-6 flex flex-wrap gap-2">
-            {QUESTION_CHIPS.map((chip) => (
-              <button
-                key={chip.key}
-                type="button"
-                onClick={() => setSelectedTopic(chip.key)}
-                className={cn(
-                  'rounded-full border px-4 py-2 text-sm transition-colors',
-                  selectedTopic === chip.key
-                    ? 'border-[#d2b072]/55 bg-[#d2b072]/15 text-[#fff0c6]'
-                    : 'border-white/10 bg-white/5 text-white/68 hover:border-white/20 hover:bg-white/10 hover:text-white'
-                )}
-              >
-                {chip.label}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <div className="mt-6 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-          <aside className="space-y-4">
-            {INTAKE_STEPS.map((step, index) => {
-              const active = intakeMode === step.key;
-
-              return (
-                <button
-                  key={step.key}
-                  type="button"
-                  onClick={() => setIntakeMode(step.key)}
-                  className={cn(
-                    'w-full rounded-[28px] border p-5 text-left transition-colors',
-                    active
-                      ? 'border-[#d2b072]/35 bg-[#d2b072]/10'
-                      : 'border-white/10 bg-white/[0.04] hover:border-white/20 hover:bg-white/[0.06]'
-                  )}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-xs uppercase tracking-[0.22em] text-[#d2b072]/78">
-                        Step {index + 1} · {step.eyebrow}
-                      </div>
-                      <div className="mt-2 text-2xl font-semibold text-[#f8f1df]">{step.label}</div>
-                    </div>
-                    {step.recommendation ? (
-                      <Badge className="border-emerald-400/20 bg-emerald-400/10 text-emerald-200">
-                        {step.recommendation}
-                      </Badge>
-                    ) : null}
-                  </div>
-                  <p className="mt-4 text-sm leading-7 text-white/58">{step.summary}</p>
-                </button>
-              );
-            })}
-
-            <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
-              <div className="text-xs uppercase tracking-[0.22em] text-white/45">Validation Rules</div>
-              <ul className="mt-4 space-y-3 text-sm leading-7 text-white/60">
-                <li>생년월일은 반드시 실제 날짜여야 합니다.</li>
-                <li>저입력은 생년월일만 있으면 시작할 수 있습니다.</li>
-                <li>정밀입력은 성별 선택이 필요하고, 시간은 모름으로 남길 수 있습니다.</li>
-              </ul>
-            </div>
-          </aside>
-
-          <section className="rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(10,18,36,0.96),rgba(7,19,39,0.92))] p-6 sm:p-7">
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <div className="text-xs uppercase tracking-[0.24em] text-white/42">
-                  {focusMeta.badge}
-                </div>
-                <h2 className="mt-2 text-2xl font-semibold text-[#f8f1df]">
-                  {focusMeta.label} 중심으로 시작하는 3단계 입력
-                </h2>
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        {step === 'splash' ? (
+          <section className="mx-auto flex min-h-[72vh] max-w-2xl items-center justify-center">
+            <div className="w-full app-hero-card px-8 py-14 text-center sm:px-10 sm:py-18">
+              <div className="mx-auto h-20 w-20 rounded-full bg-[radial-gradient(circle,rgba(245,223,170,0.88)_0%,rgba(210,176,114,0.75)_42%,transparent_78%)]" />
+              <div className="mt-8 font-[var(--font-heading)] text-[11px] tracking-[0.48em] text-[var(--app-gold)]/72">
+                月 光 先 生
               </div>
-              <Badge className="w-fit border-white/10 bg-white/5 text-white/62">
-                결과 저장 + 다시보기 연결
+              <h1 className="mt-4 font-[var(--font-heading)] text-4xl tracking-tight text-[var(--app-gold-text)] sm:text-5xl">
+                달빛선생
+              </h1>
+              <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)] sm:text-base">
+                천 년의 지혜,<br className="sm:hidden" /> 오늘의 당신을 위하여
+              </p>
+              <p className="mt-10 text-[11px] uppercase tracking-[0.35em] text-[var(--app-copy-soft)]">
+                powered by AI
+              </p>
+              <div className="mt-8">
+                <Button
+                  onClick={() => router.replace(STEP_PATHS.empathy)}
+                  className="h-11 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+                >
+                  바로 시작
+                </Button>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {step === 'empathy' ? (
+          <section className="mx-auto max-w-3xl app-hero-card p-7 text-center sm:p-10">
+            <div className="font-[var(--font-heading)] text-[11px] tracking-[0.45em] text-[var(--app-gold)]/72">
+              月 光 先 生
+            </div>
+            <h1 className="mt-5 font-[var(--font-heading)] text-4xl leading-[1.35] text-[var(--app-ivory)] sm:text-5xl">
+              문득 이런 생각이 드실 때가 있으시죠
+            </h1>
+            <div className="mt-8 grid gap-3 text-left sm:grid-cols-3">
+              {ONBOARDING_THOUGHTS.map((thought) => (
+                <div key={thought} className="app-panel-muted p-5 text-sm leading-7 text-[var(--app-copy)]">
+                  “{thought}”
+                </div>
+              ))}
+            </div>
+            <p className="mx-auto mt-7 max-w-xl text-sm leading-7 text-[var(--app-copy-muted)]">
+              옛 어른들은 이럴 때 하늘의 뜻을 읽었습니다. 생년월일시를 차근차근 여쭙고, 선생님만을 위한 첫 해석으로 이어드리겠습니다.
+            </p>
+            <div className="mt-8 flex flex-col items-center gap-3">
+              <Button
+                onClick={() => router.push(STEP_PATHS.birth)}
+                className="h-12 rounded-full bg-[var(--app-gold)] px-8 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+              >
+                시작하기
+              </Button>
+              <p className="text-xs text-[var(--app-copy-soft)]">
+                이미 계정이 있으시면 로그인 후 이어서 보실 수 있습니다.
+              </p>
+            </div>
+          </section>
+        ) : null}
+
+        {stepMeta ? (
+          <section className="mx-auto max-w-3xl app-hero-card p-7 sm:p-8">
+            <div className="flex items-center justify-between gap-3">
+              <StepIndicator active={stepMeta.active} />
+              <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                {stepMeta.count}
               </Badge>
             </div>
 
-            {intakeMode === 'free' ? (
-              <div>
-                <div className="grid gap-4 md:grid-cols-2">
-                  {FREE_EXPERIENCES.map((item) => (
-                    <article key={item.title} className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
-                      <div className="flex items-center justify-between gap-3">
-                        <h3 className="text-xl font-semibold text-[#f8f1df]">{item.title}</h3>
-                        <Badge className="border-white/10 bg-white/5 text-white/55">{item.status}</Badge>
-                      </div>
-                      <p className="mt-4 text-sm leading-7 text-white/58">{item.body}</p>
-                      <Link
-                        href={item.href}
-                        className="mt-5 inline-flex text-sm text-[#d2b072] underline underline-offset-4 hover:text-[#e3c68d]"
+            {step === 'birth' ? (
+              <>
+                <h1 className="mt-6 font-[var(--font-heading)] text-3xl leading-[1.35] text-[var(--app-ivory)] sm:text-4xl">
+                  선생님의 생시(生時)를 여쭙겠습니다
+                </h1>
+                <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
+                  하늘의 기운이 땅에 내려오는 순간, 그 찰나가 사주입니다. 생년월일만 먼저 입력하셔도 시작하실 수 있고, 시간은 모름으로 남겨두셔도 괜찮습니다.
+                </p>
+
+                <div className="mt-8 grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <Label htmlFor="birth-year" className="mb-2 block text-sm text-[var(--app-copy)]">
+                      태어난 해
+                    </Label>
+                    <Input
+                      id="birth-year"
+                      inputMode="numeric"
+                      value={form.year}
+                      onChange={(event) => updateField('year', event.target.value)}
+                      placeholder={`예: ${maxYear - 35}`}
+                      className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="birth-month" className="mb-2 block text-sm text-[var(--app-copy)]">
+                      월
+                    </Label>
+                    <Input
+                      id="birth-month"
+                      inputMode="numeric"
+                      value={form.month}
+                      onChange={(event) => updateField('month', event.target.value)}
+                      placeholder="예: 3"
+                      className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="birth-day" className="mb-2 block text-sm text-[var(--app-copy)]">
+                      일
+                    </Label>
+                    <Input
+                      id="birth-day"
+                      inputMode="numeric"
+                      value={form.day}
+                      onChange={(event) => updateField('day', event.target.value)}
+                      placeholder="예: 20"
+                      className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                    />
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <Label htmlFor="birth-hour" className="mb-2 block text-sm text-[var(--app-copy)]">
+                      태어난 시간
+                    </Label>
+                    <select
+                      id="birth-hour"
+                      value={form.hour}
+                      onChange={(event) => updateField('hour', event.target.value)}
+                      className="h-12 w-full rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-ivory)]"
+                    >
+                      {HOUR_OPTIONS.map((option) => (
+                        <option key={option.label} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <label className="mt-3 flex items-start gap-3 rounded-[1.15rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm text-[var(--app-copy-muted)]">
+                      <input
+                        type="checkbox"
+                        checked={form.hour === ''}
+                        onChange={(event) => {
+                          if (event.target.checked) {
+                            updateField('hour', '');
+                          }
+                        }}
+                        className="mt-1 h-4 w-4 rounded border-[var(--app-line)] bg-transparent accent-[var(--app-gold)]"
+                      />
+                      <span>
+                        출생 시각을 모릅니다
+                        <span className="mt-1 block text-xs leading-6 text-[var(--app-copy-soft)]">
+                          괜찮습니다. 그래도 많은 흐름을 읽어드릴 수 있습니다.
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                  <div>
+                    <Label htmlFor="birth-gender" className="mb-2 block text-sm text-[var(--app-copy)]">
+                      성별
+                    </Label>
+                    <select
+                      id="birth-gender"
+                      value={form.gender}
+                      onChange={(event) => updateField('gender', event.target.value)}
+                      className="h-12 w-full rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-ivory)]"
+                    >
+                      <option value="">선택 안 함</option>
+                      <option value="male">남성</option>
+                      <option value="female">여성</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-8 flex gap-3">
+                  {prevPath ? (
+                    <Link
+                      href={prevPath}
+                      className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                    >
+                      이전
+                    </Link>
+                  ) : null}
+                  <Button
+                    onClick={() => {
+                      if (validateBirthStep() && nextPath) router.push(nextPath);
+                    }}
+                    className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+                  >
+                    다음
+                  </Button>
+                </div>
+                <p className="mt-4 text-center text-xs leading-6 text-[var(--app-copy-soft)]">
+                  입력하신 정보는 암호화 저장되며, 외부에 공유되지 않습니다.
+                </p>
+              </>
+            ) : null}
+
+            {step === 'nickname' ? (
+              <>
+                <h1 className="mt-6 font-[var(--font-heading)] text-3xl leading-[1.35] text-[var(--app-ivory)] sm:text-4xl">
+                  어떻게 불러드릴까요?
+                </h1>
+                <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
+                  본명이 아니어도 괜찮습니다. 결과 화면과 보관함에서 선생님을 부를 호칭이며, 익숙하고 편한 이름이면 충분합니다.
+                </p>
+
+                <div className="mt-8">
+                  <Label htmlFor="nickname" className="mb-2 block text-sm text-[var(--app-copy)]">
+                    호칭
+                  </Label>
+                  <Input
+                    id="nickname"
+                    value={form.nickname}
+                    onChange={(event) => updateField('nickname', event.target.value)}
+                    placeholder="예: 김영희 선생님"
+                    className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                  />
+                  <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
+                    이렇게 불러드릴게요: <span className="text-[var(--app-gold-text)]">{honorific}</span>
+                  </p>
+                </div>
+
+                <div className="mt-8">
+                  <Label className="mb-2 block text-sm text-[var(--app-copy)]">말투 선택</Label>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    {ONBOARDING_TONE_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => updateField('tone', option.value as OnboardingSpeechTone)}
+                        className={cn(
+                          'rounded-[1.15rem] border px-4 py-4 text-left transition-colors',
+                          form.tone === option.value
+                            ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
+                            : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
+                        )}
                       >
-                        무료 메뉴 열기
-                      </Link>
-                    </article>
+                        <div className="text-sm font-medium">{option.label}</div>
+                        <div className="mt-2 text-xs leading-6">{option.description}</div>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-4 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-sm leading-7 text-[var(--app-copy)]">
+                    “{tonePreview}”
+                  </div>
+                </div>
+
+                <div className="mt-8 flex gap-3">
+                  <Link
+                    href={prevPath ?? STEP_PATHS.birth}
+                    className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                  >
+                    이전
+                  </Link>
+                  <Button
+                    onClick={() => {
+                      if (validateNicknameStep() && nextPath) router.push(nextPath);
+                    }}
+                    className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+                  >
+                    다음
+                  </Button>
+                </div>
+              </>
+            ) : null}
+
+            {step === 'consent' ? (
+              <>
+                <h1 className="mt-6 font-[var(--font-heading)] text-3xl leading-[1.35] text-[var(--app-ivory)] sm:text-4xl">
+                  마지막 한 가지만 여쭙겠습니다
+                </h1>
+                <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
+                  법으로 정해진 안내와 해석 생성에 필요한 동의만 간단히 정리했습니다. 길게 읽지 않으셔도 핵심은 한눈에 보이게 두었습니다.
+                </p>
+
+                <div className="mt-8 space-y-3">
+                  {ONBOARDING_CONSENTS.map((item) => (
+                    <label
+                      key={item.title}
+                      className="flex items-start gap-3 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.consents[item.title]}
+                        onChange={(event) =>
+                          setForm((current) => ({
+                            ...current,
+                            consents: {
+                              ...current.consents,
+                              [item.title]: event.target.checked,
+                            },
+                          }))
+                        }
+                        className="mt-1 h-4 w-4 rounded border-[var(--app-line)] bg-transparent accent-[var(--app-gold)]"
+                      />
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-2 text-sm font-medium text-[var(--app-ivory)]">
+                          {item.title}
+                          <span
+                            className={cn(
+                              'rounded-full border px-2 py-0.5 text-[10px]',
+                              item.required
+                                ? 'border-[var(--app-coral)]/28 bg-[var(--app-coral)]/10 text-[var(--app-coral)]'
+                                : 'border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]'
+                            )}
+                          >
+                            {item.required ? '필수' : '선택'}
+                          </span>
+                        </span>
+                        <span className="mt-2 block text-xs leading-6 text-[var(--app-copy-muted)]">
+                          {item.detail}
+                        </span>
+                      </span>
+                    </label>
                   ))}
                 </div>
 
-                <div className="mt-6 rounded-[24px] border border-[#d2b072]/18 bg-[#d2b072]/8 p-5">
-                  <div className="text-sm font-medium text-[#f8f1df]">다음 단계로 넘어갈 준비가 되면</div>
-                  <p className="mt-2 text-sm leading-7 text-white/60">
-                    무료 메뉴는 가볍게 둘러보는 입구입니다. 개인화 결과가 궁금해지면 저입력부터 시작하는 것이 가장 빠릅니다.
-                  </p>
-                  <Button
-                    type="button"
-                    onClick={() => setIntakeMode('light')}
-                    className="mt-4 rounded-full bg-[#d2b072] px-5 text-[#111827] hover:bg-[#e3c68d]"
+                <div className="mt-8 flex gap-3">
+                  <Link
+                    href={prevPath ?? STEP_PATHS.nickname}
+                    className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
                   >
-                    저입력으로 이어가기
+                    이전
+                  </Link>
+                  <Button
+                    onClick={submit}
+                    disabled={isSubmitting}
+                    className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+                  >
+                    {isSubmitting ? '결과 준비 중...' : '시작하기'}
                   </Button>
                 </div>
-              </div>
-            ) : null}
-
-            {intakeMode === 'light' ? (
-              <div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label htmlFor="light-birth-year" className="mb-1.5 block text-sm text-white/68">
-                      연도
-                    </Label>
-                    <Input
-                      id="light-birth-year"
-                      name="lightBirthYear"
-                      type="number"
-                      placeholder="1994"
-                      min={1900}
-                      max={maxYear}
-                      inputMode="numeric"
-                      autoComplete="bday-year"
-                      value={form.year}
-                      onChange={(event) => updateField('year', event.target.value)}
-                      className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="light-birth-month" className="mb-1.5 block text-sm text-white/68">
-                      월
-                    </Label>
-                    <Input
-                      id="light-birth-month"
-                      name="lightBirthMonth"
-                      type="number"
-                      placeholder="5"
-                      min={1}
-                      max={12}
-                      inputMode="numeric"
-                      autoComplete="bday-month"
-                      value={form.month}
-                      onChange={(event) => updateField('month', event.target.value)}
-                      className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="light-birth-day" className="mb-1.5 block text-sm text-white/68">
-                      일
-                    </Label>
-                    <Input
-                      id="light-birth-day"
-                      name="lightBirthDay"
-                      type="number"
-                      placeholder="15"
-                      min={1}
-                      max={31}
-                      inputMode="numeric"
-                      autoComplete="bday-day"
-                      value={form.day}
-                      onChange={(event) => updateField('day', event.target.value)}
-                      className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
-                  <div className="text-sm font-medium text-[#f8f1df]">저입력에서 바로 열리는 것</div>
-                  <p className="mt-2 text-sm leading-7 text-white/60">
-                    총운, 연애, 재물, 직장 점수와 행동 제안, 날짜 포인트를 먼저 받아보고 필요하면 심화 리포트로 넘어갑니다.
-                  </p>
-                </div>
-
-                <Button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() => submit('light')}
-                  className="mt-6 h-12 w-full rounded-full bg-[#d2b072] text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
-                >
-                  {isSubmitting ? '리포트를 생성하고 있어요...' : `${focusMeta.label} 요약 리포트 보기`}
-                </Button>
-              </div>
-            ) : null}
-
-            {intakeMode === 'precise' ? (
-              <div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label htmlFor="precise-birth-year" className="mb-1.5 block text-sm text-white/68">
-                      연도
-                    </Label>
-                    <Input
-                      id="precise-birth-year"
-                      name="preciseBirthYear"
-                      type="number"
-                      placeholder="1994"
-                      min={1900}
-                      max={maxYear}
-                      inputMode="numeric"
-                      autoComplete="bday-year"
-                      value={form.year}
-                      onChange={(event) => updateField('year', event.target.value)}
-                      className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="precise-birth-month" className="mb-1.5 block text-sm text-white/68">
-                      월
-                    </Label>
-                    <Input
-                      id="precise-birth-month"
-                      name="preciseBirthMonth"
-                      type="number"
-                      placeholder="5"
-                      min={1}
-                      max={12}
-                      inputMode="numeric"
-                      autoComplete="bday-month"
-                      value={form.month}
-                      onChange={(event) => updateField('month', event.target.value)}
-                      className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="precise-birth-day" className="mb-1.5 block text-sm text-white/68">
-                      일
-                    </Label>
-                    <Input
-                      id="precise-birth-day"
-                      name="preciseBirthDay"
-                      type="number"
-                      placeholder="15"
-                      min={1}
-                      max={31}
-                      inputMode="numeric"
-                      autoComplete="bday-day"
-                      value={form.day}
-                      onChange={(event) => updateField('day', event.target.value)}
-                      className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <Label htmlFor="precise-birth-hour" className="mb-1.5 block text-sm text-white/68">
-                    태어난 시간
-                  </Label>
-                  <select
-                    id="precise-birth-hour"
-                    name="preciseBirthHour"
-                    value={form.hour}
-                    onChange={(event) => updateField('hour', event.target.value)}
-                    className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
-                  >
-                    {HOUR_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value} className="bg-slate-950">
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <fieldset className="mt-4 space-y-2">
-                  <legend className="text-sm text-white/68">성별</legend>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { value: 'male', label: '남성' },
-                      { value: 'female', label: '여성' },
-                    ].map((option) => (
-                      <label
-                        key={option.value}
-                        htmlFor={`precise-gender-${option.value}`}
-                        className={cn(
-                          'flex cursor-pointer items-center justify-center rounded-2xl border px-3 py-3 text-sm font-medium transition-colors',
-                          form.gender === option.value
-                            ? 'border-[#d2b072]/55 bg-[#d2b072]/14 text-[#fff1cb]'
-                            : 'border-white/12 bg-white/5 text-white/68 hover:bg-white/10 hover:text-white'
-                        )}
-                      >
-                        <input
-                          id={`precise-gender-${option.value}`}
-                          name="preciseGender"
-                          type="radio"
-                          value={option.value}
-                          checked={form.gender === option.value}
-                          onChange={(event) => updateField('gender', event.target.value)}
-                          className="sr-only"
-                        />
-                        <span>{option.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
-
-                <div className="mt-5 rounded-[24px] border border-white/10 bg-white/[0.04] p-5">
-                  <div className="text-sm font-medium text-[#f8f1df]">정밀입력에서 보강되는 것</div>
-                  <p className="mt-2 text-sm leading-7 text-white/60">
-                    태어난 시간이 있으면 시주까지 반영하고, 성별 정보까지 묶어 결과 저장과 이후 확장 흐름을 더 또렷하게 연결합니다.
-                  </p>
-                </div>
-
-                <Button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={() => submit('precise')}
-                  className="mt-6 h-12 w-full rounded-full bg-[#d2b072] text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
-                >
-                  {isSubmitting ? '리포트를 생성하고 있어요...' : `${focusMeta.label} 정밀 리포트 시작하기`}
-                </Button>
-              </div>
+              </>
             ) : null}
 
             {errorMessage ? (
-              <p role="alert" className="mt-4 text-center text-sm text-red-300">
+              <div className="mt-6 rounded-2xl border border-[var(--app-coral)]/28 bg-[var(--app-coral)]/10 px-4 py-3 text-sm text-[var(--app-ivory)]">
                 {errorMessage}
-              </p>
+              </div>
             ) : null}
           </section>
-        </div>
+        ) : null}
       </div>
     </main>
   );
