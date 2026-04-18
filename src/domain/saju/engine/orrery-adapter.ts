@@ -188,7 +188,7 @@ const CONTROLS: Record<number, number> = {
   4: 1,
 };
 
-const STEM_COMBINATIONS = new Map(
+const STEM_COMBINATIONS = new Map<string, string>(
   [
     ['甲-己', '토'],
     ['乙-庚', '금'],
@@ -198,9 +198,9 @@ const STEM_COMBINATIONS = new Map(
   ] as const
 );
 
-const STEM_CLASHES = new Set(['甲-庚', '乙-辛', '丙-壬', '丁-癸']);
+const STEM_CLASHES = new Set<string>(['甲-庚', '乙-辛', '丙-壬', '丁-癸']);
 
-const BRANCH_SIX_HARMONIES = new Map(
+const BRANCH_SIX_HARMONIES = new Map<string, string>(
   [
     ['子-丑', '토'],
     ['寅-亥', '목'],
@@ -211,10 +211,10 @@ const BRANCH_SIX_HARMONIES = new Map(
   ] as const
 );
 
-const BRANCH_CLASHES = new Set(['子-午', '丑-未', '寅-申', '卯-酉', '辰-戌', '巳-亥']);
-const BRANCH_HARMS = new Set(['子-未', '丑-午', '寅-巳', '卯-辰', '申-亥', '酉-戌']);
-const BRANCH_BREAKS = new Set(['子-酉', '卯-午', '辰-丑', '未-戌', '寅-亥', '巳-申']);
-const BRANCH_PUNISHMENTS = new Set([
+const BRANCH_CLASHES = new Set<string>(['子-午', '丑-未', '寅-申', '卯-酉', '辰-戌', '巳-亥']);
+const BRANCH_HARMS = new Set<string>(['子-未', '丑-午', '寅-巳', '卯-辰', '申-亥', '酉-戌']);
+const BRANCH_BREAKS = new Set<string>(['子-酉', '卯-午', '辰-丑', '未-戌', '寅-亥', '巳-申']);
+const BRANCH_PUNISHMENTS = new Set<string>([
   '寅-巳',
   '巳-申',
   '寅-申',
