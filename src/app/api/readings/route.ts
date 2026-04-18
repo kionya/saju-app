@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseBirthInputDraft } from '@/domain/saju/validators/birth-input';
+import { toSlug } from '@/lib/saju/pillars';
 import { createReading } from '@/lib/saju/readings';
 
 export async function POST(req: NextRequest) {
@@ -20,10 +21,10 @@ export async function POST(req: NextRequest) {
   ) {
     return NextResponse.json(
       {
-        error:
-          'Supabase 환경변수가 없어 로컬에서 reading 저장을 진행할 수 없습니다.',
+        id: toSlug(parsed.input),
+        mode: 'preview',
       },
-      { status: 503 }
+      { status: 200 }
     );
   }
 

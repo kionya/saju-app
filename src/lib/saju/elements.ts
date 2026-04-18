@@ -1,3 +1,4 @@
+import type { SajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
 import type { Element, Stem, SajuResult } from './types';
 
 // 오행 한글 이름 및 속성
@@ -49,6 +50,8 @@ export const CONTROLS: Record<Element, Element> = {
   목: '토', 화: '금', 토: '수', 금: '목', 수: '화',
 };
 
+const ELEMENTS: Element[] = ['목', '화', '토', '금', '수'];
+
 // 일간 기반 성격 해석
 const DAY_MASTER_PERSONALITY: Record<Stem, string> = {
   '甲': '곧고 강직한 성품으로 리더십이 강합니다. 독립적이며 추진력이 있지만, 고집스러울 수 있습니다.',
@@ -63,8 +66,16 @@ const DAY_MASTER_PERSONALITY: Record<Stem, string> = {
   '癸': '사려깊고 직관력이 뛰어납니다. 감성이 풍부하며 타인의 감정을 잘 읽습니다.',
 };
 
+export function getPersonalityByStem(stem: Stem): string {
+  return DAY_MASTER_PERSONALITY[stem];
+}
+
 export function getPersonality(result: SajuResult): string {
-  return DAY_MASTER_PERSONALITY[result.dayMaster];
+  return getPersonalityByStem(result.dayMaster);
+}
+
+export function getPersonalityFromSajuData(data: SajuDataV1): string {
+  return data.dayMaster.description ?? getPersonalityByStem(data.dayMaster.stem);
 }
 
 export function getElementBalance(elements: Record<Element, number>): string {
@@ -84,4 +95,37 @@ export function getLuckyElements(result: SajuResult): Element[] {
   const support = (Object.entries(GENERATES) as [Element, Element][])
     .find(([, v]) => v === weak)?.[0];
   return support ? [weak, support] : [weak];
+}
+
+export function getElementCountsFromSajuData(
+  data: SajuDataV1
+): Record<Element, number> {
+  return Object.fromEntries(
+    ELEMENTS.map((element) => [element, data.fiveElements.byElement[element].count])
+  ) as Record<Element, number>;
+}
+
+export function getLuckyElementsFromSajuData(data: SajuDataV1): Element[] {
+  if (data.yongsin) {
+    const fromYongsin = [data.yongsin.primary, ...data.yongsin.secondary]
+      .flatMap((symbol) =>
+        symbol.type === 'element' && isElement(symbol.value)
+          ? [symbol.value]
+          : []
+      );
+
+    if (fromYongsin.length > 0) {
+      return [...new Set(fromYongsin)];
+    }
+  }
+
+  const weak = data.fiveElements.weakest;
+  const support = (Object.entries(GENERATES) as [Element, Element][])
+    .find(([, value]) => value === weak)?.[0];
+
+  return support ? [weak, support] : [weak];
+}
+
+function isElement(value: string): value is Element {
+  return ELEMENTS.includes(value as Element);
 }

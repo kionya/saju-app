@@ -2,12 +2,12 @@
 
 ## Current Release Candidate
 
-- Branch: `codex/production-prep`
-- Verified local build: `npm run build`
-- Verified preview deployment: `https://saju-30eo6aylj-kbeautys-projects.vercel.app`
-- Share URL for protected preview:
-  `https://saju-30eo6aylj-kbeautys-projects.vercel.app/?_vercel_share=FVObHHQ21widEv4dZC9n1yjHfToE6EWY`
-- Share URL expiry: `2026-04-18 08:50 KST`
+- Local working tree: `main`
+- Preview branch pushed for verification: `codex/vercel-preview-20260419`
+- Latest preview deployment:
+  `https://saju-dy94akjau-kbeautys-projects.vercel.app`
+- Branch alias URL:
+  `https://saju-app-git-codex-vercel-preview-20260419-kbeautys-projects.vercel.app`
 
 ## Included Product Changes
 
@@ -16,17 +16,39 @@
 - Home, `MY`, billing, results archive, and the saju result page use the new shell structure.
 - The saju intake flow uses `/saju/new` as the primary service entry.
 - Personal result URLs use UUID-based readings.
-- Preview QA covered both desktop and mobile layouts on the deployed preview.
+- Push notification routes, service worker, manifest, and cron entry are in the repo.
+- `SajuDataV1` now includes `orrery`-based relations, gongmang, special sals, and report evidence text.
 
-## Verified Before Production
+## Verified So Far
 
-- `npx tsc --noEmit`
-- `npm run build`
 - Vercel preview status: `Ready`
-- Browser QA on preview home page
-- Browser QA on preview result page
-- Browser QA on mobile viewport `390x844`
-- Browser console errors: none observed on checked pages
+- Vercel build-time TypeScript check passed on the latest preview deployment
+- Actual saju E2E verification passed for 3 sample cases:
+  - `extensions.orrery.relations`
+  - `gongmang`
+  - `specialSals`
+  - `report.summary`
+  - `report.insights`
+
+## Still Pending
+
+- Re-check local `full tsc` in a clean session:
+  - `./node_modules/.bin/tsc --noEmit --pretty false --incremental false -p tsconfig.json`
+- Run browser QA on the latest preview for:
+  - `/saju/new`
+  - `/my`
+  - `/my/profile`
+  - `/notifications`
+- Verify env-backed flows instead of preview fallbacks:
+  - `POST /api/readings`
+  - account dashboard/profile with real Supabase session
+- Decide whether the remaining `SajuDataV1` pending sections ship now or later:
+  - `tenGods`
+  - `strength`
+  - `pattern`
+  - `yongsin`
+  - `majorLuck`
+  - `currentLuck`
 
 ## Go-Live Checks
 
@@ -34,17 +56,29 @@
   - `NEXT_PUBLIC_SUPABASE_URL`
   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
   - `SUPABASE_SERVICE_ROLE_KEY`
+  - `NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY`
+  - `WEB_PUSH_PRIVATE_KEY`
+  - `WEB_PUSH_SUBJECT`
+  - `CRON_SECRET`
   - `NEXT_PUBLIC_TOSS_CLIENT_KEY`
   - `TOSS_SECRET_KEY`
   - `NEXT_PUBLIC_SITE_URL`
+  - If these are missing, `/api/readings` falls back to `mode: 'preview'` and `MY` pages fall back to local preview data.
 - Confirm required Supabase migrations are applied in production:
   - `001_initial.sql`
   - `002_subscriptions.sql`
   - `003_profiles.sql`
+  - `004_notifications.sql`
+- Confirm the push setup guide has been completed:
+  - `docs/push-notifications-setup.md`
 - Re-check a production reading flow after deploy:
   - `/saju/new`
   - `POST /api/readings`
   - `/saju/[uuid]`
+- Re-check the notification flow after deploy:
+  - `/notifications`
+  - `POST /api/notifications/test`
+  - `GET /api/notifications/dispatch?dryRun=true`
 - Re-check `MY` routes after deploy:
   - `/my`
   - `/my/profile`
@@ -53,13 +87,16 @@
 
 ## Release Sequence
 
-1. Review `git diff` on `codex/production-prep`.
-2. Stage and commit the release candidate.
-3. Push `codex/production-prep`.
-4. Re-check the preview deployment generated from the pushed branch.
-5. Merge into `main` only after final approval.
-6. Trigger or confirm the production deployment.
-7. Run a final smoke test on the live domain.
+1. Re-check `full tsc` in a clean session and record the result.
+2. Run the latest Vercel preview through env-backed smoke tests.
+3. If notifications ship in this release, finish the setup in `docs/push-notifications-setup.md`.
+4. Decide whether the remaining `SajuDataV1` pending sections are release blockers.
+5. Review `git diff` and remove or defer anything out of scope for this release.
+6. Stage and commit the release candidate.
+7. Push the release branch and re-check the generated preview.
+8. Merge into `main` only after final approval.
+9. Trigger or confirm the production deployment.
+10. Run a final smoke test on the live domain.
 
 ## Post-Release Follow-up
 

@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { SajuCurrentLuck, SajuSymbolRef } from '@/domain/saju/engine/saju-data-v1';
 import { createClient } from '@/lib/supabase/server';
 import { deductCredits, type Feature } from '@/lib/credits/deduct';
 import { resolveReading } from '@/lib/saju/readings';
-import { ELEMENT_INFO, getLuckyElements } from '@/lib/saju/elements';
+import {
+  ELEMENT_INFO,
+  getLuckyElementsFromSajuData,
+  getPersonalityFromSajuData,
+} from '@/lib/saju/elements';
+import { buildSajuReport } from '@/domain/saju/report';
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -23,21 +29,98 @@ export async function POST(req: NextRequest) {
   if (feature === 'detail_report' && slug) {
     const reading = await resolveReading(slug);
     if (reading) {
-      const saju = reading.result;
-      const lucky = getLuckyElements(saju);
-      const dominant = ELEMENT_INFO[saju.dominantElement];
-      const weakest = ELEMENT_INFO[saju.weakestElement];
+      const saju = reading.sajuData;
+      const lucky = getLuckyElementsFromSajuData(saju);
+      const wealthReport = buildSajuReport(reading.input, saju, 'wealth');
+      const loveReport = buildSajuReport(reading.input, saju, 'love');
+      const careerReport = buildSajuReport(reading.input, saju, 'career');
+      const relationshipReport = buildSajuReport(reading.input, saju, 'relationship');
+      const dominant = ELEMENT_INFO[saju.fiveElements.dominant];
+      const weakest = ELEMENT_INFO[saju.fiveElements.weakest];
+      const personality = getPersonalityFromSajuData(saju);
+      const yongsinLabel = formatSymbolList(
+        saju.yongsin ? [saju.yongsin.primary, ...saju.yongsin.secondary] : []
+      );
+      const patternLabel = saju.pattern?.name;
+      const strengthLabel = saju.strength?.level;
+      const currentFlowLabel = formatCurrentLuckLabel(saju.currentLuck);
+      const currentFlowSummary = formatCurrentLuckSummary(saju.currentLuck);
+      const currentMajorLabel = saju.currentLuck?.currentMajorLuck?.ganzi;
+      const saewoonLabel = saju.currentLuck?.saewoon?.ganzi;
+      const wolwoonLabel = saju.currentLuck?.wolwoon?.ganzi;
 
       content = {
-        wealth: `${dominant.name} 기운이 강한 ${saju.dayMaster}일간은 재물운에서 ${dominant.traits[0]}이(가) 두드러집니다. ${weakest.name} 기운을 보완하는 ${lucky[0]} 계열의 활동에서 금전적 기회가 생깁니다. 특히 ${dominant.keywords[0]} 시기에 중요한 결정을 내리는 것이 유리합니다.`,
-        love: `${saju.dayMaster}일간은 ${ELEMENT_INFO[saju.day.stemElement].traits[1]} 성향으로 인간관계에서 신중한 편입니다. ${lucky.map(e => ELEMENT_INFO[e].name.split(' ')[0]).join('·')} 기운의 사람과 잘 맞으며, ${dominant.keywords[1]} 방향에서 인연이 찾아올 가능성이 높습니다.`,
-        career: `강한 ${dominant.name} 기운은 직업적으로 ${dominant.traits[2]} 분야에서 두각을 나타냅니다. ${dominant.keywords[0]} 관련 업종이나 ${dominant.traits[0]}이(가) 필요한 직무에서 성과를 냅니다. 약한 ${weakest.name} 보완을 위해 ${weakest.keywords[0]} 계열의 부업이나 자기계발도 추천합니다.`,
-        health: `${saju.dayMaster}일간의 건강은 ${dominant.keywords[3]} 기관을 주의해야 합니다. 강한 오행이 과하면 오히려 해당 장기에 부담이 올 수 있습니다. ${weakest.name} 기운과 관련된 ${weakest.keywords[3]} 기관을 꾸준히 관리하고, ${lucky[0] ? ELEMENT_INFO[lucky[0]].keywords[0] : ''} 계열 음식을 섭취하면 균형이 잡힙니다.`,
+        wealth: joinNarrative([
+          wealthReport.headline,
+          wealthReport.summary,
+          wealthReport.primaryAction.description,
+          wealthReport.insights[wealthReport.insights.length - 1]?.body ?? '',
+          currentFlowLabel
+            ? `지금 재물 판단은 ${currentFlowLabel} 흐름을 함께 보며 속도를 조절하는 편이 좋습니다.`
+            : '',
+          currentFlowSummary,
+        ]),
+        love: joinNarrative([
+          loveReport.headline,
+          `${personality} 인간관계에서는 ${ELEMENT_INFO[saju.pillars.day.stemElement].traits[1]} 성향이 드러나기 쉬우며, ${lucky.map((element) => ELEMENT_INFO[element].name.split(' ')[0]).join('·')} 기운의 사람과 조화가 좋습니다.`,
+          loveReport.summary,
+          relationshipReport.insights.at(-1)?.body ?? '',
+          strengthLabel ? `현재 저장본 기준으로는 ${strengthLabel} 흐름이라 관계 속도 조절이 중요합니다.` : '',
+          saewoonLabel ? `특히 ${saewoonLabel} 세운에서는 감정 표현의 강약을 세심하게 맞추는 편이 유리합니다.` : '',
+        ]),
+        career: joinNarrative([
+          careerReport.headline,
+          careerReport.summary,
+          `강한 ${dominant.name} 기운은 직업적으로 ${dominant.traits[2]} 분야에서 두각을 나타냅니다. ${dominant.keywords[0]} 관련 업종이나 ${dominant.traits[0]}이(가) 필요한 직무에서 성과를 냅니다.`,
+          patternLabel ? `${patternLabel} 흐름을 기준으로 역할과 자리의 무게를 읽으면 직업 해석이 훨씬 선명해집니다.` : '',
+          currentMajorLabel ? `지금은 ${currentMajorLabel} 대운권이라 단기 성과보다 방향성과 포지션을 길게 잡는 해석이 잘 맞습니다.` : '',
+        ]),
+        health: joinNarrative([
+          `${saju.dayMaster.stem}일간의 건강은 ${dominant.keywords[3]} 기관에 과부하가 걸리지 않도록 생활 리듬을 고르게 지키는 쪽이 중요합니다.`,
+          `강한 오행이 과하면 오히려 해당 장기에 부담이 올 수 있으니, ${weakest.name} 기운과 관련된 ${weakest.keywords[3]} 기관을 꾸준히 관리하며 균형을 잡는 편이 좋습니다.`,
+          yongsinLabel ? `현재 보완 포인트는 ${yongsinLabel} 쪽이라 몸을 차분히 회복시키는 환경을 일부러 만들어주는 것이 도움이 됩니다.` : '',
+          wolwoonLabel ? `이번 달은 ${wolwoonLabel} 월운 기준으로 수면과 생활 리듬을 고르게 유지하는 편이 좋습니다.` : '',
+          lucky[0] ? `${ELEMENT_INFO[lucky[0]].keywords[0]} 계열 루틴을 일상에 넣으면 몸의 균형을 회복하는 데 보탬이 됩니다.` : '',
+        ]),
         luckyColor: dominant.color,
-        luckyKeywords: lucky.flatMap(e => ELEMENT_INFO[e].keywords.slice(0, 2)),
+        luckyKeywords: [...new Set(lucky.flatMap((element) => ELEMENT_INFO[element].keywords.slice(0, 2)))],
       };
     }
   }
 
   return NextResponse.json({ success: true, remaining: result.remaining, content });
+}
+
+function formatSymbolList(symbols: SajuSymbolRef[]) {
+  return symbols.map((symbol) => symbol.label).join(' · ');
+}
+
+function formatCurrentLuckLabel(currentLuck: SajuCurrentLuck | null) {
+  if (!currentLuck) return '';
+
+  return [
+    currentLuck.currentMajorLuck?.ganzi ? `${currentLuck.currentMajorLuck.ganzi} 대운` : null,
+    currentLuck.saewoon?.ganzi ? `${currentLuck.saewoon.ganzi} 세운` : null,
+    currentLuck.wolwoon?.ganzi ? `${currentLuck.wolwoon.ganzi} 월운` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+}
+
+function formatCurrentLuckSummary(currentLuck: SajuCurrentLuck | null) {
+  if (!currentLuck) return '';
+
+  const notes = [
+    ...(currentLuck.currentMajorLuck?.notes ?? []).slice(0, 1),
+    ...(currentLuck.saewoon?.notes ?? []).slice(0, 1),
+  ];
+
+  return notes.join(' ');
+}
+
+function joinNarrative(parts: Array<string | undefined>) {
+  return parts
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(' ');
 }

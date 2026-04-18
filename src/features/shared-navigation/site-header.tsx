@@ -1,29 +1,35 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
-import { createClient } from '@/lib/supabase/client';
+import {
+  Bell,
+  BookOpenText,
+  MessageCircleMore,
+  MoonStar,
+  Settings2,
+  UserRound,
+} from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import {
-  MOBILE_QUICK_LINKS,
+  HEADER_SECONDARY_NAV_ITEMS,
+  MOBILE_PRIMARY_NAV_ITEMS,
   PRIMARY_NAV_ITEMS,
-  SECONDARY_NAV_ITEM,
   type NavItem,
 } from '@/shared/config/site-navigation';
 
-function matchesPath(item: NavItem, pathname: string, currentHash: string) {
+const hasSupabaseBrowserEnv = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+const NOTIFICATION_HEARTBEAT_KEY = 'moonlight:notification-heartbeat-sent-at';
+
+function matchesPath(item: NavItem, pathname: string) {
   if (item.href === '/') return pathname === '/';
-
-  if (item.href.startsWith('/#')) {
-    return pathname === '/' && currentHash === item.href.slice(1);
-  }
-
-  if (pathname === item.href || pathname.startsWith(`${item.href}/`)) {
-    return true;
-  }
+  if (pathname === item.href || pathname.startsWith(`${item.href}/`)) return true;
 
   return (
     item.matchPrefixes?.some(
@@ -32,20 +38,56 @@ function matchesPath(item: NavItem, pathname: string, currentHash: string) {
   );
 }
 
+function DockIcon({ label }: { label: string }) {
+  switch (label) {
+    case '홈':
+      return <MoonStar className="h-4 w-4" />;
+    case '해석':
+      return <BookOpenText className="h-4 w-4" />;
+    case '대화':
+      return <MessageCircleMore className="h-4 w-4" />;
+    case '마이':
+      return <UserRound className="h-4 w-4" />;
+    default:
+      return <MoonStar className="h-4 w-4" />;
+  }
+}
+
 export default function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [credits, setCredits] = useState<number | null>(null);
-  const [currentHash, setCurrentHash] = useState('');
 
   useEffect(() => {
+    if (!hasSupabaseBrowserEnv) return;
+
     const supabase = createClient();
 
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
 
       if (data.user) {
+        try {
+          const previous = window.localStorage.getItem(NOTIFICATION_HEARTBEAT_KEY);
+          const shouldSendHeartbeat =
+            !previous ||
+            Date.now() - new Date(previous).getTime() > 6 * 60 * 60 * 1000;
+
+          if (shouldSendHeartbeat) {
+            void fetch('/api/notifications/heartbeat', {
+              method: 'POST',
+            })
+              .then(() => {
+                window.localStorage.setItem(
+                  NOTIFICATION_HEARTBEAT_KEY,
+                  new Date().toISOString()
+                );
+              })
+              .catch(() => undefined);
+          }
+        } catch {}
+
         supabase
           .from('user_credits')
           .select('balance, subscription_balance')
@@ -60,17 +102,12 @@ export default function SiteHeader() {
     });
   }, []);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const syncHash = () => setCurrentHash(window.location.hash);
-    syncHash();
-    window.addEventListener('hashchange', syncHash);
-
-    return () => window.removeEventListener('hashchange', syncHash);
-  }, [pathname]);
-
   async function signOut() {
+    if (!hasSupabaseBrowserEnv) {
+      router.push('/');
+      return;
+    }
+
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push('/');
@@ -79,33 +116,30 @@ export default function SiteHeader() {
   const authHref = `/login?next=${encodeURIComponent(pathname)}`;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--app-line)] bg-[rgba(2,8,23,0.82)] backdrop-blur supports-[backdrop-filter]:bg-[rgba(2,8,23,0.68)]">
-      <div className="px-4 sm:px-6">
-        <div className="flex items-center justify-between gap-4 py-4">
-          <div className="flex min-w-0 items-center gap-5">
-            <Link
-              href="/"
-              className="min-w-0 text-[var(--app-ivory)] transition-opacity hover:opacity-90"
-            >
-              <div className="text-[11px] uppercase tracking-[0.28em] text-[var(--app-gold-soft)]/85">
-                Senior-friendly Myeongri
-              </div>
-              <div className="truncate text-lg font-semibold tracking-tight sm:text-xl">
-                사주명리
-              </div>
-            </Link>
+    <>
+      <header className="sticky top-0 z-40 border-b border-[var(--app-line)] bg-[rgba(8,10,18,0.88)] backdrop-blur supports-[backdrop-filter]:bg-[rgba(8,10,18,0.72)]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-4 py-4">
+            <div className="flex min-w-0 items-center gap-4">
+              <Link href="/" className="min-w-0 transition-opacity hover:opacity-90">
+                <div className="truncate font-[var(--font-heading)] text-[11px] tracking-[0.4em] text-[var(--app-gold)]/72">
+                  月 光 先 生
+                </div>
+                <div className="truncate text-xl font-semibold tracking-tight text-[var(--app-ivory)] sm:text-2xl">
+                  달빛선생
+                </div>
+              </Link>
 
-            <div className="hidden items-center gap-3 xl:flex">
-              <nav className="flex items-center gap-1 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2 py-1">
+              <nav className="hidden items-center gap-2 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-1 lg:flex">
                 {PRIMARY_NAV_ITEMS.map((item) => {
-                  const active = matchesPath(item, pathname, currentHash);
+                  const active = matchesPath(item, pathname);
 
                   return (
                     <Link
                       key={item.label}
                       href={item.href}
                       className={cn(
-                        'rounded-full px-3 py-2 text-sm transition-colors',
+                        'rounded-full px-4 py-2 text-sm transition-colors',
                         active
                           ? 'bg-[var(--app-surface-strong)] text-[var(--app-ivory)]'
                           : 'text-[var(--app-copy-muted)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
@@ -116,117 +150,107 @@ export default function SiteHeader() {
                   );
                 })}
               </nav>
-
-              <div className="flex items-center gap-2 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2 py-1">
-                <span className="px-2 text-[11px] uppercase tracking-[0.2em] text-[var(--app-copy-soft)]">
-                  Free
-                </span>
-                <Link
-                  href={SECONDARY_NAV_ITEM.href}
-                  className={cn(
-                    'rounded-full px-3 py-1.5 text-sm transition-colors',
-                    matchesPath(SECONDARY_NAV_ITEM, pathname, currentHash)
-                      ? 'bg-[var(--app-gold)]/15 text-[var(--app-gold-soft)]'
-                      : 'text-[var(--app-copy-muted)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
-                  )}
-                >
-                  {SECONDARY_NAV_ITEM.label}
-                </Link>
-              </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href={SECONDARY_NAV_ITEM.href}
-              className="hidden rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] lg:inline-flex xl:hidden"
-            >
-              무료운세
-            </Link>
-
-            {user && (
+            <div className="flex items-center gap-2">
               <Link
-                href="/my"
-                className="hidden rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] md:inline-flex"
+                href="/notifications"
+                className="hidden h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] md:inline-flex"
+                aria-label="알림"
               >
-                MY
+                <Bell className="h-4 w-4" />
               </Link>
-            )}
+              <Link
+                href="/my/settings"
+                className="hidden h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] md:inline-flex"
+                aria-label="설정"
+              >
+                <Settings2 className="h-4 w-4" />
+              </Link>
 
-            <Link
-              href="/credits"
-              className="hidden rounded-full border border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 px-3 py-1.5 text-sm font-medium text-[var(--app-gold-soft)] transition-colors hover:bg-[var(--app-gold)]/15 hover:text-[var(--app-ivory)] sm:inline-flex"
-            >
-              {user ? `${credits ?? '...'} 코인` : '코인 센터'}
-            </Link>
+              <Link
+                href="/membership"
+                className="hidden rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 px-3 py-1.5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/16 md:inline-flex"
+              >
+                멤버십
+              </Link>
 
-            <Link
-              href="/membership"
-              className="hidden rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] md:inline-flex"
-            >
-              멤버십
-            </Link>
+              <Link
+                href="/credits"
+                className="hidden rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] sm:inline-flex"
+              >
+                {user ? `${credits ?? '...'} 코인` : '플랜'}
+              </Link>
 
-            {user ? (
-              <>
-                <Link
-                  href="/my"
-                  className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] md:hidden"
-                >
-                  MY
-                </Link>
-                <Link
-                  href="/credits"
-                  className="rounded-full border border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 px-3 py-1.5 text-sm font-medium text-[var(--app-gold-soft)] transition-colors hover:bg-[var(--app-gold)]/15 hover:text-[var(--app-ivory)] sm:hidden"
-                >
-                  {credits ?? '...'} 코인
-                </Link>
+              {user ? (
                 <Button
                   onClick={signOut}
                   variant="outline"
                   size="sm"
-                  className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                  className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]"
                 >
                   로그아웃
                 </Button>
-              </>
-            ) : (
-              <Link
-                href={authHref}
-                className={cn(
-                  buttonVariants({ variant: 'outline', size: 'sm' }),
-                  'border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] shadow-sm shadow-black/10 hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]'
-                )}
-              >
-                로그인
-              </Link>
-            )}
+              ) : (
+                <Link
+                  href={authHref}
+                  className={cn(
+                    buttonVariants({ variant: 'outline', size: 'sm' }),
+                    'border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]'
+                  )}
+                >
+                  로그인
+                </Link>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-4 lg:pb-5">
+            {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
+              const active = matchesPath(item, pathname);
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={cn(
+                    'shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors',
+                    active
+                      ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
+                      : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
+      </header>
 
-        <div className="flex gap-2 overflow-x-auto pb-4 xl:hidden">
-          {MOBILE_QUICK_LINKS.map((item) => {
-            const active = matchesPath(item, pathname, currentHash);
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--app-line)] bg-[rgba(8,10,18,0.94)] px-4 py-3 backdrop-blur md:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-4 gap-2">
+          {MOBILE_PRIMARY_NAV_ITEMS.map((item) => {
+            const active = matchesPath(item, pathname);
 
             return (
               <Link
                 key={item.label}
                 href={item.href}
                 className={cn(
-                  'shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors',
+                  'flex flex-col items-center rounded-[1.15rem] border px-2 py-2 text-center transition-colors',
                   active
-                    ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-soft)]'
-                    : item.tone === 'acquisition'
-                      ? 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
-                      : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
+                    ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
+                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]'
                 )}
               >
-                {item.label}
+                <DockIcon label={item.label} />
+                <span className="mt-1 text-[11px] font-medium">{item.label}</span>
               </Link>
             );
           })}
         </div>
-      </div>
-    </header>
+      </nav>
+    </>
   );
 }

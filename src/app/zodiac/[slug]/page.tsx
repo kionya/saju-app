@@ -1,10 +1,15 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import SiteHeader from '@/features/shared-navigation/site-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  ZODIAC_BLUEPRINT,
+  ZODIAC_META,
+} from '@/content/moonlight';
+import SiteHeader from '@/features/shared-navigation/site-header';
 import { ZODIAC_FORTUNES } from '@/lib/free-content-pages';
+import { AppShell } from '@/shared/layout/app-shell';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -22,15 +27,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const item = getZodiac(slug);
 
-  if (!item) {
-    return {
-      title: '띠별 운세',
-    };
-  }
+  if (!item) return { title: '띠별 운세' };
 
   return {
     title: `${item.label} 운세`,
-    description: `${item.label} 오늘의 흐름과 집중 포인트를 가볍게 보는 무료 띠별 운세 페이지입니다.`,
+    description: `${item.label}의 연운 메시지와 오늘의 포인트를 함께 보는 달빛선생의 띠별 상세 화면입니다.`,
     alternates: {
       canonical: `/zodiac/${item.slug}`,
     },
@@ -40,82 +41,105 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ZodiacDetailPage({ params }: Props) {
   const { slug } = await params;
   const item = getZodiac(slug);
+
   if (!item) notFound();
 
+  const meta = ZODIAC_META[item.slug as keyof typeof ZODIAC_META];
   const relatedItems = ZODIAC_FORTUNES.filter((entry) => entry.slug !== item.slug).slice(0, 3);
 
   return (
-    <main className="min-h-screen bg-[#020817] text-white">
-      <SiteHeader />
-
-      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        <section className="rounded-[32px] border border-[#d2b072]/18 bg-[linear-gradient(180deg,rgba(7,19,39,0.94),rgba(10,18,36,0.96))] p-7">
+    <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <section className="app-hero-card p-7 sm:p-8">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="border-[#d2b072]/30 bg-[#d2b072]/10 text-[#f5dfaa]">
-              띠별 운세 상세
+            <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+              {meta.symbol} {item.label}
             </Badge>
-            <Badge className="border-white/10 bg-white/5 text-white/62">
+            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
               {item.years}
             </Badge>
           </div>
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[#f8f1df] sm:text-5xl">
-            {item.label} 오늘의 운세
+          <h1 className="mt-5 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
+            {item.label}의 {ZODIAC_BLUEPRINT.yearlyLabel}
           </h1>
-          <p className="mt-4 text-base leading-8 text-white/66">{item.summary}</p>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <article className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5">
-              <div className="text-sm text-white/45">오늘 집중 포인트</div>
-              <p className="mt-3 text-sm leading-7 text-white/66">{item.todayFocus}</p>
-            </article>
-            <article className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5">
-              <div className="text-sm text-white/45">행동 제안</div>
-              <p className="mt-3 text-sm leading-7 text-white/66">{item.action}</p>
-            </article>
-          </div>
+          <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
+            {meta.yearlyMessage}. 오늘의 포인트와 올해의 기조를 함께 놓고 보시면, 급한 판단보다 생활의 리듬을 더 편안하게 가다듬으실 수 있습니다.
+          </p>
         </section>
 
-        <section className="mt-8 rounded-[30px] border border-white/10 bg-white/[0.04] p-6">
-          <h2 className="text-2xl font-semibold text-[#f8f1df]">이 띠 운세를 어떻게 활용하면 좋을까</h2>
-          <div className="mt-5 space-y-3 text-sm leading-7 text-white/60">
-            <p>띠별 운세는 오늘의 리듬을 가볍게 읽는 무료 입구입니다.</p>
-            <p>결정을 크게 내리기보다는, 관계·지출·일정 중 무엇을 먼저 챙길지 우선순위를 잡는 데 쓰는 편이 좋습니다.</p>
-            <p>더 개인화된 해석이 필요하면 생년월일 기준 사주 리포트로 이어지는 것이 자연스럽습니다.</p>
-          </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link href="/saju/new">
-              <Button className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]">
-                맞춤 사주 리포트 보기
-              </Button>
-            </Link>
-            <Link href="/zodiac">
-              <Button
-                variant="outline"
-                className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-              >
-                띠별 목록으로 돌아가기
-              </Button>
-            </Link>
-          </div>
+        <section className="mt-8 grid gap-6 lg:grid-cols-[0.88fr_1.12fr]">
+          <article className="app-panel p-6 text-center">
+            <div className="text-7xl">{meta.symbol}</div>
+            <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
+              {item.label}
+            </div>
+            <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{meta.yearlyMessage}</p>
+          </article>
+
+          <article className="space-y-4">
+            <div className="app-panel p-6">
+              <div className="app-caption">오늘 집중 포인트</div>
+              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{item.todayFocus}</p>
+            </div>
+
+            <div className="app-panel p-6">
+              <div className="app-caption">행동 제안</div>
+              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{item.action}</p>
+            </div>
+
+            <div className="rounded-[1.45rem] border border-[var(--app-gold)]/24 bg-[var(--app-surface-muted)] px-5 py-5">
+              <div className="app-caption">연운과 월운 읽는 법</div>
+              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+                띠별 운세는 연운으로 큰 방향을 보고, 월운으로 당장 조정할 생활 리듬을 읽는 데
+                잘 어울립니다. 큰 결정보다는 관계, 일정, 소비의 우선순위를 고를 때 특히 더 도움이 됩니다.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Link href="/saju/new">
+                <Button className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]">
+                  맞춤 사주로 이어보기
+                </Button>
+              </Link>
+              <Link href="/zodiac">
+                <Button
+                  variant="outline"
+                  className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                >
+                  띠별 목록으로 돌아가기
+                </Button>
+              </Link>
+            </div>
+          </article>
         </section>
 
         <section className="mt-8">
-          <div className="mb-5 text-sm uppercase tracking-[0.22em] text-[#d2b072]/78">Related Signs</div>
+          <div className="mb-5 app-caption">다른 띠도 보기</div>
           <div className="grid gap-4 md:grid-cols-3">
-            {relatedItems.map((entry) => (
-              <Link
-                key={entry.slug}
-                href={`/zodiac/${entry.slug}`}
-                className="rounded-[26px] border border-white/10 bg-white/[0.04] p-6 transition-colors hover:bg-white/[0.06]"
-              >
-                <div className="text-sm text-white/45">{entry.years}</div>
-                <h2 className="mt-3 text-2xl font-semibold text-[#f8f1df]">{entry.label}</h2>
-                <p className="mt-4 text-sm leading-7 text-white/58">{entry.summary}</p>
-              </Link>
-            ))}
+            {relatedItems.map((entry) => {
+              const relatedMeta = ZODIAC_META[entry.slug as keyof typeof ZODIAC_META];
+
+              return (
+                <Link
+                  key={entry.slug}
+                  href={`/zodiac/${entry.slug}`}
+                  className="app-panel block p-6 transition-colors hover:bg-[var(--app-surface-strong)]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl">{relatedMeta.symbol}</div>
+                    <div className="font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
+                      {entry.label}
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">
+                    {relatedMeta.yearlyMessage}
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         </section>
       </div>
-    </main>
+    </AppShell>
   );
 }

@@ -1,5 +1,14 @@
 import { Solar } from 'lunar-typescript';
-import type { Stem, Branch, Element, YinYang, Pillar, SajuResult, BirthInput } from './types';
+import type {
+  Stem,
+  Branch,
+  Element,
+  YinYang,
+  Pillar,
+  SajuResult,
+  BirthInput,
+  JasiMethod,
+} from './types';
 import { isValidBirthInput } from '@/domain/saju/validators/birth-input';
 
 const STEMS: Stem[] = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
@@ -50,12 +59,16 @@ function toPillar(stemValue: string, branchValue: string): Pillar {
   };
 }
 
-function getCalculationTime(hour?: number): { hour: number; minute: number } {
-  if (hour === undefined) {
+function getCalculationTime(input: BirthInput): { hour: number; minute: number } {
+  if (input.unknownTime || input.hour === undefined) {
     return { hour: UNKNOWN_HOUR, minute: UNKNOWN_MINUTE };
   }
 
-  return { hour, minute: KNOWN_MINUTE };
+  return { hour: input.hour, minute: input.minute ?? KNOWN_MINUTE };
+}
+
+function getEightCharSect(jasiMethod?: JasiMethod) {
+  return jasiMethod === 'split' ? 1 : 2;
 }
 
 function countElements(pillars: (Pillar | null)[]): Record<Element, number> {
@@ -75,8 +88,8 @@ export function calculateSaju(input: BirthInput): SajuResult {
     throw new Error('생년월일시 정보가 올바르지 않습니다.');
   }
 
-  const { year, month, day, hour } = input;
-  const calculationTime = getCalculationTime(hour);
+  const { year, month, day } = input;
+  const calculationTime = getCalculationTime(input);
   const solar = Solar.fromYmdHms(
     year,
     month,
@@ -87,14 +100,13 @@ export function calculateSaju(input: BirthInput): SajuResult {
   );
   const eightChar = solar.getLunar().getEightChar();
 
-  // 자시 기준이 갈리는 흐름을 줄이기 위해 라이브러리의 기본 만세력 섹트(2)를 명시한다.
-  eightChar.setSect(2);
+  eightChar.setSect(getEightCharSect(input.jasiMethod));
 
   const yearPillar = toPillar(eightChar.getYearGan(), eightChar.getYearZhi());
   const monthPillar = toPillar(eightChar.getMonthGan(), eightChar.getMonthZhi());
   const dayPillar = toPillar(eightChar.getDayGan(), eightChar.getDayZhi());
   const hourPillar =
-    hour !== undefined
+    !input.unknownTime && input.hour !== undefined
       ? toPillar(eightChar.getTimeGan(), eightChar.getTimeZhi())
       : null;
 
@@ -117,9 +129,24 @@ export function calculateSaju(input: BirthInput): SajuResult {
 
 // 슬러그 생성/파싱 유틸
 export function toSlug(input: BirthInput): string {
-  const parts = [input.year, input.month, input.day];
-  if (input.hour !== undefined) parts.push(input.hour);
-  if (input.gender) return parts.join('-') + `-${input.gender}`;
+  const parts = [String(input.year), String(input.month), String(input.day)];
+
+  if (!input.unknownTime && input.hour !== undefined) {
+    parts.push(String(input.hour));
+
+    if (input.minute !== undefined) {
+      parts.push(`m${input.minute}`);
+    }
+
+    if (input.jasiMethod && input.jasiMethod !== 'unified') {
+      parts.push(`j${input.jasiMethod}`);
+    }
+  }
+
+  if (input.gender) {
+    parts.push(input.gender);
+  }
+
   return parts.join('-');
 }
 
@@ -132,11 +159,30 @@ export function fromSlug(slug: string): BirthInput | null {
   if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
 
   const result: BirthInput = { year, month, day };
-  if (parts[3] && !isNaN(parseInt(parts[3]))) {
-    result.hour = parseInt(parts[3]);
-    if (parts[4] === 'male' || parts[4] === 'female') result.gender = parts[4];
-  } else if (parts[3] === 'male' || parts[3] === 'female') {
-    result.gender = parts[3];
+
+  for (const token of parts.slice(3)) {
+    if (token === 'male' || token === 'female') {
+      result.gender = token;
+      continue;
+    }
+
+    if (token.startsWith('m')) {
+      const parsedMinute = parseInt(token.slice(1), 10);
+      if (!Number.isNaN(parsedMinute)) {
+        result.minute = parsedMinute;
+      }
+      continue;
+    }
+
+    if (token === 'jsplit' || token === 'junified') {
+      result.jasiMethod = token === 'jsplit' ? 'split' : 'unified';
+      continue;
+    }
+
+    const parsedHour = parseInt(token, 10);
+    if (!Number.isNaN(parsedHour)) {
+      result.hour = parsedHour;
+    }
   }
 
   return isValidBirthInput(result) ? result : null;
