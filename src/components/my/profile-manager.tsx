@@ -30,6 +30,7 @@ type ProfileFormState = {
   birthMonth: string;
   birthDay: string;
   birthHour: string;
+  birthMinute: string;
   gender: '' | 'male' | 'female';
   note: string;
 };
@@ -41,6 +42,7 @@ type FamilyFormState = {
   birthMonth: string;
   birthDay: string;
   birthHour: string;
+  birthMinute: string;
   gender: '' | 'male' | 'female';
   note: string;
 };
@@ -52,9 +54,47 @@ function toProfileFormState(profile: UserProfile): ProfileFormState {
     birthMonth: profile.birthMonth ? String(profile.birthMonth) : '',
     birthDay: profile.birthDay ? String(profile.birthDay) : '',
     birthHour: profile.birthHour === null ? '' : String(profile.birthHour),
+    birthMinute: profile.birthMinute === null ? '' : String(profile.birthMinute),
     gender: profile.gender ?? '',
     note: profile.note,
   };
+}
+
+function toFamilyFormState(profile: FamilyProfile): FamilyFormState {
+  return {
+    label: profile.label,
+    relationship: profile.relationship,
+    birthYear: profile.birthYear ? String(profile.birthYear) : '',
+    birthMonth: profile.birthMonth ? String(profile.birthMonth) : '',
+    birthDay: profile.birthDay ? String(profile.birthDay) : '',
+    birthHour: profile.birthHour === null ? '' : String(profile.birthHour),
+    birthMinute: profile.birthMinute === null ? '' : String(profile.birthMinute),
+    gender: profile.gender ?? '',
+    note: profile.note,
+  };
+}
+
+function formatBirthSummary(profile: {
+  birthYear: number | null;
+  birthMonth: number | null;
+  birthDay: number | null;
+  birthHour: number | null;
+  birthMinute: number | null;
+}) {
+  if (!profile.birthYear || !profile.birthMonth || !profile.birthDay) {
+    return '생년월일 미입력';
+  }
+
+  if (profile.birthHour === null) {
+    return `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay} · 시간 미입력`;
+  }
+
+  const minuteLabel =
+    profile.birthMinute === null
+      ? ''
+      : ` ${String(profile.birthMinute).padStart(2, '0')}분`;
+
+  return `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay} · ${profile.birthHour}시${minuteLabel}`;
 }
 
 const EMPTY_FAMILY_FORM: FamilyFormState = {
@@ -64,6 +104,7 @@ const EMPTY_FAMILY_FORM: FamilyFormState = {
   birthMonth: '',
   birthDay: '',
   birthHour: '',
+  birthMinute: '',
   gender: '',
   note: '',
 };
@@ -80,6 +121,7 @@ export default function ProfileManager({
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingFamily, setSavingFamily] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [editingFamilyId, setEditingFamilyId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
 
   async function saveProfile() {
@@ -96,7 +138,7 @@ export default function ProfileManager({
         setMessage(data.error ?? '프로필을 저장하지 못했습니다.');
         return;
       }
-      setMessage('내 프로필을 저장했습니다.');
+      setMessage('내 프로필을 저장했습니다. 같은 버튼으로 기존 정보도 계속 수정됩니다.');
       router.refresh();
     } catch {
       setMessage('프로필 저장 중 네트워크 오류가 발생했습니다.');
@@ -110,9 +152,9 @@ export default function ProfileManager({
     setMessage('');
     try {
       const response = await fetch('/api/family-profiles', {
-        method: 'POST',
+        method: editingFamilyId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(familyForm),
+        body: JSON.stringify(editingFamilyId ? { id: editingFamilyId, ...familyForm } : familyForm),
       });
       const data = await response.json();
       if (!response.ok) {
@@ -120,13 +162,26 @@ export default function ProfileManager({
         return;
       }
       setFamilyForm(EMPTY_FAMILY_FORM);
-      setMessage('가족 프로필을 추가했습니다.');
+      setEditingFamilyId(null);
+      setMessage(editingFamilyId ? '가족 프로필을 수정했습니다.' : '가족 프로필을 추가했습니다.');
       router.refresh();
     } catch {
       setMessage('가족 프로필 저장 중 네트워크 오류가 발생했습니다.');
     } finally {
       setSavingFamily(false);
     }
+  }
+
+  function editFamilyProfile(profile: FamilyProfile) {
+    setEditingFamilyId(profile.id);
+    setFamilyForm(toFamilyFormState(profile));
+    setMessage(`${profile.label} 프로필을 수정 중입니다. 저장하면 기존 정보가 바뀝니다.`);
+  }
+
+  function cancelFamilyEdit() {
+    setEditingFamilyId(null);
+    setFamilyForm(EMPTY_FAMILY_FORM);
+    setMessage('');
   }
 
   async function removeFamilyProfile(id: string) {
@@ -143,6 +198,10 @@ export default function ProfileManager({
         setMessage(data.error ?? '가족 프로필을 삭제하지 못했습니다.');
         return;
       }
+      if (editingFamilyId === id) {
+        setEditingFamilyId(null);
+        setFamilyForm(EMPTY_FAMILY_FORM);
+      }
       setMessage('가족 프로필을 삭제했습니다.');
       router.refresh();
     } catch {
@@ -158,10 +217,10 @@ export default function ProfileManager({
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-sm text-white/45">내 프로필</div>
-            <h2 className="mt-2 text-2xl font-semibold text-[#f8f1df]">기본 정보를 저장해두기</h2>
+            <h2 className="mt-2 text-2xl font-semibold text-[#f8f1df]">기본 정보를 저장/수정하기</h2>
           </div>
           <Badge className="border-[#d2b072]/25 bg-[#d2b072]/10 text-[#f5dfaa]">
-            MY 기본값
+            MY 기본값 업데이트
           </Badge>
         </div>
 
@@ -200,9 +259,10 @@ export default function ProfileManager({
               <span className="text-xs text-[#f5dfaa]">불러오기 자동 입력 기준</span>
             </div>
             <p className="mt-2 text-xs leading-6 text-white/48">
-              시간을 저장해두면 사주 입력 화면의 “내 정보 불러오기”에서 시간까지 함께 채워집니다. 모르면 “모름”으로 두셔도 됩니다.
+              시와 분을 저장해두면 사주 입력 화면의 “내 정보 불러오기”에서 정확한 출생 시각까지 함께 채워집니다.
+              저장 버튼은 새로 만들기가 아니라 현재 내 정보를 계속 업데이트합니다.
             </p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            <div className="mt-4 grid gap-3 sm:grid-cols-5">
               <Input
                 value={profileForm.birthYear}
                 onChange={(event) =>
@@ -233,9 +293,14 @@ export default function ProfileManager({
               <select
                 value={profileForm.birthHour}
                 aria-label="태어난 시간"
-                onChange={(event) =>
-                  setProfileForm((current) => ({ ...current, birthHour: event.target.value }))
-                }
+                onChange={(event) => {
+                  const birthHour = event.target.value;
+                  setProfileForm((current) => ({
+                    ...current,
+                    birthHour,
+                    birthMinute: birthHour ? current.birthMinute : '',
+                  }));
+                }}
                 className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
               >
                 {HOUR_OPTIONS.map((option) => (
@@ -244,6 +309,23 @@ export default function ProfileManager({
                   </option>
                 ))}
               </select>
+              <Input
+                value={profileForm.birthMinute}
+                onChange={(event) =>
+                  setProfileForm((current) => ({
+                    ...current,
+                    birthMinute: event.target.value,
+                  }))
+                }
+                placeholder="분"
+                aria-label="태어난 분"
+                inputMode="numeric"
+                min={0}
+                max={59}
+                type="number"
+                disabled={!profileForm.birthHour}
+                className="border-white/15 bg-white/6 text-white placeholder:text-white/28 disabled:cursor-not-allowed disabled:opacity-45"
+              />
             </div>
           </div>
           <div className="md:col-span-2">
@@ -266,9 +348,9 @@ export default function ProfileManager({
             disabled={savingProfile}
             className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]"
           >
-            {savingProfile ? '저장 중...' : '내 프로필 저장'}
+            {savingProfile ? '저장 중...' : '내 프로필 저장/수정'}
           </Button>
-          <p className="text-sm text-white/50">저장해두면 나중에 MY와 결과보관함에서 계속 이어서 쓸 수 있습니다.</p>
+          <p className="text-sm text-white/50">동일 계정의 기존 내 정보가 있으면 이 값으로 덮어써집니다.</p>
         </div>
       </section>
 
@@ -276,10 +358,12 @@ export default function ProfileManager({
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-sm text-white/45">가족 프로필</div>
-            <h2 className="mt-2 text-2xl font-semibold text-[#f8f1df]">가족·연인·친구 프로필 추가</h2>
+            <h2 className="mt-2 text-2xl font-semibold text-[#f8f1df]">
+              {editingFamilyId ? '가족·연인·친구 프로필 수정' : '가족·연인·친구 프로필 추가'}
+            </h2>
           </div>
           <Badge className="border-white/10 bg-white/5 text-white/62">
-            재방문과 궁합 확장용
+            {editingFamilyId ? '수정 모드' : '재방문과 궁합 확장용'}
           </Badge>
         </div>
 
@@ -307,7 +391,10 @@ export default function ProfileManager({
           </select>
           <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4 md:col-span-2">
             <label className="block text-sm font-medium text-[#f8f1df]">생년월일과 태어난 시간</label>
-            <div className="mt-4 grid gap-3 sm:grid-cols-4">
+            <p className="mt-2 text-xs leading-6 text-white/48">
+              가족 프로필도 시와 분까지 저장됩니다. “수정”을 누르면 아래 입력칸에 기존 값이 들어오고, 저장 시 그 프로필이 업데이트됩니다.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-5">
               <Input
                 value={familyForm.birthYear}
                 onChange={(event) =>
@@ -338,9 +425,14 @@ export default function ProfileManager({
               <select
                 value={familyForm.birthHour}
                 aria-label="가족 태어난 시간"
-                onChange={(event) =>
-                  setFamilyForm((current) => ({ ...current, birthHour: event.target.value }))
-                }
+                onChange={(event) => {
+                  const birthHour = event.target.value;
+                  setFamilyForm((current) => ({
+                    ...current,
+                    birthHour,
+                    birthMinute: birthHour ? current.birthMinute : '',
+                  }));
+                }}
                 className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
               >
                 {HOUR_OPTIONS.map((option) => (
@@ -349,6 +441,23 @@ export default function ProfileManager({
                   </option>
                 ))}
               </select>
+              <Input
+                value={familyForm.birthMinute}
+                onChange={(event) =>
+                  setFamilyForm((current) => ({
+                    ...current,
+                    birthMinute: event.target.value,
+                  }))
+                }
+                placeholder="분"
+                aria-label="가족 태어난 분"
+                inputMode="numeric"
+                min={0}
+                max={59}
+                type="number"
+                disabled={!familyForm.birthHour}
+                className="border-white/15 bg-white/6 text-white placeholder:text-white/28 disabled:cursor-not-allowed disabled:opacity-45"
+              />
             </div>
           </div>
           <div>
@@ -380,14 +489,30 @@ export default function ProfileManager({
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button
             onClick={saveFamilyProfile}
             disabled={savingFamily}
             className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]"
           >
-            {savingFamily ? '추가 중...' : '가족 프로필 추가'}
+            {savingFamily
+              ? editingFamilyId
+                ? '수정 중...'
+                : '추가 중...'
+              : editingFamilyId
+                ? '가족 프로필 수정 저장'
+                : '가족 프로필 추가'}
           </Button>
+          {editingFamilyId ? (
+            <Button
+              onClick={cancelFamilyEdit}
+              disabled={savingFamily}
+              variant="outline"
+              className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+            >
+              수정 취소
+            </Button>
+          ) : null}
         </div>
 
         <div className="mt-8 space-y-3">
@@ -402,20 +527,28 @@ export default function ProfileManager({
                     {profile.label} · {profile.relationship}
                   </div>
                   <div className="mt-1 text-sm text-white/52">
-                    {profile.birthYear && profile.birthMonth && profile.birthDay
-                      ? `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay}`
-                      : '생년월일 미입력'}
+                    {formatBirthSummary(profile)}
                     {profile.gender ? ` · ${profile.gender === 'male' ? '남성' : '여성'}` : ''}
                   </div>
                 </div>
-                <Button
-                  onClick={() => removeFamilyProfile(profile.id)}
-                  disabled={deletingId === profile.id}
-                  variant="outline"
-                  className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-                >
-                  {deletingId === profile.id ? '삭제 중...' : '삭제'}
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => editFamilyProfile(profile)}
+                    disabled={savingFamily || deletingId === profile.id}
+                    variant="outline"
+                    className="rounded-full border-[#d2b072]/25 bg-[#d2b072]/10 text-[#f5dfaa] hover:bg-[#d2b072]/15 hover:text-[#f5dfaa]"
+                  >
+                    수정
+                  </Button>
+                  <Button
+                    onClick={() => removeFamilyProfile(profile.id)}
+                    disabled={deletingId === profile.id}
+                    variant="outline"
+                    className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                  >
+                    {deletingId === profile.id ? '삭제 중...' : '삭제'}
+                  </Button>
+                </div>
               </div>
             ))
           ) : (

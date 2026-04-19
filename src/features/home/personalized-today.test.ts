@@ -30,6 +30,7 @@ test('home today summary becomes personalized when saved birth profile is comple
       birthMonth: 1,
       birthDay: 29,
       birthHour: 8,
+      birthMinute: 30,
       gender: 'male',
     },
   };
@@ -41,5 +42,5 @@ test('home today summary becomes personalized when saved birth profile is comple
   assert.match(copy.title, /길동/);
   assert.deepEqual(summary.map((item) => item.label), ['재물', '컨디션', '관계']);
   assert.ok(summary.every((item) => item.ratio >= 42 && item.ratio <= 92));
-  assert.ok(summary.some((item) => item.detail.includes('8시')));
+  assert.ok(summary.some((item) => item.detail.includes('8시 30분')));
 });

@@ -11,6 +11,7 @@ export interface HomeBirthProfile {
   birthMonth: number | null;
   birthDay: number | null;
   birthHour: number | null;
+  birthMinute: number | null;
   gender: 'male' | 'female' | null;
 }
 
@@ -59,6 +60,7 @@ function getProfileSeed(profile: HomeBirthProfile, today: Date) {
     (profile.birthMonth ?? 1) * 31 +
     (profile.birthDay ?? 1) * 17 +
     (profile.birthHour ?? 6) * 7 +
+    (profile.birthMinute ?? 0) +
     (profile.gender === 'female' ? 11 : profile.gender === 'male' ? 5 : 0) +
     (today.getMonth() + 1) * 13 +
     today.getDate() * 19
@@ -96,7 +98,11 @@ export function buildPersonalizedTodaySummary(
   const hourDetail =
     profile.birthHour === null
       ? '태어난 시간 미입력 기준으로 부드럽게 보정했습니다.'
-      : `${profile.birthHour}시 출생 정보까지 반영했습니다.`;
+      : `${profile.birthHour}시${
+          profile.birthMinute === null
+            ? ''
+            : ` ${String(profile.birthMinute).padStart(2, '0')}분`
+        } 출생 정보까지 반영했습니다.`;
 
   return [
     {

@@ -11,12 +11,20 @@ function formatBirthSummary(profile: {
   birthMonth: number | null;
   birthDay: number | null;
   birthHour: number | null;
+  birthMinute: number | null;
 }) {
   if (!profile.birthYear || !profile.birthMonth || !profile.birthDay) {
     return '생년월일을 아직 입력하지 않았습니다.';
   }
 
-  const hourLabel = profile.birthHour === null ? '시간 미입력' : `${profile.birthHour}시`;
+  const hourLabel =
+    profile.birthHour === null
+      ? '시간 미입력'
+      : `${profile.birthHour}시${
+          profile.birthMinute === null
+            ? ''
+            : ` ${String(profile.birthMinute).padStart(2, '0')}분`
+        }`;
   return `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay} · ${hourLabel}`;
 }
 
@@ -102,9 +110,12 @@ export default async function MyProfilePage() {
                     {formatBirthSummary(profile)}
                   </div>
                 </div>
-                <Badge className="border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 text-[var(--app-jade)]">
-                  궁합 보기
-                </Badge>
+                <a
+                  href="#family-profile-editor"
+                  className="inline-flex rounded-full border border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 px-3 py-1 text-xs font-medium text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/15"
+                >
+                  아래에서 수정
+                </a>
               </article>
             ))
           ) : (
@@ -127,7 +138,7 @@ export default async function MyProfilePage() {
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+      <section id="family-profile-editor" className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="app-panel p-6">
           <div className="app-caption">저장 규칙</div>
           <div className="mt-5 space-y-3">

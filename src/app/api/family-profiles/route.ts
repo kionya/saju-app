@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import {
   createFamilyProfile,
   deleteFamilyProfile,
+  updateFamilyProfile,
   type FamilyProfileInput,
 } from '@/lib/profile';
 
@@ -46,12 +47,18 @@ function parseFamilyProfile(
     data.birthHour === '' || data.birthHour === undefined || data.birthHour === null
       ? null
       : parseOptionalInt(data.birthHour, 0, 23);
+  const birthMinute =
+    data.birthMinute === '' || data.birthMinute === undefined || data.birthMinute === null
+      ? null
+      : parseOptionalInt(data.birthMinute, 0, 59);
 
   if (
     (data.birthYear !== '' && data.birthYear !== undefined && data.birthYear !== null && birthYear === null) ||
     (data.birthMonth !== '' && data.birthMonth !== undefined && data.birthMonth !== null && birthMonth === null) ||
     (data.birthDay !== '' && data.birthDay !== undefined && data.birthDay !== null && birthDay === null) ||
-    (data.birthHour !== '' && data.birthHour !== undefined && data.birthHour !== null && birthHour === null)
+    (data.birthHour !== '' && data.birthHour !== undefined && data.birthHour !== null && birthHour === null) ||
+    (data.birthMinute !== '' && data.birthMinute !== undefined && data.birthMinute !== null && birthMinute === null) ||
+    (birthHour === null && birthMinute !== null)
   ) {
     return null;
   }
@@ -63,6 +70,7 @@ function parseFamilyProfile(
     birthMonth,
     birthDay,
     birthHour,
+    birthMinute,
     gender,
     note,
   };
@@ -96,6 +104,46 @@ export async function POST(req: NextRequest) {
           error instanceof Error
             ? error.message
             : '가족 프로필을 저장하지 못했습니다.',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
+  }
+
+  const payload = await req.json().catch(() => null);
+  const id =
+    payload && typeof payload === 'object' && typeof (payload as Record<string, unknown>).id === 'string'
+      ? ((payload as Record<string, unknown>).id as string)
+      : '';
+  const profile = parseFamilyProfile(payload);
+
+  if (!id || !profile) {
+    return NextResponse.json(
+      { error: '수정할 가족 프로필 정보가 올바르지 않습니다.' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await updateFamilyProfile(user.id, id, profile);
+    return NextResponse.json({ success: true, id });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : '가족 프로필을 수정하지 못했습니다.',
       },
       { status: 500 }
     );

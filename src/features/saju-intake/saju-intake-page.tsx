@@ -52,6 +52,7 @@ interface ProfileApiBirthFields {
   birthMonth: number | null;
   birthDay: number | null;
   birthHour: number | null;
+  birthMinute: number | null;
   gender: 'male' | 'female' | null;
 }
 
@@ -83,6 +84,7 @@ interface SavedBirthProfile {
   birthMonth: number;
   birthDay: number;
   birthHour: number | null;
+  birthMinute: number | null;
   gender: 'male' | 'female' | null;
 }
 
@@ -147,7 +149,14 @@ function hasBirthFields<T extends ProfileApiBirthFields | null | undefined>(
 
 function formatSavedProfileDetail(profile: ProfileApiBirthFields) {
   const dateLabel = `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay}`;
-  const hourLabel = profile.birthHour === null ? '시간 미입력' : `${profile.birthHour}시`;
+  const hourLabel =
+    profile.birthHour === null
+      ? '시간 미입력'
+      : `${profile.birthHour}시${
+          profile.birthMinute === null
+            ? ''
+            : ` ${String(profile.birthMinute).padStart(2, '0')}분`
+        }`;
   const genderLabel = profile.gender === 'male' ? '남성' : profile.gender === 'female' ? '여성' : '성별 미선택';
   return `${dateLabel} · ${hourLabel} · ${genderLabel}`;
 }
@@ -166,6 +175,7 @@ function buildSavedProfileOptions(data: ProfileApiResponse): SavedBirthProfile[]
       birthMonth: data.profile.birthMonth,
       birthDay: data.profile.birthDay,
       birthHour: data.profile.birthHour,
+      birthMinute: data.profile.birthMinute,
       gender: data.profile.gender,
     });
   }
@@ -183,6 +193,7 @@ function buildSavedProfileOptions(data: ProfileApiResponse): SavedBirthProfile[]
       birthMonth: profile.birthMonth,
       birthDay: profile.birthDay,
       birthHour: profile.birthHour,
+      birthMinute: profile.birthMinute,
       gender: profile.gender,
     });
   });
@@ -307,7 +318,10 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
       month: String(profile.birthMonth),
       day: String(profile.birthDay),
       hour: profile.birthHour === null ? '' : String(profile.birthHour),
-      minute: '',
+      minute:
+        profile.birthHour === null || profile.birthMinute === null
+          ? ''
+          : String(profile.birthMinute),
       gender: profile.gender ?? '',
       nickname: profile.nickname || current.nickname,
     }));
@@ -384,6 +398,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
           birthMonth: parsed.input.month,
           birthDay: parsed.input.day,
           birthHour: parsed.input.hour ?? null,
+          birthMinute: parsed.input.minute ?? null,
           gender: parsed.input.gender ?? null,
         }),
       }).catch(() => undefined);
