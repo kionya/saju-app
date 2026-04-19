@@ -1,0 +1,96 @@
+export type AiGenerationSource = 'openai' | 'fallback';
+
+export type AiFallbackReason =
+  | 'ai_not_configured'
+  | 'empty_ai_response'
+  | 'openai_error';
+
+export interface AiTextRequest {
+  instructions: string;
+  input: string;
+  fallbackText: string;
+  maxOutputTokens?: number;
+}
+
+export interface AiTextResult {
+  source: AiGenerationSource;
+  text: string;
+  model: string | null;
+  fallbackReason: AiFallbackReason | null;
+  errorMessage: string | null;
+}
+
+const DEFAULT_OPENAI_MODEL = 'gpt-5.2';
+const OPENAI_TIMEOUT_MS = 15_000;
+
+function getOpenAIKey() {
+  return process.env.OPENAI_API_KEY?.trim() ?? '';
+}
+
+export function getOpenAIModel() {
+  return process.env.OPENAI_MODEL?.trim() || DEFAULT_OPENAI_MODEL;
+}
+
+export function isOpenAIConfigured() {
+  return Boolean(getOpenAIKey());
+}
+
+function fallbackResult(
+  request: AiTextRequest,
+  fallbackReason: AiFallbackReason,
+  errorMessage: string | null = null
+): AiTextResult {
+  return {
+    source: 'fallback',
+    text: request.fallbackText,
+    model: isOpenAIConfigured() ? getOpenAIModel() : null,
+    fallbackReason,
+    errorMessage,
+  };
+}
+
+export async function generateAiText(
+  request: AiTextRequest
+): Promise<AiTextResult> {
+  const apiKey = getOpenAIKey();
+
+  if (!apiKey) {
+    return fallbackResult(request, 'ai_not_configured');
+  }
+
+  try {
+    const { default: OpenAI } = await import('openai');
+    const client = new OpenAI({
+      apiKey,
+      timeout: OPENAI_TIMEOUT_MS,
+      maxRetries: 0,
+    });
+
+    const response = await client.responses.create({
+      model: getOpenAIModel() as never,
+      instructions: request.instructions,
+      input: request.input,
+      max_output_tokens: request.maxOutputTokens ?? 700,
+      store: false,
+    });
+    const text = response.output_text?.trim();
+
+    if (!text) {
+      return fallbackResult(request, 'empty_ai_response');
+    }
+
+    return {
+      source: 'openai',
+      text,
+      model: getOpenAIModel(),
+      fallbackReason: null,
+      errorMessage: null,
+    };
+  } catch (error) {
+    return fallbackResult(
+      request,
+      'openai_error',
+      error instanceof Error ? error.message : 'OpenAI 요청에 실패했습니다.'
+    );
+  }
+}
