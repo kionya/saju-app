@@ -26,6 +26,22 @@ export interface ReportTimelineItem {
   body: string;
 }
 
+export type ReportEvidenceKey =
+  | 'strength'
+  | 'pattern'
+  | 'yongsin'
+  | 'relations'
+  | 'gongmang'
+  | 'specialSals';
+
+export interface ReportEvidenceCard {
+  key: ReportEvidenceKey;
+  label: string;
+  title: string;
+  body: string;
+  details: string[];
+}
+
 export interface FocusTopicMeta {
   label: string;
   badge: string;
@@ -43,6 +59,8 @@ export interface SajuReport {
   focusBadge: string;
   headline: string;
   summary: string;
+  summaryHighlights: string[];
+  evidenceCards: ReportEvidenceCard[];
   scores: ReportScore[];
   primaryAction: ReportAction;
   cautionAction: ReportAction;

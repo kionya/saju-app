@@ -5,11 +5,7 @@ import type {
   SajuCurrentLuck,
   SajuLuckDescriptor,
   SajuMajorLuckCycle,
-  SajuPattern,
   SajuPillar,
-  SajuStrength,
-  SajuSymbolRef,
-  SajuYongsin,
 } from '@/domain/saju/engine/saju-data-v1';
 import { Badge } from '@/components/ui/badge';
 import DetailUnlock from '@/components/detail-unlock';
@@ -56,50 +52,6 @@ function formatBirthSummary(input: {
       : '여성'
     : '성별 미선택';
   return `${input.year}년 ${input.month}월 ${input.day}일 · ${timeLabel} · ${genderLabel}`;
-}
-
-function formatStrengthTitle(strength: SajuStrength | null) {
-  if (!strength) return '강약 계산 준비 중';
-  return `${strength.level} · ${strength.score}점`;
-}
-
-function formatStrengthBody(strength: SajuStrength | null) {
-  if (!strength) {
-    return '현재 저장본은 seed 데이터라 강약 점수와 근거가 아직 비어 있습니다. 다음 계산 단계에서 바로 연결됩니다.';
-  }
-
-  return strength.rationale.length > 0
-    ? strength.rationale.join(' ')
-    : '일간 강약 점수는 계산되었지만 설명 문장은 아직 채워지지 않았습니다.';
-}
-
-function formatPatternTitle(pattern: SajuPattern | null) {
-  if (!pattern) return '격국 계산 준비 중';
-  return pattern.tenGod ? `${pattern.name} · ${pattern.tenGod}` : pattern.name;
-}
-
-function formatPatternBody(pattern: SajuPattern | null) {
-  if (!pattern) {
-    return '격국 필드가 비어 있어도 카드 자리는 유지합니다. 이후 rule-based 계산이 들어오면 이 자리에 근거와 함께 표시됩니다.';
-  }
-
-  return pattern.rationale.length > 0
-    ? pattern.rationale.join(' ')
-    : '격국명은 준비되었고 상세 근거 문장은 다음 단계에서 보강됩니다.';
-}
-
-function formatYongsinTitle(yongsin: SajuYongsin | null) {
-  if (!yongsin) return '용신 계산 준비 중';
-  return formatSymbolList([yongsin.primary, ...yongsin.secondary]);
-}
-
-function formatYongsinBody(yongsin: SajuYongsin | null) {
-  if (!yongsin) {
-    return '용신과 기신 자리가 열려 있습니다. 다음 단계에서 조후/억부 판정이 채워지면 바로 실제 값으로 교체됩니다.';
-  }
-
-  const kiyshin = yongsin.kiyshin.length > 0 ? formatSymbolList(yongsin.kiyshin) : '기신 미기재';
-  return `${yongsin.method} 기준으로 읽고, 기신은 ${kiyshin}입니다.`;
 }
 
 function formatCurrentLuckTitle(currentLuck: SajuCurrentLuck | null) {
@@ -156,10 +108,6 @@ function formatMajorLuckWindow(cycle: SajuMajorLuckCycle) {
   return `${cycle.startAge}세 ~ ${cycle.endAge}세`;
 }
 
-function formatSymbolList(symbols: SajuSymbolRef[]) {
-  return symbols.map((symbol) => symbol.label).join(' · ');
-}
-
 function formatHiddenStems(pillar: SajuPillar) {
   if (pillar.hiddenStems.length === 0) return null;
   return pillar.hiddenStems.map((item) => item.stem).join(' · ');
@@ -203,7 +151,21 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             <h1 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-[var(--app-ivory)] sm:text-4xl">
               {report.headline}
             </h1>
-            <p className="app-body-copy mt-4 max-w-2xl text-base sm:text-lg">{report.summary}</p>
+            <div className="mt-5 grid max-w-2xl gap-3">
+              {report.summaryHighlights.map((summary, index) => (
+                <p
+                  key={`${index}-${summary}`}
+                  className={cn(
+                    'rounded-2xl border bg-[var(--app-surface-muted)] px-4 py-3 leading-8',
+                    index === 0
+                      ? 'border-[var(--app-gold)]/24 text-base text-[var(--app-ivory)] sm:text-lg'
+                      : 'border-[var(--app-line)] text-sm text-[var(--app-copy)] sm:text-base'
+                  )}
+                >
+                  {summary}
+                </p>
+              ))}
+            </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
               {FOCUS_TOPIC_OPTIONS.map((option) => (
@@ -275,6 +237,40 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           ))}
         </section>
 
+        <section className="space-y-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="app-caption">명식 근거 정리</div>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--app-ivory)]">
+                강약, 격국, 용신과 합충·공망·신살을 따로 봅니다.
+              </h2>
+            </div>
+            <p className="max-w-xl text-sm leading-7 text-[var(--app-copy-muted)]">
+              상단 요약은 짧게 유지하고, 판단 근거는 아래 카드에서 항목별로 분리했습니다.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {report.evidenceCards.map((card) => (
+              <article key={card.key} className="app-panel p-5">
+                <div className="app-caption">{card.label}</div>
+                <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">{card.title}</h3>
+                <p className="app-body-copy mt-3 text-sm">{card.body}</p>
+                <div className="mt-4 grid gap-2">
+                  {card.details.map((detail, index) => (
+                    <div
+                      key={`${card.key}-${index}-${detail}`}
+                      className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-2 text-sm leading-7 text-[var(--app-copy)]"
+                    >
+                      {detail}
+                    </div>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
         <section className="grid gap-4 lg:grid-cols-3">
           {report.insights.map((insight) => (
             <article key={insight.title} className="app-panel p-6">
@@ -293,32 +289,6 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               <p className="app-body-copy mt-4 text-sm">{item.body}</p>
             </article>
           ))}
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-3">
-          <article className="app-panel p-6">
-            <div className="app-caption">강약</div>
-            <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
-              {formatStrengthTitle(sajuData.strength)}
-            </h2>
-            <p className="app-body-copy mt-4 text-sm">{formatStrengthBody(sajuData.strength)}</p>
-          </article>
-
-          <article className="app-panel p-6">
-            <div className="app-caption">격국</div>
-            <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
-              {formatPatternTitle(sajuData.pattern)}
-            </h2>
-            <p className="app-body-copy mt-4 text-sm">{formatPatternBody(sajuData.pattern)}</p>
-          </article>
-
-          <article className="app-panel p-6">
-            <div className="app-caption">용신</div>
-            <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
-              {formatYongsinTitle(sajuData.yongsin)}
-            </h2>
-            <p className="app-body-copy mt-4 text-sm">{formatYongsinBody(sajuData.yongsin)}</p>
-          </article>
         </section>
 
         <section className="grid gap-4 lg:grid-cols-[0.88fr_1.12fr]">

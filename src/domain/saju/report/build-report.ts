@@ -1,4 +1,5 @@
 ﻿import type { SajuDataV1, SajuSymbolRef, TenGodCode } from '@/domain/saju/engine/saju-data-v1';
+import type { OrreryRelation } from '@/domain/saju/engine/orrery-adapter';
 import {
   ELEMENT_INFO,
   getLuckyElementsFromSajuData,
@@ -9,6 +10,7 @@ import type {
   FocusTopic,
   FocusTopicMeta,
   FocusTopicOption,
+  ReportEvidenceCard,
   ReportInsight,
   ReportScore,
   ReportTimelineItem,
@@ -119,105 +121,20 @@ function getElementTone(element: Element) {
   };
 }
 
-function describeStrengthNarrative(strength: SajuDataV1['strength']) {
-  if (!strength) return '';
-  return `${strength.level}으로 읽혀 ${STRENGTH_INTERPRETATION[strength.level]} ${strength.rationale[0] ?? ''}`.trim();
-}
-
-function describePatternNarrative(pattern: SajuDataV1['pattern']) {
-  if (!pattern) return '';
-  return `${pattern.name} 기준으로 읽기 시작하는 명식이라 ${pattern.tenGod ? `${pattern.tenGod}의 역할감과 관계 패턴이 삶의 전면에 나오기 쉽습니다.` : '월령의 성격이 해석의 첫머리를 잡습니다.'} ${pattern.rationale[1] ?? ''}`.trim();
-}
-
-function describeYongsinNarrative(yongsin: SajuDataV1['yongsin']) {
-  if (!yongsin) return '';
-  return `용신은 ${formatSymbolList([yongsin.primary, ...yongsin.secondary])} 쪽으로 잡혀 있어, 삶에서는 이 기운을 보태는 환경과 리듬을 만들수록 균형이 좋아집니다. ${yongsin.rationale[0] ?? ''}`.trim();
-}
-
-function describeCurrentLuckNarrative(currentLuck: SajuDataV1['currentLuck']) {
-  if (!currentLuck) return '';
-
-  const currentMajor = currentLuck.currentMajorLuck;
-  const saewoon = currentLuck.saewoon;
-  const wolwoon = currentLuck.wolwoon;
-  const parts = [
-    currentMajor?.ganzi ? `현재는 ${currentMajor.ganzi} 대운권에 있어 삶의 큰 방향을 길게 보는 편이 좋습니다.` : '',
-    saewoon?.ganzi ? `${saewoon.ganzi} 세운이 겹친 해라 해당 주제와 관련된 사건이 눈앞에 드러나기 쉽습니다.` : '',
-    wolwoon?.ganzi ? `${wolwoon.ganzi} 월운 기준으로는 이번 달에는 말과 행동의 속도를 조금만 조절해도 체감 차이가 납니다.` : '',
-  ].filter(Boolean);
-
-  return parts.join(' ');
-}
-
 function getOrreryExtension(data: SajuDataV1) {
   return data.extensions?.orrery ?? null;
-}
-
-function describeRelationNarrative(data: SajuDataV1) {
-  const relations = getOrreryExtension(data)?.relations;
-  if (!relations?.length) return '';
-
-  const tension = relations.find((relation) =>
-    ['충', '형', '해', '파', '천간충'].includes(relation.label)
-  );
-  const support = relations.find((relation) =>
-    ['천간합', '육합', '반합', '삼합', '방합'].includes(relation.label)
-  );
-  const selected = [tension, support].filter(
-    (relation, index, array): relation is NonNullable<typeof relation> =>
-      Boolean(relation) && array.findIndex((item) => item === relation) === index
-  );
-
-  if (selected.length === 0) return '';
-
-  return selected
-    .map((relation) => {
-      if (relation.target) {
-        return `${relation.source}와 ${relation.target} 사이에는 ${relation.label}이 보여 ${relation.detail ?? '기운의 맞물림이 또렷하게 드러납니다.'}`;
-      }
-
-      return `${relation.source} 글자가 함께 모여 ${relation.label}이 성립하니 ${relation.detail ?? '한 방향으로 기운이 묶이는 흐름이 확인됩니다.'}`;
-    })
-    .join(' ');
-}
-
-function describeGongmangNarrative(data: SajuDataV1) {
-  const gongmang = getOrreryExtension(data)?.gongmang;
-  if (!gongmang?.branches) return '';
-
-  const branches = gongmang.branches.join('·');
-  const slots = gongmang.pillarSlots
-    .map((slot) => {
-      switch (slot) {
-        case 'year':
-          return '년주';
-        case 'month':
-          return '월주';
-        case 'day':
-          return '일주';
-        case 'hour':
-          return '시주';
-      }
-    })
-    .join('·');
-
-  if (slots) {
-    return `공망은 ${branches}로 잡히고 ${slots}에 닿아 있어, 겉으로 드러난 일정이나 약속일수록 한 번 더 확인하고 마무리할수록 허술함을 줄이기 좋습니다.`;
-  }
-
-  return `공망은 ${branches}로 잡혀 있어 이 글자가 운에서 겹칠 때는 성급히 확정하기보다 한 템포 늦춰 점검하는 편이 더 안전합니다.`;
 }
 
 function hasIndexedSpecialSal(value: number[] | null | undefined) {
   return Boolean(value && value.length > 0);
 }
 
-function describeSpecialSalsNarrative(data: SajuDataV1) {
+function getSpecialSalGroups(data: SajuDataV1) {
   const specialSals = getOrreryExtension(data)?.specialSals;
-  if (!specialSals) return '';
-
   const supportive: string[] = [];
   const cautionary: string[] = [];
+
+  if (!specialSals) return { supportive, cautionary };
 
   if (hasIndexedSpecialSal(specialSals.cheonul)) supportive.push('천을귀인');
   if (hasIndexedSpecialSal(specialSals.cheonduk)) supportive.push('천덕귀인');
@@ -230,31 +147,218 @@ function describeSpecialSalsNarrative(data: SajuDataV1) {
   if (specialSals.goegang) cautionary.push('괴강');
   if (specialSals.hongyeom) cautionary.push('홍염');
 
-  const parts: string[] = [];
-
-  if (supportive.length > 0) {
-    parts.push(
-      `신살로는 ${supportive.join('·')}이 보여 도움을 받는 통로, 위기 완충력, 배움과 표현의 복이 함께 살아 있는 편입니다.`
-    );
-  }
-
-  if (cautionary.length > 0) {
-    parts.push(
-      `${cautionary.join('·')} 기운도 함께 보여 끌어당기는 힘과 돌파력은 강하지만, 감정과 속도를 다루는 방식에 따라 체감의 온도 차이가 크게 납니다.`
-    );
-  }
-
-  return parts.join(' ');
+  return { supportive, cautionary };
 }
 
-function buildOrreryEvidenceNarrative(data: SajuDataV1) {
+function compactStrings(parts: Array<string | null | undefined>) {
+  return parts
+    .map((part) => part?.trim())
+    .filter((part): part is string => Boolean(part));
+}
+
+function describeCurrentLuckHighlight(currentLuck: SajuDataV1['currentLuck']) {
+  if (!currentLuck) return '';
+
+  const currentMajor = currentLuck.currentMajorLuck?.ganzi;
+  const saewoon = currentLuck.saewoon?.ganzi;
+  const wolwoon = currentLuck.wolwoon?.ganzi;
+
+  if (currentMajor && saewoon) {
+    return `현재는 ${currentMajor} 대운과 ${saewoon} 세운이 함께 작동하므로, 단기 반응보다 앞으로 몇 달의 선택 방향을 먼저 정리하는 편이 좋습니다.`;
+  }
+
+  if (currentMajor) {
+    return `현재는 ${currentMajor} 대운권에 있어 지금의 선택을 길게 이어질 생활 구조와 함께 보는 것이 좋습니다.`;
+  }
+
+  if (saewoon || wolwoon) {
+    return `${[saewoon ? `${saewoon} 세운` : null, wolwoon ? `${wolwoon} 월운` : null].filter(Boolean).join('과 ')} 흐름이 들어와 있어 오늘의 판단은 속도보다 균형을 우선하는 편이 안정적입니다.`;
+  }
+
+  return '';
+}
+
+function buildSummaryHighlights(
+  data: SajuDataV1,
+  focusLabel: string,
+  dominant: string,
+  weakest: string
+) {
+  const dayMasterSummary = data.dayMaster.metaphor
+    ? `${data.dayMaster.stem} 일간은 ${data.dayMaster.metaphor}의 결을 지녀 ${data.dayMaster.description ?? getPersonalityFromSajuData(data)}`
+    : getPersonalityFromSajuData(data);
+
+  return compactStrings([
+    dayMasterSummary,
+    `${dominant} 기운이 전면에 서 있어 장점은 빠르게 드러나지만, ${weakest} 보완을 의식할수록 ${focusLabel} 흐름이 더 오래 안정적으로 이어집니다.`,
+    describeCurrentLuckHighlight(data.currentLuck) || formatElementDistribution(data),
+  ]).slice(0, 3);
+}
+
+function buildStrengthEvidenceCard(strength: SajuDataV1['strength']): ReportEvidenceCard {
+  if (!strength) {
+    return {
+      key: 'strength',
+      label: '강약',
+      title: '강약 계산 준비 중',
+      body: '현재 저장본은 seed 데이터라 강약 점수와 근거가 아직 비어 있습니다.',
+      details: ['강약 계산이 연결되면 일간을 돕는 힘과 누르는 힘의 균형을 이 카드에서 먼저 보여줍니다.'],
+    };
+  }
+
+  return {
+    key: 'strength',
+    label: '강약',
+    title: `${strength.level} · ${strength.score}점`,
+    body: STRENGTH_INTERPRETATION[strength.level],
+    details: strength.rationale.length > 0
+      ? strength.rationale.slice(0, 3)
+      : ['강약 점수는 계산되었고, 세부 근거 문장은 다음 단계에서 보강됩니다.'],
+  };
+}
+
+function buildPatternEvidenceCard(pattern: SajuDataV1['pattern']): ReportEvidenceCard {
+  if (!pattern) {
+    return {
+      key: 'pattern',
+      label: '격국',
+      title: '격국 계산 준비 중',
+      body: '격국 필드가 비어 있어도 카드 자리는 유지합니다.',
+      details: ['월령과 십신 기준의 rule-based 계산이 들어오면 격국 근거가 이 카드로 정리됩니다.'],
+    };
+  }
+
+  return {
+    key: 'pattern',
+    label: '격국',
+    title: pattern.tenGod ? `${pattern.name} · ${pattern.tenGod}` : pattern.name,
+    body: pattern.tenGod
+      ? `${pattern.tenGod}의 역할감과 관계 패턴이 해석의 첫 기준으로 올라옵니다.`
+      : '월령의 성격을 기준으로 명식의 큰 구조를 먼저 읽습니다.',
+    details: pattern.rationale.length > 0
+      ? pattern.rationale.slice(0, 3)
+      : ['격국명은 준비되었고 상세 근거 문장은 다음 단계에서 보강됩니다.'],
+  };
+}
+
+function buildYongsinEvidenceCard(yongsin: SajuDataV1['yongsin']): ReportEvidenceCard {
+  if (!yongsin) {
+    return {
+      key: 'yongsin',
+      label: '용신',
+      title: '용신 계산 준비 중',
+      body: '용신과 기신 자리가 열려 있습니다.',
+      details: ['조후와 억부 판정이 채워지면 보완해야 할 기운과 피해야 할 기운을 분리해 보여줍니다.'],
+    };
+  }
+
+  const yongsinLabel = formatSymbolList([yongsin.primary, ...yongsin.secondary]);
+  const kiyshinLabel = yongsin.kiyshin.length > 0 ? formatSymbolList(yongsin.kiyshin) : '기신 미기재';
+
+  return {
+    key: 'yongsin',
+    label: '용신',
+    title: yongsinLabel,
+    body: `${yongsin.method} 기준으로 ${yongsinLabel}을 보완 축으로 보고, 기신은 ${kiyshinLabel}입니다.`,
+    details: yongsin.rationale.length > 0
+      ? yongsin.rationale.slice(0, 3)
+      : ['용신 값은 준비되었고 상세 판정 근거는 다음 단계에서 보강됩니다.'],
+  };
+}
+
+function formatRelationEvidenceLine(relation: OrreryRelation) {
+  const pair = relation.target ? `${relation.source}-${relation.target}` : relation.source;
+  return `${pair}: ${relation.label}${relation.detail ? ` · ${relation.detail}` : ''}`;
+}
+
+function buildRelationEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+  const relations = getOrreryExtension(data)?.relations ?? [];
+  const tension = relations.find((relation) =>
+    ['충', '형', '해', '파', '천간충'].includes(relation.label)
+  );
+  const support = relations.find((relation) =>
+    ['천간합', '육합', '반합', '삼합', '방합'].includes(relation.label)
+  );
+  const selected = [tension, support, ...relations].filter(
+    (relation, index, array): relation is OrreryRelation =>
+      Boolean(relation) && array.findIndex((item) => item === relation) === index
+  ).slice(0, 4);
+  const labels = [...new Set(selected.map((relation) => relation.label))];
+
+  return {
+    key: 'relations',
+    label: '합충',
+    title: labels.length > 0 ? labels.join(' · ') : '합충 근거 없음',
+    body: selected.length > 0
+      ? '합충은 명식 안에서 기운이 묶이거나 부딪히는 지점을 보는 근거입니다.'
+      : '현재 명식에서 화면에 우선 표시할 합충 관계는 아직 확인되지 않았습니다.',
+    details: selected.length > 0
+      ? selected.map(formatRelationEvidenceLine)
+      : ['합충 데이터가 들어오면 어떤 글자끼리 작용하는지 이 카드에 분리해 표시됩니다.'],
+  };
+}
+
+function formatPillarSlot(slot: string) {
+  switch (slot) {
+    case 'year':
+      return '년주';
+    case 'month':
+      return '월주';
+    case 'day':
+      return '일주';
+    case 'hour':
+      return '시주';
+    default:
+      return slot;
+  }
+}
+
+function buildGongmangEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+  const gongmang = getOrreryExtension(data)?.gongmang;
+  const branches = gongmang?.branches?.join('·') ?? '';
+  const slots = gongmang?.pillarSlots.map(formatPillarSlot) ?? [];
+
+  return {
+    key: 'gongmang',
+    label: '공망',
+    title: branches ? `${branches} 공망` : '공망 근거 없음',
+    body: branches
+      ? '공망은 비어 보이거나 지연되기 쉬운 축을 확인해 약속, 일정, 마무리 방식을 조정하는 근거입니다.'
+      : '현재 저장본에서 공망 값은 아직 확인되지 않았습니다.',
+    details: slots.length > 0
+      ? [`작용 위치: ${slots.join(' · ')}`]
+      : ['공망 글자가 특정 주에 닿으면 이곳에 작용 위치가 함께 표시됩니다.'],
+  };
+}
+
+function buildSpecialSalsEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+  const { supportive, cautionary } = getSpecialSalGroups(data);
+  const names = [...supportive, ...cautionary];
+  const details = compactStrings([
+    supportive.length > 0 ? `도움: ${supportive.join(' · ')}` : null,
+    cautionary.length > 0 ? `주의: ${cautionary.join(' · ')}` : null,
+  ]);
+
+  return {
+    key: 'specialSals',
+    label: '신살',
+    title: names.length > 0 ? names.slice(0, 5).join(' · ') : '주요 신살 없음',
+    body: names.length > 0
+      ? '신살은 도움을 받는 통로와 주의해야 할 속도를 함께 보는 보조 근거입니다.'
+      : '현재 명식에서 우선 표시할 주요 신살은 아직 확인되지 않았습니다.',
+    details: details.length > 0 ? details : ['신살 데이터가 들어오면 도움/주의 흐름을 나누어 표시합니다.'],
+  };
+}
+
+function buildEvidenceCards(data: SajuDataV1): ReportEvidenceCard[] {
   return [
-    describeRelationNarrative(data),
-    describeGongmangNarrative(data),
-    describeSpecialSalsNarrative(data),
-  ]
-    .filter(Boolean)
-    .join(' ');
+    buildStrengthEvidenceCard(data.strength),
+    buildPatternEvidenceCard(data.pattern),
+    buildYongsinEvidenceCard(data.yongsin),
+    buildRelationEvidenceCard(data),
+    buildGongmangEvidenceCard(data),
+    buildSpecialSalsEvidenceCard(data),
+  ];
 }
 
 function describeTenGodNarrative(tenGods: SajuDataV1['tenGods']) {
@@ -383,25 +487,6 @@ function buildInsights(data: SajuDataV1, topic: FocusTopic): ReportInsight[] {
     });
   }
 
-  if (data.pattern || data.yongsin || data.strength || data.currentLuck) {
-    insights.push({
-      eyebrow: '명리 심화',
-      title: data.pattern
-        ? `${data.pattern.name} 흐름을 기준으로 읽습니다.`
-        : '강약과 용신 기준의 해석이 이어집니다.',
-      body: buildStructuredReadingNote(data, topic),
-    });
-  }
-
-  const orreryEvidence = buildOrreryEvidenceNarrative(data);
-  if (orreryEvidence) {
-    insights.push({
-      eyebrow: '합충과 신살',
-      title: '명식 안쪽에서 맞물리는 관계와 완충 장치도 함께 봅니다.',
-      body: orreryEvidence,
-    });
-  }
-
   return insights;
 }
 
@@ -498,14 +583,17 @@ export function buildSajuReport(
   const cautionTone = getElementTone(data.fiveElements.weakest);
   const { luckyDates, cautionDates } = buildDates(input, data);
 
-  const structuredSummary = buildStructuredSummary(data, meta.label, dominant, weakest);
+  const summaryHighlights = buildSummaryHighlights(data, meta.label, dominant, weakest);
+  const evidenceCards = buildEvidenceCards(data);
 
   return {
     focusTopic,
     focusLabel: meta.label,
     focusBadge: meta.badge,
     headline: getHeadline(focusTopic, scoreMap),
-    summary: structuredSummary,
+    summary: summaryHighlights.join(' '),
+    summaryHighlights,
+    evidenceCards,
     scores,
     primaryAction: {
       title: `${bestTone.label} 기운을 살리는 한 가지`,
@@ -521,60 +609,6 @@ export function buildSajuReport(
     cautionDates,
     supportElements,
   };
-}
-
-function buildStructuredSummary(
-  data: SajuDataV1,
-  focusLabel: string,
-  dominant: string,
-  weakest: string
-) {
-  const segments = [
-    data.dayMaster.metaphor
-      ? `${data.dayMaster.stem} 일간은 ${data.dayMaster.metaphor}의 결을 지녀 ${data.dayMaster.description ?? getPersonalityFromSajuData(data)}`
-      : getPersonalityFromSajuData(data),
-    `${dominant} 기운이 전면에 서 있어 장점은 빠르게 드러나지만, ${weakest} 보완을 의식할수록 ${focusLabel} 흐름이 더 오래 안정적으로 이어집니다.`,
-    formatElementDistribution(data),
-  ];
-
-  segments.push(describeStrengthNarrative(data.strength));
-  segments.push(describePatternNarrative(data.pattern));
-  segments.push(describeYongsinNarrative(data.yongsin));
-  segments.push(describeCurrentLuckNarrative(data.currentLuck));
-  segments.push(buildOrreryEvidenceNarrative(data));
-
-  return segments.filter(Boolean).join(' ');
-}
-
-function buildStructuredReadingNote(data: SajuDataV1, topic: FocusTopic) {
-  const notes: string[] = [];
-
-  if (data.strength) {
-    notes.push(describeStrengthNarrative(data.strength));
-  }
-
-  if (data.pattern) {
-    notes.push(`${data.pattern.name}으로 정리되며${data.pattern.tenGod ? ` ${data.pattern.tenGod} 중심 흐름을 봅니다.` : ' 월령의 성격을 중심으로 해석합니다.'}`);
-  }
-
-  if (data.yongsin) {
-    notes.push(`${formatSymbolList([data.yongsin.primary, ...data.yongsin.secondary])}을(를) 보완 축으로 두는 구조라 ${topic === 'wealth' ? '재물 판단도 속도보다 균형을 먼저 맞출수록' : topic === 'love' || topic === 'relationship' ? '관계도 감정만 앞세우기보다 리듬을 맞출수록' : topic === 'career' ? '일도 확장보다 쓰임을 정확히 고를수록' : '생활 리듬도 무리보다 균형을 지킬수록'} 유리합니다.`);
-  }
-
-  if (data.currentLuck) {
-    notes.push(describeCurrentLuckNarrative(data.currentLuck));
-  }
-
-  const orreryEvidence = buildOrreryEvidenceNarrative(data);
-  if (orreryEvidence) {
-    notes.push(orreryEvidence);
-  }
-
-  if (notes.length === 0) {
-    return '현재 저장본은 오행과 일간 중심의 seed 데이터이며, 격국과 용신 값이 채워지면 이 카드가 즉시 실제 해석으로 바뀝니다.';
-  }
-
-  return notes.join(' ');
 }
 
 function formatSymbolList(symbols: SajuSymbolRef[]) {

@@ -35,6 +35,7 @@ export async function POST(req: NextRequest) {
       const loveReport = buildSajuReport(reading.input, saju, 'love');
       const careerReport = buildSajuReport(reading.input, saju, 'career');
       const relationshipReport = buildSajuReport(reading.input, saju, 'relationship');
+      const evidenceSummary = formatReportEvidence(wealthReport.evidenceCards);
       const dominant = ELEMENT_INFO[saju.fiveElements.dominant];
       const weakest = ELEMENT_INFO[saju.fiveElements.weakest];
       const personality = getPersonalityFromSajuData(saju);
@@ -54,7 +55,7 @@ export async function POST(req: NextRequest) {
           wealthReport.headline,
           wealthReport.summary,
           wealthReport.primaryAction.description,
-          wealthReport.insights[wealthReport.insights.length - 1]?.body ?? '',
+          evidenceSummary,
           currentFlowLabel
             ? `지금 재물 판단은 ${currentFlowLabel} 흐름을 함께 보며 속도를 조절하는 편이 좋습니다.`
             : '',
@@ -64,13 +65,14 @@ export async function POST(req: NextRequest) {
           loveReport.headline,
           `${personality} 인간관계에서는 ${ELEMENT_INFO[saju.pillars.day.stemElement].traits[1]} 성향이 드러나기 쉬우며, ${lucky.map((element) => ELEMENT_INFO[element].name.split(' ')[0]).join('·')} 기운의 사람과 조화가 좋습니다.`,
           loveReport.summary,
-          relationshipReport.insights.at(-1)?.body ?? '',
+          formatReportEvidence(relationshipReport.evidenceCards),
           strengthLabel ? `현재 저장본 기준으로는 ${strengthLabel} 흐름이라 관계 속도 조절이 중요합니다.` : '',
           saewoonLabel ? `특히 ${saewoonLabel} 세운에서는 감정 표현의 강약을 세심하게 맞추는 편이 유리합니다.` : '',
         ]),
         career: joinNarrative([
           careerReport.headline,
           careerReport.summary,
+          formatReportEvidence(careerReport.evidenceCards),
           `강한 ${dominant.name} 기운은 직업적으로 ${dominant.traits[2]} 분야에서 두각을 나타냅니다. ${dominant.keywords[0]} 관련 업종이나 ${dominant.traits[0]}이(가) 필요한 직무에서 성과를 냅니다.`,
           patternLabel ? `${patternLabel} 흐름을 기준으로 역할과 자리의 무게를 읽으면 직업 해석이 훨씬 선명해집니다.` : '',
           currentMajorLabel ? `지금은 ${currentMajorLabel} 대운권이라 단기 성과보다 방향성과 포지션을 길게 잡는 해석이 잘 맞습니다.` : '',
@@ -116,6 +118,12 @@ function formatCurrentLuckSummary(currentLuck: SajuCurrentLuck | null) {
   ];
 
   return notes.join(' ');
+}
+
+function formatReportEvidence(cards: ReturnType<typeof buildSajuReport>['evidenceCards']) {
+  return cards
+    .map((card) => `${card.label}: ${card.title}. ${card.body} ${card.details.slice(0, 2).join(' ')}`)
+    .join(' ');
 }
 
 function joinNarrative(parts: Array<string | undefined>) {
