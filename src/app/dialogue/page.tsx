@@ -3,7 +3,7 @@ import Link from 'next/link';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { AppShell } from '@/shared/layout/app-shell';
 import { DIALOGUE_GUARDRAILS, DIALOGUE_PRESETS } from '@/content/moonlight';
-import { DialogueSafetyChecker } from '@/components/dialogue/dialogue-safety-checker';
+import { DialogueChatPanel } from '@/components/dialogue/dialogue-chat-panel';
 
 export const metadata: Metadata = {
   title: '대화',
@@ -31,7 +31,12 @@ export default function DialoguePage() {
         </section>
 
         <section className="mt-8">
-          <DialogueSafetyChecker />
+          <DialogueChatPanel
+            presets={DIALOGUE_PRESETS.slice(0, 4).map((preset) => ({
+              category: preset.category,
+              question: preset.question,
+            }))}
+          />
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
