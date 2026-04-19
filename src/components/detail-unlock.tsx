@@ -115,6 +115,7 @@ export default function DetailUnlock({ slug }: Props) {
   const [content, setContent] = useState<DetailContent | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [remaining, setRemaining] = useState<number | null>(null);
+  const [access, setAccess] = useState<'charged' | 'daily_reuse' | null>(null);
 
   async function handleUnlock() {
     setState('loading');
@@ -140,6 +141,7 @@ export default function DetailUnlock({ slug }: Props) {
 
       setContent(data.content);
       setRemaining(data.remaining);
+      setAccess(data.access === 'daily_reuse' ? 'daily_reuse' : 'charged');
       setState('unlocked');
     } catch {
       setErrorMsg('서버 오류가 발생했습니다.');
@@ -159,7 +161,7 @@ export default function DetailUnlock({ slug }: Props) {
           </div>
           <div className="flex items-center gap-2">
             <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-              해금 완료
+              {access === 'daily_reuse' ? '오늘 재열람' : '해금 완료'}
             </Badge>
             {remaining !== null ? (
               <span className="text-xs text-[var(--app-copy-soft)]">잔여 코인 {remaining}개</span>
@@ -168,7 +170,9 @@ export default function DetailUnlock({ slug }: Props) {
         </div>
 
         <p className="app-body-copy text-sm">
-          재물, 애정, 직업, 건강 흐름을 현재 명식과 운세 문맥에 맞춰 확장해서 읽은 결과입니다.
+          {access === 'daily_reuse'
+            ? '오늘 이미 열어본 상세 해석이라 코인 차감 없이 다시 보여드립니다.'
+            : '재물, 애정, 직업, 건강 흐름을 현재 명식과 운세 문맥에 맞춰 확장해서 읽은 결과입니다.'}
         </p>
 
         <div className="grid gap-3">
@@ -307,7 +311,7 @@ export default function DetailUnlock({ slug }: Props) {
         <div className="relative z-20 mt-6 rounded-[24px] border border-[var(--app-line)] bg-[rgba(2,8,23,0.56)] p-5 text-center backdrop-blur-sm">
           <p className="font-semibold text-[var(--app-ivory)]">상세 해석 열기</p>
           <p className="mt-2 text-sm text-[var(--app-copy-muted)]">
-            재물·애정·직업·건강 4개 영역을 한 번에 열고, 현재 운 흐름까지 이어서 봅니다
+            재물·애정·직업·건강 4개 영역을 한 번에 열고, 같은 결과는 오늘 하루 동안 재차감 없이 다시 볼 수 있습니다
           </p>
           <Button
             onClick={handleUnlock}
@@ -316,7 +320,9 @@ export default function DetailUnlock({ slug }: Props) {
           >
             {state === 'loading' ? '처리 중...' : '코인 1개로 지금 열기'}
           </Button>
-          <p className="mt-3 text-xs text-[var(--app-copy-soft)]">가입 시 무료 코인 3개 지급</p>
+          <p className="mt-3 text-xs text-[var(--app-copy-soft)]">
+            오늘 이미 열었던 같은 결과는 코인 차감 없이 다시 열립니다.
+          </p>
         </div>
       </div>
     </section>

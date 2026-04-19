@@ -194,47 +194,57 @@ export default function ProfileManager({
               <option value="female" className="bg-slate-950">여성</option>
             </select>
           </div>
-          <div className="grid grid-cols-3 gap-3 md:col-span-2">
-            <Input
-              value={profileForm.birthYear}
-              onChange={(event) =>
-                setProfileForm((current) => ({ ...current, birthYear: event.target.value }))
-              }
-              placeholder="년도"
-              className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-            />
-            <Input
-              value={profileForm.birthMonth}
-              onChange={(event) =>
-                setProfileForm((current) => ({ ...current, birthMonth: event.target.value }))
-              }
-              placeholder="월"
-              className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-            />
-            <Input
-              value={profileForm.birthDay}
-              onChange={(event) =>
-                setProfileForm((current) => ({ ...current, birthDay: event.target.value }))
-              }
-              placeholder="일"
-              className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-sm text-white/65">태어난 시간</label>
-            <select
-              value={profileForm.birthHour}
-              onChange={(event) =>
-                setProfileForm((current) => ({ ...current, birthHour: event.target.value }))
-              }
-              className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
-            >
-              {HOUR_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value} className="bg-slate-950">
-                  {option.label}
-                </option>
-              ))}
-            </select>
+          <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4 md:col-span-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <label className="block text-sm font-medium text-[#f8f1df]">생년월일과 태어난 시간</label>
+              <span className="text-xs text-[#f5dfaa]">불러오기 자동 입력 기준</span>
+            </div>
+            <p className="mt-2 text-xs leading-6 text-white/48">
+              시간을 저장해두면 사주 입력 화면의 “내 정보 불러오기”에서 시간까지 함께 채워집니다. 모르면 “모름”으로 두셔도 됩니다.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-4">
+              <Input
+                value={profileForm.birthYear}
+                onChange={(event) =>
+                  setProfileForm((current) => ({ ...current, birthYear: event.target.value }))
+                }
+                placeholder="년도"
+                aria-label="출생년도"
+                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+              />
+              <Input
+                value={profileForm.birthMonth}
+                onChange={(event) =>
+                  setProfileForm((current) => ({ ...current, birthMonth: event.target.value }))
+                }
+                placeholder="월"
+                aria-label="출생월"
+                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+              />
+              <Input
+                value={profileForm.birthDay}
+                onChange={(event) =>
+                  setProfileForm((current) => ({ ...current, birthDay: event.target.value }))
+                }
+                placeholder="일"
+                aria-label="출생일"
+                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+              />
+              <select
+                value={profileForm.birthHour}
+                aria-label="태어난 시간"
+                onChange={(event) =>
+                  setProfileForm((current) => ({ ...current, birthHour: event.target.value }))
+                }
+                className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
+              >
+                {HOUR_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value} className="bg-slate-950">
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="md:col-span-2">
             <label className="mb-1.5 block text-sm text-white/65">메모</label>
@@ -295,46 +305,51 @@ export default function ProfileManager({
               </option>
             ))}
           </select>
-          <div className="grid grid-cols-3 gap-3 md:col-span-2">
-            <Input
-              value={familyForm.birthYear}
-              onChange={(event) =>
-                setFamilyForm((current) => ({ ...current, birthYear: event.target.value }))
-              }
-              placeholder="년도"
-              className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-            />
-            <Input
-              value={familyForm.birthMonth}
-              onChange={(event) =>
-                setFamilyForm((current) => ({ ...current, birthMonth: event.target.value }))
-              }
-              placeholder="월"
-              className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-            />
-            <Input
-              value={familyForm.birthDay}
-              onChange={(event) =>
-                setFamilyForm((current) => ({ ...current, birthDay: event.target.value }))
-              }
-              placeholder="일"
-              className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
-            />
-          </div>
-          <div>
-            <select
-              value={familyForm.birthHour}
-              onChange={(event) =>
-                setFamilyForm((current) => ({ ...current, birthHour: event.target.value }))
-              }
-              className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
-            >
-              {HOUR_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value} className="bg-slate-950">
-                  {option.label}
-                </option>
-              ))}
-            </select>
+          <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4 md:col-span-2">
+            <label className="block text-sm font-medium text-[#f8f1df]">생년월일과 태어난 시간</label>
+            <div className="mt-4 grid gap-3 sm:grid-cols-4">
+              <Input
+                value={familyForm.birthYear}
+                onChange={(event) =>
+                  setFamilyForm((current) => ({ ...current, birthYear: event.target.value }))
+                }
+                placeholder="년도"
+                aria-label="가족 출생년도"
+                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+              />
+              <Input
+                value={familyForm.birthMonth}
+                onChange={(event) =>
+                  setFamilyForm((current) => ({ ...current, birthMonth: event.target.value }))
+                }
+                placeholder="월"
+                aria-label="가족 출생월"
+                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+              />
+              <Input
+                value={familyForm.birthDay}
+                onChange={(event) =>
+                  setFamilyForm((current) => ({ ...current, birthDay: event.target.value }))
+                }
+                placeholder="일"
+                aria-label="가족 출생일"
+                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+              />
+              <select
+                value={familyForm.birthHour}
+                aria-label="가족 태어난 시간"
+                onChange={(event) =>
+                  setFamilyForm((current) => ({ ...current, birthHour: event.target.value }))
+                }
+                className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
+              >
+                {HOUR_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value} className="bg-slate-950">
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div>
             <select

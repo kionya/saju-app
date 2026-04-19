@@ -16,6 +16,13 @@ function buildCompleteHref(plan: string, slug: string | null) {
   return `/membership/complete?${params.toString()}`;
 }
 
+function buildPremiumResultHref(plan: string, slug: string | null) {
+  if (!slug || (plan !== 'premium' && plan !== 'lifetime')) return null;
+
+  const params = new URLSearchParams({ payment: 'confirmed', plan });
+  return `/saju/${encodeURIComponent(slug)}/premium?${params.toString()}`;
+}
+
 function SuccessContent() {
   const searchParams = useSearchParams();
   const didConfirm = useRef(false);
@@ -61,7 +68,16 @@ function SuccessContent() {
           return;
         }
 
-        setConfirmedPlan(data.plan ?? plan);
+        const nextPlan = data.plan ?? plan;
+        const premiumResultHref = buildPremiumResultHref(nextPlan, slug);
+
+        setConfirmedPlan(nextPlan);
+
+        if (premiumResultHref) {
+          location.replace(premiumResultHref);
+          return;
+        }
+
         setStatus('success');
       })
       .catch(() => {
@@ -124,10 +140,12 @@ function SuccessContent() {
         결제 완료
       </Badge>
       <h1 className="mt-5 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-        이용권이 반영되었습니다
+        {buildPremiumResultHref(confirmedPlan, slug) ? '리포트로 이동하고 있습니다' : '이용권이 반영되었습니다'}
       </h1>
       <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[var(--app-copy)]">
-        멤버십과 리포트 권한을 확인했습니다. 이어서 안내 화면에서 다음에 열어볼 항목을 바로 선택하실 수 있습니다.
+        {buildPremiumResultHref(confirmedPlan, slug)
+          ? '결제 확인이 끝났습니다. 선택하신 프리미엄 리포트 화면으로 바로 이동합니다.'
+          : '멤버십과 리포트 권한을 확인했습니다. 이어서 안내 화면에서 다음에 열어볼 항목을 바로 선택하실 수 있습니다.'}
       </p>
       <div className="mt-7">
         <Link href={completeHref}>

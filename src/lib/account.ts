@@ -113,6 +113,7 @@ export async function getAccountDashboardData(
         .from('credit_transactions')
         .select('id, amount, type, feature, metadata, created_at')
         .eq('user_id', user.id)
+        .neq('amount', 0)
         .order('created_at', { ascending: false })
         .limit(transactionLimit),
     ]);

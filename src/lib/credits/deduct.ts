@@ -15,6 +15,14 @@ const CREDIT_COSTS: Record<Feature, number> = {
   calendar: 2,
 };
 
+export function isFeature(value: unknown): value is Feature {
+  return typeof value === 'string' && value in CREDIT_COSTS;
+}
+
+export function getFeatureCost(feature: Feature) {
+  return CREDIT_COSTS[feature];
+}
+
 export async function getCredits(userId: string): Promise<{ balance: number; subscription_balance: number } | null> {
   const supabase = await createServiceClient();
   const { data } = await supabase

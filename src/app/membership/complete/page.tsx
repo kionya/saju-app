@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { COMPLETE_PLAN_GUIDE, type PlanSlug } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
@@ -27,6 +28,13 @@ export default async function MembershipCompletePage({ searchParams }: Props) {
   const planSlug = ((plan as PlanSlug | undefined) ?? 'premium') as PlanSlug;
   const planLabel = PLAN_LABELS[planSlug] ?? PLAN_LABELS.premium;
   const completeGuide = COMPLETE_PLAN_GUIDE[planSlug] ?? COMPLETE_PLAN_GUIDE.premium;
+  const shouldOpenPremiumResult =
+    payment === 'confirmed' && slug && (planSlug === 'lifetime' || planSlug === 'premium');
+
+  if (shouldOpenPremiumResult) {
+    redirect(`/saju/${encodeURIComponent(slug)}/premium?payment=confirmed&plan=${planSlug}`);
+  }
+
   const primaryHref =
     slug && (planSlug === 'lifetime' || planSlug === 'premium')
       ? `/saju/${slug}/premium`

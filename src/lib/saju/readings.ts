@@ -115,6 +115,25 @@ export async function getReadingById(id: string): Promise<ReadingRecord | null> 
   return mapReadingRow(data as ReadingRow);
 }
 
+export async function deleteReadingForUser(id: string, userId: string): Promise<boolean> {
+  if (!isReadingId(id)) return false;
+
+  const supabase = await createServiceClient();
+  const { data, error } = await supabase
+    .from('readings')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId)
+    .select('id')
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return Boolean(data);
+}
+
 export async function resolveReading(
   identifier: string
 ): Promise<ReadingRecord | null> {
