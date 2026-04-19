@@ -57,6 +57,7 @@ export interface SajuReport {
   focusTopic: FocusTopic;
   focusLabel: string;
   focusBadge: string;
+  focusScoreKey: ReportScore['key'];
   headline: string;
   summary: string;
   summaryHighlights: string[];

@@ -27,7 +27,7 @@ function toNumberOrNull(value: number | null | undefined) {
   return value ?? null;
 }
 
-function isMissingFamilyProfilesTableError(error: unknown) {
+export function isMissingFamilyProfilesTableError(error: unknown) {
   if (!error || typeof error !== 'object') return false;
 
   const code = 'code' in error ? String(error.code ?? '') : '';

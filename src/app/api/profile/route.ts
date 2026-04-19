@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { upsertProfile, type UserProfile } from '@/lib/profile';
+import { createClient, hasSupabaseServerEnv } from '@/lib/supabase/server';
+import {
+  isMissingFamilyProfilesTableError,
+  upsertProfile,
+  type UserProfile,
+} from '@/lib/profile';
 
 function parseOptionalInt(value: unknown, min: number, max: number) {
   if (value === null || value === undefined || value === '') return null;
@@ -53,6 +57,77 @@ function parseProfile(payload: unknown): UserProfile | null {
     gender,
     note,
   };
+}
+
+export async function GET() {
+  if (!hasSupabaseServerEnv) {
+    return NextResponse.json({
+      authenticated: false,
+      profile: null,
+      familyProfiles: [],
+    });
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({
+      authenticated: false,
+      profile: null,
+      familyProfiles: [],
+    });
+  }
+
+  const [profileResponse, familyResponse] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('display_name, birth_year, birth_month, birth_day, birth_hour, gender, note')
+      .eq('user_id', user.id)
+      .maybeSingle(),
+    supabase
+      .from('family_profiles')
+      .select('id, label, relationship, birth_year, birth_month, birth_day, birth_hour, gender, note, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false }),
+  ]);
+
+  if (profileResponse.error) {
+    return NextResponse.json({ error: profileResponse.error.message }, { status: 500 });
+  }
+
+  if (familyResponse.error && !isMissingFamilyProfilesTableError(familyResponse.error)) {
+    return NextResponse.json({ error: familyResponse.error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    authenticated: true,
+    profile: {
+      displayName: profileResponse.data?.display_name ?? '',
+      birthYear: profileResponse.data?.birth_year ?? null,
+      birthMonth: profileResponse.data?.birth_month ?? null,
+      birthDay: profileResponse.data?.birth_day ?? null,
+      birthHour: profileResponse.data?.birth_hour ?? null,
+      gender: profileResponse.data?.gender ?? null,
+      note: profileResponse.data?.note ?? '',
+    },
+    familyProfiles: familyResponse.error && isMissingFamilyProfilesTableError(familyResponse.error)
+      ? []
+      : familyResponse.data?.map((profile) => ({
+          id: profile.id,
+          label: profile.label,
+          relationship: profile.relationship,
+          birthYear: profile.birth_year ?? null,
+          birthMonth: profile.birth_month ?? null,
+          birthDay: profile.birth_day ?? null,
+          birthHour: profile.birth_hour ?? null,
+          gender: profile.gender ?? null,
+          note: profile.note ?? '',
+          createdAt: profile.created_at,
+        })) ?? [],
+  });
 }
 
 export async function POST(req: NextRequest) {

@@ -47,6 +47,47 @@ const STEP_PATHS: Record<OnboardingStep, string> = {
   consent: '/saju/new/consent',
 };
 
+interface ProfileApiBirthFields {
+  birthYear: number | null;
+  birthMonth: number | null;
+  birthDay: number | null;
+  birthHour: number | null;
+  gender: 'male' | 'female' | null;
+}
+
+interface ProfileApiResponse {
+  authenticated: boolean;
+  profile: (ProfileApiBirthFields & {
+    displayName: string;
+    note: string;
+  }) | null;
+  familyProfiles: Array<
+    ProfileApiBirthFields & {
+      id: string;
+      label: string;
+      relationship: string;
+      note: string;
+      createdAt: string;
+    }
+  >;
+  error?: string;
+}
+
+interface SavedBirthProfile {
+  id: string;
+  source: 'self' | 'family';
+  label: string;
+  nickname: string;
+  detail: string;
+  birthYear: number;
+  birthMonth: number;
+  birthDay: number;
+  birthHour: number | null;
+  gender: 'male' | 'female' | null;
+}
+
+type ProfileLoadStatus = 'idle' | 'loading' | 'ready' | 'anonymous' | 'empty' | 'error';
+
 function getPrevPath(step: OnboardingStep) {
   switch (step) {
     case 'birth':
@@ -98,6 +139,57 @@ function hasValidNickname(form: SajuOnboardingDraft) {
   return form.nickname.trim().length > 0;
 }
 
+function hasBirthFields<T extends ProfileApiBirthFields | null | undefined>(
+  profile: T
+): profile is NonNullable<T> & { birthYear: number; birthMonth: number; birthDay: number } {
+  return Boolean(profile?.birthYear && profile.birthMonth && profile.birthDay);
+}
+
+function formatSavedProfileDetail(profile: ProfileApiBirthFields) {
+  const dateLabel = `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay}`;
+  const hourLabel = profile.birthHour === null ? '시간 미입력' : `${profile.birthHour}시`;
+  const genderLabel = profile.gender === 'male' ? '남성' : profile.gender === 'female' ? '여성' : '성별 미선택';
+  return `${dateLabel} · ${hourLabel} · ${genderLabel}`;
+}
+
+function buildSavedProfileOptions(data: ProfileApiResponse): SavedBirthProfile[] {
+  const options: SavedBirthProfile[] = [];
+
+  if (hasBirthFields(data.profile)) {
+    options.push({
+      id: 'self',
+      source: 'self',
+      label: data.profile.displayName ? `내 정보 · ${data.profile.displayName}` : '내 정보 불러오기',
+      nickname: data.profile.displayName,
+      detail: formatSavedProfileDetail(data.profile),
+      birthYear: data.profile.birthYear,
+      birthMonth: data.profile.birthMonth,
+      birthDay: data.profile.birthDay,
+      birthHour: data.profile.birthHour,
+      gender: data.profile.gender,
+    });
+  }
+
+  data.familyProfiles.forEach((profile) => {
+    if (!hasBirthFields(profile)) return;
+
+    options.push({
+      id: `family-${profile.id}`,
+      source: 'family',
+      label: `${profile.label} · ${profile.relationship}`,
+      nickname: profile.label,
+      detail: formatSavedProfileDetail(profile),
+      birthYear: profile.birthYear,
+      birthMonth: profile.birthMonth,
+      birthDay: profile.birthDay,
+      birthHour: profile.birthHour,
+      gender: profile.gender,
+    });
+  });
+
+  return options;
+}
+
 function StepIndicator({ active }: { active: 1 | 2 | 3 }) {
   return (
     <div className="flex items-center gap-2 text-xs tracking-[0.24em] text-[var(--app-gold)]/72">
@@ -117,6 +209,9 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savedProfileOptions, setSavedProfileOptions] = useState<SavedBirthProfile[]>([]);
+  const [profileLoadStatus, setProfileLoadStatus] = useState<ProfileLoadStatus>('idle');
+  const [profileLoadMessage, setProfileLoadMessage] = useState('');
   const honorific = useMemo(() => getHonorificLabel(form.nickname), [form.nickname]);
   const tonePreview = useMemo(
     () => buildTonePreview(form.tone, form.nickname),
@@ -133,6 +228,49 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
     if (!isHydrated) return;
     saveOnboardingDraft(form);
   }, [form, isHydrated]);
+
+  useEffect(() => {
+    if (!isHydrated || step !== 'birth') return;
+
+    let cancelled = false;
+
+    async function loadSavedProfiles() {
+      setProfileLoadStatus('loading');
+      setProfileLoadMessage('');
+
+      try {
+        const response = await fetch('/api/profile', { cache: 'no-store' });
+        const data = (await response.json().catch(() => null)) as ProfileApiResponse | null;
+
+        if (cancelled) return;
+
+        if (!response.ok || !data) {
+          setProfileLoadStatus('error');
+          setProfileLoadMessage(data?.error ?? '저장된 프로필을 불러오지 못했습니다.');
+          return;
+        }
+
+        if (!data.authenticated) {
+          setProfileLoadStatus('anonymous');
+          return;
+        }
+
+        const options = buildSavedProfileOptions(data);
+        setSavedProfileOptions(options);
+        setProfileLoadStatus(options.length > 0 ? 'ready' : 'empty');
+      } catch {
+        if (cancelled) return;
+        setProfileLoadStatus('error');
+        setProfileLoadMessage('저장된 프로필을 불러오는 중 네트워크 오류가 발생했습니다.');
+      }
+    }
+
+    void loadSavedProfiles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isHydrated, step]);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -160,6 +298,21 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
     value: SajuOnboardingDraft[K]
   ) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function applySavedProfile(profile: SavedBirthProfile) {
+    setForm((current) => ({
+      ...current,
+      year: String(profile.birthYear),
+      month: String(profile.birthMonth),
+      day: String(profile.birthDay),
+      hour: profile.birthHour === null ? '' : String(profile.birthHour),
+      minute: '',
+      gender: profile.gender ?? '',
+      nickname: profile.nickname || current.nickname,
+    }));
+    setErrorMessage('');
+    setProfileLoadMessage(`${profile.label} 정보를 입력칸에 불러왔습니다.`);
   }
 
   function validateBirthStep() {
@@ -329,6 +482,78 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                 <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
                   하늘의 기운이 땅에 내려오는 순간, 그 찰나가 사주입니다. 생년월일만 먼저 입력하셔도 시작하실 수 있고, 시간은 모름으로 남겨두셔도 괜찮습니다.
                 </p>
+
+                <div className="mt-6 rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <div className="app-caption">저장된 정보</div>
+                      <h2 className="mt-2 text-lg font-semibold text-[var(--app-ivory)]">
+                        내 정보나 가족 프로필을 불러올 수 있습니다
+                      </h2>
+                      <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
+                        다른 분의 사주를 보실 때는 저장된 가족/지인 프로필을 선택해 주세요.
+                      </p>
+                    </div>
+                    <Link
+                      href="/my/profile"
+                      className="inline-flex h-10 shrink-0 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-4 text-sm text-[var(--app-copy)] transition-colors hover:text-[var(--app-ivory)]"
+                    >
+                      프로필 관리
+                    </Link>
+                  </div>
+
+                  <div className="mt-4">
+                    {profileLoadStatus === 'loading' ? (
+                      <div className="rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-[var(--app-copy-muted)]">
+                        저장된 정보를 확인하고 있습니다.
+                      </div>
+                    ) : null}
+
+                    {profileLoadStatus === 'anonymous' ? (
+                      <div className="flex flex-col gap-3 rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-6 text-[var(--app-copy-muted)] sm:flex-row sm:items-center sm:justify-between">
+                        <span>로그인하면 저장해 둔 내 정보와 가족 정보를 바로 불러올 수 있습니다.</span>
+                        <Link
+                          href="/login?next=/saju/new/birth"
+                          className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-4 text-sm text-[var(--app-gold-text)]"
+                        >
+                          로그인
+                        </Link>
+                      </div>
+                    ) : null}
+
+                    {profileLoadStatus === 'empty' ? (
+                      <div className="rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-6 text-[var(--app-copy-muted)]">
+                        아직 생년월일이 저장된 프로필이 없습니다. 이번 입력을 마치면 내 프로필에 자동 저장됩니다.
+                      </div>
+                    ) : null}
+
+                    {profileLoadStatus === 'error' ? (
+                      <div className="rounded-2xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm leading-6 text-rose-100">
+                        {profileLoadMessage}
+                      </div>
+                    ) : null}
+
+                    {profileLoadStatus === 'ready' ? (
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {savedProfileOptions.map((profile) => (
+                          <button
+                            key={profile.id}
+                            type="button"
+                            onClick={() => applySavedProfile(profile)}
+                            className="rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-left transition-colors hover:border-[var(--app-gold)]/38 hover:bg-[var(--app-gold)]/8"
+                          >
+                            <span className="block text-sm font-medium text-[var(--app-ivory)]">{profile.label}</span>
+                            <span className="mt-1 block text-xs leading-5 text-[var(--app-copy-muted)]">{profile.detail}</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {profileLoadMessage && profileLoadStatus !== 'error' ? (
+                      <p className="mt-3 text-xs leading-6 text-[var(--app-gold-text)]">{profileLoadMessage}</p>
+                    ) : null}
+                  </div>
+                </div>
 
                 <div className="mt-8 grid gap-4 sm:grid-cols-3">
                   <div>

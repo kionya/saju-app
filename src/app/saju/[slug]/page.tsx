@@ -187,12 +187,12 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
 
           <section className="grid self-start gap-4">
             <div className="app-panel p-5">
-              <div className="app-caption">오늘의 행동 제안</div>
+              <div className="app-caption">{report.focusLabel} 행동 제안</div>
               <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.primaryAction.title}</div>
               <p className="app-body-copy mt-3 text-sm">{report.primaryAction.description}</p>
             </div>
             <div className="app-panel p-5">
-              <div className="app-caption">오늘 피할 포인트</div>
+              <div className="app-caption">{report.focusLabel} 피할 포인트</div>
               <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.cautionAction.title}</div>
               <p className="app-body-copy mt-3 text-sm">{report.cautionAction.description}</p>
             </div>
@@ -225,16 +225,28 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
         </div>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {report.scores.map((score) => (
-            <article key={score.key} className="app-panel p-5">
-              <div className="app-caption">{score.label}</div>
-              <div className="mt-3 flex items-end gap-2">
-                <span className="text-4xl font-semibold text-[var(--app-ivory)]">{score.score}</span>
-                <span className="pb-1 text-sm text-[var(--app-copy-soft)]">/ 100</span>
-              </div>
-              <p className="app-body-copy mt-4 text-sm">{score.summary}</p>
-            </article>
-          ))}
+          {report.scores.map((score) => {
+            const isFocusedScore = report.focusScoreKey === score.key;
+
+            return (
+              <article
+                key={score.key}
+                className={cn(
+                  'app-panel p-5',
+                  isFocusedScore
+                    ? 'border-[var(--app-gold)]/35 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(15,18,32,0.92))]'
+                    : ''
+                )}
+              >
+                <div className="app-caption">{score.label}</div>
+                <div className="mt-3 flex items-end gap-2">
+                  <span className="text-4xl font-semibold text-[var(--app-ivory)]">{score.score}</span>
+                  <span className="pb-1 text-sm text-[var(--app-copy-soft)]">/ 100</span>
+                </div>
+                <p className="app-body-copy mt-4 text-sm">{score.summary}</p>
+              </article>
+            );
+          })}
         </section>
 
         <section className="space-y-4">
