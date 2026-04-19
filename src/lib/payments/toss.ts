@@ -1,17 +1,16 @@
-export const CREDIT_PACKAGES = [
-  { id: 'credit_1', name: '체험 1 코인', credits: 1, price: 500 },
-  { id: 'credit_3', name: '스타터 3 코인', credits: 3, price: 990 },
-  { id: 'credit_7', name: '기본 7 코인', credits: 7, price: 2000 },
-  { id: 'subscription_30', name: 'Plus 30 코인', credits: 30, price: 9900, isSubscription: true },
-] as const;
+import { PAYMENT_PACKAGES, getPackage, type PackageId } from './catalog';
 
-export type PackageId = typeof CREDIT_PACKAGES[number]['id'];
+export const CREDIT_PACKAGES = PAYMENT_PACKAGES.filter((pkg) =>
+  ['credit_1', 'credit_3', 'credit_7', 'subscription_30'].includes(pkg.id)
+);
 
-export function getPackage(id: PackageId) {
-  return CREDIT_PACKAGES.find(p => p.id === id);
-}
+export { getPackage, type PackageId };
 
 export async function confirmPayment(paymentKey: string, orderId: string, amount: number) {
+  if (!process.env.TOSS_SECRET_KEY) {
+    throw new Error('TOSS_SECRET_KEY가 설정되어 있지 않습니다.');
+  }
+
   const response = await fetch('https://api.tosspayments.com/v1/payments/confirm', {
     method: 'POST',
     headers: {

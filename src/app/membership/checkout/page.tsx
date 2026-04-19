@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import TossMembershipCheckout from '@/components/membership/toss-membership-checkout';
 import { Badge } from '@/components/ui/badge';
 import {
   CHECKOUT_PLAN_GUIDE,
@@ -8,10 +9,17 @@ import {
   type PlanSlug,
 } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { getMembershipPackage } from '@/lib/payments/catalog';
 import { AppShell } from '@/shared/layout/app-shell';
 
 interface Props {
-  searchParams: Promise<{ plan?: string }>;
+  searchParams: Promise<{ plan?: string; slug?: string; error?: string }>;
+}
+
+function normalizePlanSlug(value?: string): PlanSlug {
+  if (value === 'plus') return 'basic';
+  if (value === 'basic' || value === 'premium' || value === 'lifetime') return value;
+  return 'premium';
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -22,9 +30,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function MembershipCheckoutPage({ searchParams }: Props) {
-  const { plan } = await searchParams;
-  const selectedPlan = ((plan as PlanSlug | undefined) ?? 'premium') as PlanSlug;
+  const { plan, slug, error } = await searchParams;
+  const selectedPlan = normalizePlanSlug(plan);
   const selected = CHECKOUT_PLAN_GUIDE[selectedPlan] ?? CHECKOUT_PLAN_GUIDE.premium;
+  const paymentPackage = getMembershipPackage(selectedPlan);
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
@@ -90,6 +99,12 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
               ))}
             </div>
 
+            {error === 'payment' ? (
+              <div className="mt-6 rounded-[1.2rem] border border-rose-400/25 bg-rose-400/10 px-5 py-4 text-sm leading-7 text-rose-100">
+                결제가 완료되지 않았습니다. 결제창을 닫으셨거나 승인에 실패했습니다.
+              </div>
+            ) : null}
+
             <div className="mt-6 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
               <div className="app-caption">결제 후 바로 열리는 것</div>
               <div className="mt-3 space-y-2">
@@ -119,12 +134,19 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
             </div>
 
             <div className="mt-6">
-              <Link
-                href={`/membership/complete?plan=${selectedPlan}`}
-                className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
-              >
-                {selected.price} 결제하기
-              </Link>
+              {paymentPackage ? (
+                <TossMembershipCheckout
+                  packageId={paymentPackage.id}
+                  plan={selectedPlan}
+                  amount={paymentPackage.price}
+                  orderName={paymentPackage.name}
+                  slug={slug}
+                />
+              ) : (
+                <div className="rounded-[1.2rem] border border-rose-400/25 bg-rose-400/10 px-5 py-4 text-sm leading-7 text-rose-100">
+                  선택한 플랜의 결제 정보를 찾지 못했습니다.
+                </div>
+              )}
             </div>
           </article>
         </section>

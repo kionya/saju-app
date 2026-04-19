@@ -23,6 +23,18 @@ const TYPE_LABELS: Record<string, string> = {
   signup_bonus: '가입 보너스',
 };
 
+function getTransactionLabel(transaction: Awaited<ReturnType<typeof getAccountDashboardData>>['recentTransactions'][number]) {
+  if (transaction.feature === 'lifetime_report') {
+    return '평생 리포트 권한';
+  }
+
+  if (transaction.type === 'subscription') {
+    return '멤버십 시작';
+  }
+
+  return TYPE_LABELS[transaction.type] ?? transaction.type;
+}
+
 function getStatusTone(status: 'active' | 'cancelled' | 'expired' | null) {
   if (status === 'active') {
     return 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200';
@@ -191,7 +203,7 @@ export default async function MyBillingPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <div className="text-sm font-medium text-[var(--app-ivory)]">
-                      {TYPE_LABELS[transaction.type] ?? transaction.type}
+                      {getTransactionLabel(transaction)}
                     </div>
                     <div className="app-micro-copy mt-1">
                       {formatDate(transaction.createdAt)}

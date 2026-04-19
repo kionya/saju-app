@@ -601,7 +601,7 @@ export const MY_MENU_BLUEPRINT = [
 export const PLAN_BLUEPRINT = [
   {
     slug: 'basic' as const,
-    title: '베이직',
+    title: 'Plus',
     price: '월 4,900원',
     badge: '부담 없는 시작',
     summary: '가끔씩 마음이 궁금할 때, 큰 부담 없이 달빛선생의 해석을 곁에 두는 가장 가벼운 달빛 플랜입니다.',
@@ -807,12 +807,12 @@ export const CHECKOUT_PLAN_GUIDE: Record<
   }
 > = {
   basic: {
-    title: '베이직',
+    title: 'Plus',
     price: '월 4,900원',
     nextRange: '첫 결제 후 30일 이용',
     reassurance: '가볍게 시작해도 핵심 해석 흐름은 충분히 경험하실 수 있습니다.',
     opens: ['심층 리포트 월 2회', '기본 해석과 대화 상담', '광고 없는 차분한 이용'],
-    notices: ['자동 갱신 전 미리 알림', '언제든 마이페이지에서 해지 가능', '열람 전 환불 기준 함께 안내'],
+    notices: ['첫 결제 후 30일 이용권으로 반영', '마이페이지에서 상태 확인 가능', '열람 전 환불 기준 함께 안내'],
   },
   premium: {
     title: '프리미엄',
@@ -820,7 +820,7 @@ export const CHECKOUT_PLAN_GUIDE: Record<
     nextRange: '첫 결제 후 30일 이용',
     reassurance: '가족 사주, 궁합, 대화까지 가장 넓게 쓰실 수 있는 메인 플랜입니다.',
     opens: ['궁합 분석과 가족 사주 5명', '심층 리포트 월 10회', '대화 상담 무제한'],
-    notices: ['결제일 3일 전 자동 갱신 안내', '언제든 플랜 화면에서 해지 가능', '이용 내역과 환불 기준을 한 번 더 고지'],
+    notices: ['첫 결제 후 30일 이용권으로 반영', '언제든 플랜 화면에서 상태 확인 가능', '이용 내역과 환불 기준을 한 번 더 고지'],
   },
   lifetime: {
     title: '평생 심층 리포트',
@@ -1020,14 +1020,13 @@ export const TEN_GODS_GUIDE: readonly MoonlightTenGodCard[] = [
 export const MEMBERSHIP_REASSURANCE = [
   '해지는 언제든 가능하며, 남은 이용 기간은 끝까지 편히 보실 수 있습니다.',
   '열람 전 상태와 이용 기준을 먼저 보여드리고, 환불 기준도 같은 화면에서 확인하실 수 있습니다.',
-  '자동 갱신은 미리 알려드리니 갑작스러운 결제로 놀라지 않으셔도 됩니다.',
+  '현재 멤버십 결제는 30일 이용권으로 먼저 안전하게 반영하고, 자동 갱신 결제키 연동은 별도 단계로 다룹니다.',
 ] as const;
 
 export const CHECKOUT_METHODS = [
-  '신용카드 · 체크카드',
-  '카카오페이',
-  '네이버페이',
-  '계좌이체',
+  'Toss 계좌이체',
+  '결제 승인 후 멤버십 자동 반영',
+  '실패 시 권한 미반영 후 결제 화면 복귀',
 ] as const;
 
 export const SETTINGS_BLUEPRINT = [
@@ -1069,7 +1068,7 @@ export const SETTINGS_BLUEPRINT = [
 ] as const;
 
 export const FAMILY_PLAN_LIMITS = [
-  '무료·베이직: 본인만 저장',
+  '무료·Plus: 본인만 저장',
   '프리미엄: 본인 + 가족 5명',
   '평생 심층: 본인 + 가족 10명',
 ] as const;

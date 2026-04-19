@@ -1,4 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server';
+import type { SubscriptionPlan } from '@/lib/payments/catalog';
 
 export type SubscriptionStatus = 'active' | 'cancelled' | 'expired';
 
@@ -93,9 +94,25 @@ export async function activatePlusSubscription(
   userId: string,
   options: { customerKey?: string | null; billingKey?: string | null } = {}
 ) {
+  return activateMembershipSubscription(userId, {
+    ...options,
+    plan: 'plus_monthly',
+  });
+}
+
+export async function activateMembershipSubscription(
+  userId: string,
+  options: {
+    plan: SubscriptionPlan;
+    days?: number;
+    customerKey?: string | null;
+    billingKey?: string | null;
+  }
+) {
   const service = await createServiceClient();
   const existing = await readSubscription(userId);
   const now = new Date();
+  const days = options.days ?? 30;
   const baseDate =
     existing?.renews_at && new Date(existing.renews_at).getTime() > now.getTime()
       ? new Date(existing.renews_at)
@@ -107,8 +124,8 @@ export async function activatePlusSubscription(
       {
         user_id: userId,
         status: 'active',
-        plan: 'plus_monthly',
-        renews_at: addDays(baseDate, 30),
+        plan: options.plan,
+        renews_at: addDays(baseDate, days),
         toss_customer_key: options.customerKey ?? existing?.toss_customer_key ?? null,
         toss_billing_key: options.billingKey ?? existing?.toss_billing_key ?? null,
         updated_at: now.toISOString(),
@@ -174,6 +191,10 @@ export function getSubscriptionStatusLabel(status: SubscriptionStatus) {
 export function getSubscriptionPlanLabel(plan: string) {
   if (plan === 'plus_monthly') {
     return 'Plus 월간 멤버십';
+  }
+
+  if (plan === 'premium_monthly') {
+    return '프리미엄 월간 멤버십';
   }
 
   return plan;

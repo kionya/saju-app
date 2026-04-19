@@ -10,7 +10,7 @@ import {
 
 export const metadata: Metadata = {
   title: '멤버십',
-  description: '베이직, 프리미엄, 평생 심층 리포트 세 가지 선택지로 달빛선생의 멤버십을 살펴보세요.',
+  description: 'Plus, 프리미엄, 평생 심층 리포트 세 가지 선택지로 달빛선생의 멤버십을 살펴보세요.',
   alternates: {
     canonical: '/membership',
   },
@@ -87,7 +87,7 @@ export default function MembershipPage() {
                       : 'inline-flex h-11 w-full items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
                   }
                 >
-                  {index === 0 ? '베이직 시작하기' : index === 1 ? '프리미엄 시작하기' : '평생 리포트 열기'}
+                  {index === 0 ? 'Plus 시작하기' : index === 1 ? '프리미엄 시작하기' : '평생 리포트 열기'}
                 </Link>
               </div>
             </article>

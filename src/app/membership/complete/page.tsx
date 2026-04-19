@@ -6,11 +6,11 @@ import SiteHeader from '@/features/shared-navigation/site-header';
 import { AppShell } from '@/shared/layout/app-shell';
 
 interface Props {
-  searchParams: Promise<{ plan?: string }>;
+  searchParams: Promise<{ plan?: string; slug?: string; payment?: string }>;
 }
 
 const PLAN_LABELS = {
-  basic: '베이직',
+  basic: 'Plus',
   premium: '프리미엄',
   lifetime: '평생 심층 리포트',
 } as const;
@@ -23,10 +23,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function MembershipCompletePage({ searchParams }: Props) {
-  const { plan } = await searchParams;
+  const { plan, slug, payment } = await searchParams;
   const planSlug = ((plan as PlanSlug | undefined) ?? 'premium') as PlanSlug;
   const planLabel = PLAN_LABELS[planSlug] ?? PLAN_LABELS.premium;
   const completeGuide = COMPLETE_PLAN_GUIDE[planSlug] ?? COMPLETE_PLAN_GUIDE.premium;
+  const primaryHref =
+    slug && (planSlug === 'lifetime' || planSlug === 'premium')
+      ? `/saju/${slug}/premium`
+      : completeGuide.primaryHref;
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
@@ -38,7 +42,7 @@ export default async function MembershipCompletePage({ searchParams }: Props) {
 
           <div className="mt-6 flex justify-center">
             <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]">
-              {planLabel}
+              {payment === 'confirmed' ? '결제 완료' : planLabel}
             </Badge>
           </div>
 
@@ -72,10 +76,10 @@ export default async function MembershipCompletePage({ searchParams }: Props) {
 
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Link
-              href={completeGuide.primaryHref}
+              href={primaryHref}
               className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
             >
-              {completeGuide.primaryLabel}
+              {slug && planSlug === 'lifetime' ? '열린 평생 리포트 보기' : completeGuide.primaryLabel}
             </Link>
             <Link
               href="/"
