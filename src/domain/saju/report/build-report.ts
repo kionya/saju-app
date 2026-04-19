@@ -58,6 +58,7 @@ const SCORE_LABELS: Record<ReportScore['key'], string> = {
   love: '연애',
   wealth: '재물',
   career: '직장',
+  relationship: '관계',
 };
 
 const TOPIC_SCORE_KEYS: Record<FocusTopic, ReportScore['key']> = {
@@ -65,7 +66,7 @@ const TOPIC_SCORE_KEYS: Record<FocusTopic, ReportScore['key']> = {
   love: 'love',
   wealth: 'wealth',
   career: 'career',
-  relationship: 'love',
+  relationship: 'relationship',
 };
 
 const STRENGTH_INTERPRETATION: Record<'신강' | '중화' | '신약', string> = {
@@ -233,7 +234,7 @@ function buildSummaryHighlights(
     case 'relationship':
       return compactStrings([
         `${dayMasterSummary} 관계에서는 한 번에 결론을 내기보다 말의 순서와 거리감을 조율하는 쪽이 편합니다.`,
-        `관계 흐름은 ${scoreMap.love}점으로, ${supportLabels} 기운을 살리면 가까운 사람과의 오해를 줄이고 대화의 온도를 맞추기 좋습니다.`,
+        `관계 흐름은 ${scoreMap.relationship}점으로, ${supportLabels} 기운을 살리면 가까운 사람과의 오해를 줄이고 대화의 온도를 맞추기 좋습니다.`,
         currentLuck || `${dominant} 기운이 앞서기 쉬운 날이라 ${weakest} 보완을 의식할수록 감정의 균형이 안정됩니다.`,
       ]).slice(0, 3);
     case 'today':
@@ -441,6 +442,21 @@ function buildScores(input: BirthInput, data: SajuDataV1): ReportScore[] {
   const love = clampScore(balanceBase + datePulse + (uniqueCount >= 4 ? 4 : 1) + (input.day % 5) - 2);
   const wealth = clampScore(balanceBase + yearPulse + strongest * 2 - weakest);
   const career = clampScore(balanceBase + hourBonus + (input.month % 5) - 1 + (strongest >= 2 ? 3 : 0));
+  const relations = getOrreryExtension(data)?.relations ?? [];
+  const supportRelations = relations.filter((relation) =>
+    ['천간합', '육합', '반합', '삼합', '방합'].includes(relation.label)
+  ).length;
+  const tensionRelations = relations.filter((relation) =>
+    ['충', '형', '해', '파', '천간충'].includes(relation.label)
+  ).length;
+  const relationship = clampScore(
+    balanceBase +
+      (uniqueCount >= 4 ? 3 : 0) +
+      Math.min(supportRelations, 2) * 3 -
+      Math.min(tensionRelations, 2) * 2 +
+      ((input.year + input.day) % 5) -
+      2
+  );
 
   const summaries: Record<ReportScore['key'], string> = {
     overall:
@@ -467,6 +483,12 @@ function buildScores(input: BirthInput, data: SajuDataV1): ReportScore[] {
         : career >= 70
           ? '정리된 커뮤니케이션이 일의 흐름을 매끈하게 만듭니다.'
           : '확장보다 현재 역할의 완성도를 높이는 편이 좋습니다.',
+    relationship:
+      relationship >= 80
+        ? '가까운 사람과의 말길이 열리기 쉬워 먼저 확인하고 조율하기 좋습니다.'
+        : relationship >= 70
+          ? '감정의 결론보다 거리감과 표현 순서를 맞추는 것이 중요합니다.'
+          : '오해가 커지지 않도록 사실과 감정을 나눠 말하는 편이 안전합니다.',
   };
 
   return [
@@ -474,6 +496,7 @@ function buildScores(input: BirthInput, data: SajuDataV1): ReportScore[] {
     { key: 'love', label: SCORE_LABELS.love, score: love, summary: summaries.love },
     { key: 'wealth', label: SCORE_LABELS.wealth, score: wealth, summary: summaries.wealth },
     { key: 'career', label: SCORE_LABELS.career, score: career, summary: summaries.career },
+    { key: 'relationship', label: SCORE_LABELS.relationship, score: relationship, summary: summaries.relationship },
   ];
 }
 
@@ -492,7 +515,7 @@ function getHeadline(topic: FocusTopic, scoreMap: Record<ReportScore['key'], num
         ? '직장운이 전진 구간입니다. 제안과 피드백에 힘이 붙습니다.'
         : '직장운은 정비 구간입니다. 속도보다 완성도를 먼저 챙기세요.';
     case 'relationship':
-      return scoreMap.love >= 76
+      return scoreMap.relationship >= 76
         ? '관계운이 따뜻하게 풀립니다. 짧은 안부가 흐름을 바꿉니다.'
         : '관계운은 거리 조절이 핵심입니다. 감정보다 명확한 표현이 필요합니다.';
     case 'today':

@@ -8,6 +8,11 @@ import {
   SAJU_PREMIUM_VALUE_POINTS,
 } from '@/content/moonlight';
 import { buildSajuReport } from '@/domain/saju/report';
+import {
+  ELEMENT_INFO,
+  getLuckyElementsFromSajuData,
+  getPersonalityFromSajuData,
+} from '@/lib/saju/elements';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { getLifetimeReportEntitlement } from '@/lib/report-entitlements';
@@ -24,29 +29,166 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+type ReadingRecord = NonNullable<Awaited<ReturnType<typeof resolveReading>>>;
+
+interface PremiumReportSection {
+  eyebrow: string;
+  title: string;
+  lead: string;
+  paragraphs: string[];
+  highlights?: string[];
+}
+
 function compactStrings(strings: Array<string | null | undefined>) {
   return strings.filter((item): item is string => Boolean(item && item.trim().length > 0));
 }
 
-function buildUnlockedReportSections(reading: NonNullable<Awaited<ReturnType<typeof resolveReading>>>) {
+function formatElementName(element: keyof typeof ELEMENT_INFO) {
+  return ELEMENT_INFO[element].name.split(' ')[0];
+}
+
+function formatSymbolList(symbols: Array<{ label: string }> | null | undefined) {
+  return symbols && symbols.length > 0 ? symbols.map((symbol) => symbol.label).join(' · ') : '';
+}
+
+function formatLuckRange(cycle: { startAge: number | null; endAge: number | null }) {
+  if (cycle.startAge === null && cycle.endAge === null) return '나이 미산정';
+  if (cycle.startAge !== null && cycle.endAge !== null) return `${cycle.startAge}-${cycle.endAge}세`;
+  if (cycle.startAge !== null) return `${cycle.startAge}세 이후`;
+  return `${cycle.endAge}세 이전`;
+}
+
+function formatMajorLuckLine(cycle: NonNullable<ReadingRecord['sajuData']['majorLuck']>[number]) {
+  const note = cycle.notes.slice(0, 2).join(' ') || '이 시기의 대운 흐름은 세부 해석 보강 대상입니다.';
+  return `${formatLuckRange(cycle)} · ${cycle.ganzi}: ${note}`;
+}
+
+function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSection[] {
   const { input, sajuData } = reading;
-  const report = buildSajuReport(input, sajuData, 'today');
+  const todayReport = buildSajuReport(input, sajuData, 'today');
+  const loveReport = buildSajuReport(input, sajuData, 'love');
+  const wealthReport = buildSajuReport(input, sajuData, 'wealth');
+  const careerReport = buildSajuReport(input, sajuData, 'career');
+  const relationshipReport = buildSajuReport(input, sajuData, 'relationship');
+  const evidenceByKey = Object.fromEntries(
+    todayReport.evidenceCards.map((card) => [card.key, card])
+  );
+  const dominant = formatElementName(sajuData.fiveElements.dominant);
+  const weakest = formatElementName(sajuData.fiveElements.weakest);
+  const supportLabels =
+    getLuckyElementsFromSajuData(sajuData).map(formatElementName).join(' · ') || dominant;
+  const pillars = [
+    `년주 ${sajuData.pillars.year.ganzi}`,
+    `월주 ${sajuData.pillars.month.ganzi}`,
+    `일주 ${sajuData.pillars.day.ganzi}`,
+    sajuData.pillars.hour ? `시주 ${sajuData.pillars.hour.ganzi}` : '시주 미입력',
+  ];
+  const strength = evidenceByKey.strength;
+  const pattern = evidenceByKey.pattern;
+  const yongsin = evidenceByKey.yongsin;
+  const relations = evidenceByKey.relations;
+  const gongmang = evidenceByKey.gongmang;
+  const specialSals = evidenceByKey.specialSals;
+  const majorLuckHighlights = sajuData.majorLuck?.slice(0, 10).map(formatMajorLuckLine) ?? [];
+  const currentMajor = sajuData.currentLuck?.currentMajorLuck;
+  const saewoon = sajuData.currentLuck?.saewoon;
+  const wolwoon = sajuData.currentLuck?.wolwoon;
+  const yongsinLabel = sajuData.yongsin
+    ? formatSymbolList([sajuData.yongsin.primary, ...sajuData.yongsin.secondary])
+    : yongsin?.title ?? '';
 
   return [
     {
-      title: '1. 일주 본질',
-      body: compactStrings([
+      eyebrow: '타고난 결',
+      title: '1. 일주와 기본 성향',
+      lead: compactStrings([
         `선생님의 일주는 ${sajuData.pillars.day.ganzi}입니다.`,
         sajuData.dayMaster.metaphor
           ? `${sajuData.dayMaster.stem} 일간은 ${sajuData.dayMaster.metaphor}의 결을 지녀 삶의 방향을 읽을 때 이 상징을 먼저 봅니다.`
           : null,
-        report.summaryHighlights[0],
       ]).join(' '),
+      paragraphs: compactStrings([
+        getPersonalityFromSajuData(sajuData),
+        `명식의 네 기둥은 ${pillars.join(' · ')}로 놓이며, 일간이 서 있는 자리와 월령의 계절감이 평생 해석의 출발점이 됩니다.`,
+        todayReport.summaryHighlights[0],
+      ]),
     },
-    ...report.evidenceCards.map((card, index) => ({
-      title: `${index + 2}. ${card.label} · ${card.title}`,
-      body: compactStrings([card.body, ...card.details.slice(0, 3)]).join(' '),
-    })),
+    {
+      eyebrow: '균형 진단',
+      title: '2. 오행 분포와 강약',
+      lead: `${dominant} 기운이 가장 앞에 있고, ${weakest} 기운을 어떻게 보완하느냐가 평생 균형의 핵심입니다.`,
+      paragraphs: compactStrings([
+        strength ? `${strength.title}: ${strength.body}` : null,
+        strength?.details.join(' '),
+        todayReport.summaryHighlights[1],
+      ]),
+      highlights: Object.entries(sajuData.fiveElements.byElement).map(
+        ([element, value]) => `${formatElementName(element as keyof typeof ELEMENT_INFO)} ${value.percentage}% · ${value.state}`
+      ),
+    },
+    {
+      eyebrow: '명식 구조',
+      title: '3. 격국과 용신',
+      lead: compactStrings([
+        pattern ? `${pattern.title}을 기준으로 삶의 역할과 관계 패턴을 먼저 읽습니다.` : null,
+        yongsinLabel ? `보완 축은 ${yongsinLabel}입니다.` : null,
+      ]).join(' '),
+      paragraphs: compactStrings([
+        pattern ? `${pattern.body} ${pattern.details.join(' ')}` : null,
+        yongsin ? `${yongsin.body} ${yongsin.details.join(' ')}` : null,
+        `평생 운을 볼 때는 타고난 구조를 고정값으로 단정하기보다, ${supportLabels} 기운을 생활 환경과 선택 안에 얼마나 안정적으로 들이는지가 중요합니다.`,
+      ]),
+    },
+    {
+      eyebrow: '인생 큰 흐름',
+      title: '4. 대운으로 보는 장기 운세',
+      lead: currentMajor
+        ? `현재는 ${currentMajor.ganzi} 대운권에 있어 ${formatLuckRange(currentMajor)} 구간의 선택이 다음 흐름을 여는 기준이 됩니다.`
+        : '대운은 10년 단위로 삶의 배경이 바뀌는 큰 흐름입니다.',
+      paragraphs: compactStrings([
+        currentMajor?.notes.join(' '),
+        '아래 대운 흐름은 특정 사건을 단정하기보다, 어느 시기에 확장·정리·관계 조율의 과제가 커지는지 보는 장기 지도입니다.',
+      ]),
+      highlights: majorLuckHighlights.length > 0
+        ? majorLuckHighlights
+        : ['성별 또는 생시 정보가 부족해 대운 시작 시점은 아직 산정되지 않았습니다.'],
+    },
+    {
+      eyebrow: '현재 운',
+      title: '5. 세운과 월운',
+      lead: compactStrings([
+        saewoon?.ganzi ? `${saewoon.ganzi} 세운` : null,
+        wolwoon?.ganzi ? `${wolwoon.ganzi} 월운` : null,
+      ]).join(' · ') || '현재 세운과 월운은 기본 흐름 중심으로 해석합니다.',
+      paragraphs: compactStrings([
+        saewoon?.notes.join(' '),
+        wolwoon?.notes.join(' '),
+        todayReport.timeline[1]?.body,
+        todayReport.timeline[2]?.body,
+      ]),
+    },
+    {
+      eyebrow: '생활 분야',
+      title: '6. 재물·연애·직장·관계',
+      lead: '평생 리포트에서는 한 분야만 따로 떼어 보지 않고, 돈·마음·역할·사람 사이의 균형을 함께 봅니다.',
+      paragraphs: compactStrings([
+        `재물: ${wealthReport.summaryHighlights.join(' ')} ${wealthReport.primaryAction.description}`,
+        `연애: ${loveReport.summaryHighlights.join(' ')} ${loveReport.primaryAction.description}`,
+        `직장: ${careerReport.summaryHighlights.join(' ')} ${careerReport.primaryAction.description}`,
+        `관계: ${relationshipReport.summaryHighlights.join(' ')} ${relationshipReport.primaryAction.description}`,
+      ]),
+    },
+    {
+      eyebrow: '활용 전략',
+      title: '7. 합충·공망·신살을 반영한 평생 조언',
+      lead: `좋은 운은 ${supportLabels} 기운을 현실의 루틴으로 만들 때 오래 갑니다.`,
+      paragraphs: compactStrings([
+        relations ? `${relations.title}: ${relations.body} ${relations.details.join(' ')}` : null,
+        gongmang ? `${gongmang.title}: ${gongmang.body} ${gongmang.details.join(' ')}` : null,
+        specialSals ? `${specialSals.title}: ${specialSals.body} ${specialSals.details.join(' ')}` : null,
+        '운의 강한 구간에서는 속도를 내되, 약한 축이 드러나는 시기에는 결정을 늦추고 확인 절차를 늘리는 방식이 가장 현실적인 보완책입니다.',
+      ]),
+    },
   ];
 }
 
@@ -105,11 +247,11 @@ export default async function SajuPremiumPage({ params }: Props) {
         <section className="app-hero-card p-7 sm:p-8">
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-              심층 리포트 · 미리보기
+              {accessLabel ? '심층 리포트 · 전체 열람' : '심층 리포트 · 미리보기'}
             </Badge>
           </div>
           <h1 className="mt-5 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
-            나머지 6개 섹션, 전체 해석 보기
+            {accessLabel ? '평생 리포트 전체 해석' : '나머지 6개 섹션, 전체 해석 보기'}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
             격국, 용신, 대운, 세운을 포함한 일생의 큰 그림을 한 번에 열고, 평생 소장용 리포트로
@@ -137,8 +279,32 @@ export default async function SajuPremiumPage({ params }: Props) {
                     key={section.title}
                     className="rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5"
                   >
-                    <h3 className="text-base font-semibold text-[var(--app-ivory)]">{section.title}</h3>
-                    <p className="mt-3 text-sm leading-8 text-[var(--app-copy)]">{section.body}</p>
+                    <div className="app-caption">{section.eyebrow}</div>
+                    <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">
+                      {section.title}
+                    </h3>
+                    <p className="mt-4 rounded-[1rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-4 text-base font-semibold leading-8 text-[var(--app-ivory)]">
+                      {section.lead}
+                    </p>
+                    <div className="mt-4 space-y-3">
+                      {section.paragraphs.map((paragraph) => (
+                        <p key={paragraph} className="text-sm leading-8 text-[var(--app-copy)]">
+                          {paragraph}
+                        </p>
+                      ))}
+                    </div>
+                    {section.highlights && section.highlights.length > 0 ? (
+                      <div className="mt-5 grid gap-2">
+                        {section.highlights.map((highlight) => (
+                          <div
+                            key={highlight}
+                            className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]"
+                          >
+                            {highlight}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                   </article>
                 ))}
               </div>

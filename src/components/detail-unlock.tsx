@@ -25,6 +25,91 @@ const SECTIONS = [
   { key: 'health', label: '건강운' },
 ] as const;
 
+const DETAIL_SECTION_META: Record<
+  (typeof SECTIONS)[number]['key'],
+  {
+    eyebrow: string;
+    focus: string;
+    guidance: string;
+  }
+> = {
+  wealth: {
+    eyebrow: '돈의 구조',
+    focus: '핵심 재물 흐름',
+    guidance: '수입·지출·기회 판단을 분리해서 읽어보세요.',
+  },
+  love: {
+    eyebrow: '감정의 온도',
+    focus: '핵심 애정 흐름',
+    guidance: '상대의 반응보다 표현 방식과 속도에 주목해 보세요.',
+  },
+  career: {
+    eyebrow: '역할과 성과',
+    focus: '핵심 직업 흐름',
+    guidance: '자리, 책임, 제안 타이밍을 나눠서 확인해 보세요.',
+  },
+  health: {
+    eyebrow: '몸의 균형',
+    focus: '핵심 건강 흐름',
+    guidance: '강한 기운과 약한 기운이 생활 리듬에 주는 영향을 봅니다.',
+  },
+};
+
+function splitSentences(text: string) {
+  return (
+    text
+      .replace(/\s+/g, ' ')
+      .match(/[^.!?。]+[.!?。]?/g)
+      ?.map((sentence) => sentence.trim())
+      .filter(Boolean) ?? [text.trim()]
+  );
+}
+
+function chunkSentences(sentences: string[], size: number) {
+  const chunks: string[] = [];
+
+  for (let index = 0; index < sentences.length; index += size) {
+    chunks.push(sentences.slice(index, index + size).join(' '));
+  }
+
+  return chunks;
+}
+
+function ReadableDetailText({
+  text,
+  focus,
+}: {
+  text: string;
+  focus: string;
+}) {
+  const [lead = '', ...rest] = splitSentences(text);
+  const paragraphs = chunkSentences(rest, 2);
+
+  return (
+    <div className="mt-4 space-y-4">
+      <div className="rounded-[1.15rem] border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/8 px-4 py-4">
+        <div className="app-caption">{focus}</div>
+        <p className="mt-2 text-base font-semibold leading-8 text-[var(--app-ivory)] sm:text-lg">
+          {lead}
+        </p>
+      </div>
+
+      {paragraphs.length > 0 ? (
+        <div className="space-y-3">
+          {paragraphs.map((paragraph) => (
+            <p
+              key={paragraph}
+              className="text-sm leading-8 text-[var(--app-copy)] sm:text-[0.95rem]"
+            >
+              {paragraph}
+            </p>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function DetailUnlock({ slug }: Props) {
   const [state, setState] = useState<'locked' | 'loading' | 'unlocked' | 'error'>('locked');
   const [content, setContent] = useState<DetailContent | null>(null);
@@ -87,22 +172,31 @@ export default function DetailUnlock({ slug }: Props) {
         </p>
 
         <div className="grid gap-3">
-          {SECTIONS.map(({ key, label }) => (
-            <article
-              key={key}
-              className="rounded-[24px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-sm font-medium text-[var(--app-ivory)]">{label}</div>
-                <Badge className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-copy-muted)]">
-                  심화
-                </Badge>
-              </div>
-              <p className="app-body-copy mt-3 text-sm leading-relaxed">
-                {content[key as keyof Pick<DetailContent, 'wealth' | 'love' | 'career' | 'health'>]}
-              </p>
-            </article>
-          ))}
+          {SECTIONS.map(({ key, label }) => {
+            const meta = DETAIL_SECTION_META[key];
+
+            return (
+              <article
+                key={key}
+                className="rounded-[24px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="app-caption">{meta.eyebrow}</div>
+                    <div className="mt-2 text-lg font-semibold text-[var(--app-ivory)]">{label}</div>
+                  </div>
+                  <Badge className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-copy-muted)]">
+                    심화
+                  </Badge>
+                </div>
+                <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">{meta.guidance}</p>
+                <ReadableDetailText
+                  text={content[key as keyof Pick<DetailContent, 'wealth' | 'love' | 'career' | 'health'>]}
+                  focus={meta.focus}
+                />
+              </article>
+            );
+          })}
         </div>
 
         <div className="rounded-[24px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">

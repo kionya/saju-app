@@ -224,7 +224,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           </section>
         </div>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {report.scores.map((score) => {
             const isFocusedScore = report.focusScoreKey === score.key;
 

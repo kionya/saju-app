@@ -3,7 +3,7 @@
 export type FocusTopic = 'today' | 'love' | 'wealth' | 'career' | 'relationship';
 
 export interface ReportScore {
-  key: 'overall' | 'love' | 'wealth' | 'career';
+  key: 'overall' | 'love' | 'wealth' | 'career' | 'relationship';
   label: string;
   score: number;
   summary: string;
