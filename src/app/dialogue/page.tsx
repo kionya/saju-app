@@ -3,6 +3,7 @@ import Link from 'next/link';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { AppShell } from '@/shared/layout/app-shell';
 import { DIALOGUE_GUARDRAILS, DIALOGUE_PRESETS } from '@/content/moonlight';
+import { DialogueSafetyChecker } from '@/components/dialogue/dialogue-safety-checker';
 
 export const metadata: Metadata = {
   title: '대화',
@@ -27,6 +28,10 @@ export default function DialoguePage() {
             처음부터 길게 적지 않으셔도 괜찮습니다. 많이들 여쭙는 질문을 먼저 고르셔도 되고, 편한 말로 한 줄만 남기셔도 됩니다.
             더 조심스러운 문제는 무리하게 해석하지 않고 알맞은 도움으로 안내드립니다.
           </p>
+        </section>
+
+        <section className="mt-8">
+          <DialogueSafetyChecker />
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">

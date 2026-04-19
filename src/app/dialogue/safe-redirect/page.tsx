@@ -12,6 +12,7 @@ export const metadata: Metadata = {
 
 export default function SafeRedirectPage() {
   const primary = SAFE_REDIRECT_RESOURCES[0];
+  const primaryPhoneHref = `tel:${primary.phone.replace(/[^\d+]/g, '')}`;
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
@@ -63,7 +64,7 @@ export default function SafeRedirectPage() {
           </p>
           <div className="mt-6">
             <a
-              href="tel:1393"
+              href={primaryPhoneHref}
               className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--app-coral)] px-6 text-sm font-semibold text-white transition-colors hover:opacity-90"
             >
               바로 전화 걸기

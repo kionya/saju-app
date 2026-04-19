@@ -353,17 +353,24 @@ export const DIALOGUE_GUARDRAILS = [
   },
   {
     title: 'SAFE_REDIRECT',
-    body: '의료·법률·투자처럼 더 안전한 도움이 필요한 문제는 선을 넘지 않고 알맞은 도움처로 모십니다.',
+    body: '자해·극단 선택·응급 의료·법률·투자처럼 더 안전한 도움이 필요한 문제는 선을 넘지 않고 알맞은 도움처로 모십니다.',
   },
 ] as const;
 
 export const SAFE_REDIRECT_RESOURCES = [
   {
     category: 'crisis',
-    label: '자살예방상담전화',
-    phone: '1393',
-    detail: '24시간 무료 · 익명 가능',
-    note: '전문 상담사와 이야기 나누실 수 있습니다.',
+    label: '자살예방 상담전화 109',
+    phone: '109',
+    detail: '대한민국 24시간 상담 · 국번 없이 연결',
+    note: '마음이 위험한 순간에는 전문 상담사와 바로 이야기 나누실 수 있습니다.',
+  },
+  {
+    category: 'crisis-us',
+    label: '988 Suicide & Crisis Lifeline',
+    phone: '988',
+    detail: '미국/미국령 24시간 통화 · 문자 · 채팅',
+    note: '미국에서 즉시 위기 지원이 필요하면 988, 생명이 급한 응급상황이면 911로 연결하세요.',
   },
   {
     category: 'medical',
