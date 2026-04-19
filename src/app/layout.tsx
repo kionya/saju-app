@@ -5,10 +5,10 @@ import { DEFAULT_DESCRIPTION, SITE_NAME, getSiteUrl } from "@/lib/site";
 const layoutModeScript = `
 (() => {
   try {
-    const mode = window.localStorage.getItem('moonlight:layout-mode');
-    document.documentElement.dataset.appLayout = mode === 'horizontal' ? 'horizontal' : 'vertical';
+    const mode = window.localStorage.getItem('moonlight:layout-mode-v2');
+    document.documentElement.dataset.appLayout = mode === 'vertical' ? 'vertical' : 'horizontal';
   } catch {
-    document.documentElement.dataset.appLayout = 'vertical';
+    document.documentElement.dataset.appLayout = 'horizontal';
   }
 })();
 `;
@@ -53,7 +53,7 @@ export default function RootLayout({
     <html
       lang="ko"
       className="dark h-full antialiased"
-      data-app-layout="vertical"
+      data-app-layout="horizontal"
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">

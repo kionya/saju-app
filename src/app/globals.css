@@ -611,6 +611,110 @@
     z-index: 0;
   }
 
+  .wisdom-category-page {
+    max-width: none;
+    padding: 0 0 5rem;
+  }
+
+  .wisdom-category-body {
+    width: min(100%, 75rem);
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  .wisdom-category-hero {
+    position: relative;
+    overflow: hidden;
+    min-height: 18.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top: 1px solid var(--app-line);
+    border-bottom: 1px solid var(--app-line);
+    background:
+      radial-gradient(ellipse at 50% 15%, rgba(212, 176, 106, 0.11), transparent 52%),
+      radial-gradient(ellipse at 12% 82%, rgba(123, 163, 204, 0.08), transparent 42%),
+      linear-gradient(180deg, rgba(6, 7, 13, 0.98), rgba(10, 12, 23, 0.99));
+    padding: 4.25rem 1.5rem 3.75rem;
+    text-align: center;
+  }
+
+  .wisdom-category-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle at 5% 8%, rgba(212, 176, 106, 0.9) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 16% 42%, rgba(236, 201, 133, 0.46) 0 1px, transparent 1.4px),
+      radial-gradient(circle at 32% 16%, rgba(236, 201, 133, 0.56) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 47% 68%, rgba(236, 201, 133, 0.48) 0 1px, transparent 1.4px),
+      radial-gradient(circle at 66% 14%, rgba(236, 201, 133, 0.5) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 82% 52%, rgba(236, 201, 133, 0.72) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 93% 22%, rgba(236, 201, 133, 0.36) 0 1px, transparent 1.4px);
+    opacity: 0.5;
+  }
+
+  .wisdom-category-hero-content {
+    position: relative;
+    z-index: 1;
+    width: min(100%, 48rem);
+    margin-inline: auto;
+  }
+
+  .wisdom-category-hanja {
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    letter-spacing: 0.54em;
+  }
+
+  .wisdom-category-title {
+    margin-top: 1.45rem;
+    font-family: var(--font-heading);
+    font-size: clamp(2.45rem, 4vw, 3.8rem);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+  }
+
+  .wisdom-category-hook {
+    margin-top: 1.35rem;
+    font-family: var(--font-heading);
+    font-size: clamp(1.2rem, 1.7vw, 1.75rem);
+    line-height: 1.65;
+    color: var(--app-ivory);
+    font-style: italic;
+  }
+
+  .wisdom-category-description {
+    max-width: 44rem;
+    margin: 1rem auto 0;
+    color: var(--app-copy-muted);
+    font-size: 1rem;
+    line-height: 1.9;
+  }
+
+  .wisdom-category-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.45rem;
+    margin-top: 2.3rem;
+    border-radius: 0.9rem;
+    background: var(--app-gold);
+    padding-inline: 2.15rem;
+    color: var(--app-bg);
+    font-weight: 700;
+    transition:
+      background-color 160ms ease,
+      transform 160ms ease;
+  }
+
+  .wisdom-category-cta:hover {
+    transform: translateY(-1px);
+    background: var(--app-gold-text);
+  }
+
   .moon-orbit-card {
     position: relative;
     overflow: hidden;
@@ -780,6 +884,10 @@
   .app-page {
     padding-inline: 1.5rem;
   }
+
+  .wisdom-category-body {
+    padding-inline: 1.5rem;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -787,7 +895,15 @@
     padding-inline: 2rem;
   }
 
+  .wisdom-category-body {
+    padding-inline: 2rem;
+  }
+
   .app-shell-with-navigation .app-shell-content {
+    padding-left: 16rem;
+  }
+
+  [data-app-layout="vertical"] .saju-intake-shell {
     padding-left: 16rem;
   }
 
@@ -895,6 +1011,10 @@
 
   [data-app-layout="horizontal"] .app-shell-with-navigation .app-shell-content {
     padding-left: 0;
+    padding-top: 6.5rem;
+  }
+
+  [data-app-layout="horizontal"] .saju-intake-shell {
     padding-top: 6.5rem;
   }
 
@@ -1095,6 +1215,10 @@
   }
 
   .app-shell-with-navigation .app-shell-content {
+    padding-left: 17rem;
+  }
+
+  [data-app-layout="vertical"] .saju-intake-shell {
     padding-left: 17rem;
   }
 

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { COMPATIBILITY_RELATIONSHIPS } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
 import { AppShell } from '@/shared/layout/app-shell';
 
 export const metadata: Metadata = {
@@ -16,17 +17,9 @@ export const metadata: Metadata = {
 export default function CompatibilityPage() {
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-hero-card p-7 sm:p-8">
-          <div className="app-caption">宮合</div>
-          <h1 className="mt-4 font-[var(--font-heading)] text-4xl leading-[1.3] tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-            두 사람의 사주가 만나 어떤 이야기를 이루는지 살펴봅니다
-          </h1>
-          <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            연인과 배우자, 부모자녀, 형제와 친구, 동업 파트너까지. 관계의 온도와 속도, 서로를 살리는 지점을 함께 짚어드립니다.
-          </p>
-        </section>
-
+      <div className="wisdom-category-page">
+        <WisdomCategoryHero slug="compatibility" />
+        <div className="wisdom-category-body">
         <section className="mt-8 grid gap-4 md:grid-cols-2">
           {COMPATIBILITY_RELATIONSHIPS.map((item) => (
             <Link
@@ -52,6 +45,7 @@ export default function CompatibilityPage() {
           <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">
             처음이시라면 관계를 고르고 입력 화면까지 천천히 둘러보실 수 있습니다.
           </p>
+        </div>
         </div>
       </div>
     </AppShell>

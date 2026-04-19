@@ -7,6 +7,7 @@ import {
   ZODIAC_META,
 } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
 import { ZODIAC_FORTUNES } from '@/lib/free-content-pages';
 import { AppShell } from '@/shared/layout/app-shell';
 
@@ -27,19 +28,9 @@ export default function ZodiacPage() {
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-hero-card p-7 sm:p-8">
-          <div className="text-center">
-            <div className="text-[11px] tracking-[0.5em] text-[var(--app-gold)]/72">十 二 支</div>
-            <h1 className="mt-4 font-[var(--font-heading)] text-4xl font-semibold text-[var(--app-gold-text)] sm:text-5xl">
-              띠별 운세
-            </h1>
-            <p className="mt-4 text-base leading-8 text-[var(--app-copy)]">
-              {ZODIAC_BLUEPRINT.yearlyLabel}. 가장 익숙한 띠 이야기로 오늘의 리듬과 한 해의 큰 흐름을 편안하게 살펴보실 수 있습니다.
-            </p>
-          </div>
-        </section>
-
+      <div className="wisdom-category-page">
+        <WisdomCategoryHero slug="zodiac" />
+        <div className="wisdom-category-body">
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
           <article className="app-panel p-6 text-center">
             <div className="text-6xl">{featuredMeta.symbol}</div>
@@ -149,6 +140,7 @@ export default function ZodiacPage() {
             })}
           </div>
         </section>
+        </div>
       </div>
     </AppShell>
   );

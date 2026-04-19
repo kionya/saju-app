@@ -6,6 +6,7 @@ import {
   TAROT_QUESTION_OPTIONS,
 } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
 import { getCardOfTheDay } from '@/lib/home-content';
 import { AppShell } from '@/shared/layout/app-shell';
 
@@ -26,20 +27,9 @@ export default function DailyTarotPage() {
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-hero-card p-7 sm:p-8">
-          <div className="text-center">
-            <div className="text-[11px] tracking-[0.5em] text-[var(--app-plum)]">塔 羅</div>
-            <h1 className="mt-4 font-[var(--font-heading)] text-4xl font-semibold text-[var(--app-plum)] sm:text-5xl">
-              타로
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-8 text-[var(--app-copy)]">
-              마음속에 질문을 품고 한 장을 뽑아보세요. 지금 이 순간의 에너지를 한 장의
-              그림과 달빛선생의 차분한 말로 이어드립니다.
-            </p>
-          </div>
-        </section>
-
+      <div className="wisdom-category-page">
+        <WisdomCategoryHero slug="tarot" />
+        <div className="wisdom-category-body">
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
           <article className="app-panel p-6">
             <div className="app-caption">어떤 것이 궁금하신가요?</div>
@@ -168,6 +158,7 @@ export default function DailyTarotPage() {
             ))}
           </div>
         </section>
+        </div>
       </div>
     </AppShell>
   );

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
 import { HOUR_OPTIONS } from '@/features/home/content';
 import {
   ONBOARDING_CONSENTS,
@@ -416,36 +417,42 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
   const nextPath = getNextPath(step);
 
   return (
-    <main className="min-h-screen bg-[var(--app-ink)] text-white">
+    <main className="saju-intake-shell min-h-screen bg-[var(--app-ink)] text-white">
       <SiteHeader />
 
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <div
+        className={cn(
+          step === 'splash'
+            ? 'wisdom-category-page'
+            : 'mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10'
+        )}
+      >
         {step === 'splash' ? (
-          <section className="mx-auto flex min-h-[72vh] max-w-2xl items-center justify-center">
-            <div className="w-full app-hero-card px-8 py-14 text-center sm:px-10 sm:py-18">
-              <div className="mx-auto h-20 w-20 rounded-full bg-[radial-gradient(circle,rgba(245,223,170,0.88)_0%,rgba(210,176,114,0.75)_42%,transparent_78%)]" />
-              <div className="mt-8 font-[var(--font-heading)] text-[11px] tracking-[0.48em] text-[var(--app-gold)]/72">
-                月 光 先 生
+          <>
+            <WisdomCategoryHero slug="saju" />
+            <section className="wisdom-category-body mt-8">
+              <div className="mx-auto max-w-3xl app-panel px-8 py-14 text-center sm:px-10 sm:py-16">
+                <h1 className="font-[var(--font-heading)] text-3xl tracking-tight text-[var(--app-ivory)] sm:text-4xl">
+                  사주를 시작할 준비가 되었습니다
+                </h1>
+                <p className="mx-auto mt-5 max-w-xl text-sm leading-8 text-[var(--app-copy-muted)] sm:text-base">
+                  생년월일과 태어난 시간을 차근차근 여쭙고, 선생님만의 첫 해석으로 이어드리겠습니다.
+                  저장된 정보가 있다면 입력 단계에서 바로 불러오실 수 있습니다.
+                </p>
+                <div className="mt-8">
+                  <Button
+                    onClick={() => router.replace(STEP_PATHS.empathy)}
+                    className="h-12 rounded-[0.9rem] bg-[var(--app-gold)] px-8 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+                  >
+                    사주 시작하기
+                  </Button>
+                </div>
+                <p className="mt-5 text-xs tracking-[0.22em] text-[var(--app-copy-soft)]">
+                  月光先生
+                </p>
               </div>
-              <h1 className="mt-4 font-[var(--font-heading)] text-4xl tracking-tight text-[var(--app-gold-text)] sm:text-5xl">
-                달빛선생
-              </h1>
-              <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)] sm:text-base">
-                천 년의 지혜,<br className="sm:hidden" /> 오늘의 당신을 위하여
-              </p>
-              <p className="mt-10 text-[11px] uppercase tracking-[0.35em] text-[var(--app-copy-soft)]">
-                powered by AI
-              </p>
-              <div className="mt-8">
-                <Button
-                  onClick={() => router.replace(STEP_PATHS.empathy)}
-                  className="h-11 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
-                >
-                  바로 시작
-                </Button>
-              </div>
-            </div>
-          </section>
+            </section>
+          </>
         ) : null}
 
         {step === 'empathy' ? (

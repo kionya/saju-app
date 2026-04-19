@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
 import { AppShell } from '@/shared/layout/app-shell';
 
 export const metadata: Metadata = {
@@ -39,18 +40,9 @@ const EXPLORATIONS = [
 export default function MyeongriPage() {
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-hero-card p-7 sm:p-8">
-          <div className="app-caption">命 理</div>
-          <h1 className="mt-4 font-[var(--font-heading)] text-4xl leading-[1.3] tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-            왜 유독 이 부분에서 늘 걸리는지, 명리는 그 이유를 묻습니다
-          </h1>
-          <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            일주와 오행, 십신을 시각화해 반복되는 장면의 까닭을 차분히 짚어보는 공간입니다.
-            공부하듯 하나씩 살펴보실 수 있게 흐름을 단순하고 또렷하게 정리했습니다.
-          </p>
-        </section>
-
+      <div className="wisdom-category-page">
+        <WisdomCategoryHero slug="myeongri" />
+        <div className="wisdom-category-body">
         <section className="mt-8 grid gap-4 md:grid-cols-3">
           {EXPLORATIONS.map((item) => (
             <Link
@@ -108,6 +100,7 @@ export default function MyeongriPage() {
             </div>
           </article>
         </section>
+        </div>
       </div>
     </AppShell>
   );

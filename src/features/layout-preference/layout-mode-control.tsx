@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 export type LayoutMode = 'vertical' | 'horizontal';
 
-export const LAYOUT_MODE_STORAGE_KEY = 'moonlight:layout-mode';
+export const LAYOUT_MODE_STORAGE_KEY = 'moonlight:layout-mode-v2';
 
 const LAYOUT_MODES: Array<{
   value: LayoutMode;
@@ -29,7 +29,7 @@ const LAYOUT_MODES: Array<{
 ];
 
 function normalizeLayoutMode(value: string | null): LayoutMode {
-  return value === 'horizontal' ? 'horizontal' : 'vertical';
+  return value === 'vertical' ? 'vertical' : 'horizontal';
 }
 
 function applyLayoutMode(mode: LayoutMode) {
@@ -46,7 +46,7 @@ export function LayoutModeControl({
   compact?: boolean;
   className?: string;
 }) {
-  const [mode, setMode] = useState<LayoutMode>('vertical');
+  const [mode, setMode] = useState<LayoutMode>('horizontal');
 
   useEffect(() => {
     const storedMode = normalizeLayoutMode(
