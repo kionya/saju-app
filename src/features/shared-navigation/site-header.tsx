@@ -273,9 +273,9 @@ function MobileChrome({
   return (
     <>
       <header className="app-top-header sticky top-0 z-40 border-b border-[var(--app-line)] bg-[rgba(8,10,18,0.9)] backdrop-blur lg:hidden">
-        <div className="app-top-header-inner px-4 py-4">
+        <div className="app-top-header-inner app-top-header-main px-4 py-4">
           <div className="flex items-center justify-between gap-3">
-            <Link href="/" className="min-w-0">
+            <Link href="/" className="app-top-brand min-w-0">
               <div className="truncate font-[var(--font-heading)] text-[10px] tracking-[0.42em] text-[var(--app-gold)]/72">
                 月 光 先 生
               </div>
@@ -284,7 +284,7 @@ function MobileChrome({
               </div>
             </Link>
 
-            <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex">
+            <nav className="app-top-primary-nav hidden flex-1 items-center justify-center gap-1 lg:flex">
               {PRIMARY_NAV_ITEMS.map((item) => {
                 const active = matchesPath(item, pathname);
 
@@ -292,6 +292,7 @@ function MobileChrome({
                   <Link
                     key={item.label}
                     href={item.href}
+                    data-active={active}
                     className={cn(
                       'relative rounded-full px-4 py-2 text-sm transition-colors',
                       active
@@ -308,20 +309,26 @@ function MobileChrome({
               })}
             </nav>
 
-            <div className="flex items-center gap-2">
+            <div className="app-top-actions flex items-center gap-2">
+              <Link href="/membership" className="app-top-action-link hidden lg:inline-flex">
+                멤버십
+              </Link>
+              <Link href="/credits" className="app-top-action-link hidden lg:inline-flex">
+                플랜
+              </Link>
               <div className="hidden sm:block">
                 <LayoutModeControl compact />
               </div>
               <Link
                 href="/notifications"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                className="app-top-icon-link inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
                 aria-label="알림"
               >
                 <Bell className="h-4 w-4" />
               </Link>
               <Link
                 href="/my/settings"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                className="app-top-icon-link inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
                 aria-label="설정"
               >
                 <Settings2 className="h-4 w-4" />
@@ -330,7 +337,7 @@ function MobileChrome({
                 <button
                   type="button"
                   onClick={onSignOut}
-                  className="hidden h-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-3 text-xs text-[var(--app-ivory)] sm:inline-flex"
+                  className="app-top-login hidden h-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-3 text-xs text-[var(--app-ivory)] sm:inline-flex"
                 >
                   로그아웃
                 </button>
@@ -339,7 +346,7 @@ function MobileChrome({
                   href={authHref}
                   className={cn(
                     buttonVariants({ variant: 'outline', size: 'sm' }),
-                    'border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]'
+                    'app-top-login border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]'
                   )}
                 >
                   로그인
@@ -378,10 +385,10 @@ function MobileChrome({
         </div>
 
         <div className="app-top-header-shortcuts hidden border-t border-[var(--app-line)] bg-[var(--app-surface-muted)] lg:block">
-          <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-8 py-3">
+          <div className="app-top-category-inner mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-8 py-3">
             <Link
               href="/credits"
-              className="shrink-0 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)]"
+              className="app-top-category-chip shrink-0 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)]"
             >
               {user ? `${credits ?? '...'} 코인` : '플랜'}
             </Link>
@@ -392,8 +399,9 @@ function MobileChrome({
                 <Link
                   key={item.label}
                   href={item.href}
+                  data-active={active}
                   className={cn(
-                    'shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors',
+                    'app-top-category-chip shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors',
                     active
                       ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
                       : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'

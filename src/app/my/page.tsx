@@ -33,9 +33,9 @@ export default async function MyPage() {
   const sigil = mostRecentReading?.dayMasterStem ?? '月';
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[22rem_1fr] lg:items-start">
-      <aside className="space-y-4">
-        <section className="moon-lunar-panel p-6 text-center">
+    <div className="my-dashboard-grid grid gap-6 lg:grid-cols-[22rem_1fr] lg:items-start">
+      <aside className="my-dashboard-aside space-y-4">
+        <section className="my-profile-card moon-lunar-panel p-6 text-center">
           <div className="app-starfield" />
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/16 font-[var(--font-heading)] text-3xl font-semibold text-[var(--app-gold-text)]">
             {sigil}
@@ -63,7 +63,7 @@ export default async function MyPage() {
           </div>
         </section>
 
-        <section className="app-panel p-5">
+        <section className="my-family-card app-panel p-5">
           <div className="app-caption">가족 사주</div>
           <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
             가까운 분들의 흐름도 함께
@@ -80,8 +80,8 @@ export default async function MyPage() {
         </section>
       </aside>
 
-      <main className="space-y-5">
-        <section className="grid gap-4 md:grid-cols-3">
+      <main className="my-dashboard-main space-y-5">
+        <section className="my-stats-grid grid gap-4 md:grid-cols-3">
           <article className="moon-orbit-card p-5">
             <div className="app-caption">저장한 해석</div>
             <div className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
@@ -111,7 +111,7 @@ export default async function MyPage() {
           </article>
         </section>
 
-        <section className="app-panel p-5 sm:p-6">
+        <section className="my-menu-panel app-panel p-5 sm:p-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="app-caption">내 기록 메뉴</div>

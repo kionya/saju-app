@@ -370,6 +370,27 @@
     color: var(--app-gold-text);
   }
 
+  .app-top-action-link {
+    align-items: center;
+    justify-content: center;
+    min-height: 2.1rem;
+    border: 1px solid var(--app-line);
+    border-radius: 0.6rem;
+    padding-inline: 1rem;
+    color: var(--app-copy-muted);
+    font-size: 0.8125rem;
+    transition:
+      border-color 160ms ease,
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .app-top-action-link:hover {
+    border-color: rgba(212, 176, 106, 0.3);
+    background: rgba(31, 37, 64, 0.55);
+    color: var(--app-gold-text);
+  }
+
   .app-page {
     margin-inline: auto;
     width: min(100%, 88rem);
@@ -776,16 +797,105 @@
 
   [data-app-layout="horizontal"] .app-top-header {
     display: block !important;
+    position: fixed !important;
+    inset: 0 0 auto;
+    z-index: 60;
+    border-bottom: 1px solid var(--app-line);
+    background: rgba(6, 7, 13, 0.93);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
 
   [data-app-layout="horizontal"] .app-top-header-inner {
     margin-inline: auto;
-    max-width: 88rem;
+    max-width: 75rem;
     padding-inline: 2rem;
+  }
+
+  [data-app-layout="horizontal"] .app-top-header-main {
+    height: 3.75rem;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  [data-app-layout="horizontal"] .app-top-brand {
+    margin-right: 3rem;
+    flex-shrink: 0;
+  }
+
+  [data-app-layout="horizontal"] .app-top-primary-nav {
+    gap: 0.25rem;
+  }
+
+  [data-app-layout="horizontal"] .app-top-primary-nav a {
+    border-radius: 0.5rem;
+    background: transparent !important;
+    padding: 0.5rem 1rem;
+    color: var(--app-copy-soft);
+    font-weight: 500;
+  }
+
+  [data-app-layout="horizontal"] .app-top-primary-nav a:hover,
+  [data-app-layout="horizontal"] .app-top-primary-nav a[data-active="true"] {
+    color: var(--app-gold-text);
+  }
+
+  [data-app-layout="horizontal"] .app-top-actions {
+    gap: 0.5rem;
+  }
+
+  [data-app-layout="horizontal"] .app-top-icon-link {
+    height: 2.25rem;
+    width: 2.25rem;
+    border-radius: 0.65rem;
+    background: transparent;
+  }
+
+  [data-app-layout="horizontal"] .app-top-login {
+    min-height: 2.1rem;
+    border: 0;
+    border-radius: 0.6rem;
+    background: var(--app-gold);
+    padding-inline: 1.1rem;
+    color: var(--app-bg);
+    font-weight: 700;
+  }
+
+  [data-app-layout="horizontal"] .app-top-login:hover {
+    background: var(--app-gold-text);
+    color: var(--app-bg);
+  }
+
+  [data-app-layout="horizontal"] .app-top-header-shortcuts {
+    height: 2.75rem;
+    border-top: 1px solid var(--app-line);
+    background: rgba(10, 12, 23, 0.96);
+  }
+
+  [data-app-layout="horizontal"] .app-top-category-inner {
+    height: 2.75rem;
+    max-width: 75rem;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  [data-app-layout="horizontal"] .app-top-category-chip {
+    border-color: transparent;
+    background: transparent;
+    padding: 0.32rem 1rem;
+    color: var(--app-copy-soft);
+  }
+
+  [data-app-layout="horizontal"] .app-top-category-chip:hover,
+  [data-app-layout="horizontal"] .app-top-category-chip[data-active="true"] {
+    border-color: rgba(212, 176, 106, 0.34);
+    background: rgba(212, 176, 106, 0.12);
+    color: var(--app-gold-text);
   }
 
   [data-app-layout="horizontal"] .app-shell-with-navigation .app-shell-content {
     padding-left: 0;
+    padding-top: 6.5rem;
   }
 
   [data-app-layout="horizontal"] .app-page {
@@ -794,6 +904,141 @@
 
   [data-app-layout="horizontal"] .app-page-spacious {
     padding-top: 2rem;
+  }
+
+  [data-app-layout="horizontal"] .home-page {
+    max-width: none;
+    padding: 0 0 5rem;
+  }
+
+  [data-app-layout="horizontal"] .home-horizontal-intro {
+    display: none;
+  }
+
+  [data-app-layout="horizontal"] .home-hero-date {
+    display: block !important;
+  }
+
+  [data-app-layout="horizontal"] .home-hero-layout {
+    display: block;
+    margin-top: 0;
+  }
+
+  [data-app-layout="horizontal"] .home-hero-card {
+    min-height: 27.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    padding: 5rem 2rem;
+    text-align: center;
+    background:
+      radial-gradient(ellipse at 62% 35%, rgba(212, 176, 106, 0.12), transparent 56%),
+      radial-gradient(ellipse at 12% 82%, rgba(107, 166, 139, 0.08), transparent 46%),
+      linear-gradient(180deg, rgba(6, 7, 13, 0.98), rgba(10, 12, 23, 0.99));
+  }
+
+  [data-app-layout="horizontal"] .home-hero-card > .flex {
+    width: min(100%, 48rem);
+    align-items: center;
+    justify-content: center;
+    margin-inline: auto;
+  }
+
+  [data-app-layout="horizontal"] .home-hero-copy,
+  [data-app-layout="horizontal"] .home-hero-copy > * {
+    margin-inline: auto;
+  }
+
+  [data-app-layout="horizontal"] .home-hero-card .app-moon-orb {
+    width: 6.25rem;
+    height: 6.25rem;
+  }
+
+  [data-app-layout="horizontal"] .home-hero-card .moon-pill {
+    background: rgba(22, 26, 46, 0.72);
+    backdrop-filter: blur(8px);
+  }
+
+  [data-app-layout="horizontal"] .home-hero-card .mt-7 {
+    justify-content: center;
+  }
+
+  [data-app-layout="horizontal"] .home-today-panel {
+    max-width: 75rem;
+    margin: 1.5rem auto 4.5rem;
+  }
+
+  [data-app-layout="horizontal"] .home-wisdom-section,
+  [data-app-layout="horizontal"] .home-selected-wisdom,
+  [data-app-layout="horizontal"] .home-lower-grid {
+    max-width: 75rem;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  [data-app-layout="horizontal"] .home-wisdom-section,
+  [data-app-layout="horizontal"] .home-lower-grid {
+    padding-right: 2rem;
+    padding-left: 2rem;
+  }
+
+  [data-app-layout="horizontal"] .home-section-heading {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  [data-app-layout="horizontal"] .home-section-heading p {
+    margin-inline: auto;
+  }
+
+  [data-app-layout="horizontal"] .home-wisdom-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  [data-app-layout="horizontal"] .moon-wisdom-card {
+    padding: 1.75rem 1.625rem;
+    border-radius: 1.25rem;
+    background: linear-gradient(180deg, rgba(22, 26, 46, 0.78), rgba(15, 18, 32, 0.88));
+  }
+
+  [data-app-layout="horizontal"] .home-selected-wisdom {
+    padding: 2rem;
+  }
+
+  [data-app-layout="horizontal"] .my-dashboard-grid {
+    max-width: 75rem;
+    margin-inline: auto;
+    grid-template-columns: 17.5rem minmax(0, 1fr);
+    gap: 1.5rem;
+  }
+
+  [data-app-layout="horizontal"] .my-dashboard-aside,
+  [data-app-layout="horizontal"] .my-dashboard-main {
+    min-width: 0;
+  }
+
+  [data-app-layout="horizontal"] .my-profile-card {
+    border-radius: 1.25rem;
+    padding: 2rem;
+  }
+
+  [data-app-layout="horizontal"] .my-family-card,
+  [data-app-layout="horizontal"] .my-menu-panel {
+    border-radius: 1.125rem;
+  }
+
+  [data-app-layout="horizontal"] .my-stats-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  [data-app-layout="horizontal"] .moon-account-row {
+    border-radius: 0.95rem;
+    background: rgba(31, 37, 64, 0.46);
   }
 }
 

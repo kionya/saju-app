@@ -87,8 +87,8 @@ export default function HomePage() {
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="home-page mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <section className="home-horizontal-intro mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="text-sm tracking-[0.12em] text-[var(--app-copy-soft)]">{todayLabel}</div>
             <h1 className="mt-3 font-[var(--font-heading)] text-3xl font-medium tracking-tight text-[var(--app-ivory)] sm:text-4xl">
@@ -114,11 +114,14 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="grid gap-5 lg:grid-cols-[1fr_21rem] lg:items-stretch">
-          <article className="moon-lunar-panel p-7 sm:p-8 lg:p-9">
+        <section className="home-hero-layout grid gap-5 lg:grid-cols-[1fr_21rem] lg:items-stretch">
+          <article className="home-hero-card moon-lunar-panel p-7 sm:p-8 lg:p-9">
             <div className="app-starfield" />
             <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-              <div className="max-w-3xl">
+              <div className="home-hero-copy max-w-3xl">
+                <div className="home-hero-date mb-4 hidden text-sm tracking-[0.28em] text-[var(--app-gold-soft)]">
+                  {todayLabel}
+                </div>
                 <div className="inline-flex items-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-[11px] tracking-[0.28em] text-[var(--app-gold)]/78">
                   오늘의 한 줄
                 </div>
@@ -164,7 +167,7 @@ export default function HomePage() {
             </div>
           </article>
 
-          <aside className="app-panel p-6">
+          <aside className="home-today-panel app-panel p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="app-caption">{personalizationCopy.eyebrow}</div>
@@ -217,8 +220,8 @@ export default function HomePage() {
           </aside>
         </section>
 
-        <section className="mt-8 app-section-stack">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <section className="home-wisdom-section mt-8 app-section-stack">
+          <div className="home-section-heading flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <div className="app-caption">여섯 가지 지혜</div>
               <h2 className="moon-section-title mt-3">문득 떠오르는 질문마다 다른 지혜가 기다리고 있습니다</h2>
@@ -228,7 +231,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="home-wisdom-grid grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {WISDOM_CARDS.map((card, index) => {
               const tone = toneClasses(card.tone);
               const active = selectedSlug === card.slug;
@@ -255,7 +258,7 @@ export default function HomePage() {
             })}
           </div>
 
-          <article className="app-panel p-6 sm:p-7">
+          <article className="home-selected-wisdom app-panel p-6 sm:p-7">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <div className={cn('app-caption', selectedTone.text)}>오늘 마음이 머무는 지혜</div>
@@ -299,7 +302,7 @@ export default function HomePage() {
           </article>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+        <section className="home-lower-grid mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <article className="moon-lunar-panel p-6 sm:p-7">
             <div className="app-starfield" />
             <div className="flex items-center justify-between gap-3">
