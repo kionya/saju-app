@@ -2,12 +2,13 @@
 
 ## Current Release Candidate
 
-- Branch: `codex/production-prep`
-- Verified local build: `npm run build`
-- Verified preview deployment: `https://saju-30eo6aylj-kbeautys-projects.vercel.app`
-- Share URL for protected preview:
-  `https://saju-30eo6aylj-kbeautys-projects.vercel.app/?_vercel_share=FVObHHQ21widEv4dZC9n1yjHfToE6EWY`
-- Share URL expiry: `2026-04-18 08:50 KST`
+- Production target branch: `main`
+- Integration branch used for final sync: `codex/main-production-sync`
+- Base: latest `origin/main`
+- Added on top:
+  - email magic-link signup/login
+  - auth email template source
+  - release checklist updates
 
 ## Included Product Changes
 
@@ -16,17 +17,18 @@
 - Home, `MY`, billing, results archive, and the saju result page use the new shell structure.
 - The saju intake flow uses `/saju/new` as the primary service entry.
 - Personal result URLs use UUID-based readings.
-- Preview QA covered both desktop and mobile layouts on the deployed preview.
+- Login supports email magic-link signup/login, with phone SMS OTP left as a documented future integration.
+- Push notification routes, service worker, manifest, and cron entry are in the repo.
+- `SajuDataV1` includes `orrery`-based relations, gongmang, special sals, and report evidence text.
 
 ## Verified Before Production
 
-- `npx tsc --noEmit`
-- `npm run build`
+- TypeScript check passed:
+  - `./node_modules/.bin/tsc --noEmit --pretty false --incremental false -p tsconfig.json`
 - Vercel preview status: `Ready`
-- Browser QA on preview home page
-- Browser QA on preview result page
-- Browser QA on mobile viewport `390x844`
-- Browser console errors: none observed on checked pages
+- Browser QA on preview home page and result page completed.
+- Email magic-link signup/login was confirmed by the operator before production promotion.
+- Real login flow was confirmed by the operator before production promotion.
 
 ## Go-Live Checks
 
@@ -41,39 +43,40 @@
   - `NEXT_PUBLIC_TOSS_CLIENT_KEY`
   - `TOSS_SECRET_KEY`
   - `NEXT_PUBLIC_SITE_URL`
+  - If these are missing, `/api/readings` falls back to `mode: 'preview'` and `MY` pages fall back to local preview data.
+- Confirm Supabase Auth provider settings:
+  - Kakao OAuth enabled if Kakao remains visible on the login page.
+  - Google OAuth enabled if Google remains visible on the login page.
+  - Email OTP/magic-link enabled for the primary signup/login path.
+  - Email template uses `supabase/templates/auth-magic-link.html` and keeps `{{ .ConfirmationURL }}` for preview-safe redirects.
+  - Phone provider enabled with an SMS provider only when phone OTP is promoted from future integration to active login.
 - Confirm required Supabase migrations are applied in production:
   - `001_initial.sql`
-  - `002_subscriptions.sql`
+  - `002_credit_functions.sql`
   - `003_profiles.sql`
   - `004_notifications.sql`
-- Confirm the push setup guide has been completed:
+- Confirm the push setup guide has been completed if notifications ship in this release:
   - `docs/push-notifications-setup.md`
+
+## Production Smoke Test
+
 - Re-check a production reading flow after deploy:
   - `/saju/new`
   - `POST /api/readings`
   - `/saju/[uuid]`
-- Re-check the notification flow after deploy:
-  - `/notifications`
-  - `POST /api/notifications/test`
-  - `GET /api/notifications/dispatch?dryRun=true`
-- Re-check `MY` routes after deploy:
+- Re-check auth/account routes after deploy:
+  - email magic-link login
   - `/my`
   - `/my/profile`
   - `/my/results`
   - `/my/billing`
-
-## Release Sequence
-
-1. Review `git diff` on `codex/production-prep`.
-2. Stage and commit the release candidate.
-3. Push `codex/production-prep`.
-4. Re-check the preview deployment generated from the pushed branch.
-5. Merge into `main` only after final approval.
-6. Trigger or confirm the production deployment.
-7. Run a final smoke test on the live domain.
+- Re-check the notification flow after deploy:
+  - `/notifications`
+  - `POST /api/notifications/test`
+  - `GET /api/notifications/dispatch?dryRun=true`
 
 ## Post-Release Follow-up
 
 - Remove or archive any remaining duplicate legacy entry points.
 - Continue Day 7 with core screen rebuild refinements.
-- Separate “free SEO entry” and “core paid service” metrics in analytics.
+- Separate free SEO entry and core paid service metrics in analytics.
