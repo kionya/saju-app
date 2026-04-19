@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import SiteHeader from '@/features/shared-navigation/site-header';
@@ -8,11 +8,16 @@ import { AppShell } from '@/shared/layout/app-shell';
 import {
   HOME_DAILY_LINES,
   HOME_HERO_TOKENS,
-  HOME_TODAY_SUMMARY,
   INTERPRETATION_LAYERS,
   WISDOM_CARDS,
   toneClasses,
 } from '@/content/moonlight';
+import {
+  buildHomePersonalizationCopy,
+  buildPersonalizedTodaySummary,
+  type HomeProfileLoadStatus,
+  type HomeProfilePreview,
+} from '@/features/home/personalized-today';
 import { cn } from '@/lib/utils';
 
 function formatTodayLabel() {
@@ -30,15 +35,53 @@ function formatTodayLabel() {
 
 export default function HomePage() {
   const [selectedSlug, setSelectedSlug] = useState(WISDOM_CARDS[0].slug);
+  const [profilePreview, setProfilePreview] = useState<HomeProfilePreview | null>(null);
+  const [profileLoadStatus, setProfileLoadStatus] = useState<HomeProfileLoadStatus>('loading');
 
   const todayLine = useMemo(() => {
     const now = new Date();
     return HOME_DAILY_LINES[now.getDate() % HOME_DAILY_LINES.length];
   }, []);
+  const personalizedTodaySummary = useMemo(
+    () => buildPersonalizedTodaySummary(profilePreview),
+    [profilePreview]
+  );
+  const personalizationCopy = useMemo(
+    () => buildHomePersonalizationCopy(profilePreview, profileLoadStatus),
+    [profileLoadStatus, profilePreview]
+  );
 
   const selectedWisdom =
     WISDOM_CARDS.find((card) => card.slug === selectedSlug) ?? WISDOM_CARDS[0];
   const selectedTone = toneClasses(selectedWisdom.tone);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadProfilePreview() {
+      try {
+        const response = await fetch('/api/profile', { cache: 'no-store' });
+        if (!response.ok) throw new Error('profile load failed');
+        const data = (await response.json()) as HomeProfilePreview;
+        if (!isActive) return;
+
+        setProfilePreview({
+          authenticated: Boolean(data.authenticated),
+          profile: data.profile ?? null,
+        });
+        setProfileLoadStatus('ready');
+      } catch {
+        if (!isActive) return;
+        setProfileLoadStatus('error');
+      }
+    }
+
+    void loadProfilePreview();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
@@ -198,19 +241,39 @@ export default function HomePage() {
           <article className="app-panel p-6 sm:p-7">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="app-caption">내 오늘의 운</div>
-                <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">오늘 마음에 남을 세 가지 흐름</h2>
+                <div className="app-caption">{personalizationCopy.eyebrow}</div>
+                <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">{personalizationCopy.title}</h2>
               </div>
               <Link
-                href="/saju/new"
+                href={personalizationCopy.ctaHref}
                 className="text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
               >
-                개인 리포트 열기
+                {personalizationCopy.ctaLabel}
               </Link>
+            </div>
+            <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">
+              {personalizationCopy.body}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <span
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs',
+                  personalizationCopy.isPersonalized
+                    ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200'
+                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]'
+                )}
+              >
+                {personalizationCopy.isPersonalized ? '개인화 적용' : '기본 흐름'}
+              </span>
+              {profileLoadStatus === 'loading' ? (
+                <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs text-[var(--app-copy-muted)]">
+                  불러오는 중
+                </span>
+              ) : null}
             </div>
 
             <div className="mt-6 space-y-4">
-              {HOME_TODAY_SUMMARY.map((item) => {
+              {personalizedTodaySummary.map((item) => {
                 const tone = toneClasses(item.tone);
 
                 return (
@@ -222,6 +285,7 @@ export default function HomePage() {
                     <div className="moon-meter mt-3">
                       <span className={cn(tone.bg)} style={{ width: `${item.ratio}%` }} />
                     </div>
+                    <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">{item.detail}</p>
                   </div>
                 );
               })}

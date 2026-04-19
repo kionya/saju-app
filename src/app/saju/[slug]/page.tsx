@@ -114,10 +114,32 @@ function formatHiddenStems(pillar: SajuPillar) {
   return pillar.hiddenStems.map((item) => item.stem).join(' · ');
 }
 
+function formatEvidenceKeyLabel(key: string) {
+  switch (key) {
+    case 'strength':
+      return '강약';
+    case 'pattern':
+      return '격국';
+    case 'yongsin':
+      return '용신';
+    case 'relations':
+      return '합충';
+    case 'gongmang':
+      return '공망';
+    case 'specialSals':
+      return '신살';
+    default:
+      return key;
+  }
+}
+
 function buildAiFallbackText(report: ReturnType<typeof buildSajuReport>) {
   const highlights = report.summaryHighlights.map((summary) => `- ${summary}`).join('\n');
   const evidence = report.evidenceCards
     .map((card) => `- ${card.label}: ${card.title}`)
+    .join('\n');
+  const citations = report.classicalCitations
+    .map((citation) => `- ${citation.sourceTitle}: ${citation.title}`)
     .join('\n');
 
   return [
@@ -126,7 +148,8 @@ function buildAiFallbackText(report: ReturnType<typeof buildSajuReport>) {
     `행동 제안: ${report.primaryAction.title} - ${report.primaryAction.description}`,
     `주의 포인트: ${report.cautionAction.title} - ${report.cautionAction.description}`,
     `근거 요약:\n${evidence}`,
-  ].join('\n\n');
+    citations ? `고전 근거/RAG 준비:\n${citations}` : '',
+  ].filter(Boolean).join('\n\n');
 }
 
 export default async function SajuResultPage({ params, searchParams }: Props) {
@@ -305,6 +328,59 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             ))}
           </div>
         </section>
+
+        {report.classicalCitations.length > 0 ? (
+          <section className="rounded-[28px] border border-[var(--app-gold)]/20 bg-[linear-gradient(135deg,rgba(210,176,114,0.1),rgba(7,19,39,0.88)_44%,rgba(255,255,255,0.035))] p-5 sm:p-6">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className="app-caption">고전 근거/RAG</div>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--app-ivory)]">
+                  고전의 관점과 현재 명식 근거를 연결해 봅니다.
+                </h2>
+              </div>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--app-copy-muted)]">
+                현재는 검증된 고전 원문 DB가 연결되기 전 단계라 직접 인용이 아니라 출처별 해석 관점으로 표시합니다.
+                추후 RAG 코퍼스가 붙으면 이 카드에 원문 출처와 인용 위치를 함께 노출할 수 있습니다.
+              </p>
+            </div>
+
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              {report.classicalCitations.map((citation) => (
+                <article
+                  key={citation.key}
+                  className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(2,8,23,0.36)] p-5"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className="border-[var(--app-gold)]/30 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]">
+                      {citation.sourceTitle}
+                    </Badge>
+                    <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                      {citation.statusLabel}
+                    </Badge>
+                  </div>
+                  <div className="mt-4 text-xs uppercase tracking-[0.22em] text-[var(--app-copy-soft)]">
+                    {citation.sourceLabel} · {citation.theme}
+                  </div>
+                  <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">{citation.title}</h3>
+                  <p className="mt-4 rounded-2xl border border-[var(--app-gold)]/14 bg-[var(--app-gold)]/8 px-4 py-3 text-sm leading-7 text-[var(--app-gold-text)]">
+                    {citation.sourceNote}
+                  </p>
+                  <p className="app-body-copy mt-4 text-sm">{citation.interpretation}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {citation.matchedEvidenceKeys.map((key) => (
+                      <span
+                        key={`${citation.key}-${key}`}
+                        className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs text-[var(--app-copy)]"
+                      >
+                        연결 근거 · {formatEvidenceKeyLabel(key)}
+                      </span>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <section className="grid gap-4 lg:grid-cols-3">
           {report.insights.map((insight) => (

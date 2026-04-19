@@ -104,6 +104,19 @@ function formatEvidenceCards(report: SajuReport) {
   }));
 }
 
+function formatClassicalCitations(report: SajuReport) {
+  return report.classicalCitations.map((citation) => ({
+    sourceTitle: citation.sourceTitle,
+    sourceLabel: citation.sourceLabel,
+    theme: citation.theme,
+    title: citation.title,
+    sourceNote: citation.sourceNote,
+    interpretation: citation.interpretation,
+    matchedEvidenceKeys: citation.matchedEvidenceKeys,
+    statusLabel: citation.statusLabel,
+  }));
+}
+
 function buildReportFallback(report: SajuReport) {
   const highlights = report.summaryHighlights.length
     ? report.summaryHighlights.map((item) => `- ${item}`).join('\n')
@@ -164,6 +177,7 @@ function createReportGrounding(record: ReadingRecord, report: SajuReport) {
       headline: report.headline,
       summaryHighlights: report.summaryHighlights,
       evidenceCards: formatEvidenceCards(report),
+      classicalCitations: formatClassicalCitations(report),
       scores: report.scores,
       primaryAction: report.primaryAction,
       cautionAction: report.cautionAction,
@@ -182,6 +196,7 @@ function createReportPrompt(
     instructions: [
       '당신은 한국어 사주 서비스 달빛선생의 AI 해석 보조자입니다.',
       '반드시 제공된 JSON 근거 안에서만 해석하고, 없는 명리 정보나 고전 인용을 지어내지 않습니다.',
+      'classicalCitations의 sourceNote가 원문 직접 인용 전 단계라고 되어 있으면, 이를 고전 원문 인용처럼 바꿔 쓰지 않습니다.',
       '문장은 차분하고 고급스럽게 쓰되, 사용자가 바로 읽기 쉽도록 4~6개의 짧은 단락으로 나눕니다.',
       '강약, 격국, 용신, 합충/공망/신살 중 제공된 근거가 있으면 자연스럽게 반영합니다.',
       '의료·법률·투자 결론은 피하고, 필요한 경우 전문가 확인을 권합니다.',
@@ -247,6 +262,7 @@ async function handleSajuReport(request: SajuReportAiRequest) {
       headline: report.headline,
       summaryHighlights: report.summaryHighlights,
       evidenceCards: report.evidenceCards,
+      classicalCitations: report.classicalCitations,
       primaryAction: report.primaryAction,
       cautionAction: report.cautionAction,
     },

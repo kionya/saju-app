@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "test": "node scripts/run-unit-tests.mjs",
     "start": "next start",
     "generate:web-push-keys": "node scripts/generate-web-push-keys.mjs"
   },

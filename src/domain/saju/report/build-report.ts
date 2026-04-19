@@ -6,6 +6,7 @@ import {
   getPersonalityFromSajuData,
 } from '@/lib/saju/elements';
 import type { BirthInput, Element } from '@/lib/saju/types';
+import { buildClassicalCitations } from './classical-citations';
 import type {
   FocusTopic,
   FocusTopicMeta,
@@ -763,6 +764,7 @@ export function buildSajuReport(
 
   const summaryHighlights = buildSummaryHighlights(data, focusTopic, scoreMap, dominant, weakest);
   const evidenceCards = buildEvidenceCards(data);
+  const classicalCitations = buildClassicalCitations(data, evidenceCards, focusTopic);
 
   return {
     focusTopic,
@@ -773,6 +775,7 @@ export function buildSajuReport(
     summary: summaryHighlights.join(' '),
     summaryHighlights,
     evidenceCards,
+    classicalCitations,
     scores,
     primaryAction,
     cautionAction,
