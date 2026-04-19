@@ -57,7 +57,7 @@ function findTestFiles(directory) {
     });
 }
 
-for (const testFile of findTestFiles(sourceRoot)) {
+for (const testFile of findTestFiles(sourceRoot).sort()) {
   require(testFile);
 }
 
