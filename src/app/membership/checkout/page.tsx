@@ -17,7 +17,7 @@ interface Props {
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: '결제',
-    description: '프리미엄 체크아웃 화면입니다.',
+    description: '선택한 플랜의 결제 정보를 마지막으로 확인하는 화면입니다.',
   };
 }
 
@@ -42,11 +42,10 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
             </Badge>
           </div>
           <h1 className="mt-5 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
-            선택하신 플랜을 확인해주세요
+            선택하신 결제를 마지막으로 한 번 더 살펴보세요
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            결제 전에는 가격, 결제 방식, 해지와 환불 기준을 한 화면에서 모두 보이게 두어야
-            불안감 없이 결정하실 수 있습니다.
+            가격, 결제 방식, 자동 갱신과 환불 안내를 한 화면에 모아두었습니다. 천천히 읽어보신 뒤 편한 마음으로 결정하시면 됩니다.
           </p>
         </section>
 
@@ -109,7 +108,7 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
             </div>
 
             <div className="mt-6 rounded-[1.2rem] border border-[var(--app-gold)]/18 bg-[rgba(255,255,255,0.02)] px-5 py-5">
-              <div className="app-caption">한 번 더 확인해주세요</div>
+              <div className="app-caption">한 번 더 살펴보실 것</div>
               <div className="mt-3 space-y-2">
                 {selected.notices.map((item) => (
                   <div key={item} className="text-sm leading-7 text-[var(--app-copy)]">

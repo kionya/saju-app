@@ -18,7 +18,7 @@ const PLAN_LABELS = {
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: '결제 완료',
-    description: '프리미엄 결제 완료 화면입니다.',
+    description: '결제가 완료된 뒤 첫 이용 흐름을 안내하는 화면입니다.',
   };
 }
 
@@ -43,7 +43,7 @@ export default async function MembershipCompletePage({ searchParams }: Props) {
           </div>
 
           <h1 className="mt-5 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
-            환영합니다, 선생님
+            달빛선생과의 인연이 시작되었습니다
           </h1>
           <p className="mt-4 text-base leading-8 text-[var(--app-copy)]">
             {planLabel} 이용이 시작되었습니다. {completeGuide.welcome}

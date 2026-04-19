@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
-  --font-heading: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Noto Sans KR", "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+  --font-heading: "Noto Serif KR", "Fraunces", Georgia, serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -81,22 +81,27 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --app-ink: #020817;
-  --app-ink-strong: #071327;
-  --app-surface: rgba(7, 19, 39, 0.78);
-  --app-surface-strong: rgba(10, 18, 36, 0.94);
-  --app-surface-soft: rgba(255, 255, 255, 0.04);
-  --app-surface-muted: rgba(255, 255, 255, 0.03);
-  --app-line: rgba(255, 255, 255, 0.1);
-  --app-line-strong: rgba(210, 176, 114, 0.18);
-  --app-gold: #d2b072;
-  --app-gold-soft: rgba(210, 176, 114, 0.12);
-  --app-gold-text: #f5dfaa;
-  --app-ivory: #f8f1df;
-  --app-copy: rgba(255, 255, 255, 0.68);
-  --app-copy-muted: rgba(255, 255, 255, 0.58);
-  --app-copy-soft: rgba(255, 255, 255, 0.45);
-  --app-shadow: 0 24px 80px rgba(2, 6, 23, 0.42);
+  --app-bg: #080a12;
+  --app-ink: #080a12;
+  --app-ink-strong: #0f1220;
+  --app-surface: rgba(15, 18, 32, 0.82);
+  --app-surface-strong: rgba(22, 26, 46, 0.96);
+  --app-surface-soft: rgba(22, 26, 46, 0.86);
+  --app-surface-muted: rgba(31, 37, 64, 0.4);
+  --app-line: rgba(42, 48, 82, 0.92);
+  --app-line-strong: rgba(212, 176, 106, 0.28);
+  --app-gold: #d4b06a;
+  --app-gold-soft: #9a7f4e;
+  --app-gold-text: #ecc985;
+  --app-jade: #6ba68b;
+  --app-coral: #e08370;
+  --app-plum: #a67cb5;
+  --app-sky: #7ba3cc;
+  --app-ivory: #ece5d4;
+  --app-copy: rgba(236, 229, 212, 0.8);
+  --app-copy-muted: rgba(155, 160, 176, 0.92);
+  --app-copy-soft: rgba(99, 104, 120, 0.96);
+  --app-shadow: 0 24px 72px rgba(0, 0, 0, 0.36);
 }
 
 .dark {
@@ -149,6 +154,31 @@
     @apply font-sans;
   }
 
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background-image:
+      radial-gradient(circle at 18% 24%, rgba(212, 176, 106, 0.05) 0%, transparent 36%),
+      radial-gradient(circle at 82% 14%, rgba(236, 201, 133, 0.06) 0%, transparent 18%),
+      radial-gradient(circle at 78% 72%, rgba(107, 166, 139, 0.04) 0%, transparent 26%);
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0.025) 18%, transparent 34%),
+      linear-gradient(215deg, transparent 0%, rgba(255, 255, 255, 0.02) 16%, transparent 30%);
+    opacity: 0.35;
+    mix-blend-mode: soft-light;
+  }
+
   ::selection {
     background: rgba(210, 176, 114, 0.28);
     color: var(--app-ivory);
@@ -161,7 +191,8 @@
     min-height: 100vh;
     color: white;
     background:
-      linear-gradient(180deg, rgba(7, 19, 39, 0.9), rgba(2, 8, 23, 0.98));
+      radial-gradient(ellipse at 50% -12%, rgba(212, 176, 106, 0.14) 0%, transparent 42%),
+      linear-gradient(180deg, rgba(8, 10, 18, 0.98), rgba(15, 18, 32, 0.98) 56%, rgba(8, 10, 18, 1));
     isolation: isolate;
   }
 
@@ -172,9 +203,10 @@
     z-index: 0;
     pointer-events: none;
     background:
-      radial-gradient(circle at 12% 0%, rgba(210, 176, 114, 0.18), transparent 28%),
-      radial-gradient(circle at 86% 14%, rgba(129, 140, 248, 0.14), transparent 24%),
-      linear-gradient(180deg, rgba(7, 19, 39, 0.92), rgba(2, 8, 23, 0.98));
+      radial-gradient(circle at 14% 0%, rgba(212, 176, 106, 0.16), transparent 24%),
+      radial-gradient(circle at 87% 16%, rgba(212, 176, 106, 0.08), transparent 18%),
+      radial-gradient(circle at 78% 28%, rgba(123, 163, 204, 0.06), transparent 20%),
+      linear-gradient(180deg, rgba(8, 10, 18, 0.94), rgba(15, 18, 32, 0.98));
   }
 
   .app-shell::after {
@@ -183,12 +215,11 @@
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-    background-size: 96px 96px;
-    mask-image: radial-gradient(circle at center, black 28%, transparent 86%);
-    opacity: 0.18;
+    background:
+      linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.025) 20%, transparent 38%),
+      linear-gradient(210deg, transparent 0%, rgba(255, 255, 255, 0.02) 15%, transparent 32%),
+      radial-gradient(circle at 74% 16%, rgba(236, 201, 133, 0.08), transparent 16%);
+    opacity: 0.42;
   }
 
   .app-shell > * {
@@ -208,26 +239,54 @@
   }
 
   .app-hero-card {
+    position: relative;
+    overflow: hidden;
     border: 1px solid var(--app-line-strong);
     background:
-      radial-gradient(circle at top left, rgba(210, 176, 114, 0.14), transparent 30%),
-      linear-gradient(180deg, rgba(7, 19, 39, 0.94), rgba(10, 18, 36, 0.96));
-    border-radius: 2rem;
+      radial-gradient(circle at 0% 0%, rgba(212, 176, 106, 0.18), transparent 26%),
+      radial-gradient(circle at 100% 12%, rgba(236, 201, 133, 0.08), transparent 20%),
+      linear-gradient(180deg, rgba(15, 18, 32, 0.96), rgba(8, 10, 18, 0.98));
+    border-radius: 1.85rem;
     box-shadow: var(--app-shadow);
   }
 
+  .app-hero-card::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(90deg, transparent 0%, rgba(236, 201, 133, 0.16) 50%, transparent 100%);
+    mask-image: linear-gradient(180deg, black, transparent 22%);
+  }
+
   .app-panel {
+    position: relative;
+    overflow: hidden;
     border: 1px solid var(--app-line);
-    background: var(--app-surface-soft);
-    border-radius: 1.75rem;
-    box-shadow: 0 16px 44px rgba(2, 6, 23, 0.26);
-    backdrop-filter: blur(18px);
+    background: linear-gradient(180deg, rgba(22, 26, 46, 0.9), rgba(15, 18, 32, 0.92));
+    border-radius: 1.35rem;
+    box-shadow: 0 16px 44px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(16px);
+  }
+
+  .app-panel::before,
+  .app-panel-muted::before,
+  .moon-wisdom-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(236, 201, 133, 0.08), transparent 18%);
+    opacity: 0.9;
   }
 
   .app-panel-muted {
+    position: relative;
+    overflow: hidden;
     border: 1px solid var(--app-line);
-    background: var(--app-surface-muted);
-    border-radius: 1.5rem;
+    background: linear-gradient(180deg, rgba(31, 37, 64, 0.34), rgba(15, 18, 32, 0.5));
+    border-radius: 1.2rem;
   }
 
   .app-section-stack {
@@ -279,8 +338,8 @@
   .app-caption {
     font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.22em;
-    color: rgba(210, 176, 114, 0.78);
+    letter-spacing: 0.28em;
+    color: rgba(212, 176, 106, 0.82);
   }
 
   .app-body-copy {
@@ -290,6 +349,76 @@
 
   .app-micro-copy {
     color: var(--app-copy-soft);
+  }
+
+  .moon-pill {
+    border: 1px solid var(--app-line);
+    background: rgba(31, 37, 64, 0.42);
+    border-radius: 9999px;
+    padding: 0.65rem 1rem;
+    color: var(--app-copy);
+    transition:
+      border-color 160ms ease,
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .moon-pill:hover {
+    border-color: rgba(212, 176, 106, 0.3);
+    background: rgba(31, 37, 64, 0.7);
+    color: var(--app-ivory);
+  }
+
+  .moon-section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.6rem, 2vw, 2.4rem);
+    line-height: 1.42;
+    letter-spacing: -0.02em;
+    color: var(--app-ivory);
+    text-wrap: balance;
+  }
+
+  .moon-wisdom-card {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--app-line);
+    background: linear-gradient(180deg, rgba(22, 26, 46, 0.96), rgba(15, 18, 32, 0.98));
+    border-radius: 1.2rem;
+    padding: 1.25rem;
+    box-shadow: inset 0 1px 0 rgba(236, 201, 133, 0.06);
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      background-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .moon-wisdom-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(212, 176, 106, 0.32);
+    box-shadow:
+      inset 0 1px 0 rgba(236, 201, 133, 0.08),
+      0 18px 38px rgba(0, 0, 0, 0.26);
+  }
+
+  .moon-wisdom-hanja {
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    letter-spacing: 0.35em;
+    color: rgba(210, 176, 114, 0.72);
+  }
+
+  .moon-meter {
+    height: 0.35rem;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+
+  .moon-meter > span {
+    display: block;
+    height: 100%;
+    border-radius: 9999px;
   }
 }
 

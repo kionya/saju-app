@@ -81,6 +81,9 @@ function buildBirthPayload(form: SajuOnboardingDraft) {
     month: form.month,
     day: form.day,
     hour: form.hour,
+    minute: form.minute,
+    unknownTime: form.hour === '',
+    jasiMethod: form.jasiMethod,
     gender: form.gender,
   };
 }
@@ -369,7 +372,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                   </div>
                 </div>
 
-                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   <div>
                     <Label htmlFor="birth-hour" className="mb-2 block text-sm text-[var(--app-copy)]">
                       태어난 시간
@@ -404,6 +407,42 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                         </span>
                       </span>
                     </label>
+                    {form.hour === '23' ? (
+                      <div className="mt-3">
+                        <Label htmlFor="birth-jasi-method" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
+                          자시 기준
+                        </Label>
+                        <select
+                          id="birth-jasi-method"
+                          value={form.jasiMethod}
+                          onChange={(event) => updateField('jasiMethod', event.target.value as SajuOnboardingDraft['jasiMethod'])}
+                          className="h-11 w-full rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-ivory)]"
+                        >
+                          <option value="unified">통자시 기준으로 보기</option>
+                          <option value="split">야자시 기준으로 보기</option>
+                        </select>
+                        <p className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">
+                          밤 11시 전후 출생은 일주가 갈릴 수 있어요. 우선 통자시를 기본값으로 두었습니다.
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                  <div>
+                    <Label htmlFor="birth-minute" className="mb-2 block text-sm text-[var(--app-copy)]">
+                      태어난 분
+                    </Label>
+                    <Input
+                      id="birth-minute"
+                      inputMode="numeric"
+                      value={form.minute}
+                      onChange={(event) => updateField('minute', event.target.value)}
+                      placeholder="예: 30"
+                      disabled={form.hour === ''}
+                      className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] disabled:cursor-not-allowed disabled:opacity-55"
+                    />
+                    <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
+                      분까지 아시면 더 정확해집니다. 모르시면 비워두셔도 괜찮습니다.
+                    </p>
                   </div>
                   <div>
                     <Label htmlFor="birth-gender" className="mb-2 block text-sm text-[var(--app-copy)]">

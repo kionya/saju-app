@@ -2,6 +2,7 @@ import type {
   BirthInput,
   Branch,
   Element,
+  JasiMethod,
   Pillar as LegacyPillar,
   SajuResult as LegacySajuResult,
   Stem,
@@ -9,6 +10,10 @@ import type {
 } from '@/lib/saju/types';
 import { Solar } from 'lunar-typescript';
 import { calculateSaju } from '@/lib/saju/pillars';
+import {
+  buildOrreryReferenceExtension,
+  type SajuOrreryExtension,
+} from './orrery-adapter';
 
 export const SAJU_DATA_V1 = 'saju-data/v1' as const;
 
@@ -16,7 +21,8 @@ export type SajuDataVersion = typeof SAJU_DATA_V1;
 export type SajuComputationSource =
   | 'legacy-typescript'
   | 'rule-based-typescript'
-  | 'python-engine';
+  | 'python-engine'
+  | 'orrery-reference';
 export type SajuCompleteness = 'seed' | 'partial' | 'complete';
 
 export type SajuPendingSection =
@@ -202,12 +208,14 @@ export interface SajuDataV1 {
   yongsin: SajuYongsin | null;
   majorLuck: SajuMajorLuckCycle[] | null;
   currentLuck: SajuCurrentLuck | null;
+  extensions: SajuDataExtensions | null;
 }
 
 export interface SajuInputSnapshot {
   calendar: 'solar';
   timezone: string;
   location: string | null;
+  jasiMethod?: JasiMethod | null;
   birth: {
     year: number;
     month: number;
@@ -327,6 +335,10 @@ export interface SajuCurrentLuck {
   wolwoon: SajuLuckDescriptor | null;
 }
 
+export interface SajuDataExtensions {
+  orrery?: SajuOrreryExtension | null;
+}
+
 export const SAJU_V1_PENDING_FROM_LEGACY: SajuPendingSection[] = [
   'tenGods',
   'strength',
@@ -354,15 +366,16 @@ export function seedSajuDataV1FromLegacy(
       calendar: 'solar',
       timezone: options?.timezone ?? 'Asia/Seoul',
       location: options?.location ?? null,
+      jasiMethod: input.jasiMethod ?? null,
       birth: {
         year: input.year,
         month: input.month,
         day: input.day,
-        hour: input.hour ?? null,
-        minute: null,
+        hour: input.unknownTime ? null : input.hour ?? null,
+        minute: input.unknownTime ? null : input.minute ?? null,
       },
       gender: input.gender ?? null,
-      hourKnown: input.hour !== undefined,
+      hourKnown: input.unknownTime ? false : input.hour !== undefined,
     },
     metadata: {
       source: 'legacy-typescript',
@@ -391,6 +404,7 @@ export function seedSajuDataV1FromLegacy(
     yongsin: null,
     majorLuck: null,
     currentLuck: null,
+    extensions: null,
   };
 
   return enrichSajuDataV1(seed);
@@ -509,12 +523,12 @@ function enrichSajuDataV1(base: SajuDataV1): SajuDataV1 {
     currentLuck,
   });
 
-  return {
+  const next: SajuDataV1 = {
     ...base,
     metadata: {
       ...base.metadata,
-      source: 'rule-based-typescript',
-      engineVersion: 'rule-based-typescript-v1',
+      source: 'orrery-reference',
+      engineVersion: 'orrery-reference-v1',
       completeness: pendingSections.length === 0 ? 'complete' : 'partial',
       pendingSections,
     },
@@ -531,6 +545,14 @@ function enrichSajuDataV1(base: SajuDataV1): SajuDataV1 {
     yongsin,
     majorLuck,
     currentLuck,
+  };
+
+  return {
+    ...next,
+    extensions: {
+      ...(next.extensions ?? {}),
+      orrery: buildOrreryReferenceExtension(next),
+    },
   };
 }
 
@@ -588,14 +610,18 @@ function shouldPreserveSajuDataV1(value: SajuDataV1) {
     return true;
   }
 
-  if (value.metadata.source === 'rule-based-typescript') {
+  if (
+    value.metadata.source === 'rule-based-typescript' ||
+    value.metadata.source === 'orrery-reference'
+  ) {
     return Boolean(
       value.tenGods &&
         value.strength &&
         value.pattern &&
         value.yongsin &&
         value.majorLuck &&
-        value.currentLuck
+        value.currentLuck &&
+        value.extensions?.orrery
     );
   }
 
@@ -1084,9 +1110,10 @@ function calculateLuckData(
 
   const birthSolar = getBirthSolar(input);
   const birthEightChar = birthSolar.getLunar().getEightChar();
-  birthEightChar.setSect(EIGHT_CHAR_SECT);
+  const birthSect = toEightCharSect(input.jasiMethod);
+  birthEightChar.setSect(birthSect);
 
-  const yun = birthEightChar.getYun(genderValue, EIGHT_CHAR_SECT);
+  const yun = birthEightChar.getYun(genderValue, birthSect);
   const rawMajorLuck = yun
     .getDaYun(MAJOR_LUCK_COUNT + 1)
     .filter((cycle) => cycle.getIndex() > 0)
@@ -1162,6 +1189,10 @@ function getBirthSolar(input: SajuInputSnapshot) {
     minute,
     0
   );
+}
+
+function toEightCharSect(jasiMethod?: JasiMethod | null) {
+  return jasiMethod === 'split' ? 1 : EIGHT_CHAR_SECT;
 }
 
 function toYunGender(gender: SajuInputSnapshot['gender']): 0 | 1 | null {

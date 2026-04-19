@@ -3,9 +3,10 @@
 ## Current Release Candidate
 
 - Production target branch: `main`
-- Integration branch used for final sync: `codex/main-production-sync`
+- Integration branch used for final sync: `codex/full-preview-production-sync`
 - Base: latest `origin/main`
 - Added on top:
+  - full `codex/vercel-preview-20260419` feature snapshot
   - email magic-link signup/login
   - auth email template source
   - release checklist updates
@@ -26,7 +27,7 @@
 - TypeScript check passed:
   - `./node_modules/.bin/tsc --noEmit --pretty false --incremental false -p tsconfig.json`
 - Vercel preview status: `Ready`
-- Browser QA on preview home page and result page completed.
+- Browser QA on preview home page and result page completed for the previous preview; repeat after the full snapshot redeploy.
 - Email magic-link signup/login was confirmed by the operator before production promotion.
 - Real login flow was confirmed by the operator before production promotion.
 
@@ -55,7 +56,7 @@
   - `002_credit_functions.sql`
   - `003_profiles.sql`
   - `004_notifications.sql`
-- Confirm the push setup guide has been completed if notifications ship in this release:
+- Confirm the push setup guide has been completed:
   - `docs/push-notifications-setup.md`
 
 ## Production Smoke Test
@@ -66,6 +67,11 @@
   - `/saju/[uuid]`
 - Re-check auth/account routes after deploy:
   - email magic-link login
+- Re-check the notification flow after deploy:
+  - `/notifications`
+  - `POST /api/notifications/test`
+  - `GET /api/notifications/dispatch?dryRun=true`
+- Re-check `MY` routes after deploy:
   - `/my`
   - `/my/profile`
   - `/my/results`

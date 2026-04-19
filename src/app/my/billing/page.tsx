@@ -69,15 +69,15 @@ export default async function MyBillingPage() {
         badges={
           <>
             <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]">
-              Billing & Plus
+              결제와 이용
             </Badge>
             <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-              코인, 정기 이용, 환불 안내
+              코인 · Plus · 환불 안내
             </Badge>
           </>
         }
-        title="결제와 Plus 상태를 같은 흐름으로 관리하세요"
-        description="첫 결제 전환은 코인 사용 흐름이 매끄러워야 하고, Plus는 반복 효용과 정책 고지가 함께 보여야 합니다. 이 화면은 잔액, 상태, 해지 예약, 최근 이력을 하나의 앱 화면처럼 묶어둔 허브입니다."
+        title="결제와 이용 상태를 한눈에 살펴보세요"
+        description="지금 남은 코인, Plus 상태, 다음 결제일, 최근 이용 내역을 한곳에 모았습니다. 복잡하지 않게, 필요한 정보만 차분히 살펴보실 수 있습니다."
       />
 
       <section className="grid gap-4 md:grid-cols-3">
@@ -143,10 +143,10 @@ export default async function MyBillingPage() {
           <h2 className="text-2xl font-semibold text-[var(--app-ivory)]">정책 안내</h2>
           <div className="mt-5 space-y-3">
             {[
-              '정기 이용 상품은 가격, 갱신 주기, 제공 시작 시점을 결제 전과 MY 화면에서 계속 확인할 수 있어야 합니다.',
-              '해지 예약이 있으면 다음 갱신 전까지는 혜택을 유지하고, 사용자는 같은 화면에서 바로 재개할 수 있어야 합니다.',
-              '디지털 콘텐츠는 제공이 시작된 이후 환불 기준이 달라질 수 있으므로 미리보기와 제공 개시 시점을 함께 안내합니다.',
-              '현재 MVP에서는 MY 화면에서 상태 조회와 해지 예약, 재개를 우선 제공하고 실제 자동결제 확장은 추후 billing key 연동과 함께 이어집니다.',
+              '정기 이용 상품은 가격과 갱신 시점, 열리는 혜택을 같은 화면에서 다시 확인하실 수 있습니다.',
+              '해지 예약을 하셔도 이번 이용 기간이 끝날 때까지 혜택은 그대로 유지됩니다.',
+              '디지털 해석은 열람 여부에 따라 환불 기준이 달라질 수 있어, 결제 전 안내를 먼저 보여드립니다.',
+              '궁금한 점이 생기면 멤버십 페이지와 코인 센터에서 바로 이어서 살펴보실 수 있습니다.',
             ].map((item) => (
               <div
                 key={item}

@@ -12,7 +12,7 @@ import {
 
 export const metadata: Metadata = {
   title: '해석',
-  description: '사주, 명리, 타로, 궁합, 별자리, 띠운세 여섯 가지 지혜를 한곳에서 살펴보세요.',
+  description: '사주, 명리, 타로, 궁합, 별자리, 띠운세 여섯 가지 지혜를 한곳에서 차분히 살펴보세요.',
   alternates: {
     canonical: '/interpretation',
   },
@@ -25,11 +25,11 @@ export default function InterpretationPage() {
         <section className="app-hero-card p-7 sm:p-8">
           <div className="app-caption">해석</div>
           <h1 className="mt-4 font-[var(--font-heading)] text-4xl leading-[1.3] tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-            여섯 가지 지혜가 서로 다른 질문에 답합니다
+            오늘 마음에 닿는 물음마다 읽는 방식이 다릅니다
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            사주와 명리는 삶의 큰 흐름을, 타로와 궁합은 지금의 선택과 관계를, 별자리와 띠운세는 더 가벼운 입구를 담당합니다.
-            어디부터 시작해도 달빛선생의 한 문장으로 다시 이어집니다.
+            사주는 삶의 바탕을, 명리는 반복되는 결을, 타로와 궁합은 오늘의 선택과 관계를 읽습니다.
+            별자리와 띠운세는 가볍게 펼쳐보는 운으로 마음을 먼저 열어드립니다.
           </p>
         </section>
 
@@ -73,7 +73,7 @@ export default function InterpretationPage() {
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
           <article className="app-panel p-6">
-            <div className="app-caption">어디서 시작하면 좋을까요?</div>
+            <div className="app-caption">어떤 이야기부터 펼쳐볼까요?</div>
             <div className="mt-5 space-y-4">
               {INTERPRETATION_ENTRY_GUIDE.map((item) => (
                 <div
@@ -98,9 +98,9 @@ export default function InterpretationPage() {
           </article>
 
           <article className="rounded-[1.75rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] p-6">
-            <div className="app-caption">무료에서 심화로 이어지는 흐름</div>
+            <div className="app-caption">가벼운 첫 해석에서 깊은 리포트까지</div>
             <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
-              좋은 해석은 한 번 보고 끝나지 않습니다
+              좋은 해석은 그날의 마음에서 끝나지 않습니다
             </div>
             <div className="mt-5 space-y-4">
               {INTERPRETATION_JOURNEY.map((step) => (

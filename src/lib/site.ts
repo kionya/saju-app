@@ -1,6 +1,6 @@
-export const SITE_NAME = '사주명리';
+export const SITE_NAME = '달빛선생';
 export const DEFAULT_DESCRIPTION =
-  '오늘의 운세부터 정통 사주 리포트, 타로, 궁합, 멤버십까지 앱처럼 이어지는 운세 플랫폼 사주명리입니다.';
+  '문득 궁금하신 날, 당신을 위한 여섯 가지 지혜. 사주, 명리, 타로, 궁합, 별자리, 띠운세를 품격 있는 흐름으로 잇는 사주 웹앱 달빛선생입니다.';
 export const DEFAULT_OG_IMAGE = '/og-image.png';
 
 const FALLBACK_SITE_URL = 'https://saju-app-lac.vercel.app';

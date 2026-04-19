@@ -9,6 +9,8 @@ export interface SajuOnboardingDraft {
   month: string;
   day: string;
   hour: string;
+  minute: string;
+  jasiMethod: 'split' | 'unified';
   gender: string;
   nickname: string;
   tone: OnboardingSpeechTone;
@@ -29,6 +31,8 @@ export function createInitialOnboardingDraft(): SajuOnboardingDraft {
     month: '',
     day: '',
     hour: '',
+    minute: '',
+    jasiMethod: 'unified',
     gender: '',
     nickname: '',
     tone: 'polite',
@@ -61,6 +65,8 @@ export function loadOnboardingDraft(): SajuOnboardingDraft {
       month: typeof parsed.month === 'string' ? parsed.month : '',
       day: typeof parsed.day === 'string' ? parsed.day : '',
       hour: typeof parsed.hour === 'string' ? parsed.hour : '',
+      minute: typeof parsed.minute === 'string' ? parsed.minute : '',
+      jasiMethod: parsed.jasiMethod === 'split' ? 'split' : 'unified',
       gender: typeof parsed.gender === 'string' ? parsed.gender : '',
       nickname: typeof parsed.nickname === 'string' ? parsed.nickname : '',
       tone:

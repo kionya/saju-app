@@ -6,7 +6,7 @@ import { DIALOGUE_GUARDRAILS, DIALOGUE_PRESETS } from '@/content/moonlight';
 
 export const metadata: Metadata = {
   title: '대화',
-  description: '달빛선생께 묻는 질문 프리셋과 안전한 대화 원칙을 확인하세요.',
+  description: '달빛선생께 자주 여쭙는 질문과 안전한 대화 원칙을 확인하세요.',
   alternates: {
     canonical: '/dialogue',
   },
@@ -21,17 +21,17 @@ export default function DialoguePage() {
         <section className="app-hero-card p-7 sm:p-8">
           <div className="app-caption">대화</div>
           <h1 className="mt-4 font-[var(--font-heading)] text-4xl leading-[1.3] tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-            달빛선생께 여쭙는 질문은 공감과 안전 위에서 시작됩니다
+            달빛선생께 드리는 질문은 마음을 먼저 헤아리는 말에서 시작됩니다
           </h1>
           <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            처음부터 길게 쓰지 않으셔도 됩니다. 시니어가 실제로 많이 묻는 질문 프리셋을 먼저 고르고,
-            필요한 순간에는 의료·법률·금전 판단을 전문가 상담으로 부드럽게 잇는 SAFE_REDIRECT 원칙을 지킵니다.
+            처음부터 길게 적지 않으셔도 괜찮습니다. 많이들 여쭙는 질문을 먼저 고르셔도 되고, 편한 말로 한 줄만 남기셔도 됩니다.
+            더 조심스러운 문제는 무리하게 해석하지 않고 알맞은 도움으로 안내드립니다.
           </p>
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <article className="app-panel p-6">
-            <div className="app-caption">자주 여쭙는 질문</div>
+            <div className="app-caption">자주 여쭙는 이야기</div>
             <div className="mt-5 grid gap-3">
               {DIALOGUE_PRESETS.map((preset, index) => (
                 <article
@@ -64,7 +64,7 @@ export default function DialoguePage() {
 
           <div className="grid gap-4">
             <article className="rounded-[1.75rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] p-6">
-              <div className="app-caption">답변은 이런 결로 이어집니다</div>
+              <div className="app-caption">이런 결로 답해드립니다</div>
               <div className="mt-4 text-xs tracking-[0.2em] text-[var(--app-gold-soft)]">
                 {featuredPreset.category}
               </div>
@@ -92,7 +92,7 @@ export default function DialoguePage() {
             >
               <div className="app-caption">SAFE_REDIRECT 예시</div>
               <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
-                위기 키워드를 감지했을 때 어떤 식으로 공감하고, 어디로 연결하는지 전용 상태 화면으로 확인하실 수 있습니다.
+                마음이 많이 아프거나 도움이 급한 순간에는 어떤 말로 공감하고 어디로 모시는지 살펴보실 수 있습니다.
               </p>
             </Link>
           </div>

@@ -5,6 +5,9 @@ export interface BirthInputDraft {
   month?: unknown;
   day?: unknown;
   hour?: unknown;
+  minute?: unknown;
+  unknownTime?: unknown;
+  jasiMethod?: unknown;
   gender?: unknown;
 }
 
@@ -30,7 +33,7 @@ function getDaysInMonth(year: number, month: number): number {
 }
 
 export function isValidBirthInput(input: BirthInput): boolean {
-  const { year, month, day, hour } = input;
+  const { year, month, day, hour, minute, jasiMethod, unknownTime } = input;
 
   if (
     !Number.isInteger(year) ||
@@ -47,6 +50,22 @@ export function isValidBirthInput(input: BirthInput): boolean {
   }
 
   if (hour !== undefined && (!Number.isInteger(hour) || hour < 0 || hour > 23)) {
+    return false;
+  }
+
+  if (
+    !unknownTime &&
+    minute !== undefined &&
+    (!Number.isInteger(minute) || minute < 0 || minute > 59)
+  ) {
+    return false;
+  }
+
+  if (
+    jasiMethod !== undefined &&
+    jasiMethod !== 'split' &&
+    jasiMethod !== 'unified'
+  ) {
     return false;
   }
 
@@ -70,12 +89,33 @@ export function parseBirthInputDraft(
   }
 
   let hour: number | undefined;
+  let minute: number | undefined;
+  const unknownTime = draft.unknownTime === true;
+
   if (draft.hour !== undefined && draft.hour !== null && draft.hour !== '') {
     const parsedHour = toInt(draft.hour);
     if (parsedHour === null) {
       return { ok: false, error: '태어난 시간은 0시부터 23시 사이로 입력해 주세요.' };
     }
     hour = parsedHour;
+  }
+
+  if (!unknownTime && draft.minute !== undefined && draft.minute !== null && draft.minute !== '') {
+    if (hour === undefined) {
+      return { ok: false, error: '분을 입력하시려면 태어난 시간도 함께 선택해 주세요.' };
+    }
+
+    const parsedMinute = toInt(draft.minute);
+    if (parsedMinute === null) {
+      return { ok: false, error: '태어난 분은 0분부터 59분 사이로 입력해 주세요.' };
+    }
+
+    minute = parsedMinute;
+  }
+
+  let jasiMethod: BirthInput['jasiMethod'];
+  if (draft.jasiMethod === 'split' || draft.jasiMethod === 'unified') {
+    jasiMethod = draft.jasiMethod;
   }
 
   let gender: BirthInput['gender'];
@@ -89,7 +129,10 @@ export function parseBirthInputDraft(
     year,
     month,
     day,
-    hour,
+    hour: unknownTime ? undefined : hour,
+    minute: unknownTime ? undefined : minute,
+    unknownTime,
+    jasiMethod,
     gender,
   };
 

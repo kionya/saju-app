@@ -106,16 +106,16 @@ export const HEADER_SHORTCUTS: readonly MoonlightNavItem[] = [
 
 export const HOME_DAILY_LINES = [
   {
-    title: '오늘은 서두르지 않으시는 것이 가장 큰 지혜입니다',
-    subtitle: '가까운 분과의 식사가 마음의 양식이 되는 날입니다',
+    title: '오늘은 서두르기보다 마음을 고르게 하시면 길이 열립니다',
+    subtitle: '가까운 분과 나누는 짧은 안부 한마디가 하루의 기운을 부드럽게 바꿉니다',
   },
   {
-    title: '마음을 차분히 하실수록 좋은 날입니다',
-    subtitle: '오후에 한 통의 연락이 반가운 소식이 될 수 있습니다',
+    title: '마음을 낮추실수록 반가운 소식이 먼저 닿는 날입니다',
+    subtitle: '오후 무렵 닿는 연락 하나가 생각보다 오래 따뜻하게 남을 수 있습니다',
   },
   {
-    title: '오래 미루셨던 일을 매듭지을 때입니다',
-    subtitle: '작은 결심 하나가 한 달의 흐름을 바꿉니다',
+    title: '오래 미루신 일을 조용히 매듭지으시면 다음 흐름이 열립니다',
+    subtitle: '큰 결심보다 작은 정리가 한 달의 리듬을 바로잡아 드립니다',
   },
 ] as const;
 
@@ -131,7 +131,7 @@ export const WISDOM_CARDS: readonly MoonlightWisdomCard[] = [
     hanja: '四 柱',
     title: '사주',
     hook: '나는 어떤 사람으로 태어난 걸까',
-    description: '태어난 순간 정해진 내 본질. 80년을 관통하는 큰 흐름을 읽어드립니다.',
+    description: '태어난 때에 깃든 하늘의 결을 읽어, 선생님의 본성과 큰 흐름을 차분히 짚어드립니다.',
     href: '/saju/new',
     tone: 'gold',
   },
@@ -140,7 +140,7 @@ export const WISDOM_CARDS: readonly MoonlightWisdomCard[] = [
     hanja: '命 理',
     title: '명리',
     hook: '왜 유독 이 부분에서 늘 걸리는 걸까',
-    description: '사주 속 오행과 십신이 알려주는 반복되는 인생 패턴. 그 이유가 보입니다.',
+    description: '오행과 십신의 움직임으로, 자꾸 반복되는 삶의 장면이 왜 생기는지 들려드립니다.',
     href: '/myeongri',
     tone: 'gold',
   },
@@ -149,7 +149,7 @@ export const WISDOM_CARDS: readonly MoonlightWisdomCard[] = [
     hanja: '塔 羅',
     title: '타로',
     hook: '지금 이 선택, 괜찮은 걸까',
-    description: '지금 이 순간의 에너지를 한 장의 그림으로. 찰나의 지혜를 건넵니다.',
+    description: '지금 이 순간 마음 위로 스치는 기운을 한 장의 그림으로 읽어드립니다.',
     href: '/tarot/daily',
     tone: 'plum',
   },
@@ -158,7 +158,7 @@ export const WISDOM_CARDS: readonly MoonlightWisdomCard[] = [
     hanja: '宮 合',
     title: '궁합',
     hook: '우리, 정말 잘 맞는 사이일까',
-    description: '두 사람의 사주가 만나 이루는 인연. 장점과 조심할 점을 함께 짚어드립니다.',
+    description: '두 사람의 결이 어디에서 닮고 어디에서 어긋나는지, 살가운 말로 풀어드립니다.',
     href: '/compatibility',
     tone: 'jade',
   },
@@ -167,7 +167,7 @@ export const WISDOM_CARDS: readonly MoonlightWisdomCard[] = [
     hanja: '星 座',
     title: '별자리',
     hook: '저 먼 별빛이 내게 전하는 말',
-    description: '서양의 별자리와 동양의 사주가 함께 보는 오늘. 두 관점을 한 번에.',
+    description: '오늘 마음의 결을 별빛 언어로 먼저 살피고, 사주와 만나는 지점까지 이어드립니다.',
     href: '/star-sign',
     tone: 'plum',
   },
@@ -176,7 +176,7 @@ export const WISDOM_CARDS: readonly MoonlightWisdomCard[] = [
     hanja: '十 二 支',
     title: '띠별 운세',
     hook: '올해 내 띠의 흐름은 어떠한가',
-    description: '12띠로 보는 연운과 월운. 한 해의 큰 리듬을 미리 준비하실 수 있게 돕습니다.',
+    description: '익숙한 띠의 흐름으로 오늘과 올 한 해의 기운을 부드럽게 짚어드립니다.',
     href: '/zodiac',
     tone: 'gold',
   },
@@ -190,18 +190,18 @@ export const HOME_TODAY_SUMMARY = [
 
 export const INTERPRETATION_LAYERS = [
   {
-    title: '깊이 읽는 해석',
-    body: '사주와 명리는 태어난 순간부터 반복되는 패턴까지 차분하게 읽어내는 핵심 축입니다.',
+    title: '깊이 헤아리는 해석',
+    body: '사주와 명리는 태어난 바탕과 오래 이어지는 흐름을 읽어, “나는 왜 이럴까”라는 물음에 천천히 답합니다.',
     items: ['사주 원국과 일간의 본질', '오행 균형과 격국 해석', '용신, 대운, 세운 중심 심화 리포트'],
   },
   {
-    title: '지금 묻는 해석',
-    body: '타로와 궁합은 지금 이 순간의 선택과 관계를 가까운 언어로 풀어주는 보완 축입니다.',
+    title: '지금 마음에 닿는 해석',
+    body: '타로와 궁합은 오늘의 선택과 관계를 가까운 말로 풀어, 막연한 마음을 조금 더 또렷하게 정리해드립니다.',
     items: ['질문별 타로 리딩', '연인·배우자·가족 궁합', '사주와 타로의 교차 해석'],
   },
   {
-    title: '가볍게 보는 운세',
-    body: '별자리와 띠운세는 익숙한 입구로 들어와 더 깊은 본 서비스로 이어지게 만드는 대중적 접점입니다.',
+    title: '가볍게 펼쳐보는 운세',
+    body: '별자리와 띠운세는 익숙한 언어로 오늘의 리듬을 먼저 보여드리는 친숙한 길입니다.',
     items: ['오늘의 별자리', '12띠 연운과 월운', '서양·동양 관점 크로스'],
   },
 ] as const;
@@ -344,16 +344,16 @@ export const DIALOGUE_PRESETS: readonly MoonlightDialoguePreset[] = [
 
 export const DIALOGUE_GUARDRAILS = [
   {
-    title: '공감 먼저',
-    body: '답을 단정적으로 내리기보다 지금 어떤 마음으로 질문하셨는지 먼저 받아주는 말투를 지킵니다.',
+    title: '마음을 먼저 듣습니다',
+    body: '답을 서둘러 내리기보다, 지금 어떤 마음으로 여쭈셨는지 먼저 헤아리는 말투를 지킵니다.',
   },
   {
-    title: '행동으로 연결',
-    body: '불안만 키우지 않고, 오늘 바로 할 수 있는 작은 실천으로 해석을 이어드립니다.',
+    title: '오늘의 실마리까지',
+    body: '듣기 좋은 말로 끝내지 않고, 오늘 바로 해보실 수 있는 작은 실천 하나까지 함께 정리합니다.',
   },
   {
     title: 'SAFE_REDIRECT',
-    body: '의료·법률·금전처럼 고위험 판단은 사주 해석을 넘어 전문가 상담으로 부드럽게 안내합니다.',
+    body: '의료·법률·투자처럼 더 안전한 도움이 필요한 문제는 선을 넘지 않고 알맞은 도움처로 모십니다.',
   },
 ] as const;
 
@@ -604,49 +604,49 @@ export const PLAN_BLUEPRINT = [
     title: '베이직',
     price: '월 4,900원',
     badge: '부담 없는 시작',
-    summary: '핵심 해석과 대화를 적당한 빈도로 누리고 싶을 때 가장 가볍게 시작하는 월간 플랜입니다.',
+    summary: '가끔씩 마음이 궁금할 때, 큰 부담 없이 달빛선생의 해석을 곁에 두는 가장 가벼운 달빛 플랜입니다.',
     features: ['매일 해석 10회', '심층 리포트 월 2회', '고전 인용 표시', '대화 상담 월 30턴'],
-    fit: '사주와 대화를 가볍게 이어보고 싶은 분',
-    opens: ['짧은 질문을 자주 물어보는 흐름', '월 2회 심층 리포트 맛보기', '광고 없이 차분히 보는 해석'],
+    fit: '혼자 조용히 해석을 펼쳐보고 싶은 분',
+    opens: ['마음이 흔들릴 때 짧게 여쭙는 대화', '월 2회 심층 리포트 맛보기', '광고 없이 차분히 읽는 해석'],
   },
   {
     slug: 'premium' as const,
     title: '프리미엄',
     price: '월 9,900원',
     badge: '가장 많이 고르세요',
-    summary: '해석, 궁합, 가족 저장, 대화까지 가장 균형 있게 쓰실 수 있는 메인 플랜입니다.',
+    summary: '사주, 궁합, 가족 이야기, 대화까지 생활 가까운 질문을 가장 넉넉하게 이어보실 수 있는 중심 플랜입니다.',
     features: ['모든 해석 무제한', '궁합 분석 월 3회', '가족 사주 5명', '심층 리포트 월 10회', '대화 상담 무제한'],
-    fit: '가족 사주와 궁합, 생활 속 질문을 꾸준히 보시는 분',
-    opens: ['궁합과 가족 사주 저장', '심층 리포트 월 10회', '대화 상담 무제한'],
+    fit: '가족 이야기와 생활 고민을 꾸준히 들여다보고 싶은 분',
+    opens: ['궁합과 가족 사주를 넉넉히 펼쳐보기', '심층 리포트 월 10회', '대화 상담 무제한'],
   },
   {
     slug: 'lifetime' as const,
     title: '평생 심층 리포트',
     price: '49,000원',
     badge: '한 번 결제 · 평생 소장',
-    summary: '7개 섹션 완성형 심층 해석을 한 번에 열고, 이후 업데이트도 오래 간직하는 소장형 상품입니다.',
+    summary: '한 번의 결제로 깊은 해석 한 편을 오래 곁에 두고 싶은 분을 위한 소장형 리포트입니다.',
     features: ['7개 섹션 심층 해석', '고전 원문 인용', 'PDF 다운로드', '평생 무료 업데이트'],
     fit: '한 번의 결제로 완성본을 오래 보관하고 싶은 분',
-    opens: ['격국·용신·대운까지 한 번에', 'PDF 저장과 평생 보관', '업데이트 반영본 재열람'],
+    opens: ['격국·용신·대운을 한 편의 리포트로', 'PDF로 오래 간직하는 저장본', '해석이 다듬어질 때 다시 펼쳐보기'],
   },
 ] as const;
 
 export const INTERPRETATION_ENTRY_GUIDE = [
   {
-    title: '처음이면 사주부터',
-    body: '생년월일만 넣으면 내 기질과 오행의 결을 먼저 읽습니다. 가장 깊은 본 서비스의 입구입니다.',
+    title: '마음의 바탕이 궁금하시면 사주부터',
+    body: '생년월일을 바탕으로 타고난 기질, 오행의 균형, 지금의 흐름을 가장 차분히 읽어드립니다.',
     href: '/saju/new',
     cta: '사주 시작하기',
   },
   {
-    title: '지금 관계가 궁금하면 궁합',
-    body: '가족, 연인, 동업자처럼 가까운 사람과의 흐름을 부드러운 평어로 읽습니다. 결제 전환이 가장 강한 화면입니다.',
+    title: '사람 사이의 온도가 궁금하시면 궁합',
+    body: '가족, 연인, 가까운 인연 사이에서 왜 마음이 엇갈리는지, 어디서 다시 다정해질 수 있는지 살펴봅니다.',
     href: '/compatibility',
     cta: '궁합 보기',
   },
   {
-    title: '마음의 결부터 보고 싶으면 타로',
-    body: '질문 하나와 카드 한 장으로 지금의 감정선을 가볍게 읽고, 마음에 들면 사주 해석으로 더 깊게 들어갑니다.',
+    title: '오늘 마음이 먼저 움직이신다면 타로',
+    body: '질문 하나와 카드 한 장으로 지금의 감정선을 비추고, 필요하면 더 깊은 사주 해석으로 이어집니다.',
     href: '/tarot/daily',
     cta: '타로 뽑기',
   },
@@ -654,16 +654,16 @@ export const INTERPRETATION_ENTRY_GUIDE = [
 
 export const INTERPRETATION_JOURNEY = [
   {
-    title: '1. 무료 해석으로 결을 먼저 봅니다',
-    body: '사주 기본 해석, 타로 한 장, 궁합 첫 결과처럼 부담 없는 결과에서 먼저 신뢰를 만듭니다.',
+    title: '1. 먼저 가볍게 펼쳐봅니다',
+    body: '부담 없는 첫 해석으로 지금 마음에 닿는 이야기를 먼저 만나봅니다.',
   },
   {
-    title: '2. 마음에 남는 질문을 저장합니다',
-    body: 'MY에 결과를 모아두고, 가족 이야기나 올해의 흐름처럼 다시 꺼내보고 싶은 질문을 쌓아갑니다.',
+    title: '2. 마음에 남는 장면을 간직합니다',
+    body: '다시 읽고 싶은 결과는 MY에 차곡차곡 모아, 가족 이야기나 올해의 흐름과 이어 봅니다.',
   },
   {
-    title: '3. 심층 리포트와 플랜으로 확장합니다',
-    body: '격국, 용신, 대운, 세운처럼 한 번에 보기 어려운 깊은 정보는 결제 뒤에 완성형으로 이어집니다.',
+    title: '3. 필요할 때 더 깊이 들어갑니다',
+    body: '격국, 용신, 대운처럼 오래 품고 볼 내용은 심층 리포트로 차분히 열어드립니다.',
   },
 ] as const;
 
@@ -1018,9 +1018,9 @@ export const TEN_GODS_GUIDE: readonly MoonlightTenGodCard[] = [
 ] as const;
 
 export const MEMBERSHIP_REASSURANCE = [
-  '언제든 해지 가능하며 다음 결제일 전까지 효력이 유지됩니다.',
-  '7일 이내 열람하지 않은 건은 환불 기준을 함께 안내합니다.',
-  '자동 갱신은 결제일 3일 전에 미리 알려드립니다.',
+  '해지는 언제든 가능하며, 남은 이용 기간은 끝까지 편히 보실 수 있습니다.',
+  '열람 전 상태와 이용 기준을 먼저 보여드리고, 환불 기준도 같은 화면에서 확인하실 수 있습니다.',
+  '자동 갱신은 미리 알려드리니 갑작스러운 결제로 놀라지 않으셔도 됩니다.',
 ] as const;
 
 export const CHECKOUT_METHODS = [
@@ -1077,7 +1077,7 @@ export const FAMILY_PLAN_LIMITS = [
 export const STAR_SIGN_BLUEPRINT = {
   featuredSlug: 'pisces',
   intro: '저 먼 별빛이 오늘 당신에게 전하는 한 마디',
-  cross: '서양의 별자리와 동양의 사주를 함께 읽어 두 관점이 만나는 지점을 보여드립니다.',
+  cross: '서양의 별빛과 동양의 명식을 나란히 놓고, 오늘 마음에 더 가까운 결을 함께 읽어드립니다.',
 } as const;
 
 export const STAR_SIGN_META = {

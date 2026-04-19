@@ -149,6 +149,114 @@ function describeCurrentLuckNarrative(currentLuck: SajuDataV1['currentLuck']) {
   return parts.join(' ');
 }
 
+function getOrreryExtension(data: SajuDataV1) {
+  return data.extensions?.orrery ?? null;
+}
+
+function describeRelationNarrative(data: SajuDataV1) {
+  const relations = getOrreryExtension(data)?.relations;
+  if (!relations?.length) return '';
+
+  const tension = relations.find((relation) =>
+    ['충', '형', '해', '파', '천간충'].includes(relation.label)
+  );
+  const support = relations.find((relation) =>
+    ['천간합', '육합', '반합', '삼합', '방합'].includes(relation.label)
+  );
+  const selected = [tension, support].filter(
+    (relation, index, array): relation is NonNullable<typeof relation> =>
+      Boolean(relation) && array.findIndex((item) => item === relation) === index
+  );
+
+  if (selected.length === 0) return '';
+
+  return selected
+    .map((relation) => {
+      if (relation.target) {
+        return `${relation.source}와 ${relation.target} 사이에는 ${relation.label}이 보여 ${relation.detail ?? '기운의 맞물림이 또렷하게 드러납니다.'}`;
+      }
+
+      return `${relation.source} 글자가 함께 모여 ${relation.label}이 성립하니 ${relation.detail ?? '한 방향으로 기운이 묶이는 흐름이 확인됩니다.'}`;
+    })
+    .join(' ');
+}
+
+function describeGongmangNarrative(data: SajuDataV1) {
+  const gongmang = getOrreryExtension(data)?.gongmang;
+  if (!gongmang?.branches) return '';
+
+  const branches = gongmang.branches.join('·');
+  const slots = gongmang.pillarSlots
+    .map((slot) => {
+      switch (slot) {
+        case 'year':
+          return '년주';
+        case 'month':
+          return '월주';
+        case 'day':
+          return '일주';
+        case 'hour':
+          return '시주';
+      }
+    })
+    .join('·');
+
+  if (slots) {
+    return `공망은 ${branches}로 잡히고 ${slots}에 닿아 있어, 겉으로 드러난 일정이나 약속일수록 한 번 더 확인하고 마무리할수록 허술함을 줄이기 좋습니다.`;
+  }
+
+  return `공망은 ${branches}로 잡혀 있어 이 글자가 운에서 겹칠 때는 성급히 확정하기보다 한 템포 늦춰 점검하는 편이 더 안전합니다.`;
+}
+
+function hasIndexedSpecialSal(value: number[] | null | undefined) {
+  return Boolean(value && value.length > 0);
+}
+
+function describeSpecialSalsNarrative(data: SajuDataV1) {
+  const specialSals = getOrreryExtension(data)?.specialSals;
+  if (!specialSals) return '';
+
+  const supportive: string[] = [];
+  const cautionary: string[] = [];
+
+  if (hasIndexedSpecialSal(specialSals.cheonul)) supportive.push('천을귀인');
+  if (hasIndexedSpecialSal(specialSals.cheonduk)) supportive.push('천덕귀인');
+  if (hasIndexedSpecialSal(specialSals.wolduk)) supportive.push('월덕귀인');
+  if (hasIndexedSpecialSal(specialSals.munchang)) supportive.push('문창귀인');
+  if (hasIndexedSpecialSal(specialSals.geumyeo)) supportive.push('금여');
+  if (hasIndexedSpecialSal(specialSals.dohwa)) cautionary.push('도화');
+  if (hasIndexedSpecialSal(specialSals.yangin)) cautionary.push('양인');
+  if (specialSals.baekho) cautionary.push('백호');
+  if (specialSals.goegang) cautionary.push('괴강');
+  if (specialSals.hongyeom) cautionary.push('홍염');
+
+  const parts: string[] = [];
+
+  if (supportive.length > 0) {
+    parts.push(
+      `신살로는 ${supportive.join('·')}이 보여 도움을 받는 통로, 위기 완충력, 배움과 표현의 복이 함께 살아 있는 편입니다.`
+    );
+  }
+
+  if (cautionary.length > 0) {
+    parts.push(
+      `${cautionary.join('·')} 기운도 함께 보여 끌어당기는 힘과 돌파력은 강하지만, 감정과 속도를 다루는 방식에 따라 체감의 온도 차이가 크게 납니다.`
+    );
+  }
+
+  return parts.join(' ');
+}
+
+function buildOrreryEvidenceNarrative(data: SajuDataV1) {
+  return [
+    describeRelationNarrative(data),
+    describeGongmangNarrative(data),
+    describeSpecialSalsNarrative(data),
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
 function describeTenGodNarrative(tenGods: SajuDataV1['tenGods']) {
   if (!tenGods?.dominant) return '';
   return TEN_GOD_INTERPRETATION[tenGods.dominant];
@@ -282,6 +390,15 @@ function buildInsights(data: SajuDataV1, topic: FocusTopic): ReportInsight[] {
         ? `${data.pattern.name} 흐름을 기준으로 읽습니다.`
         : '강약과 용신 기준의 해석이 이어집니다.',
       body: buildStructuredReadingNote(data, topic),
+    });
+  }
+
+  const orreryEvidence = buildOrreryEvidenceNarrative(data);
+  if (orreryEvidence) {
+    insights.push({
+      eyebrow: '합충과 신살',
+      title: '명식 안쪽에서 맞물리는 관계와 완충 장치도 함께 봅니다.',
+      body: orreryEvidence,
     });
   }
 
@@ -424,6 +541,7 @@ function buildStructuredSummary(
   segments.push(describePatternNarrative(data.pattern));
   segments.push(describeYongsinNarrative(data.yongsin));
   segments.push(describeCurrentLuckNarrative(data.currentLuck));
+  segments.push(buildOrreryEvidenceNarrative(data));
 
   return segments.filter(Boolean).join(' ');
 }
@@ -445,6 +563,11 @@ function buildStructuredReadingNote(data: SajuDataV1, topic: FocusTopic) {
 
   if (data.currentLuck) {
     notes.push(describeCurrentLuckNarrative(data.currentLuck));
+  }
+
+  const orreryEvidence = buildOrreryEvidenceNarrative(data);
+  if (orreryEvidence) {
+    notes.push(orreryEvidence);
   }
 
   if (notes.length === 0) {

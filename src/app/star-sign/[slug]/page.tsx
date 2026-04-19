@@ -1,10 +1,15 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import SiteHeader from '@/features/shared-navigation/site-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  STAR_SIGN_BLUEPRINT,
+  STAR_SIGN_META,
+} from '@/content/moonlight';
+import SiteHeader from '@/features/shared-navigation/site-header';
 import { STAR_SIGN_FORTUNES } from '@/lib/free-content-pages';
+import { AppShell } from '@/shared/layout/app-shell';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -23,14 +28,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const item = getStarSign(slug);
 
   if (!item) {
-    return {
-      title: '별자리 운세',
-    };
+    return { title: '별자리' };
   }
 
   return {
-    title: `${item.label} 운세`,
-    description: `${item.label}의 오늘 흐름과 행동 포인트를 짧고 선명하게 정리한 무료 별자리 운세 페이지입니다.`,
+    title: `${item.label} 별자리`,
+    description: `${item.label}의 오늘 흐름과 사주 크로스 관점을 함께 보는 달빛선생의 별자리 상세 화면입니다.`,
     alternates: {
       canonical: `/star-sign/${item.slug}`,
     },
@@ -41,84 +44,110 @@ export default async function StarSignDetailPage({ params }: Props) {
   const { slug } = await params;
   const item = getStarSign(slug);
 
-  if (!item) {
-    notFound();
-  }
+  if (!item) notFound();
 
+  const meta = STAR_SIGN_META[item.slug as keyof typeof STAR_SIGN_META];
   const relatedItems = STAR_SIGN_FORTUNES.filter((entry) => entry.slug !== item.slug).slice(0, 3);
 
   return (
-    <main className="min-h-screen bg-[#020817] text-white">
-      <SiteHeader />
-
-      <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        <section className="rounded-[32px] border border-[#d2b072]/18 bg-[linear-gradient(180deg,rgba(7,19,39,0.94),rgba(10,18,36,0.96))] p-7">
+    <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <section className="app-hero-card p-7 sm:p-8">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="border-[#d2b072]/30 bg-[#d2b072]/10 text-[#f5dfaa]">
-              별자리 운세 상세
+            <Badge className="border-[var(--app-plum)]/28 bg-[var(--app-plum)]/10 text-[var(--app-plum)]">
+              {meta.symbol} {item.label}
             </Badge>
-            <Badge className="border-white/10 bg-white/5 text-white/62">
+            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
               {item.dateRange}
             </Badge>
           </div>
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[#f8f1df] sm:text-5xl">
-            {item.label} 오늘의 운세
+          <h1 className="mt-5 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
+            {item.label}에게 오늘 별빛이 전하는 말
           </h1>
-          <p className="mt-4 text-base leading-8 text-white/66">{item.summary}</p>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <article className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5">
-              <div className="text-sm text-white/45">오늘 집중 사인</div>
-              <p className="mt-3 text-sm leading-7 text-white/66">{item.todayFocus}</p>
-            </article>
-            <article className="rounded-[26px] border border-white/10 bg-white/[0.04] p-5">
-              <div className="text-sm text-white/45">행동 제안</div>
-              <p className="mt-3 text-sm leading-7 text-white/66">{item.action}</p>
-            </article>
-          </div>
+          <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
+            {item.summary} 달빛선생은 이 흐름을 “{meta.seniorCopy}”라는 한 문장으로 먼저
+            받아들인 뒤, 오늘의 감정선과 선택의 온도를 차분히 읽어드립니다.
+          </p>
         </section>
 
-        <section className="mt-8 rounded-[30px] border border-white/10 bg-white/[0.04] p-6">
-          <h2 className="text-2xl font-semibold text-[#f8f1df]">이 운세를 더 잘 쓰는 방법</h2>
-          <div className="mt-5 space-y-3 text-sm leading-7 text-white/60">
-            <p>별자리 운세는 오늘의 분위기와 감정선을 빠르게 읽는 무료 메뉴입니다.</p>
-            <p>하루 전체를 점치기보다, 지금 가장 먼저 다뤄야 할 대화와 선택의 톤을 잡는 용도로 쓰면 더 유용합니다.</p>
-            <p>조금 더 개인화된 리포트가 필요하면 생년월일 기반 사주 리포트나 오늘의 타로와 같이 보는 흐름이 자연스럽습니다.</p>
-          </div>
-          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-            <Link href="/tarot/daily">
-              <Button className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]">
-                오늘의 타로 보기
-              </Button>
-            </Link>
-            <Link href="/star-sign">
-              <Button
-                variant="outline"
-                className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-              >
-                별자리 목록으로 돌아가기
-              </Button>
-            </Link>
-          </div>
+        <section className="mt-8 grid gap-6 lg:grid-cols-[0.94fr_1.06fr]">
+          <article className="app-panel p-6 text-center">
+            <div className="text-7xl">{meta.symbol}</div>
+            <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-plum)]">
+              {item.label}
+            </div>
+            <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+              {item.todayFocus}
+            </p>
+          </article>
+
+          <article className="space-y-4">
+            <div className="app-panel p-6">
+              <div className="app-caption">오늘의 별자리</div>
+              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{item.summary}</p>
+            </div>
+
+            <div className="app-panel p-6">
+              <div className="app-caption">행동 제안</div>
+              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{item.action}</p>
+            </div>
+
+            <div className="rounded-[1.45rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(166,124,181,0.08))] px-5 py-5">
+              <div className="app-caption">별자리 × 사주 크로스</div>
+              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+                별자리는 선생님의 감수성과 관계 온도를 빠르게 읽고, 사주는 태어난 순간의 큰
+                구조와 반복 패턴을 읽습니다. {STAR_SIGN_BLUEPRINT.cross}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Link href="/saju/new">
+                <Button className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]">
+                  사주와 함께 보기
+                </Button>
+              </Link>
+              <Link href="/star-sign">
+                <Button
+                  variant="outline"
+                  className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                >
+                  별자리 목록으로 돌아가기
+                </Button>
+              </Link>
+            </div>
+          </article>
         </section>
 
         <section className="mt-8">
-          <div className="mb-5 text-sm uppercase tracking-[0.22em] text-[#d2b072]/78">Related Signs</div>
+          <div className="mb-5 app-caption">다른 별자리도 보기</div>
           <div className="grid gap-4 md:grid-cols-3">
-            {relatedItems.map((entry) => (
-              <Link
-                key={entry.slug}
-                href={`/star-sign/${entry.slug}`}
-                className="rounded-[26px] border border-white/10 bg-white/[0.04] p-6 transition-colors hover:bg-white/[0.06]"
-              >
-                <div className="text-sm text-white/45">{entry.dateRange}</div>
-                <h2 className="mt-3 text-2xl font-semibold text-[#f8f1df]">{entry.label}</h2>
-                <p className="mt-4 text-sm leading-7 text-white/58">{entry.summary}</p>
-              </Link>
-            ))}
+            {relatedItems.map((entry) => {
+              const relatedMeta = STAR_SIGN_META[entry.slug as keyof typeof STAR_SIGN_META];
+
+              return (
+                <Link
+                  key={entry.slug}
+                  href={`/star-sign/${entry.slug}`}
+                  className="app-panel block p-6 transition-colors hover:bg-[var(--app-surface-strong)]"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl">{relatedMeta.symbol}</div>
+                    <div>
+                      <div className="font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
+                        {entry.label}
+                      </div>
+                      <div className="text-sm text-[var(--app-copy-muted)]">{entry.dateRange}</div>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">
+                    {entry.summary}
+                  </p>
+                </Link>
+              );
+            })}
           </div>
         </section>
       </div>
-    </main>
+    </AppShell>
   );
 }

@@ -30,6 +30,22 @@ export interface ReadingRecord {
   result: LegacySajuResult;
 }
 
+function deriveBirthInputFromSajuData(
+  fallback: BirthInput,
+  sajuData: SajuDataV1
+): BirthInput {
+  return {
+    year: sajuData.input.birth.year,
+    month: sajuData.input.birth.month,
+    day: sajuData.input.birth.day,
+    hour: sajuData.input.hourKnown ? sajuData.input.birth.hour ?? undefined : undefined,
+    minute: sajuData.input.hourKnown ? sajuData.input.birth.minute ?? undefined : undefined,
+    unknownTime: !sajuData.input.hourKnown,
+    jasiMethod: sajuData.input.jasiMethod ?? sajuData.extensions?.orrery?.input.jasiMethod ?? fallback.jasiMethod,
+    gender: sajuData.input.gender ?? fallback.gender ?? undefined,
+  };
+}
+
 export function isReadingId(value: string): boolean {
   return READING_ID_PATTERN.test(value);
 }
@@ -47,7 +63,7 @@ function mapReadingRow(row: ReadingRow): ReadingRecord {
   return {
     id: row.id,
     userId: row.user_id,
-    input,
+    input: deriveBirthInputFromSajuData(input, sajuData),
     sajuData,
     // Keep the legacy shape available while screens migrate to SajuDataV1.
     result: deriveLegacySajuResult(sajuData),
@@ -114,7 +130,7 @@ export async function resolveReading(
   return {
     id: identifier,
     userId: null,
-    input,
+    input: deriveBirthInputFromSajuData(input, sajuData),
     sajuData,
     result: deriveLegacySajuResult(sajuData),
   };
