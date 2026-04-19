@@ -5,9 +5,15 @@ import { loadTossPayments, ANONYMOUS } from '@tosspayments/tosspayments-sdk';
 import { createClient } from '@/lib/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import TossPaymentMethodPicker from '@/components/payments/toss-payment-method-picker';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import LegalLinks from '@/components/legal-links';
 import Link from 'next/link';
+import {
+  DEFAULT_TOSS_PAYMENT_METHOD,
+  getTossPaymentMethodOption,
+  type TossPaymentMethodCode,
+} from '@/lib/payments/methods';
 
 const hasSupabaseBrowserEnv = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -33,6 +39,9 @@ const PACKAGES: Package[] = [
 export default function CreditsPage() {
   const [loading, setLoading] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<TossPaymentMethodCode>(
+    DEFAULT_TOSS_PAYMENT_METHOD
+  );
 
   useEffect(() => {
     if (!hasSupabaseBrowserEnv) {
@@ -55,15 +64,36 @@ export default function CreditsPage() {
     try {
       const toss = await loadTossPayments(process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY!);
       const payment = toss.payment({ customerKey: ANONYMOUS });
-      const orderId = `order_${pkg.id}_${Date.now()}`;
+      const orderId = `order_${pkg.id}_${paymentMethod.toLowerCase()}_${Date.now()}`;
 
-      await payment.requestPayment({
-        method: 'TRANSFER',
+      const paymentRequest = {
         amount: { currency: 'KRW', value: pkg.price },
         orderId,
         orderName: `${pkg.label} ${pkg.credits}코인`,
         successUrl: `${location.origin}/credits/success?packageId=${pkg.id}`,
         failUrl: `${location.origin}/credits?error=fail`,
+      } as const;
+
+      if (paymentMethod === 'CARD') {
+        await payment.requestPayment({
+          ...paymentRequest,
+          method: 'CARD',
+          card: {
+            flowMode: 'DEFAULT',
+          },
+        });
+        return;
+      }
+
+      await payment.requestPayment({
+        ...paymentRequest,
+        method: 'TRANSFER',
+        transfer: {
+          cashReceipt: {
+            type: '소득공제',
+          },
+          useEscrow: false,
+        },
       });
     } catch (e) {
       console.error(e);
@@ -71,6 +101,8 @@ export default function CreditsPage() {
       setLoading(null);
     }
   }
+
+  const selectedMethod = getTossPaymentMethodOption(paymentMethod);
 
   return (
     <main className="min-h-screen bg-[#020817] text-white">
@@ -115,7 +147,7 @@ export default function CreditsPage() {
               <p>결제 뒤에는 마이 화면에서 상태와 이용 흐름을 다시 확인하실 수 있습니다.</p>
             </div>
             <div className="mt-6 rounded-2xl border border-[#d2b072]/16 bg-[#d2b072]/8 p-4 text-sm leading-7 text-white/64">
-              지원 결제: 토스페이먼츠 계좌이체 기반 결제
+              지원 결제: 토스페이먼츠 카드 결제 · 계좌이체
               <br />
               진행 시 <LegalLinks className="text-white/48" />에 동의한 것으로 봅니다.
             </div>
@@ -128,6 +160,11 @@ export default function CreditsPage() {
               <div className="text-sm uppercase tracking-[0.22em] text-[#d2b072]/78">Coin Packages</div>
               <h2 className="mt-3 text-2xl font-semibold text-[#f8f1df]">첫 결제부터 월간 Plus까지</h2>
             </div>
+            <TossPaymentMethodPicker
+              value={paymentMethod}
+              onChange={setPaymentMethod}
+              className="mb-5"
+            />
             <div className="grid gap-4 md:grid-cols-2">
               {PACKAGES.map((pkg) => (
                 <article
@@ -169,7 +206,7 @@ export default function CreditsPage() {
                       className="min-w-[96px] rounded-full bg-[#d2b072] text-[#111827] hover:bg-[#e3c68d]"
                       size="sm"
                     >
-                      {loading === pkg.id ? '처리중...' : '구매'}
+                      {loading === pkg.id ? '처리중...' : `${selectedMethod.shortLabel} 구매`}
                     </Button>
                   </div>
                 </article>

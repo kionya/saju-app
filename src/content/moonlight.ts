@@ -1031,7 +1031,7 @@ export const MEMBERSHIP_REASSURANCE = [
 ] as const;
 
 export const CHECKOUT_METHODS = [
-  'Toss 계좌이체',
+  '카드 결제 또는 계좌이체 선택',
   '결제 승인 후 멤버십 자동 반영',
   '실패 시 권한 미반영 후 결제 화면 복귀',
 ] as const;

@@ -3,6 +3,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ANONYMOUS, loadTossPayments } from '@tosspayments/tosspayments-sdk';
 import { Button } from '@/components/ui/button';
+import TossPaymentMethodPicker from '@/components/payments/toss-payment-method-picker';
+import {
+  DEFAULT_TOSS_PAYMENT_METHOD,
+  getTossPaymentMethodOption,
+  type TossPaymentMethodCode,
+} from '@/lib/payments/methods';
 import { createClient } from '@/lib/supabase/client';
 
 const hasSupabaseBrowserEnv = Boolean(
@@ -27,6 +33,9 @@ export default function TossMembershipCheckout({
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<TossPaymentMethodCode>(
+    DEFAULT_TOSS_PAYMENT_METHOD
+  );
 
   const checkoutPath = useMemo(() => {
     const params = new URLSearchParams({ plan });
@@ -63,7 +72,7 @@ export default function TossMembershipCheckout({
     try {
       const toss = await loadTossPayments(process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY);
       const payment = toss.payment({ customerKey: ANONYMOUS });
-      const orderId = `membership_${packageId}_${Date.now()}`;
+      const orderId = `membership_${packageId}_${paymentMethod.toLowerCase()}_${Date.now()}`;
       const successParams = new URLSearchParams({
         packageId,
         plan,
@@ -78,13 +87,34 @@ export default function TossMembershipCheckout({
         failParams.set('slug', slug);
       }
 
-      await payment.requestPayment({
-        method: 'TRANSFER',
+      const paymentRequest = {
         amount: { currency: 'KRW', value: amount },
         orderId,
         orderName,
         successUrl: `${location.origin}/membership/success?${successParams.toString()}`,
         failUrl: `${location.origin}/membership/checkout?${failParams.toString()}`,
+      } as const;
+
+      if (paymentMethod === 'CARD') {
+        await payment.requestPayment({
+          ...paymentRequest,
+          method: 'CARD',
+          card: {
+            flowMode: 'DEFAULT',
+          },
+        });
+        return;
+      }
+
+      await payment.requestPayment({
+        ...paymentRequest,
+        method: 'TRANSFER',
+        transfer: {
+          cashReceipt: {
+            type: '소득공제',
+          },
+          useEscrow: false,
+        },
       });
     } catch (error) {
       console.error(error);
@@ -94,21 +124,26 @@ export default function TossMembershipCheckout({
     }
   }
 
+  const selectedMethod = getTossPaymentMethodOption(paymentMethod);
+
   return (
     <div className="space-y-3">
+      <TossPaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} />
       <Button
         type="button"
         onClick={handlePayment}
         disabled={isLoading || isLoggedIn === null}
         className="h-12 w-full rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
       >
-        {isLoading ? '결제창 여는 중...' : `${amount.toLocaleString()}원 Toss 결제하기`}
+        {isLoading
+          ? '결제창 여는 중...'
+          : `${amount.toLocaleString()}원 ${selectedMethod.shortLabel}로 결제하기`}
       </Button>
       {errorMessage ? (
         <p className="text-center text-xs leading-6 text-rose-200">{errorMessage}</p>
       ) : (
         <p className="text-center text-xs leading-6 text-[var(--app-copy-soft)]">
-          Toss 결제 완료 후 서버에서 이용권을 확인하고 바로 반영합니다.
+          Toss 결제 완료 후 서버에서 이용권을 확인하고 바로 반영합니다. 카드와 계좌이체를 모두 지원합니다.
         </p>
       )}
     </div>
