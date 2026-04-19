@@ -769,6 +769,32 @@
   .app-shell-with-navigation .app-shell-content {
     padding-left: 16rem;
   }
+
+  [data-app-layout="horizontal"] .app-desktop-sidebar {
+    display: none !important;
+  }
+
+  [data-app-layout="horizontal"] .app-top-header {
+    display: block !important;
+  }
+
+  [data-app-layout="horizontal"] .app-top-header-inner {
+    margin-inline: auto;
+    max-width: 88rem;
+    padding-inline: 2rem;
+  }
+
+  [data-app-layout="horizontal"] .app-shell-with-navigation .app-shell-content {
+    padding-left: 0;
+  }
+
+  [data-app-layout="horizontal"] .app-page {
+    width: min(100%, 92rem);
+  }
+
+  [data-app-layout="horizontal"] .app-page-spacious {
+    padding-top: 2rem;
+  }
 }
 
 @media (min-width: 1280px) {
@@ -778,5 +804,9 @@
 
   .app-shell-with-navigation .app-shell-content {
     padding-left: 17rem;
+  }
+
+  [data-app-layout="horizontal"] .app-shell-with-navigation .app-shell-content {
+    padding-left: 0;
   }
 }

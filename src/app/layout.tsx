@@ -2,6 +2,17 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { DEFAULT_DESCRIPTION, SITE_NAME, getSiteUrl } from "@/lib/site";
 
+const layoutModeScript = `
+(() => {
+  try {
+    const mode = window.localStorage.getItem('moonlight:layout-mode');
+    document.documentElement.dataset.appLayout = mode === 'horizontal' ? 'horizontal' : 'vertical';
+  } catch {
+    document.documentElement.dataset.appLayout = 'vertical';
+  }
+})();
+`;
+
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   applicationName: SITE_NAME,
@@ -39,8 +50,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="dark h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html
+      lang="ko"
+      className="dark h-full antialiased"
+      data-app-layout="vertical"
+      suppressHydrationWarning
+    >
+      <body className="min-h-full flex flex-col">
+        <script dangerouslySetInnerHTML={{ __html: layoutModeScript }} />
+        {children}
+      </body>
     </html>
   );
 }

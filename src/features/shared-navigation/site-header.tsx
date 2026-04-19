@@ -16,6 +16,7 @@ import {
   UserRound,
 } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
+import { LayoutModeControl } from '@/features/layout-preference/layout-mode-control';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import {
@@ -202,6 +203,11 @@ function DesktopSidebar({
       </nav>
 
       <div className="relative z-10 border-t border-[var(--app-line)] px-5 py-5">
+        <div className="mb-3">
+          <div className="app-caption mb-2">보기 방식</div>
+          <LayoutModeControl />
+        </div>
+
         <div className="rounded-[1.2rem] border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/10 p-4">
           <div className="flex items-center gap-2 text-sm font-medium text-[var(--app-gold-text)]">
             <Sparkles className="h-4 w-4" />
@@ -266,8 +272,8 @@ function MobileChrome({
 }) {
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-[var(--app-line)] bg-[rgba(8,10,18,0.9)] backdrop-blur lg:hidden">
-        <div className="px-4 py-4">
+      <header className="app-top-header sticky top-0 z-40 border-b border-[var(--app-line)] bg-[rgba(8,10,18,0.9)] backdrop-blur lg:hidden">
+        <div className="app-top-header-inner px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="min-w-0">
               <div className="truncate font-[var(--font-heading)] text-[10px] tracking-[0.42em] text-[var(--app-gold)]/72">
@@ -278,7 +284,34 @@ function MobileChrome({
               </div>
             </Link>
 
+            <nav className="hidden flex-1 items-center justify-center gap-1 lg:flex">
+              {PRIMARY_NAV_ITEMS.map((item) => {
+                const active = matchesPath(item, pathname);
+
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className={cn(
+                      'relative rounded-full px-4 py-2 text-sm transition-colors',
+                      active
+                        ? 'bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
+                        : 'text-[var(--app-copy-muted)] hover:bg-[var(--app-surface-muted)] hover:text-[var(--app-ivory)]'
+                    )}
+                  >
+                    {item.label}
+                    {active ? (
+                      <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[var(--app-gold)]" />
+                    ) : null}
+                  </Link>
+                );
+              })}
+            </nav>
+
             <div className="flex items-center gap-2">
+              <div className="hidden sm:block">
+                <LayoutModeControl compact />
+              </div>
               <Link
                 href="/notifications"
                 className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
@@ -315,7 +348,37 @@ function MobileChrome({
             </div>
           </div>
 
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 lg:hidden">
+            <LayoutModeControl compact className="shrink-0 sm:hidden" />
+            <Link
+              href="/credits"
+              className="shrink-0 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)]"
+            >
+              {user ? `${credits ?? '...'} 코인` : '플랜'}
+            </Link>
+            {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
+              const active = matchesPath(item, pathname);
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={cn(
+                    'shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors',
+                    active
+                      ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
+                      : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="app-top-header-shortcuts hidden border-t border-[var(--app-line)] bg-[var(--app-surface-muted)] lg:block">
+          <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-8 py-3">
             <Link
               href="/credits"
               className="shrink-0 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)]"
