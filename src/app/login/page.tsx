@@ -1,15 +1,38 @@
 'use client';
 
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Suspense } from 'react';
 import LegalLinks from '@/components/legal-links';
+
+function getSafeNext(value: string | null) {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/';
+  return value;
+}
+
+function getEmailLoginError(message?: string) {
+  if (!message) return '로그인 링크를 보내지 못했습니다. 잠시 뒤 다시 시도해 주세요.';
+
+  if (message.toLowerCase().includes('email')) {
+    return '이메일 형식이나 Supabase Email Auth 설정을 확인해 주세요.';
+  }
+
+  if (message.toLowerCase().includes('rate')) {
+    return '로그인 링크 요청이 너무 잦습니다. 잠시 뒤 다시 시도해 주세요.';
+  }
+
+  return message;
+}
 
 function LoginContent() {
   const searchParams = useSearchParams();
-  const next = searchParams.get('next') ?? '/';
+  const next = getSafeNext(searchParams.get('next'));
   const supabase = createClient();
+  const [email, setEmail] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
 
   async function signInWithProvider(provider: 'google' | 'kakao') {
     await supabase.auth.signInWithOAuth({
@@ -20,41 +43,151 @@ function LoginContent() {
     });
   }
 
+  async function requestEmailLink(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail.includes('@')) {
+      setErrorMessage('로그인에 사용할 이메일 주소를 입력해 주세요.');
+      setStatusMessage('');
+      return;
+    }
+
+    setIsSubmittingEmail(true);
+    setErrorMessage('');
+    setStatusMessage('');
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: trimmedEmail,
+      options: {
+        emailRedirectTo: `${location.origin}/api/auth/callback?next=${encodeURIComponent(next)}`,
+        shouldCreateUser: true,
+      },
+    });
+
+    setIsSubmittingEmail(false);
+
+    if (error) {
+      setErrorMessage(getEmailLoginError(error.message));
+      return;
+    }
+
+    setStatusMessage('가입/로그인 링크를 보냈습니다. 메일함에서 달빛선생 링크를 열어 주세요.');
+  }
+
   return (
-    <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-2xl p-8 text-center space-y-4">
+    <div className="app-panel w-full max-w-md p-7 text-center sm:p-8">
       <div className="mb-2">
-        <h1 className="text-2xl font-bold mb-2">✦ 사주명리</h1>
-        <p className="text-white/50 text-sm">로그인하면 코인 3개를 무료로 드려요</p>
+        <div className="app-caption mb-3">연락처로 간편 로그인</div>
+        <h1 className="font-heading text-3xl font-semibold tracking-tight text-[var(--app-ivory)]">
+          ✦ 사주명리
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-[var(--app-copy-muted)]">
+          이메일 링크로 바로 가입하고 코인 3개를 무료로 받아보세요.
+        </p>
       </div>
 
-      {/* 카카오 로그인 */}
-      <Button
-        onClick={() => signInWithProvider('kakao')}
-        className="w-full font-medium flex items-center justify-center gap-3"
-        style={{ backgroundColor: '#FEE500', color: '#191919' }}
-      >
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#191919">
-          <path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.709 1.6 5.09 4.008 6.535l-.96 3.584a.3.3 0 0 0 .448.328L9.74 19.05A11.6 11.6 0 0 0 12 19.2c5.523 0 10-3.358 10-7.5S17.523 3 12 3z"/>
-        </svg>
-        카카오로 계속하기
-      </Button>
+      <form className="mt-6 space-y-3 text-left" onSubmit={requestEmailLink}>
+        <label
+          className="text-xs font-medium text-[var(--app-copy-muted)]"
+          htmlFor="login-email"
+        >
+          이메일 주소
+        </label>
+        <div className="flex gap-2 rounded-2xl border border-[var(--app-line-strong)] bg-[var(--app-surface-muted)] p-2 focus-within:border-[var(--app-gold)]/70">
+          <span className="inline-flex h-11 items-center rounded-xl bg-[var(--app-surface-strong)] px-3 text-sm text-[var(--app-gold-text)]">
+            MAIL
+          </span>
+          <input
+            id="login-email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="min-w-0 flex-1 bg-transparent text-base text-[var(--app-ivory)] outline-none placeholder:text-[var(--app-copy-soft)]"
+          />
+        </div>
+        <Button
+          type="submit"
+          disabled={isSubmittingEmail}
+          className="h-11 w-full rounded-2xl border border-[var(--app-gold)]/40 bg-[var(--app-gold)] text-[var(--app-ink)] hover:bg-[var(--app-gold-text)]"
+        >
+          {isSubmittingEmail ? '링크 보내는 중...' : '가입/로그인 링크 받기'}
+        </Button>
+      </form>
 
-      {/* 구글 로그인 */}
-      <Button
-        onClick={() => signInWithProvider('google')}
-        className="w-full bg-white text-slate-900 hover:bg-white/90 font-medium flex items-center justify-center gap-3"
-      >
-        <svg className="w-5 h-5" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-        </svg>
-        Google로 계속하기
-      </Button>
+      <section className="mt-4 rounded-2xl border border-dashed border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-left">
+        <div className="text-sm font-medium text-[var(--app-ivory)]">휴대폰 인증은 준비 중입니다</div>
+        <p className="mt-2 text-xs leading-6 text-[var(--app-copy-muted)]">
+          SMS provider 연동 전까지는 이메일 링크로 가입/로그인을 진행합니다.
+        </p>
+        {/*
+          TODO(phone-auth): Supabase Auth Phone provider와 SMS provider가 준비되면
+          이 안내 영역을 실제 휴대폰 OTP 폼으로 교체합니다.
 
-      <p className="text-xs text-white/30 pt-2">
-        로그인 시 <LegalLinks className="text-white/40" />에 동의합니다.
+          구현 시 필요한 흐름:
+          1. 입력값을 E.164 형식으로 정규화합니다. 예: 010-1234-5678 -> +821012345678
+          2. supabase.auth.signInWithOtp({
+               phone: normalizedPhone,
+               options: { channel: 'sms', shouldCreateUser: true },
+             })
+          3. 사용자가 받은 인증번호로 supabase.auth.verifyOtp({
+               phone: normalizedPhone,
+               token,
+               type: 'sms',
+             })
+          4. 성공 후 router.replace(next) 또는 router.refresh()로 보호 페이지를 갱신합니다.
+        */}
+      </section>
+
+      {statusMessage ? (
+        <p className="mt-4 rounded-2xl border border-[var(--app-jade)]/30 bg-[var(--app-jade)]/10 px-4 py-3 text-left text-xs leading-6 text-[var(--app-ivory)]">
+          {statusMessage}
+        </p>
+      ) : null}
+
+      {errorMessage ? (
+        <p className="mt-4 rounded-2xl border border-[var(--app-coral)]/30 bg-[var(--app-coral)]/10 px-4 py-3 text-left text-xs leading-6 text-[var(--app-ivory)]">
+          {errorMessage}
+        </p>
+      ) : null}
+
+      <div className="my-6 flex items-center gap-3 text-xs text-[var(--app-copy-soft)]">
+        <span className="h-px flex-1 bg-[var(--app-line)]" />
+        다른 방식으로 계속하기
+        <span className="h-px flex-1 bg-[var(--app-line)]" />
+      </div>
+
+      <div className="space-y-3">
+        <Button
+          onClick={() => signInWithProvider('kakao')}
+          className="flex h-11 w-full items-center justify-center gap-3 rounded-2xl font-medium"
+          style={{ backgroundColor: '#FEE500', color: '#191919' }}
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="#191919">
+            <path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.709 1.6 5.09 4.008 6.535l-.96 3.584a.3.3 0 0 0 .448.328L9.74 19.05A11.6 11.6 0 0 0 12 19.2c5.523 0 10-3.358 10-7.5S17.523 3 12 3z" />
+          </svg>
+          카카오로 계속하기
+        </Button>
+
+        <Button
+          onClick={() => signInWithProvider('google')}
+          className="flex h-11 w-full items-center justify-center gap-3 rounded-2xl bg-white text-slate-900 hover:bg-white/90"
+        >
+          <svg className="h-5 w-5" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+          </svg>
+          Google로 계속하기
+        </Button>
+      </div>
+
+      <p className="pt-4 text-xs leading-6 text-[var(--app-copy-soft)]">
+        로그인 시 <LegalLinks className="text-[var(--app-copy-muted)]" />에 동의합니다.
       </p>
     </div>
   );
@@ -62,7 +195,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-950 text-white flex items-center justify-center px-4">
+    <main className="app-shell flex min-h-screen items-center justify-center px-4 py-10 text-white">
       <Suspense fallback={<div className="text-white/50">로딩중...</div>}>
         <LoginContent />
       </Suspense>
