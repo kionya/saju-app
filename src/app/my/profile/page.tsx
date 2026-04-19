@@ -50,16 +50,18 @@ export default async function MyProfilePage() {
       />
 
       <section className="grid gap-4 md:grid-cols-3">
-        <article className="app-panel p-5">
+        <article className="moon-orbit-card p-5">
           <div className="app-caption">등록된 가족 수</div>
-          <div className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
-            {data.familyProfiles.length} / 5
+          <div className="mt-3 font-[var(--font-heading)] text-4xl font-semibold text-[var(--app-ivory)]">
+            {data.familyProfiles.length}
+            <span className="ml-1 text-xl text-[var(--app-copy-muted)]">/ 5</span>
           </div>
           <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">
             프리미엄 기준으로 최대 다섯 분까지 저장할 수 있습니다.
           </p>
         </article>
-        <article className="app-panel p-5">
+        <article className="moon-lunar-panel p-5">
+          <div className="app-starfield" />
           <div className="app-caption">내 기본 프로필</div>
           <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
             {data.profile.displayName || '이름 미입력'}
@@ -68,9 +70,9 @@ export default async function MyProfilePage() {
             {formatBirthSummary(data.profile)}
           </p>
         </article>
-        <article className="app-panel p-5">
+        <article className="moon-orbit-card p-5">
           <div className="app-caption">남은 자리</div>
-          <div className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+          <div className="mt-3 font-[var(--font-heading)] text-4xl font-semibold text-[var(--app-ivory)]">
             {remainingSlots}
           </div>
           <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">
@@ -79,7 +81,8 @@ export default async function MyProfilePage() {
         </article>
       </section>
 
-      <section className="app-panel p-6">
+      <section className="moon-lunar-panel p-6">
+        <div className="app-starfield" />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="app-caption">저장된 가족</div>
@@ -97,7 +100,7 @@ export default async function MyProfilePage() {
             data.familyProfiles.map((profile) => (
               <article
                 key={profile.id}
-                className="flex flex-col gap-4 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-4 sm:flex-row sm:items-center"
+                className="moon-account-row flex-col sm:flex-row sm:items-center"
               >
                 <div className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 font-[var(--font-heading)] text-lg text-[var(--app-gold-text)]">
                   {profile.label.slice(0, 1) || '家'}
@@ -126,8 +129,10 @@ export default async function MyProfilePage() {
           )}
 
           {remainingSlots > 0 ? (
-            <div className="rounded-[1.25rem] border-2 border-dashed border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-6 text-center">
-              <div className="text-2xl text-[var(--app-gold)]/72">+</div>
+            <div className="moon-orbit-card border-dashed px-5 py-6 text-center">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-2xl text-[var(--app-gold)]/72">
+                +
+              </div>
               <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">
                 가족 한 분 더 추가하기
                 <br />
@@ -145,7 +150,7 @@ export default async function MyProfilePage() {
             {FAMILY_PLAN_LIMITS.map((item) => (
               <div
                 key={item}
-                className="rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]"
+                className="moon-orbit-card px-4 py-3 text-sm leading-7 text-[var(--app-copy)]"
               >
                 {item}
               </div>

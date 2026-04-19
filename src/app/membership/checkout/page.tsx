@@ -38,7 +38,8 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-hero-card p-7 sm:p-8">
+        <section className="moon-lunar-panel p-7 sm:p-8">
+          <div className="app-starfield" />
           <div className="flex items-center justify-between gap-3">
             <Link
               href="/membership"
@@ -59,18 +60,33 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-          <article className="rounded-[1.75rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] p-6 text-center">
-            <div className="app-caption">선택하신 플랜</div>
-            <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
-              {selected.title}
+          <article className="moon-plan-card p-6" data-featured="true">
+            <div className="text-center">
+              <div className="app-caption">선택하신 플랜</div>
+              <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
+                {selected.title}
+              </div>
+              <div className="mt-3 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)]">
+                {selected.price}
+              </div>
+              <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+                {selected.nextRange}
+              </p>
+              <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">{selected.reassurance}</p>
             </div>
-            <div className="mt-3 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)]">
-              {selected.price}
+
+            <div className="mt-6 space-y-3">
+              {selected.opens.map((item, index) => (
+                <div
+                  key={item}
+                  className="moon-payment-row px-4 py-3 text-sm leading-7 text-[var(--app-copy)]"
+                  data-selected={index === 0 ? 'true' : 'false'}
+                >
+                  <span className="mr-2 text-[var(--app-gold-text)]">{index + 1}.</span>
+                  {item}
+                </div>
+              ))}
             </div>
-            <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-              {selected.nextRange}
-            </p>
-            <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">{selected.reassurance}</p>
           </article>
 
           <article className="app-panel p-6">
@@ -79,11 +95,8 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
               {CHECKOUT_METHODS.map((method, index) => (
                 <div
                   key={method}
-                  className={`flex items-center gap-3 rounded-[1rem] px-4 py-4 ${
-                    index === 0
-                      ? 'border-2 border-[var(--app-gold)]/45 bg-[var(--app-surface-strong)]'
-                      : 'border border-[var(--app-line)] bg-[var(--app-surface-muted)]'
-                  }`}
+                  className="moon-payment-row flex items-center gap-3 px-4 py-4"
+                  data-selected={index === 0 ? 'true' : 'false'}
                 >
                   <div
                     className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
@@ -104,17 +117,6 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
                 결제가 완료되지 않았습니다. 결제창을 닫으셨거나 승인에 실패했습니다.
               </div>
             ) : null}
-
-            <div className="mt-6 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
-              <div className="app-caption">결제 후 바로 열리는 것</div>
-              <div className="mt-3 space-y-2">
-                {selected.opens.map((item) => (
-                  <div key={item} className="text-sm leading-7 text-[var(--app-copy)]">
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
 
             <div className="mt-6 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5 text-sm leading-7 text-[var(--app-copy-muted)]">
               {MEMBERSHIP_REASSURANCE.map((item) => (

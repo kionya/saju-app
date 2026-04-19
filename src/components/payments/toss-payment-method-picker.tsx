@@ -39,14 +39,10 @@ export default function TossPaymentMethodPicker({
               onClick={() => onChange(option.code)}
               aria-pressed={isSelected}
               className={cn(
-                'rounded-[1rem] border px-4 py-3 text-left transition-colors',
-                isSelected
-                  ? 'border-[var(--app-gold)]/45 bg-[var(--app-gold)]/12 text-[var(--app-ivory)]'
-                  : [
-                      'border-[var(--app-line)] bg-white/[0.03] text-[var(--app-copy)]',
-                      'hover:bg-white/[0.06] hover:text-[var(--app-ivory)]',
-                    ]
+                'moon-payment-row px-4 py-3 text-left',
+                isSelected ? 'text-[var(--app-ivory)]' : 'text-[var(--app-copy)]'
               )}
+              data-selected={isSelected ? 'true' : 'false'}
             >
               <div className="flex items-center gap-2">
                 <span

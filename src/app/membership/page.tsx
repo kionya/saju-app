@@ -20,25 +20,33 @@ export default function MembershipPage() {
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-hero-card p-7 sm:p-8">
-          <div className="app-caption">결제 · 플랜</div>
-          <h1 className="mt-4 font-[var(--font-heading)] text-4xl leading-[1.3] tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-            부담은 덜고, 필요한 깊이만큼만 곁에 두실 수 있습니다
-          </h1>
-          <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            결제는 늘 조심스러운 일이라, 먼저 가격과 열리는 혜택, 해지와 환불 안내를 한곳에 차분히 모아두었습니다.
-          </p>
+        <section className="moon-lunar-panel p-7 sm:p-8">
+          <div className="app-starfield" />
+          <div className="grid gap-6 lg:grid-cols-[1fr_16rem] lg:items-center">
+            <div>
+              <div className="app-caption">결제 · 플랜</div>
+              <h1 className="mt-4 font-[var(--font-heading)] text-4xl leading-[1.3] tracking-tight text-[var(--app-ivory)] sm:text-5xl">
+                부담은 덜고, 필요한 깊이만큼만 곁에 두실 수 있습니다
+              </h1>
+              <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
+                결제는 늘 조심스러운 일이라, 먼저 가격과 열리는 혜택, 해지와 환불 안내를 한곳에 차분히 모아두었습니다.
+              </p>
+            </div>
+            <div className="hidden justify-self-end lg:block">
+              <div className="app-moon-orb h-28 w-28" />
+              <div className="mt-4 rounded-full border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-4 py-2 text-center text-xs text-[var(--app-gold-text)]">
+                Plus · Premium · Lifetime
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="mt-8 grid gap-4 lg:grid-cols-[0.92fr_1.06fr_0.92fr] lg:items-start">
           {PLAN_BLUEPRINT.map((plan, index) => (
             <article
               key={plan.title}
-              className={
-                index === 1
-                  ? 'relative rounded-[1.75rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] p-6 lg:-translate-y-3'
-                  : 'app-panel p-6'
-              }
+              className={`moon-plan-card p-6 ${index === 1 ? 'lg:-translate-y-3' : ''}`}
+              data-featured={index === 1 ? 'true' : 'false'}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="app-caption">{plan.badge}</div>
@@ -61,7 +69,7 @@ export default function MembershipPage() {
                 ))}
               </ul>
 
-              <div className="mt-5 rounded-[1.15rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4">
+              <div className="mt-5 rounded-[1.15rem] border border-[var(--app-gold)]/18 bg-[rgba(8,10,18,0.32)] px-4 py-4">
                 <div className="app-caption">지금 열리는 것</div>
                 <div className="mt-3 space-y-2">
                   {plan.opens.map((item) => (
@@ -83,7 +91,7 @@ export default function MembershipPage() {
                   }
                   className={
                     index === 1
-                      ? 'inline-flex h-11 w-full items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/16 px-5 text-sm font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/22'
+                      ? 'inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]'
                       : 'inline-flex h-11 w-full items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
                   }
                 >
@@ -96,7 +104,7 @@ export default function MembershipPage() {
 
         <section className="mt-8 grid gap-4 lg:grid-cols-3">
           {MEMBERSHIP_REASSURANCE.map((item) => (
-            <article key={item} className="app-panel p-5 text-sm leading-7 text-[var(--app-copy)]">
+            <article key={item} className="moon-orbit-card p-5 text-sm leading-7 text-[var(--app-copy)]">
               {item}
             </article>
           ))}
@@ -118,7 +126,8 @@ export default function MembershipPage() {
             </div>
           </article>
 
-          <article className="rounded-[1.75rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] p-6 lg:mt-1">
+          <article className="moon-lunar-panel p-6 lg:mt-1">
+            <div className="app-starfield" />
             <div className="app-caption">가장 많이 고르는 시작법</div>
             <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
               먼저 프리미엄으로 넉넉히 써보고,

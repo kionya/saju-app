@@ -7,12 +7,15 @@ import type { User } from '@supabase/supabase-js';
 import {
   Bell,
   BookOpenText,
+  CreditCard,
+  LogOut,
   MessageCircleMore,
   MoonStar,
   Settings2,
+  Sparkles,
   UserRound,
 } from 'lucide-react';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import {
@@ -27,6 +30,19 @@ const hasSupabaseBrowserEnv = Boolean(
 );
 const NOTIFICATION_HEARTBEAT_KEY = 'moonlight:notification-heartbeat-sent-at';
 
+const NAV_META: Record<string, { glyph: string; accent: string; description: string }> = {
+  홈: { glyph: '月', accent: 'var(--app-gold)', description: '오늘의 흐름' },
+  해석: { glyph: '解', accent: 'var(--app-gold-text)', description: '사주·명리·궁합' },
+  대화: { glyph: '對', accent: 'var(--app-jade)', description: '질문과 상담' },
+  마이: { glyph: '我', accent: 'var(--app-copy-muted)', description: '기록과 결제' },
+  사주: { glyph: '四', accent: 'var(--app-gold)', description: '네 기둥의 해석' },
+  명리: { glyph: '命', accent: 'var(--app-gold-soft)', description: '반복되는 삶의 이유' },
+  타로: { glyph: '塔', accent: 'var(--app-plum)', description: '지금 선택의 지혜' },
+  궁합: { glyph: '宮', accent: 'var(--app-jade)', description: '두 사람의 결' },
+  별자리: { glyph: '星', accent: 'var(--app-sky)', description: '별빛의 오늘' },
+  띠운세: { glyph: '支', accent: 'var(--app-coral)', description: '한 해의 리듬' },
+};
+
 function matchesPath(item: NavItem, pathname: string) {
   if (item.href === '/') return pathname === '/';
   if (pathname === item.href || pathname.startsWith(`${item.href}/`)) return true;
@@ -36,6 +52,14 @@ function matchesPath(item: NavItem, pathname: string) {
       (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
     ) ?? false
   );
+}
+
+function getNavMeta(item: NavItem) {
+  return NAV_META[item.label] ?? {
+    glyph: item.label.slice(0, 1),
+    accent: 'var(--app-gold)',
+    description: '달빛선생',
+  };
 }
 
 function DockIcon({ label }: { label: string }) {
@@ -51,6 +75,296 @@ function DockIcon({ label }: { label: string }) {
     default:
       return <MoonStar className="h-4 w-4" />;
   }
+}
+
+function DesktopNavLink({
+  item,
+  pathname,
+  compact = false,
+}: {
+  item: NavItem;
+  pathname: string;
+  compact?: boolean;
+}) {
+  const active = matchesPath(item, pathname);
+  const meta = getNavMeta(item);
+
+  return (
+    <Link
+      href={item.href}
+      data-active={active}
+      className="app-nav-card flex items-center gap-3 px-3 py-3 text-[var(--app-copy-muted)]"
+    >
+      <span
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border bg-[var(--app-surface-muted)] font-[var(--font-heading)] text-sm font-semibold"
+        style={{
+          borderColor: active ? meta.accent : 'var(--app-line)',
+          color: meta.accent,
+        }}
+      >
+        {meta.glyph}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium text-[var(--app-ivory)]">
+          {item.label}
+        </span>
+        {!compact ? (
+          <span className="mt-0.5 block truncate text-[11px] text-[var(--app-copy-soft)]">
+            {meta.description}
+          </span>
+        ) : null}
+      </span>
+      {active ? (
+        <span
+          className="h-1.5 w-1.5 rounded-full"
+          style={{ backgroundColor: meta.accent }}
+        />
+      ) : null}
+    </Link>
+  );
+}
+
+function DesktopSidebar({
+  pathname,
+  user,
+  credits,
+  authHref,
+  onSignOut,
+}: {
+  pathname: string;
+  user: User | null;
+  credits: number | null;
+  authHref: string;
+  onSignOut: () => Promise<void>;
+}) {
+  const displayName = user?.email?.split('@')[0] ?? '방문자';
+
+  return (
+    <aside className="app-desktop-sidebar hidden flex-col overflow-hidden lg:flex">
+      <div className="app-starfield" />
+
+      <div className="relative z-10 border-b border-[var(--app-line)] px-6 py-7">
+        <Link href="/" className="group block">
+          <div className="font-[var(--font-heading)] text-[11px] tracking-[0.48em] text-[var(--app-gold)]/72">
+            月 光 先 生
+          </div>
+          <div className="mt-3 flex items-center gap-3">
+            <div className="app-moon-orb h-10 w-10" />
+            <div>
+              <div className="font-[var(--font-heading)] text-2xl font-medium tracking-tight text-[var(--app-gold-text)] transition-colors group-hover:text-[var(--app-ivory)]">
+                달빛선생
+              </div>
+              <div className="text-xs text-[var(--app-copy-soft)]">천 년의 지혜</div>
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      <div className="relative z-10 border-b border-[var(--app-line)] px-5 py-5">
+        <div className="flex items-center gap-3 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/16 font-[var(--font-heading)] text-lg text-[var(--app-gold-text)]">
+            {user ? '我' : '月'}
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-sm font-medium text-[var(--app-ivory)]">
+              {displayName} 선생님
+            </div>
+            <div className="mt-1 text-xs text-[var(--app-copy-soft)]">
+              {user ? `${credits ?? '...'} 코인 보유` : '로그인하면 기록 저장'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <nav className="relative z-10 flex-1 space-y-5 overflow-y-auto px-4 py-5">
+        <div>
+          <div className="app-caption px-2">주요 여정</div>
+          <div className="mt-3 space-y-2">
+            {PRIMARY_NAV_ITEMS.map((item) => (
+              <DesktopNavLink key={item.label} item={item} pathname={pathname} />
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="app-caption px-2">여섯 지혜</div>
+          <div className="mt-3 space-y-2">
+            {HEADER_SECONDARY_NAV_ITEMS.map((item) => (
+              <DesktopNavLink
+                key={item.label}
+                item={item}
+                pathname={pathname}
+                compact
+              />
+            ))}
+          </div>
+        </div>
+      </nav>
+
+      <div className="relative z-10 border-t border-[var(--app-line)] px-5 py-5">
+        <div className="rounded-[1.2rem] border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/10 p-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-[var(--app-gold-text)]">
+            <Sparkles className="h-4 w-4" />
+            프리미엄 플랜
+          </div>
+          <p className="mt-2 text-xs leading-6 text-[var(--app-copy-muted)]">
+            심층 리포트와 가족 사주를 한곳에서 이어보실 수 있습니다.
+          </p>
+          <div className="mt-3 grid gap-2">
+            <Link
+              href="/membership"
+              className="inline-flex h-9 items-center justify-center rounded-full bg-[var(--app-gold)] px-3 text-xs font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)]"
+            >
+              멤버십 보기
+            </Link>
+            <Link
+              href="/credits"
+              className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 text-xs text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              코인 충전
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-3">
+          {user ? (
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+            >
+              <LogOut className="h-4 w-4" />
+              로그아웃
+            </button>
+          ) : (
+            <Link
+              href={authHref}
+              className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-4 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface)]"
+            >
+              로그인
+            </Link>
+          )}
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+function MobileChrome({
+  pathname,
+  user,
+  credits,
+  authHref,
+  onSignOut,
+}: {
+  pathname: string;
+  user: User | null;
+  credits: number | null;
+  authHref: string;
+  onSignOut: () => Promise<void>;
+}) {
+  return (
+    <>
+      <header className="sticky top-0 z-40 border-b border-[var(--app-line)] bg-[rgba(8,10,18,0.9)] backdrop-blur lg:hidden">
+        <div className="px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/" className="min-w-0">
+              <div className="truncate font-[var(--font-heading)] text-[10px] tracking-[0.42em] text-[var(--app-gold)]/72">
+                月 光 先 生
+              </div>
+              <div className="truncate text-xl font-semibold tracking-tight text-[var(--app-ivory)]">
+                달빛선생
+              </div>
+            </Link>
+
+            <div className="flex items-center gap-2">
+              <Link
+                href="/notifications"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                aria-label="알림"
+              >
+                <Bell className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/my/settings"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                aria-label="설정"
+              >
+                <Settings2 className="h-4 w-4" />
+              </Link>
+              {user ? (
+                <button
+                  type="button"
+                  onClick={onSignOut}
+                  className="hidden h-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-3 text-xs text-[var(--app-ivory)] sm:inline-flex"
+                >
+                  로그아웃
+                </button>
+              ) : (
+                <Link
+                  href={authHref}
+                  className={cn(
+                    buttonVariants({ variant: 'outline', size: 'sm' }),
+                    'border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]'
+                  )}
+                >
+                  로그인
+                </Link>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+            <Link
+              href="/credits"
+              className="shrink-0 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)]"
+            >
+              {user ? `${credits ?? '...'} 코인` : '플랜'}
+            </Link>
+            {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
+              const active = matchesPath(item, pathname);
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={cn(
+                    'shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors',
+                    active
+                      ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
+                      : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </header>
+
+      <nav className="app-mobile-dock fixed inset-x-0 bottom-0 z-40 px-4 py-3 lg:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-4 gap-2">
+          {MOBILE_PRIMARY_NAV_ITEMS.map((item) => {
+            const active = matchesPath(item, pathname);
+
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                data-active={active}
+                className="app-mobile-dock-link flex flex-col items-center px-2 py-2 text-center"
+              >
+                <DockIcon label={item.label} />
+                <span className="mt-1 text-[11px] font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </>
+  );
 }
 
 export default function SiteHeader() {
@@ -117,140 +431,20 @@ export default function SiteHeader() {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-[var(--app-line)] bg-[rgba(8,10,18,0.88)] backdrop-blur supports-[backdrop-filter]:bg-[rgba(8,10,18,0.72)]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-4 py-4">
-            <div className="flex min-w-0 items-center gap-4">
-              <Link href="/" className="min-w-0 transition-opacity hover:opacity-90">
-                <div className="truncate font-[var(--font-heading)] text-[11px] tracking-[0.4em] text-[var(--app-gold)]/72">
-                  月 光 先 生
-                </div>
-                <div className="truncate text-xl font-semibold tracking-tight text-[var(--app-ivory)] sm:text-2xl">
-                  달빛선생
-                </div>
-              </Link>
-
-              <nav className="hidden items-center gap-2 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-1 lg:flex">
-                {PRIMARY_NAV_ITEMS.map((item) => {
-                  const active = matchesPath(item, pathname);
-
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={cn(
-                        'rounded-full px-4 py-2 text-sm transition-colors',
-                        active
-                          ? 'bg-[var(--app-surface-strong)] text-[var(--app-ivory)]'
-                          : 'text-[var(--app-copy-muted)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
-                      )}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Link
-                href="/notifications"
-                className="hidden h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] md:inline-flex"
-                aria-label="알림"
-              >
-                <Bell className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/my/settings"
-                className="hidden h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] md:inline-flex"
-                aria-label="설정"
-              >
-                <Settings2 className="h-4 w-4" />
-              </Link>
-
-              <Link
-                href="/membership"
-                className="hidden rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 px-3 py-1.5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/16 md:inline-flex"
-              >
-                멤버십
-              </Link>
-
-              <Link
-                href="/credits"
-                className="hidden rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] sm:inline-flex"
-              >
-                {user ? `${credits ?? '...'} 코인` : '플랜'}
-              </Link>
-
-              {user ? (
-                <Button
-                  onClick={signOut}
-                  variant="outline"
-                  size="sm"
-                  className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]"
-                >
-                  로그아웃
-                </Button>
-              ) : (
-                <Link
-                  href={authHref}
-                  className={cn(
-                    buttonVariants({ variant: 'outline', size: 'sm' }),
-                    'border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]'
-                  )}
-                >
-                  로그인
-                </Link>
-              )}
-            </div>
-          </div>
-
-          <div className="flex gap-2 overflow-x-auto pb-4 lg:pb-5">
-            {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
-              const active = matchesPath(item, pathname);
-
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={cn(
-                    'shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors',
-                    active
-                      ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
-                      : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </header>
-
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--app-line)] bg-[rgba(8,10,18,0.94)] px-4 py-3 backdrop-blur md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-4 gap-2">
-          {MOBILE_PRIMARY_NAV_ITEMS.map((item) => {
-            const active = matchesPath(item, pathname);
-
-            return (
-              <Link
-                key={item.label}
-                href={item.href}
-                className={cn(
-                  'flex flex-col items-center rounded-[1.15rem] border px-2 py-2 text-center transition-colors',
-                  active
-                    ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
-                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]'
-                )}
-              >
-                <DockIcon label={item.label} />
-                <span className="mt-1 text-[11px] font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-      </nav>
+      <DesktopSidebar
+        pathname={pathname}
+        user={user}
+        credits={credits}
+        authHref={authHref}
+        onSignOut={signOut}
+      />
+      <MobileChrome
+        pathname={pathname}
+        user={user}
+        credits={credits}
+        authHref={authHref}
+        onSignOut={signOut}
+      />
     </>
   );
 }

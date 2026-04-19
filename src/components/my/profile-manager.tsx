@@ -109,6 +109,11 @@ const EMPTY_FAMILY_FORM: FamilyFormState = {
   note: '',
 };
 
+const FIELD_LABEL_CLASS = 'mb-1.5 block text-sm text-[var(--app-copy-muted)]';
+const FORM_CONTROL_CLASS = 'moon-form-control px-3 py-2 text-sm';
+const SELECT_CONTROL_CLASS = `${FORM_CONTROL_CLASS} appearance-none`;
+const TEXTAREA_CONTROL_CLASS = `${FORM_CONTROL_CLASS} leading-7`;
+
 export default function ProfileManager({
   initialProfile,
   initialFamilyProfiles,
@@ -213,31 +218,34 @@ export default function ProfileManager({
 
   return (
     <div className="space-y-8">
-      <section className="rounded-[30px] border border-white/10 bg-white/[0.04] p-6">
+      <section className="moon-lunar-panel p-6">
+        <div className="app-starfield" />
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-sm text-white/45">내 프로필</div>
-            <h2 className="mt-2 text-2xl font-semibold text-[#f8f1df]">기본 정보를 저장/수정하기</h2>
+            <div className="app-caption">내 프로필</div>
+            <h2 className="mt-2 font-[var(--font-heading)] text-2xl font-semibold text-[var(--app-ivory)]">
+              기본 정보를 저장/수정하기
+            </h2>
           </div>
-          <Badge className="border-[#d2b072]/25 bg-[#d2b072]/10 text-[#f5dfaa]">
+          <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
             MY 기본값 업데이트
           </Badge>
         </div>
 
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-sm text-white/65">이름 또는 별칭</label>
+            <label className={FIELD_LABEL_CLASS}>이름 또는 별칭</label>
             <Input
               value={profileForm.displayName}
               onChange={(event) =>
                 setProfileForm((current) => ({ ...current, displayName: event.target.value }))
               }
               placeholder="예: 민지"
-              className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+              className={FORM_CONTROL_CLASS}
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm text-white/65">성별</label>
+            <label className={FIELD_LABEL_CLASS}>성별</label>
             <select
               value={profileForm.gender}
               onChange={(event) =>
@@ -246,19 +254,19 @@ export default function ProfileManager({
                   gender: event.target.value as ProfileFormState['gender'],
                 }))
               }
-              className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
+              className={SELECT_CONTROL_CLASS}
             >
               <option value="" className="bg-slate-950">선택 안 함</option>
               <option value="male" className="bg-slate-950">남성</option>
               <option value="female" className="bg-slate-950">여성</option>
             </select>
           </div>
-          <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4 md:col-span-2">
+          <div className="moon-orbit-card p-4 md:col-span-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <label className="block text-sm font-medium text-[#f8f1df]">생년월일과 태어난 시간</label>
-              <span className="text-xs text-[#f5dfaa]">불러오기 자동 입력 기준</span>
+              <label className="block text-sm font-medium text-[var(--app-ivory)]">생년월일과 태어난 시간</label>
+              <span className="text-xs text-[var(--app-gold-text)]">불러오기 자동 입력 기준</span>
             </div>
-            <p className="mt-2 text-xs leading-6 text-white/48">
+            <p className="mt-2 text-xs leading-6 text-[var(--app-copy-muted)]">
               시와 분을 저장해두면 사주 입력 화면의 “내 정보 불러오기”에서 정확한 출생 시각까지 함께 채워집니다.
               저장 버튼은 새로 만들기가 아니라 현재 내 정보를 계속 업데이트합니다.
             </p>
@@ -270,7 +278,7 @@ export default function ProfileManager({
                 }
                 placeholder="년도"
                 aria-label="출생년도"
-                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+                className={FORM_CONTROL_CLASS}
               />
               <Input
                 value={profileForm.birthMonth}
@@ -279,7 +287,7 @@ export default function ProfileManager({
                 }
                 placeholder="월"
                 aria-label="출생월"
-                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+                className={FORM_CONTROL_CLASS}
               />
               <Input
                 value={profileForm.birthDay}
@@ -288,7 +296,7 @@ export default function ProfileManager({
                 }
                 placeholder="일"
                 aria-label="출생일"
-                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+                className={FORM_CONTROL_CLASS}
               />
               <select
                 value={profileForm.birthHour}
@@ -301,7 +309,7 @@ export default function ProfileManager({
                     birthMinute: birthHour ? current.birthMinute : '',
                   }));
                 }}
-                className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
+                className={SELECT_CONTROL_CLASS}
               >
                 {HOUR_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value} className="bg-slate-950">
@@ -324,12 +332,12 @@ export default function ProfileManager({
                 max={59}
                 type="number"
                 disabled={!profileForm.birthHour}
-                className="border-white/15 bg-white/6 text-white placeholder:text-white/28 disabled:cursor-not-allowed disabled:opacity-45"
+                className={FORM_CONTROL_CLASS}
               />
             </div>
           </div>
           <div className="md:col-span-2">
-            <label className="mb-1.5 block text-sm text-white/65">메모</label>
+            <label className={FIELD_LABEL_CLASS}>메모</label>
             <textarea
               value={profileForm.note}
               onChange={(event) =>
@@ -337,7 +345,7 @@ export default function ProfileManager({
               }
               rows={4}
               placeholder="예: 태어난 시간은 오전으로만 기억남"
-              className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-white/28"
+              className={TEXTAREA_CONTROL_CLASS}
             />
           </div>
         </div>
@@ -346,23 +354,23 @@ export default function ProfileManager({
           <Button
             onClick={saveProfile}
             disabled={savingProfile}
-            className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]"
+            className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]"
           >
             {savingProfile ? '저장 중...' : '내 프로필 저장/수정'}
           </Button>
-          <p className="text-sm text-white/50">동일 계정의 기존 내 정보가 있으면 이 값으로 덮어써집니다.</p>
+          <p className="text-sm text-[var(--app-copy-muted)]">동일 계정의 기존 내 정보가 있으면 이 값으로 덮어써집니다.</p>
         </div>
       </section>
 
-      <section className="rounded-[30px] border border-white/10 bg-white/[0.04] p-6">
+      <section className="app-panel p-6">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-sm text-white/45">가족 프로필</div>
-            <h2 className="mt-2 text-2xl font-semibold text-[#f8f1df]">
+            <div className="app-caption">가족 프로필</div>
+            <h2 className="mt-2 font-[var(--font-heading)] text-2xl font-semibold text-[var(--app-ivory)]">
               {editingFamilyId ? '가족·연인·친구 프로필 수정' : '가족·연인·친구 프로필 추가'}
             </h2>
           </div>
-          <Badge className="border-white/10 bg-white/5 text-white/62">
+          <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
             {editingFamilyId ? '수정 모드' : '재방문과 궁합 확장용'}
           </Badge>
         </div>
@@ -374,14 +382,14 @@ export default function ProfileManager({
               setFamilyForm((current) => ({ ...current, label: event.target.value }))
             }
             placeholder="이름 또는 별칭"
-            className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+            className={FORM_CONTROL_CLASS}
           />
           <select
             value={familyForm.relationship}
             onChange={(event) =>
               setFamilyForm((current) => ({ ...current, relationship: event.target.value }))
             }
-            className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
+            className={SELECT_CONTROL_CLASS}
           >
             {RELATIONSHIP_OPTIONS.map((option) => (
               <option key={option} value={option} className="bg-slate-950">
@@ -389,9 +397,9 @@ export default function ProfileManager({
               </option>
             ))}
           </select>
-          <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4 md:col-span-2">
-            <label className="block text-sm font-medium text-[#f8f1df]">생년월일과 태어난 시간</label>
-            <p className="mt-2 text-xs leading-6 text-white/48">
+          <div className="moon-orbit-card p-4 md:col-span-2">
+            <label className="block text-sm font-medium text-[var(--app-ivory)]">생년월일과 태어난 시간</label>
+            <p className="mt-2 text-xs leading-6 text-[var(--app-copy-muted)]">
               가족 프로필도 시와 분까지 저장됩니다. “수정”을 누르면 아래 입력칸에 기존 값이 들어오고, 저장 시 그 프로필이 업데이트됩니다.
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-5">
@@ -402,7 +410,7 @@ export default function ProfileManager({
                 }
                 placeholder="년도"
                 aria-label="가족 출생년도"
-                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+                className={FORM_CONTROL_CLASS}
               />
               <Input
                 value={familyForm.birthMonth}
@@ -411,7 +419,7 @@ export default function ProfileManager({
                 }
                 placeholder="월"
                 aria-label="가족 출생월"
-                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+                className={FORM_CONTROL_CLASS}
               />
               <Input
                 value={familyForm.birthDay}
@@ -420,7 +428,7 @@ export default function ProfileManager({
                 }
                 placeholder="일"
                 aria-label="가족 출생일"
-                className="border-white/15 bg-white/6 text-white placeholder:text-white/28"
+                className={FORM_CONTROL_CLASS}
               />
               <select
                 value={familyForm.birthHour}
@@ -433,7 +441,7 @@ export default function ProfileManager({
                     birthMinute: birthHour ? current.birthMinute : '',
                   }));
                 }}
-                className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
+                className={SELECT_CONTROL_CLASS}
               >
                 {HOUR_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value} className="bg-slate-950">
@@ -456,7 +464,7 @@ export default function ProfileManager({
                 max={59}
                 type="number"
                 disabled={!familyForm.birthHour}
-                className="border-white/15 bg-white/6 text-white placeholder:text-white/28 disabled:cursor-not-allowed disabled:opacity-45"
+                className={FORM_CONTROL_CLASS}
               />
             </div>
           </div>
@@ -469,7 +477,7 @@ export default function ProfileManager({
                   gender: event.target.value as FamilyFormState['gender'],
                 }))
               }
-              className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white"
+              className={SELECT_CONTROL_CLASS}
             >
               <option value="" className="bg-slate-950">성별 선택 안 함</option>
               <option value="male" className="bg-slate-950">남성</option>
@@ -484,7 +492,7 @@ export default function ProfileManager({
               }
               rows={4}
               placeholder="예: 엄마, 음력 생일만 기억남"
-              className="w-full rounded-md border border-white/15 bg-white/6 px-3 py-2 text-sm text-white placeholder:text-white/28"
+              className={TEXTAREA_CONTROL_CLASS}
             />
           </div>
         </div>
@@ -493,7 +501,7 @@ export default function ProfileManager({
           <Button
             onClick={saveFamilyProfile}
             disabled={savingFamily}
-            className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]"
+            className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]"
           >
             {savingFamily
               ? editingFamilyId
@@ -508,7 +516,7 @@ export default function ProfileManager({
               onClick={cancelFamilyEdit}
               disabled={savingFamily}
               variant="outline"
-              className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+              className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
             >
               수정 취소
             </Button>
@@ -520,13 +528,13 @@ export default function ProfileManager({
             initialFamilyProfiles.map((profile) => (
               <div
                 key={profile.id}
-                className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:flex-row sm:items-center sm:justify-between"
+                className="moon-account-row flex-col sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
-                  <div className="text-sm font-medium text-[#f8f1df]">
+                  <div className="text-sm font-medium text-[var(--app-ivory)]">
                     {profile.label} · {profile.relationship}
                   </div>
-                  <div className="mt-1 text-sm text-white/52">
+                  <div className="mt-1 text-sm text-[var(--app-copy-muted)]">
                     {formatBirthSummary(profile)}
                     {profile.gender ? ` · ${profile.gender === 'male' ? '남성' : '여성'}` : ''}
                   </div>
@@ -536,7 +544,7 @@ export default function ProfileManager({
                     onClick={() => editFamilyProfile(profile)}
                     disabled={savingFamily || deletingId === profile.id}
                     variant="outline"
-                    className="rounded-full border-[#d2b072]/25 bg-[#d2b072]/10 text-[#f5dfaa] hover:bg-[#d2b072]/15 hover:text-[#f5dfaa]"
+                    className="rounded-full border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)] hover:bg-[var(--app-gold)]/15 hover:text-[var(--app-gold-text)]"
                   >
                     수정
                   </Button>
@@ -544,7 +552,7 @@ export default function ProfileManager({
                     onClick={() => removeFamilyProfile(profile.id)}
                     disabled={deletingId === profile.id}
                     variant="outline"
-                    className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                    className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
                   >
                     {deletingId === profile.id ? '삭제 중...' : '삭제'}
                   </Button>
@@ -552,13 +560,13 @@ export default function ProfileManager({
               </div>
             ))
           ) : (
-            <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.03] p-6 text-sm leading-7 text-white/56">
+            <div className="rounded-2xl border border-dashed border-[var(--app-line)] bg-[var(--app-surface-muted)] p-6 text-sm leading-7 text-[var(--app-copy-muted)]">
               아직 가족 프로필이 없습니다. 가족이나 연인 프로필을 저장해두면 이후 궁합, 가족 리포트, 비교형 콘텐츠로 확장하기 쉬워집니다.
             </div>
           )}
         </div>
 
-        {message && <p className="mt-4 text-sm text-[#d2b072]">{message}</p>}
+        {message && <p className="mt-4 text-sm text-[var(--app-gold-text)]">{message}</p>}
       </section>
     </div>
   );

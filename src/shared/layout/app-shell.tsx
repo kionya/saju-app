@@ -22,9 +22,9 @@ interface PageHeroProps {
 
 export function AppShell({ children, header, dock, className }: AppShellProps) {
   return (
-    <main className={cn('app-shell', className)}>
+    <main className={cn('app-shell', header && 'app-shell-with-navigation', className)}>
       {header}
-      {children}
+      <div className="app-shell-content">{children}</div>
       {dock}
     </main>
   );

@@ -225,6 +225,48 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           </section>
 
           <section className="grid self-start gap-4">
+            <div className="moon-lunar-panel p-5">
+              <div className="app-caption">사주 원국</div>
+              <div className="mt-3 flex items-end justify-between gap-3">
+                <div>
+                  <div className="font-[var(--font-heading)] text-2xl font-semibold text-[var(--app-gold-text)]">
+                    {sajuData.dayMaster.stem} 일간
+                  </div>
+                  <p className="mt-1 text-sm text-[var(--app-copy-muted)]">
+                    네 기둥 중 일주를 중심으로 오늘의 해석을 엮습니다.
+                  </p>
+                </div>
+                <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+                  원국
+                </Badge>
+              </div>
+              <div className="moon-saju-grid mt-5">
+                {pillars.map(({ label, pillar }) => (
+                  <div key={label} className="moon-saju-pillar" data-day={label === '일주'}>
+                    <div className="text-xs text-[var(--app-copy-soft)]">{label.replace('주', '')}</div>
+                    {pillar ? (
+                      <>
+                        <div
+                          className="mt-2 font-[var(--font-heading)] text-2xl font-semibold"
+                          style={{ color: ELEMENT_INFO[pillar.stemElement].color }}
+                        >
+                          {pillar.stem}
+                        </div>
+                        <div
+                          className="mt-1 font-[var(--font-heading)] text-xl font-semibold"
+                          style={{ color: ELEMENT_INFO[pillar.branchElement].color }}
+                        >
+                          {pillar.branch}
+                        </div>
+                      </>
+                    ) : (
+                      <div className="mt-5 text-xs text-[var(--app-copy-soft)]">미입력</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="app-panel p-5">
               <div className="app-caption">{report.focusLabel} 행동 제안</div>
               <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.primaryAction.title}</div>
@@ -310,15 +352,20 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {report.evidenceCards.map((card) => (
-              <article key={card.key} className="app-panel p-5">
-                <div className="app-caption">{card.label}</div>
+              <article key={card.key} className="moon-orbit-card p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="app-caption">{card.label}</div>
+                  <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[11px] text-[var(--app-copy-soft)]">
+                    근거
+                  </span>
+                </div>
                 <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">{card.title}</h3>
                 <p className="app-body-copy mt-3 text-sm">{card.body}</p>
                 <div className="mt-4 grid gap-2">
                   {card.details.map((detail, index) => (
                     <div
                       key={`${card.key}-${index}-${detail}`}
-                      className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-2 text-sm leading-7 text-[var(--app-copy)]"
+                      className="rounded-2xl border border-[var(--app-line)] bg-[rgba(8,10,18,0.32)] px-3 py-2 text-sm leading-7 text-[var(--app-copy)]"
                     >
                       {detail}
                     </div>
@@ -348,7 +395,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               {report.classicalCitations.map((citation) => (
                 <article
                   key={citation.key}
-                  className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(2,8,23,0.36)] p-5"
+                  className="moon-classic-quote p-5"
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge className="border-[var(--app-gold)]/30 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]">
@@ -587,7 +634,8 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             {pillars.map(({ label, pillar }) => (
               <div
                 key={label}
-                className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4 text-center"
+                className="moon-saju-pillar p-4"
+                data-day={label === '일주'}
               >
                 <div className="text-xs text-[var(--app-copy-soft)]">{label}</div>
                 {pillar ? (

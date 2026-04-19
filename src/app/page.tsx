@@ -54,6 +54,8 @@ export default function HomePage() {
   const selectedWisdom =
     WISDOM_CARDS.find((card) => card.slug === selectedSlug) ?? WISDOM_CARDS[0];
   const selectedTone = toneClasses(selectedWisdom.tone);
+  const displayName = profilePreview?.profile?.displayName?.trim() || '방문자';
+  const todayLabel = formatTodayLabel();
 
   useEffect(() => {
     let isActive = true;
@@ -86,23 +88,59 @@ export default function HomePage() {
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="grid gap-5 lg:grid-cols-[1.28fr_0.72fr] lg:items-start">
-          <article className="app-hero-card p-7 sm:p-8 lg:p-9">
-            <div className="inline-flex items-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-[11px] tracking-[0.28em] text-[var(--app-gold)]/78">
-              오늘의 한 줄
-            </div>
-            <div className="mt-5 text-sm text-[var(--app-gold)]/72">{formatTodayLabel()}</div>
-            <p className="mt-4 max-w-2xl font-[var(--font-heading)] text-lg leading-8 text-[var(--app-copy)]">
-              문득 마음이 머무는 날, 오늘의 결을 가장 먼저 조용히 펼쳐보실 수 있도록 준비했습니다.
-            </p>
-            <h1 className="mt-5 max-w-3xl font-[var(--font-heading)] text-4xl leading-[1.24] tracking-tight text-[var(--app-ivory)] sm:text-[3.35rem]">
-              {todayLine.title}
+        <section className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <div className="text-sm tracking-[0.12em] text-[var(--app-copy-soft)]">{todayLabel}</div>
+            <h1 className="mt-3 font-[var(--font-heading)] text-3xl font-medium tracking-tight text-[var(--app-ivory)] sm:text-4xl">
+              안녕하세요, {displayName} 선생님
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-8 text-[var(--app-copy)] sm:text-lg">
-              {todayLine.subtitle}
+            <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">
+              오늘의 지혜와 저장된 개인 흐름을 한 화면에서 이어볼 수 있게 준비했습니다.
             </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/notifications"
+              className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+            >
+              알림 확인
+            </Link>
+            <Link
+              href="/today-fortune"
+              className="inline-flex h-10 items-center justify-center rounded-full bg-[var(--app-gold)] px-4 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)]"
+            >
+              오늘의 운세
+            </Link>
+          </div>
+        </section>
 
-            <div className="mt-6 flex flex-wrap gap-2">
+        <section className="grid gap-5 lg:grid-cols-[1fr_21rem] lg:items-stretch">
+          <article className="moon-lunar-panel p-7 sm:p-8 lg:p-9">
+            <div className="app-starfield" />
+            <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <div className="inline-flex items-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-[11px] tracking-[0.28em] text-[var(--app-gold)]/78">
+                  오늘의 한 줄
+                </div>
+                <p className="mt-5 max-w-2xl font-[var(--font-heading)] text-lg leading-8 text-[var(--app-copy)]">
+                  문득 마음이 머무는 날, 오늘의 결을 가장 먼저 조용히 펼쳐드립니다.
+                </p>
+                <h2 className="mt-5 max-w-3xl font-[var(--font-heading)] text-4xl leading-[1.24] tracking-tight text-[var(--app-ivory)] sm:text-[3.35rem]">
+                  {todayLine.title}
+                </h2>
+                <p className="mt-5 max-w-2xl text-base leading-8 text-[var(--app-copy)] sm:text-lg">
+                  {todayLine.subtitle}
+                </p>
+              </div>
+              <div className="hidden shrink-0 flex-col items-center gap-4 lg:flex">
+                <div className="app-moon-orb h-24 w-24" />
+                <div className="text-center font-[var(--font-heading)] text-xs tracking-[0.45em] text-[var(--app-gold-soft)]">
+                  月光
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-7 flex flex-wrap gap-2">
               {HOME_HERO_TOKENS.map((token) => (
                 <span key={token.label} className="moon-pill text-sm">
                   {token.label} · {token.value}
@@ -113,7 +151,7 @@ export default function HomePage() {
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/saju/new"
-                className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/16 px-6 text-sm font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/22"
+                className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)]"
               >
                 사주 시작하기
               </Link>
@@ -126,33 +164,56 @@ export default function HomePage() {
             </div>
           </article>
 
-          <aside className="grid gap-3 lg:pt-3">
-            {[
-              {
-                title: '새벽에 먼저 전하는 한마디',
-                body: '아침 햇살이 들기 전, 오늘의 결을 짧고 또렷한 한 줄로 먼저 전해드립니다.',
-              },
-              {
-                title: '지금 마음 가는 곳부터',
-                body: '사주, 명리, 타로, 궁합, 별자리, 띠운세 가운데 오늘 가장 마음이 머무는 질문부터 편히 열어보세요.',
-              },
-              {
-                title: '마음이 머문 해석 보관함',
-                body: '좋았던 해석은 마이에 고이 모아두고, 나중에 다시 꺼내어 더 깊은 이야기로 이어보실 수 있습니다.',
-              },
-            ].map((item, index) => (
-              <article
-                key={item.title}
+          <aside className="app-panel p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="app-caption">{personalizationCopy.eyebrow}</div>
+                <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
+                  내 오늘의 운
+                </h2>
+              </div>
+              <span
                 className={cn(
-                  'app-panel p-5',
-                  index === 0 &&
-                    'border-[var(--app-gold)]/22 bg-[linear-gradient(180deg,rgba(212,176,106,0.08),rgba(15,18,32,0.92))]'
+                  'rounded-full border px-3 py-1 text-xs',
+                  personalizationCopy.isPersonalized
+                    ? 'border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 text-[var(--app-jade)]'
+                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]'
                 )}
               >
-                <div className="app-caption">{item.title}</div>
-                <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
-              </article>
-            ))}
+                {personalizationCopy.isPersonalized ? '개인화' : '기본'}
+              </span>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              {personalizedTodaySummary.map((item) => {
+                const tone = toneClasses(item.tone);
+
+                return (
+                  <div key={item.label}>
+                    <div className="flex items-center justify-between gap-3 text-sm">
+                      <span className="text-[var(--app-copy-muted)]">{item.label}運</span>
+                      <span className={cn('font-[var(--font-heading)] text-lg font-semibold', tone.text)}>
+                        {item.value}
+                      </span>
+                    </div>
+                    <div className="moon-meter mt-2">
+                      <span className={cn(tone.bg)} style={{ width: `${item.ratio}%` }} />
+                    </div>
+                    <p className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">{item.detail}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+              <p className="text-sm leading-7 text-[var(--app-copy)]">{personalizationCopy.body}</p>
+              <Link
+                href={personalizationCopy.ctaHref}
+                className="mt-3 inline-flex text-sm font-medium text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+              >
+                {personalizationCopy.ctaLabel}
+              </Link>
+            </div>
           </aside>
         </section>
 
@@ -168,7 +229,7 @@ export default function HomePage() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {WISDOM_CARDS.map((card) => {
+            {WISDOM_CARDS.map((card, index) => {
               const tone = toneClasses(card.tone);
               const active = selectedSlug === card.slug;
 
@@ -178,9 +239,10 @@ export default function HomePage() {
                   type="button"
                   onClick={() => setSelectedSlug(card.slug)}
                   className={cn(
-                    'moon-wisdom-card text-left',
+                    'moon-wisdom-card moon-design-reveal text-left',
                     active && 'border-[var(--app-gold)]/30 bg-[linear-gradient(180deg,rgba(32,38,62,0.95),rgba(12,18,34,0.94))]'
                   )}
+                  style={{ animationDelay: `${index * 60}ms` }}
                 >
                   <div className={cn('moon-wisdom-hanja', tone.text)}>{card.hanja}</div>
                   <div className={cn('mt-3 font-[var(--font-heading)] text-2xl font-semibold', tone.text)}>
@@ -238,11 +300,14 @@ export default function HomePage() {
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <article className="app-panel p-6 sm:p-7">
+          <article className="moon-lunar-panel p-6 sm:p-7">
+            <div className="app-starfield" />
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="app-caption">{personalizationCopy.eyebrow}</div>
-                <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">{personalizationCopy.title}</h2>
+                <div className="app-caption">개인화 준비</div>
+                <h2 className="mt-3 font-[var(--font-heading)] text-2xl font-semibold text-[var(--app-ivory)]">
+                  내 정보가 저장되면 더 깊어집니다
+                </h2>
               </div>
               <Link
                 href={personalizationCopy.ctaHref}
@@ -252,7 +317,7 @@ export default function HomePage() {
               </Link>
             </div>
             <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">
-              {personalizationCopy.body}
+              {personalizationCopy.body} 저장된 생년월일과 출생 시각은 사주 입력, 오늘 흐름, 가족 리포트에서 반복 입력 없이 이어집니다.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <span
@@ -272,23 +337,20 @@ export default function HomePage() {
               ) : null}
             </div>
 
-            <div className="mt-6 space-y-4">
-              {personalizedTodaySummary.map((item) => {
-                const tone = toneClasses(item.tone);
-
-                return (
-                  <div key={item.label} className="app-panel-muted p-4">
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="text-[var(--app-copy)]">{item.label}</span>
-                      <span className={cn('font-medium', tone.text)}>{item.value}</span>
-                    </div>
-                    <div className="moon-meter mt-3">
-                      <span className={cn(tone.bg)} style={{ width: `${item.ratio}%` }} />
-                    </div>
-                    <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">{item.detail}</p>
+            <div className="mt-6 space-y-3">
+              {[
+                ['내 정보 저장', '출생 연월일과 시·분을 MY에 한 번만 저장합니다.'],
+                ['해석 자동 입력', '사주 보기에서 “내 정보 불러오기”로 바로 채웁니다.'],
+                ['가족 확장', '가족 프로필을 저장해 궁합과 가족 리포트로 이어갑니다.'],
+              ].map(([title, body], index) => (
+                <div key={title} className="moon-payment-row px-4 py-4">
+                  <div className="text-xs tracking-[0.24em] text-[var(--app-gold-text)]">
+                    STEP {index + 1}
                   </div>
-                );
-              })}
+                  <div className="mt-2 font-medium text-[var(--app-ivory)]">{title}</div>
+                  <p className="mt-1 text-sm leading-7 text-[var(--app-copy-muted)]">{body}</p>
+                </div>
+              ))}
             </div>
           </article>
 

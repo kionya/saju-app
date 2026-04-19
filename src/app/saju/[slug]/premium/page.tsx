@@ -244,7 +244,8 @@ export default async function SajuPremiumPage({ params }: Props) {
       <AppPage className="space-y-6">
         <SajuScreenNav slug={slug} current="premium" />
 
-        <section className="app-hero-card p-7 sm:p-8">
+        <section className="moon-lunar-panel p-7 sm:p-8">
+          <div className="app-starfield" />
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
               {accessLabel ? '심층 리포트 · 전체 열람' : '심층 리포트 · 미리보기'}
@@ -265,7 +266,7 @@ export default async function SajuPremiumPage({ params }: Props) {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="app-caption">심층 리포트 전체 열람</div>
-                  <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
+                  <h2 className="mt-3 font-[var(--font-heading)] text-2xl font-semibold text-[var(--app-ivory)]">
                     7개 섹션이 열렸습니다
                   </h2>
                 </div>
@@ -277,10 +278,10 @@ export default async function SajuPremiumPage({ params }: Props) {
                 {unlockedSections.map((section) => (
                   <article
                     key={section.title}
-                    className="rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5"
+                    className="moon-orbit-card px-5 py-5"
                   >
                     <div className="app-caption">{section.eyebrow}</div>
-                    <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">
+                    <h3 className="mt-3 font-[var(--font-heading)] text-xl font-semibold leading-8 text-[var(--app-ivory)]">
                       {section.title}
                     </h3>
                     <p className="mt-4 rounded-[1rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-4 text-base font-semibold leading-8 text-[var(--app-ivory)]">
@@ -298,7 +299,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                         {section.highlights.map((highlight) => (
                           <div
                             key={highlight}
-                            className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]"
+                            className="moon-payment-row px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]"
                           >
                             {highlight}
                           </div>
@@ -310,7 +311,8 @@ export default async function SajuPremiumPage({ params }: Props) {
               </div>
             </article>
 
-            <aside className="rounded-[1.75rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] p-6">
+            <aside className="moon-lunar-panel p-6">
+              <div className="app-starfield" />
               <div className="app-caption">저장형 리포트</div>
               <h2 className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
                 이 명식의 핵심 근거를 다시 펼쳐볼 수 있습니다
@@ -323,7 +325,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                 {SAJU_PREMIUM_VALUE_POINTS.map((item) => (
                   <div
                     key={item}
-                    className="rounded-[1rem] border border-[var(--app-gold)]/14 bg-[rgba(255,255,255,0.02)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]"
+                    className="moon-payment-row px-4 py-3 text-sm leading-7 text-[var(--app-copy)]"
                   >
                     {item}
                   </div>
@@ -347,7 +349,8 @@ export default async function SajuPremiumPage({ params }: Props) {
           </section>
         ) : (
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <article className="app-panel p-6">
+          <article className="moon-lunar-panel p-6">
+            <div className="app-starfield" />
             <div className="app-caption">미리보기</div>
             <div className="mt-4 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
               ① 일주(日柱) 본질
@@ -375,7 +378,7 @@ export default async function SajuPremiumPage({ params }: Props) {
               {SAJU_PREMIUM_PREVIEW.map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-[1.15rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
+                  className="moon-payment-row px-4 py-4"
                 >
                   <div className="text-sm font-medium text-[var(--app-ivory)]">{item.title}</div>
                   <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">{item.body}</p>
@@ -384,7 +387,7 @@ export default async function SajuPremiumPage({ params }: Props) {
             </div>
           </article>
 
-          <article className="rounded-[1.75rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] p-6">
+          <article className="moon-plan-card p-6" data-featured="true">
             <div className="font-[var(--font-heading)] text-2xl text-[var(--app-gold-text)]">
               7개 섹션 완성본
             </div>
@@ -392,7 +395,7 @@ export default async function SajuPremiumPage({ params }: Props) {
               {SAJU_PREMIUM_SECTIONS.map((item) => (
                 <div
                   key={item}
-                  className="rounded-[1rem] border border-[var(--app-gold)]/14 bg-[rgba(255,255,255,0.02)] px-4 py-3 text-sm text-[var(--app-copy)]"
+                  className="moon-payment-row px-4 py-3 text-sm text-[var(--app-copy)]"
                 >
                   {item}
                 </div>
