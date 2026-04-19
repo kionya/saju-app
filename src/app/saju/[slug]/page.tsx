@@ -7,6 +7,7 @@ import type {
   SajuMajorLuckCycle,
   SajuPillar,
 } from '@/domain/saju/engine/saju-data-v1';
+import { SajuAiInterpretationPanel } from '@/components/ai/saju-ai-interpretation-panel';
 import { Badge } from '@/components/ui/badge';
 import DetailUnlock from '@/components/detail-unlock';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
@@ -111,6 +112,21 @@ function formatMajorLuckWindow(cycle: SajuMajorLuckCycle) {
 function formatHiddenStems(pillar: SajuPillar) {
   if (pillar.hiddenStems.length === 0) return null;
   return pillar.hiddenStems.map((item) => item.stem).join(' · ');
+}
+
+function buildAiFallbackText(report: ReturnType<typeof buildSajuReport>) {
+  const highlights = report.summaryHighlights.map((summary) => `- ${summary}`).join('\n');
+  const evidence = report.evidenceCards
+    .map((card) => `- ${card.label}: ${card.title}`)
+    .join('\n');
+
+  return [
+    report.headline,
+    highlights,
+    `행동 제안: ${report.primaryAction.title} - ${report.primaryAction.description}`,
+    `주의 포인트: ${report.cautionAction.title} - ${report.cautionAction.description}`,
+    `근거 요약:\n${evidence}`,
+  ].join('\n\n');
 }
 
 export default async function SajuResultPage({ params, searchParams }: Props) {
@@ -223,6 +239,13 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             </div>
           </section>
         </div>
+
+        <SajuAiInterpretationPanel
+          readingId={slug}
+          topic={report.focusTopic}
+          focusLabel={report.focusLabel}
+          fallbackText={buildAiFallbackText(report)}
+        />
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           {report.scores.map((score) => {
