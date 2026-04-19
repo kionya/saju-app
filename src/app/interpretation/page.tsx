@@ -21,8 +21,8 @@ export const metadata: Metadata = {
 export default function InterpretationPage() {
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-hero-card p-7 sm:p-8">
+      <div className="interpretation-page mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <section className="interpretation-title-band app-hero-card p-7 sm:p-8">
           <div className="app-caption">해석</div>
           <h1 className="mt-4 font-[var(--font-heading)] text-4xl leading-[1.3] tracking-tight text-[var(--app-ivory)] sm:text-5xl">
             오늘 마음에 닿는 물음마다 읽는 방식이 다릅니다
@@ -33,7 +33,7 @@ export default function InterpretationPage() {
           </p>
         </section>
 
-        <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="interpretation-wisdom-grid mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {WISDOM_CARDS.map((card) => {
             const tone = toneClasses(card.tone);
 
@@ -54,7 +54,7 @@ export default function InterpretationPage() {
           })}
         </section>
 
-        <section className="mt-8 grid gap-4 lg:grid-cols-3">
+        <section className="interpretation-layer-grid mt-8 grid gap-4 lg:grid-cols-3">
           {INTERPRETATION_LAYERS.map((layer) => (
             <article key={layer.title} className="app-panel p-6">
               <div className="app-caption">{layer.title}</div>
@@ -71,7 +71,7 @@ export default function InterpretationPage() {
           ))}
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
+        <section className="interpretation-bottom-grid mt-8 grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
           <article className="app-panel p-6">
             <div className="app-caption">어떤 이야기부터 펼쳐볼까요?</div>
             <div className="mt-5 space-y-4">

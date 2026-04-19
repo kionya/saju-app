@@ -1010,6 +1010,53 @@
     padding: 2rem;
   }
 
+  [data-app-layout="horizontal"] .interpretation-page {
+    max-width: none;
+    padding: 0 0 5rem;
+  }
+
+  [data-app-layout="horizontal"] .interpretation-title-band {
+    display: flex;
+    min-height: 18rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    padding: 3.5rem 2rem;
+    text-align: center;
+    background:
+      radial-gradient(ellipse at 50% 18%, rgba(212, 176, 106, 0.12), transparent 52%),
+      radial-gradient(ellipse at 12% 80%, rgba(123, 163, 204, 0.08), transparent 42%),
+      linear-gradient(180deg, rgba(6, 7, 13, 0.98), rgba(10, 12, 23, 0.99));
+  }
+
+  [data-app-layout="horizontal"] .interpretation-title-band > * {
+    max-width: 46rem;
+    margin-right: auto;
+    margin-left: auto;
+  }
+
+  [data-app-layout="horizontal"] .interpretation-title-band .app-caption {
+    letter-spacing: 0.58em;
+  }
+
+  [data-app-layout="horizontal"] .interpretation-wisdom-grid,
+  [data-app-layout="horizontal"] .interpretation-layer-grid,
+  [data-app-layout="horizontal"] .interpretation-bottom-grid {
+    max-width: 75rem;
+    margin-right: auto;
+    margin-left: auto;
+    padding-right: 2rem;
+    padding-left: 2rem;
+  }
+
+  [data-app-layout="horizontal"] .interpretation-wisdom-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 3.5rem;
+  }
+
   [data-app-layout="horizontal"] .my-dashboard-grid {
     max-width: 75rem;
     margin-inline: auto;

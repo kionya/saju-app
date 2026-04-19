@@ -1,4 +1,4 @@
-export type MoonlightTone = 'gold' | 'jade' | 'plum' | 'sky';
+export type MoonlightTone = 'gold' | 'goldSoft' | 'jade' | 'plum' | 'sky' | 'coral';
 export type MoonlightNavTone = 'service' | 'acquisition';
 export type PlanSlug = 'basic' | 'premium' | 'lifetime';
 export type CompatibilityRelationshipSlug = 'lover' | 'family' | 'friend' | 'partner';
@@ -142,7 +142,7 @@ export const WISDOM_CARDS: readonly MoonlightWisdomCard[] = [
     hook: '왜 유독 이 부분에서 늘 걸리는 걸까',
     description: '오행과 십신의 움직임으로, 자꾸 반복되는 삶의 장면이 왜 생기는지 들려드립니다.',
     href: '/myeongri',
-    tone: 'gold',
+    tone: 'goldSoft',
   },
   {
     slug: 'tarot',
@@ -169,7 +169,7 @@ export const WISDOM_CARDS: readonly MoonlightWisdomCard[] = [
     hook: '저 먼 별빛이 내게 전하는 말',
     description: '오늘 마음의 결을 별빛 언어로 먼저 살피고, 사주와 만나는 지점까지 이어드립니다.',
     href: '/star-sign',
-    tone: 'plum',
+    tone: 'sky',
   },
   {
     slug: 'zodiac',
@@ -178,7 +178,7 @@ export const WISDOM_CARDS: readonly MoonlightWisdomCard[] = [
     hook: '올해 내 띠의 흐름은 어떠한가',
     description: '익숙한 띠의 흐름으로 오늘과 올 한 해의 기운을 부드럽게 짚어드립니다.',
     href: '/zodiac',
-    tone: 'gold',
+    tone: 'coral',
   },
 ] as const;
 
@@ -1123,6 +1123,12 @@ export const ZODIAC_META = {
 
 export function toneClasses(tone: MoonlightTone) {
   switch (tone) {
+    case 'goldSoft':
+      return {
+        text: 'text-[var(--app-gold-soft)]',
+        border: 'border-[var(--app-gold-soft)]/28',
+        bg: 'bg-[var(--app-gold-soft)]/10',
+      };
     case 'jade':
       return {
         text: 'text-[var(--app-jade)]',
@@ -1140,6 +1146,12 @@ export function toneClasses(tone: MoonlightTone) {
         text: 'text-[var(--app-sky)]',
         border: 'border-[var(--app-sky)]/28',
         bg: 'bg-[var(--app-sky)]/10',
+      };
+    case 'coral':
+      return {
+        text: 'text-[var(--app-coral)]',
+        border: 'border-[var(--app-coral)]/28',
+        bg: 'bg-[var(--app-coral)]/10',
       };
     case 'gold':
     default:
