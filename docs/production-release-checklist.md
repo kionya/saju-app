@@ -93,6 +93,7 @@
   - Kakao OAuth enabled if Kakao remains visible on the login page.
   - Google OAuth enabled if Google remains visible on the login page.
   - Email OTP/magic-link enabled for the primary signup/login path.
+  - Email template uses `supabase/templates/auth-magic-link.html` and keeps `{{ .ConfirmationURL }}` for preview-safe redirects.
   - Phone provider enabled with an SMS provider only when phone OTP is promoted from future integration to active login.
 - Confirm required Supabase migrations are applied in production:
   - `001_initial.sql`
