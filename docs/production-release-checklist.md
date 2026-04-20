@@ -26,6 +26,9 @@
 
 - TypeScript check passed:
   - `./node_modules/.bin/tsc --noEmit --pretty false --incremental false -p tsconfig.json`
+- CI gate added:
+  - `.github/workflows/ci.yml`
+  - runs `npm ci`, `npm test`, optional `npm run validate:kasi`, `npm run typecheck`, and `npm run build`
 - Vercel preview status: `Ready`
 - Browser QA on preview home page and result page completed for the previous preview; repeat after the full snapshot redeploy.
 - Email magic-link signup/login was confirmed by the operator before production promotion.
