@@ -103,6 +103,8 @@
   --app-copy-muted: rgba(155, 160, 176, 0.92);
   --app-copy-soft: rgba(99, 104, 120, 0.96);
   --app-shadow: 0 24px 72px rgba(0, 0, 0, 0.36);
+  --app-mobile-dock-clearance: calc(6.75rem + env(safe-area-inset-bottom));
+  --app-mobile-top-clearance: 8.5rem;
 }
 
 .dark {
@@ -182,10 +184,14 @@
     min-height: 100%;
     background-color: var(--app-ink);
     color: white;
+    overscroll-behavior-y: contain;
     text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans;
+    min-height: 100%;
+    scroll-padding-top: var(--app-mobile-top-clearance);
+    scroll-padding-bottom: var(--app-mobile-dock-clearance);
   }
 
   body::before {
@@ -222,7 +228,7 @@
 @layer components {
   .app-shell {
     position: relative;
-    min-height: 100vh;
+    min-height: 100svh;
     color: white;
     background:
       radial-gradient(ellipse at 50% -12%, rgba(212, 176, 106, 0.14) 0%, transparent 42%),
@@ -259,7 +265,7 @@
   .app-shell-content {
     position: relative;
     z-index: 1;
-    min-height: 100vh;
+    min-height: 100svh;
   }
 
   .app-shell-content {
@@ -349,8 +355,10 @@
 
   .app-mobile-dock {
     border-top: 1px solid var(--app-line);
-    background: rgba(8, 10, 18, 0.94);
+    background: rgba(8, 10, 18, 0.98);
     backdrop-filter: blur(18px);
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    transform: translateZ(0);
   }
 
   .app-mobile-dock-link {
@@ -389,6 +397,20 @@
     border-color: rgba(212, 176, 106, 0.3);
     background: rgba(31, 37, 64, 0.55);
     color: var(--app-gold-text);
+  }
+
+  .app-shell.app-shell-with-navigation {
+    padding-bottom: var(--app-mobile-dock-clearance);
+  }
+
+  .app-shell-with-navigation .app-shell-content {
+    padding-bottom: 1rem;
+  }
+
+  .app-shell-with-navigation .app-top-header {
+    background: rgba(8, 10, 18, 0.985) !important;
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3);
+    transform: translateZ(0);
   }
 
   .app-page {
@@ -891,6 +913,11 @@
 }
 
 @media (min-width: 1024px) {
+  html {
+    scroll-padding-top: 7rem;
+    scroll-padding-bottom: 2rem;
+  }
+
   .app-page {
     padding-inline: 2rem;
   }
@@ -901,6 +928,11 @@
 
   .app-shell-with-navigation .app-shell-content {
     padding-left: 16rem;
+    padding-bottom: 0;
+  }
+
+  .app-shell.app-shell-with-navigation {
+    padding-bottom: 0;
   }
 
   [data-app-layout="vertical"] .saju-intake-shell {
@@ -1047,8 +1079,10 @@
   [data-app-layout="horizontal"] .home-hero-card {
     min-height: 27.5rem;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 0;
     border-right: 0;
     border-left: 0;
     border-radius: 0;
@@ -1062,9 +1096,16 @@
 
   [data-app-layout="horizontal"] .home-hero-card > .flex {
     width: min(100%, 48rem);
+    position: relative;
+    z-index: 1;
     align-items: center;
     justify-content: center;
     margin-inline: auto;
+  }
+
+  [data-app-layout="horizontal"] .home-hero-card > .mt-7 {
+    position: relative;
+    z-index: 1;
   }
 
   [data-app-layout="horizontal"] .home-hero-copy,
