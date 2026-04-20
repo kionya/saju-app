@@ -30,6 +30,20 @@ const hasSupabaseBrowserEnv = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 const NOTIFICATION_HEARTBEAT_KEY = 'moonlight:notification-heartbeat-sent-at';
+const HEADER_CREDIT_CACHE_KEY = 'moonlight:header-credit-cache-v1';
+const HEADER_CREDIT_REFRESH_MS = 45 * 1000;
+
+interface HeaderCreditSnapshot {
+  userId: string;
+  credits: number;
+  fetchedAt: number;
+}
+
+let cachedHeaderUser: User | null | undefined;
+let cachedHeaderCredits: HeaderCreditSnapshot | null = null;
+let creditRefreshPromise: Promise<HeaderCreditSnapshot | null> | null = null;
+let creditRefreshUserId: string | null = null;
+let creditCacheVersion = 0;
 
 const NAV_META: Record<string, { glyph: string; accent: string; description: string }> = {
   홈: { glyph: '月', accent: 'var(--app-gold)', description: '오늘의 흐름' },
@@ -80,6 +94,84 @@ function DockIcon({ label }: { label: string }) {
 
 function creditLabel(user: User | null, credits: number | null) {
   return user ? `${credits ?? '...'} 코인` : '코인';
+}
+
+function readStoredCreditSnapshot(userId: string) {
+  try {
+    const raw = window.sessionStorage.getItem(HEADER_CREDIT_CACHE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<HeaderCreditSnapshot>;
+    if (
+      parsed.userId !== userId ||
+      typeof parsed.credits !== 'number' ||
+      typeof parsed.fetchedAt !== 'number'
+    ) {
+      return null;
+    }
+
+    cachedHeaderCredits = {
+      userId,
+      credits: parsed.credits,
+      fetchedAt: parsed.fetchedAt,
+    };
+    return cachedHeaderCredits;
+  } catch {
+    return null;
+  }
+}
+
+function getCachedCreditSnapshot(userId: string) {
+  if (cachedHeaderCredits?.userId === userId) return cachedHeaderCredits;
+  return readStoredCreditSnapshot(userId);
+}
+
+function saveCreditSnapshot(snapshot: HeaderCreditSnapshot) {
+  cachedHeaderCredits = snapshot;
+
+  try {
+    window.sessionStorage.setItem(HEADER_CREDIT_CACHE_KEY, JSON.stringify(snapshot));
+  } catch {}
+}
+
+function clearCreditSnapshot() {
+  cachedHeaderCredits = null;
+  creditCacheVersion += 1;
+
+  try {
+    window.sessionStorage.removeItem(HEADER_CREDIT_CACHE_KEY);
+  } catch {}
+}
+
+function shouldRefreshCreditSnapshot(snapshot: HeaderCreditSnapshot | null) {
+  return !snapshot || Date.now() - snapshot.fetchedAt > HEADER_CREDIT_REFRESH_MS;
+}
+
+function refreshCreditSnapshot(userId: string, loadCredits: () => Promise<number>) {
+  if (creditRefreshPromise && creditRefreshUserId === userId) return creditRefreshPromise;
+
+  const refreshVersion = creditCacheVersion;
+
+  creditRefreshUserId = userId;
+  creditRefreshPromise = loadCredits()
+    .then((credits) => {
+      if (creditCacheVersion !== refreshVersion || cachedHeaderUser?.id !== userId) {
+        return null;
+      }
+
+      const snapshot = { userId, credits, fetchedAt: Date.now() };
+      saveCreditSnapshot(snapshot);
+      return snapshot;
+    })
+    .catch(() => null)
+    .finally(() => {
+      if (creditRefreshUserId === userId) {
+        creditRefreshPromise = null;
+        creditRefreshUserId = null;
+      }
+    });
+
+  return creditRefreshPromise;
 }
 
 function DesktopNavLink({
@@ -375,9 +467,11 @@ function MobileChrome({
                 <button
                   type="button"
                   onClick={onSignOut}
-                  className="app-top-login hidden h-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-3 text-xs text-[var(--app-ivory)] sm:inline-flex"
+                  className="app-top-login inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface)] sm:w-auto sm:gap-1.5 sm:px-3 sm:text-xs"
+                  aria-label="로그아웃"
                 >
-                  로그아웃
+                  <LogOut className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+                  <span className="hidden sm:inline">로그아웃</span>
                 </button>
               ) : (
                 <Link
@@ -466,18 +560,27 @@ function MobileChrome({
 export default function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [credits, setCredits] = useState<number | null>(null);
+  const [user, setUser] = useState<User | null>(cachedHeaderUser ?? null);
+  const [credits, setCredits] = useState<number | null>(cachedHeaderCredits?.credits ?? null);
 
   useEffect(() => {
     if (!hasSupabaseBrowserEnv) return;
 
+    let isActive = true;
     const supabase = createClient();
 
     supabase.auth.getUser().then(({ data }) => {
+      if (!isActive) return;
+
+      cachedHeaderUser = data.user;
       setUser(data.user);
 
       if (data.user) {
+        const cachedCredits = getCachedCreditSnapshot(data.user.id);
+        if (cachedCredits) {
+          setCredits(cachedCredits.credits);
+        }
+
         try {
           const previous = window.localStorage.getItem(NOTIFICATION_HEARTBEAT_KEY);
           const shouldSendHeartbeat =
@@ -498,18 +601,91 @@ export default function SiteHeader() {
           }
         } catch {}
 
-        supabase
-          .from('user_credits')
-          .select('balance, subscription_balance')
-          .eq('user_id', data.user.id)
-          .single()
-          .then(({ data: creditRow }) => {
-            if (creditRow) {
-              setCredits((creditRow.balance ?? 0) + (creditRow.subscription_balance ?? 0));
-            }
-          });
+        if (!shouldRefreshCreditSnapshot(cachedCredits)) return;
+
+        void refreshCreditSnapshot(data.user.id, async () => {
+          const { data: creditRow } = await supabase
+            .from('user_credits')
+            .select('balance, subscription_balance')
+            .eq('user_id', data.user.id)
+            .maybeSingle();
+
+          return (creditRow?.balance ?? 0) + (creditRow?.subscription_balance ?? 0);
+        }).then((snapshot) => {
+          if (isActive && snapshot?.userId === data.user?.id) {
+            setCredits(snapshot.credits);
+          }
+        });
+      } else {
+        clearCreditSnapshot();
+        setCredits(null);
       }
     });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isActive) return;
+
+      cachedHeaderUser = session?.user ?? null;
+      setUser(session?.user ?? null);
+
+      if (!session?.user) {
+        clearCreditSnapshot();
+        setCredits(null);
+        return;
+      }
+
+      const cachedCredits = getCachedCreditSnapshot(session.user.id);
+      if (cachedCredits) {
+        setCredits(cachedCredits.credits);
+      }
+
+      if (!shouldRefreshCreditSnapshot(cachedCredits)) return;
+
+      void refreshCreditSnapshot(session.user.id, async () => {
+        const { data: creditRow } = await supabase
+          .from('user_credits')
+          .select('balance, subscription_balance')
+          .eq('user_id', session.user.id)
+          .maybeSingle();
+
+        return (creditRow?.balance ?? 0) + (creditRow?.subscription_balance ?? 0);
+      }).then((snapshot) => {
+        if (isActive && snapshot?.userId === session.user.id) {
+          setCredits(snapshot.credits);
+        }
+      });
+    });
+
+    const syncCreditsFromEvent = (event: Event) => {
+      if (!isActive || !cachedHeaderUser) return;
+
+      const detail = (event as CustomEvent<{ credits?: number; remaining?: number }>).detail;
+      const nextCredits =
+        typeof detail?.credits === 'number'
+          ? detail.credits
+          : typeof detail?.remaining === 'number'
+            ? detail.remaining
+            : null;
+
+      if (nextCredits === null) return;
+
+      saveCreditSnapshot({
+        userId: cachedHeaderUser.id,
+        credits: nextCredits,
+        fetchedAt: Date.now(),
+      });
+      setCredits(nextCredits);
+    };
+
+    window.addEventListener('moonlight:credits-updated', syncCreditsFromEvent);
+
+    return () => {
+      isActive = false;
+      subscription.unsubscribe();
+      window.removeEventListener('moonlight:credits-updated', syncCreditsFromEvent);
+    };
   }, []);
 
   async function signOut() {
@@ -520,6 +696,10 @@ export default function SiteHeader() {
 
     const supabase = createClient();
     await supabase.auth.signOut();
+    cachedHeaderUser = null;
+    clearCreditSnapshot();
+    setUser(null);
+    setCredits(null);
     router.push('/');
   }
 

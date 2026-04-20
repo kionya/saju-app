@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { isSubscriptionPackage } from '@/lib/payments/catalog';
 import { confirmPayment } from '@/lib/payments/toss';
 import { validatePaymentConfirmationPayload } from '@/lib/payments/confirmation';
-import { addCredits } from '@/lib/credits/deduct';
+import { addCredits, getCredits } from '@/lib/credits/deduct';
 import { grantLifetimeReportEntitlement } from '@/lib/report-entitlements';
 import { activateMembershipSubscription } from '@/lib/subscription';
 
@@ -29,12 +29,17 @@ export async function POST(req: NextRequest) {
 
   if (payment instanceof NextResponse) return payment;
 
+  let totalCredits: number | null = null;
+
   if (pkg.credits > 0) {
     await addCredits(user.id, pkg.credits, pkg.kind === 'subscription' ? 'subscription' : 'purchase', {
       orderId,
       packageId: pkg.id,
       paymentKey,
     });
+    const updatedCredits = await getCredits(user.id);
+    totalCredits =
+      (updatedCredits?.balance ?? 0) + (updatedCredits?.subscription_balance ?? 0);
   }
 
   const subscription = isSubscriptionPackage(pkg)
@@ -55,6 +60,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     success: true,
     credits: pkg.credits,
+    totalCredits,
     subscription,
     entitlement,
     plan: 'planSlug' in pkg ? pkg.planSlug : null,

@@ -12,11 +12,13 @@ import type {
   FocusTopicMeta,
   FocusTopicOption,
   ReportEvidenceCard,
+  ReportEvidenceComputed,
   ReportInsight,
   ReportScore,
   ReportTimelineItem,
   SajuReport,
 } from './types';
+import { getEvidenceSource, getEvidenceTopicMapping } from './topic-rule-table';
 
 export const FOCUS_TOPIC_META: Record<FocusTopic, FocusTopicMeta> = {
   today: {
@@ -160,6 +162,38 @@ function getSpecialSalGroups(data: SajuDataV1) {
   return { supportive, cautionary };
 }
 
+function buildFiveElementRatio(data: SajuDataV1): ReportEvidenceComputed['fiveElementRatio'] {
+  return (Object.keys(data.fiveElements.byElement) as Element[]).reduce<
+    NonNullable<ReportEvidenceComputed['fiveElementRatio']>
+  >((accumulator, element) => {
+    accumulator[element] = data.fiveElements.byElement[element].percentage;
+    return accumulator;
+  }, {});
+}
+
+function buildBaseComputed(data: SajuDataV1): ReportEvidenceComputed {
+  return {
+    dayMaster: data.dayMaster.stem,
+    dayMasterElement: data.dayMaster.element,
+    monthPillar: data.pillars.month.ganzi,
+    fiveElementRatio: buildFiveElementRatio(data),
+    strength: data.strength?.level ?? null,
+    strengthScore: data.strength?.score ?? null,
+    pattern: data.pattern?.name ?? null,
+    tenGod: data.pattern?.tenGod ?? data.tenGods?.dominant ?? null,
+    yongsin: data.yongsin
+      ? [data.yongsin.primary, ...data.yongsin.secondary].map((symbol) => symbol.label)
+      : [],
+    currentLuck: compactStrings([
+      data.currentLuck?.currentMajorLuck?.ganzi
+        ? `${data.currentLuck.currentMajorLuck.ganzi} 대운`
+        : null,
+      data.currentLuck?.saewoon?.ganzi ? `${data.currentLuck.saewoon.ganzi} 세운` : null,
+      data.currentLuck?.wolwoon?.ganzi ? `${data.currentLuck.wolwoon.ganzi} 월운` : null,
+    ]),
+  };
+}
+
 function compactStrings(parts: Array<string | null | undefined>) {
   return parts
     .map((part) => part?.trim())
@@ -248,41 +282,61 @@ function buildSummaryHighlights(
   }
 }
 
-function buildStrengthEvidenceCard(strength: SajuDataV1['strength']): ReportEvidenceCard {
+function buildStrengthEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+  const strength = data.strength;
+  const computed = buildBaseComputed(data);
+  const key = 'strength';
+
   if (!strength) {
     return {
-      key: 'strength',
+      key,
       label: '강약',
       title: '강약 계산 준비 중',
       body: '현재 저장본은 seed 데이터라 강약 점수와 근거가 아직 비어 있습니다.',
       details: ['강약 계산이 연결되면 일간을 돕는 힘과 누르는 힘의 균형을 이 카드에서 먼저 보여줍니다.'],
+      computed,
+      source: getEvidenceSource(key),
+      confidence: '참고',
+      topicMapping: getEvidenceTopicMapping(key),
     };
   }
 
   return {
-    key: 'strength',
+    key,
     label: '강약',
     title: `${strength.level} · ${strength.score}점`,
     body: STRENGTH_INTERPRETATION[strength.level],
     details: strength.rationale.length > 0
       ? strength.rationale.slice(0, 3)
       : ['강약 점수는 계산되었고, 세부 근거 문장은 다음 단계에서 보강됩니다.'],
+    computed,
+    source: getEvidenceSource(key),
+    confidence: '확정',
+    topicMapping: getEvidenceTopicMapping(key),
   };
 }
 
-function buildPatternEvidenceCard(pattern: SajuDataV1['pattern']): ReportEvidenceCard {
+function buildPatternEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+  const pattern = data.pattern;
+  const computed = buildBaseComputed(data);
+  const key = 'pattern';
+
   if (!pattern) {
     return {
-      key: 'pattern',
+      key,
       label: '격국',
       title: '격국 계산 준비 중',
       body: '격국 필드가 비어 있어도 카드 자리는 유지합니다.',
       details: ['월령과 십신 기준의 rule-based 계산이 들어오면 격국 근거가 이 카드로 정리됩니다.'],
+      computed,
+      source: getEvidenceSource(key),
+      confidence: '참고',
+      topicMapping: getEvidenceTopicMapping(key),
     };
   }
 
   return {
-    key: 'pattern',
+    key,
     label: '격국',
     title: pattern.tenGod ? `${pattern.name} · ${pattern.tenGod}` : pattern.name,
     body: pattern.tenGod
@@ -291,17 +345,29 @@ function buildPatternEvidenceCard(pattern: SajuDataV1['pattern']): ReportEvidenc
     details: pattern.rationale.length > 0
       ? pattern.rationale.slice(0, 3)
       : ['격국명은 준비되었고 상세 근거 문장은 다음 단계에서 보강됩니다.'],
+    computed,
+    source: getEvidenceSource(key),
+    confidence: '확정',
+    topicMapping: getEvidenceTopicMapping(key),
   };
 }
 
-function buildYongsinEvidenceCard(yongsin: SajuDataV1['yongsin']): ReportEvidenceCard {
+function buildYongsinEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+  const yongsin = data.yongsin;
+  const computed = buildBaseComputed(data);
+  const key = 'yongsin';
+
   if (!yongsin) {
     return {
-      key: 'yongsin',
+      key,
       label: '용신',
       title: '용신 계산 준비 중',
       body: '용신과 기신 자리가 열려 있습니다.',
       details: ['조후와 억부 판정이 채워지면 보완해야 할 기운과 피해야 할 기운을 분리해 보여줍니다.'],
+      computed,
+      source: getEvidenceSource(key),
+      confidence: '참고',
+      topicMapping: getEvidenceTopicMapping(key),
     };
   }
 
@@ -309,13 +375,17 @@ function buildYongsinEvidenceCard(yongsin: SajuDataV1['yongsin']): ReportEvidenc
   const kiyshinLabel = yongsin.kiyshin.length > 0 ? formatSymbolList(yongsin.kiyshin) : '기신 미기재';
 
   return {
-    key: 'yongsin',
+    key,
     label: '용신',
     title: yongsinLabel,
     body: `${yongsin.method} 기준으로 ${yongsinLabel}을 보완 축으로 보고, 기신은 ${kiyshinLabel}입니다.`,
     details: yongsin.rationale.length > 0
       ? yongsin.rationale.slice(0, 3)
       : ['용신 값은 준비되었고 상세 판정 근거는 다음 단계에서 보강됩니다.'],
+    computed,
+    source: getEvidenceSource(key),
+    confidence: yongsin.method === 'legacy-placeholder' ? '참고' : '보통',
+    topicMapping: getEvidenceTopicMapping(key),
   };
 }
 
@@ -325,6 +395,7 @@ function formatRelationEvidenceLine(relation: OrreryRelation) {
 }
 
 function buildRelationEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+  const key = 'relations';
   const relations = getOrreryExtension(data)?.relations ?? [];
   const tension = relations.find((relation) =>
     ['충', '형', '해', '파', '천간충'].includes(relation.label)
@@ -337,9 +408,13 @@ function buildRelationEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
       Boolean(relation) && array.findIndex((item) => item === relation) === index
   ).slice(0, 4);
   const labels = [...new Set(selected.map((relation) => relation.label))];
+  const computed = {
+    ...buildBaseComputed(data),
+    relations: selected.map(formatRelationEvidenceLine),
+  };
 
   return {
-    key: 'relations',
+    key,
     label: '합충',
     title: labels.length > 0 ? labels.join(' · ') : '합충 근거 없음',
     body: selected.length > 0
@@ -348,6 +423,10 @@ function buildRelationEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     details: selected.length > 0
       ? selected.map(formatRelationEvidenceLine)
       : ['합충 데이터가 들어오면 어떤 글자끼리 작용하는지 이 카드에 분리해 표시됩니다.'],
+    computed,
+    source: getEvidenceSource(key),
+    confidence: selected.length > 0 ? '보통' : '참고',
+    topicMapping: getEvidenceTopicMapping(key),
   };
 }
 
@@ -367,12 +446,17 @@ function formatPillarSlot(slot: string) {
 }
 
 function buildGongmangEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+  const key = 'gongmang';
   const gongmang = getOrreryExtension(data)?.gongmang;
   const branches = gongmang?.branches?.join('·') ?? '';
   const slots = gongmang?.pillarSlots.map(formatPillarSlot) ?? [];
+  const computed = {
+    ...buildBaseComputed(data),
+    gongmang: gongmang?.branches ?? [],
+  };
 
   return {
-    key: 'gongmang',
+    key,
     label: '공망',
     title: branches ? `${branches} 공망` : '공망 근거 없음',
     body: branches
@@ -381,33 +465,46 @@ function buildGongmangEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     details: slots.length > 0
       ? [`작용 위치: ${slots.join(' · ')}`]
       : ['공망 글자가 특정 주에 닿으면 이곳에 작용 위치가 함께 표시됩니다.'],
+    computed,
+    source: getEvidenceSource(key),
+    confidence: branches ? '보통' : '참고',
+    topicMapping: getEvidenceTopicMapping(key),
   };
 }
 
 function buildSpecialSalsEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+  const key = 'specialSals';
   const { supportive, cautionary } = getSpecialSalGroups(data);
   const names = [...supportive, ...cautionary];
   const details = compactStrings([
     supportive.length > 0 ? `도움: ${supportive.join(' · ')}` : null,
     cautionary.length > 0 ? `주의: ${cautionary.join(' · ')}` : null,
   ]);
+  const computed = {
+    ...buildBaseComputed(data),
+    specialSals: names,
+  };
 
   return {
-    key: 'specialSals',
+    key,
     label: '신살',
     title: names.length > 0 ? names.slice(0, 5).join(' · ') : '주요 신살 없음',
     body: names.length > 0
       ? '신살은 도움을 받는 통로와 주의해야 할 속도를 함께 보는 보조 근거입니다.'
       : '현재 명식에서 우선 표시할 주요 신살은 아직 확인되지 않았습니다.',
     details: details.length > 0 ? details : ['신살 데이터가 들어오면 도움/주의 흐름을 나누어 표시합니다.'],
+    computed,
+    source: getEvidenceSource(key),
+    confidence: '참고',
+    topicMapping: getEvidenceTopicMapping(key),
   };
 }
 
 function buildEvidenceCards(data: SajuDataV1): ReportEvidenceCard[] {
   return [
-    buildStrengthEvidenceCard(data.strength),
-    buildPatternEvidenceCard(data.pattern),
-    buildYongsinEvidenceCard(data.yongsin),
+    buildStrengthEvidenceCard(data),
+    buildPatternEvidenceCard(data),
+    buildYongsinEvidenceCard(data),
     buildRelationEvidenceCard(data),
     buildGongmangEvidenceCard(data),
     buildSpecialSalsEvidenceCard(data),

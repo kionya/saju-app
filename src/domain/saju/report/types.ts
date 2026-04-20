@@ -34,12 +34,44 @@ export type ReportEvidenceKey =
   | 'gongmang'
   | 'specialSals';
 
+export type ReportEvidenceSource =
+  | '계산값'
+  | '운세 룰'
+  | '자평진전'
+  | '적천수'
+  | '궁통보감'
+  | '삼명통회'
+  | '연해자평'
+  | 'orrery-reference';
+
+export type ReportEvidenceConfidence = '확정' | '보통' | '참고';
+
+export interface ReportEvidenceComputed {
+  dayMaster?: string;
+  dayMasterElement?: Element;
+  monthPillar?: string;
+  fiveElementRatio?: Partial<Record<Element, number>>;
+  strength?: string | null;
+  strengthScore?: number | null;
+  pattern?: string | null;
+  tenGod?: string | null;
+  yongsin?: string[];
+  currentLuck?: string[];
+  relations?: string[];
+  gongmang?: string[];
+  specialSals?: string[];
+}
+
 export interface ReportEvidenceCard {
   key: ReportEvidenceKey;
   label: string;
   title: string;
   body: string;
   details: string[];
+  computed: ReportEvidenceComputed;
+  source: ReportEvidenceSource[];
+  confidence: ReportEvidenceConfidence;
+  topicMapping: FocusTopic[];
 }
 
 export interface ReportClassicalCitation {

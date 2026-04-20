@@ -58,3 +58,24 @@ test('relationship topic uses relationship-specific copy instead of love copy', 
   assert.match(report.cautionAction.title, /관계/);
   assert.ok(report.summaryHighlights.some((summary) => summary.includes('관계 흐름')));
 });
+
+test('evidence cards expose computed facts, source, confidence, and topic mapping', () => {
+  const data = normalizeToSajuDataV1(birthInput, null);
+  const report = buildSajuReport(birthInput, data, 'today');
+
+  assert.ok(report.evidenceCards.length >= 6);
+  assert.ok(
+    report.evidenceCards.every((card) => {
+      return (
+        card.computed.dayMaster === data.dayMaster.stem &&
+        card.source.length > 0 &&
+        ['확정', '보통', '참고'].includes(card.confidence) &&
+        card.topicMapping.length > 0
+      );
+    })
+  );
+
+  const relationCard = report.evidenceCards.find((card) => card.key === 'relations');
+  assert.ok(relationCard?.topicMapping.includes('relationship'));
+  assert.ok(relationCard?.source.includes('orrery-reference'));
+});

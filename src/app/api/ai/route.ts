@@ -5,6 +5,7 @@ import {
   buildSajuReport,
   normalizeFocusTopic,
 } from '@/domain/saju/report/build-report';
+import { getReportTopicRulesForTopic } from '@/domain/saju/report/topic-rule-table';
 import type { SajuReport } from '@/domain/saju/report/types';
 import { resolveReading, type ReadingRecord } from '@/lib/saju/readings';
 import { generateAiText } from '@/server/ai/openai-text';
@@ -101,6 +102,10 @@ function formatEvidenceCards(report: SajuReport) {
     title: card.title,
     body: card.body,
     details: card.details,
+    computed: card.computed,
+    source: card.source,
+    confidence: card.confidence,
+    topicMapping: card.topicMapping,
   }));
 }
 
@@ -177,6 +182,7 @@ function createReportGrounding(record: ReadingRecord, report: SajuReport) {
       headline: report.headline,
       summaryHighlights: report.summaryHighlights,
       evidenceCards: formatEvidenceCards(report),
+      topicRuleTable: getReportTopicRulesForTopic(report.focusTopic),
       classicalCitations: formatClassicalCitations(report),
       scores: report.scores,
       primaryAction: report.primaryAction,

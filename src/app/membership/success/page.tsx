@@ -81,6 +81,13 @@ function SuccessContent() {
         const nextPlan = data.plan ?? plan;
         const premiumResultHref = buildPremiumResultHref(nextPlan, slug);
 
+        if (typeof data.totalCredits === 'number') {
+          window.dispatchEvent(
+            new CustomEvent('moonlight:credits-updated', {
+              detail: { credits: data.totalCredits },
+            })
+          );
+        }
         setConfirmedPlan(nextPlan);
 
         if (premiumResultHref) {

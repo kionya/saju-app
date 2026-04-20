@@ -141,6 +141,13 @@ export default function DetailUnlock({ slug }: Props) {
 
       setContent(data.content);
       setRemaining(data.remaining);
+      if (typeof data.remaining === 'number') {
+        window.dispatchEvent(
+          new CustomEvent('moonlight:credits-updated', {
+            detail: { remaining: data.remaining },
+          })
+        );
+      }
       setAccess(data.access === 'daily_reuse' ? 'daily_reuse' : 'charged');
       setState('unlocked');
     } catch {

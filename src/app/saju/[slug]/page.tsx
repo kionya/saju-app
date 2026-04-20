@@ -15,7 +15,7 @@ import SiteHeader from '@/features/shared-navigation/site-header';
 import { ELEMENT_INFO } from '@/lib/saju/elements';
 import type { Element } from '@/lib/saju/types';
 import { resolveReading } from '@/lib/saju/readings';
-import { buildSajuReport, FOCUS_TOPIC_OPTIONS } from '@/domain/saju/report';
+import { buildSajuReport, FOCUS_TOPIC_META, FOCUS_TOPIC_OPTIONS } from '@/domain/saju/report';
 import { cn } from '@/lib/utils';
 import { AppPage, AppShell } from '@/shared/layout/app-shell';
 
@@ -356,11 +356,29 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 <div className="flex items-center justify-between gap-3">
                   <div className="app-caption">{card.label}</div>
                   <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[11px] text-[var(--app-copy-soft)]">
-                    근거
+                    {card.confidence}
                   </span>
                 </div>
                 <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">{card.title}</h3>
                 <p className="app-body-copy mt-3 text-sm">{card.body}</p>
+                <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
+                  {card.source.map((source) => (
+                    <span
+                      key={`${card.key}-${source}`}
+                      className="rounded-full border border-[var(--app-gold)]/20 bg-[var(--app-gold)]/8 px-2.5 py-1 text-[var(--app-gold-soft)]"
+                    >
+                      {source}
+                    </span>
+                  ))}
+                  {card.topicMapping.map((topic) => (
+                    <span
+                      key={`${card.key}-${topic}`}
+                      className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[var(--app-copy-soft)]"
+                    >
+                      {FOCUS_TOPIC_META[topic].label}
+                    </span>
+                  ))}
+                </div>
                 <div className="mt-4 grid gap-2">
                   {card.details.map((detail, index) => (
                     <div

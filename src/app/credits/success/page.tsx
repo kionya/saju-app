@@ -38,6 +38,13 @@ function SuccessContent() {
       .then(data => {
         if (data.success) {
           setCoins(data.credits);
+          if (typeof data.totalCredits === 'number') {
+            window.dispatchEvent(
+              new CustomEvent('moonlight:credits-updated', {
+                detail: { credits: data.totalCredits },
+              })
+            );
+          }
           setStatus('success');
         } else {
           setStatus('error');
