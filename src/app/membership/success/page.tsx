@@ -6,6 +6,10 @@ import { useSearchParams } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import {
+  clearPendingLifetimeReportSlug,
+  readPendingLifetimeReportSlug,
+} from '@/lib/payments/lifetime-report';
 import { AppShell } from '@/shared/layout/app-shell';
 
 type ConfirmStatus = 'loading' | 'success' | 'error';
@@ -29,9 +33,10 @@ function SuccessContent() {
   const [status, setStatus] = useState<ConfirmStatus>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [confirmedPlan, setConfirmedPlan] = useState(searchParams.get('plan') ?? 'premium');
+  const querySlug = searchParams.get('slug');
+  const [resolvedSlug, setResolvedSlug] = useState(querySlug);
 
-  const slug = searchParams.get('slug');
-  const completeHref = buildCompleteHref(confirmedPlan, slug);
+  const completeHref = buildCompleteHref(confirmedPlan, resolvedSlug);
 
   useEffect(() => {
     if (didConfirm.current) return;
@@ -42,6 +47,11 @@ function SuccessContent() {
     const amount = searchParams.get('amount');
     const packageId = searchParams.get('packageId');
     const plan = searchParams.get('plan') ?? 'premium';
+    const storedLifetimeSlug =
+      packageId === 'lifetime_report' ? readPendingLifetimeReportSlug() : null;
+    const slug = (querySlug ?? storedLifetimeSlug)?.trim() || null;
+
+    setResolvedSlug(slug);
 
     if (!paymentKey || !orderId || !amount || !packageId) {
       setStatus('error');
@@ -74,17 +84,23 @@ function SuccessContent() {
         setConfirmedPlan(nextPlan);
 
         if (premiumResultHref) {
+          if (packageId === 'lifetime_report') {
+            clearPendingLifetimeReportSlug();
+          }
           location.replace(premiumResultHref);
           return;
         }
 
+        if (packageId === 'lifetime_report') {
+          clearPendingLifetimeReportSlug();
+        }
         setStatus('success');
       })
       .catch(() => {
         setStatus('error');
         setErrorMessage('서버와 통신하는 중 문제가 생겼습니다.');
       });
-  }, [searchParams, slug]);
+  }, [searchParams, querySlug]);
 
   if (status === 'loading') {
     return (
@@ -140,10 +156,10 @@ function SuccessContent() {
         결제 완료
       </Badge>
       <h1 className="mt-5 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-        {buildPremiumResultHref(confirmedPlan, slug) ? '리포트로 이동하고 있습니다' : '이용권이 반영되었습니다'}
+        {buildPremiumResultHref(confirmedPlan, resolvedSlug) ? '리포트로 이동하고 있습니다' : '이용권이 반영되었습니다'}
       </h1>
       <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[var(--app-copy)]">
-        {buildPremiumResultHref(confirmedPlan, slug)
+        {buildPremiumResultHref(confirmedPlan, resolvedSlug)
           ? '결제 확인이 끝났습니다. 선택하신 프리미엄 리포트 화면으로 바로 이동합니다.'
           : '멤버십과 리포트 권한을 확인했습니다. 이어서 안내 화면에서 다음에 열어볼 항목을 바로 선택하실 수 있습니다.'}
       </p>

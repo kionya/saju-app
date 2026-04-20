@@ -9,6 +9,7 @@ import {
   getTossPaymentMethodOption,
   type TossPaymentMethodCode,
 } from '@/lib/payments/methods';
+import { savePendingLifetimeReportSlug } from '@/lib/payments/lifetime-report';
 import { createClient } from '@/lib/supabase/client';
 
 const hasSupabaseBrowserEnv = Boolean(
@@ -56,6 +57,11 @@ export default function TossMembershipCheckout({
   }, []);
 
   async function handlePayment() {
+    if (packageId === 'lifetime_report' && !slug) {
+      setErrorMessage('평생 리포트는 먼저 사주 결과를 만든 뒤 해당 결과 화면에서 결제할 수 있습니다.');
+      return;
+    }
+
     if (!isLoggedIn) {
       location.href = `/login?next=${encodeURIComponent(checkoutPath)}`;
       return;
@@ -85,6 +91,10 @@ export default function TossMembershipCheckout({
       if (slug) {
         successParams.set('slug', slug);
         failParams.set('slug', slug);
+      }
+
+      if (packageId === 'lifetime_report' && slug) {
+        savePendingLifetimeReportSlug(slug);
       }
 
       const paymentRequest = {

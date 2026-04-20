@@ -136,7 +136,21 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
             </div>
 
             <div className="mt-6">
-              {paymentPackage ? (
+              {paymentPackage?.kind === 'lifetime_report' && !slug ? (
+                <div className="rounded-[1.2rem] border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-5 py-5">
+                  <div className="app-caption">결과 식별자가 필요합니다</div>
+                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+                    평생 심층 리포트는 특정 사주 결과에 붙는 소장권입니다. 먼저 사주 결과를 만든 뒤
+                    해당 결과의 “평생 소장하기” 버튼으로 결제하시면 결제 직후 바로 전체 리포트가 열립니다.
+                  </p>
+                  <Link
+                    href="/saju/new"
+                    className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                  >
+                    사주 결과 먼저 만들기
+                  </Link>
+                </div>
+              ) : paymentPackage ? (
                 <TossMembershipCheckout
                   packageId={paymentPackage.id}
                   plan={selectedPlan}

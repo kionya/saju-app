@@ -87,7 +87,7 @@ export default function MembershipPage() {
                       ? '/membership/checkout?plan=basic'
                       : plan.slug === 'premium'
                         ? '/membership/checkout?plan=premium'
-                        : '/membership/checkout?plan=lifetime'
+                        : '/saju/new'
                   }
                   className={
                     index === 1
@@ -145,7 +145,7 @@ export default function MembershipPage() {
                 프리미엄 시작하기
               </Link>
               <Link
-                href="/membership/checkout?plan=lifetime"
+                href="/saju/new"
                 className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/14 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/20"
               >
                 평생 리포트 바로 보기
