@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 export type LayoutMode = 'vertical' | 'horizontal';
 
-export const LAYOUT_MODE_STORAGE_KEY = 'moonlight:layout-mode-v2';
+export const LAYOUT_MODE_STORAGE_KEY = 'moonlight:layout-mode-v3';
 
 const LAYOUT_MODES: Array<{
   value: LayoutMode;
@@ -29,7 +29,7 @@ const LAYOUT_MODES: Array<{
 ];
 
 function normalizeLayoutMode(value: string | null): LayoutMode {
-  return value === 'vertical' ? 'vertical' : 'horizontal';
+  return value === 'horizontal' ? 'horizontal' : 'vertical';
 }
 
 function applyLayoutMode(mode: LayoutMode) {
@@ -46,7 +46,7 @@ export function LayoutModeControl({
   compact?: boolean;
   className?: string;
 }) {
-  const [mode, setMode] = useState<LayoutMode>('horizontal');
+  const [mode, setMode] = useState<LayoutMode>('vertical');
 
   useEffect(() => {
     const storedMode = normalizeLayoutMode(
@@ -64,10 +64,10 @@ export function LayoutModeControl({
   return (
     <div
       className={cn(
-        'rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-1',
+        'rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-0.5',
         compact
-          ? 'hidden items-center gap-1 lg:inline-flex'
-          : 'hidden grid-cols-2 gap-1 lg:grid',
+          ? 'hidden items-center gap-0.5 lg:inline-flex'
+          : 'hidden w-fit grid-cols-2 gap-0.5 lg:grid',
         className
       )}
       aria-label="레이아웃 보기 선택"
@@ -84,14 +84,14 @@ export function LayoutModeControl({
             title={item.description}
             onClick={() => selectMode(item.value)}
             className={cn(
-              'inline-flex items-center justify-center gap-2 rounded-[0.8rem] px-3 py-2 text-xs font-medium transition-colors',
+              'inline-flex h-8 items-center justify-center gap-1.5 rounded-full px-2.5 text-[11px] font-medium transition-colors',
               selected
                 ? 'bg-[var(--app-gold)] text-[var(--app-bg)]'
                 : 'text-[var(--app-copy-muted)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]',
-              !compact && 'min-h-11'
+              !compact && 'min-w-16'
             )}
           >
-            <Icon className="h-3.5 w-3.5" />
+            <Icon className="h-3 w-3" />
             <span>{compact ? item.shortLabel : item.label}</span>
           </button>
         );

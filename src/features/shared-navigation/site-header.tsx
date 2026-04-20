@@ -78,6 +78,10 @@ function DockIcon({ label }: { label: string }) {
   }
 }
 
+function creditLabel(user: User | null, credits: number | null) {
+  return user ? `${credits ?? '...'} 코인` : '코인';
+}
+
 function DesktopNavLink({
   item,
   pathname,
@@ -332,18 +336,27 @@ function MobileChrome({
                   </Link>
                 );
               })}
+              <Link href="/credits" className="app-top-credit-chip">
+                <CreditCard className="h-3.5 w-3.5" />
+                {creditLabel(user, credits)}
+              </Link>
             </nav>
 
             <div className="app-top-actions flex items-center gap-2">
               <Link href="/membership" className="app-top-action-link hidden lg:inline-flex">
                 멤버십
               </Link>
-              <Link href="/credits" className="app-top-action-link hidden lg:inline-flex">
-                플랜
-              </Link>
               <div className="hidden sm:block">
                 <LayoutModeControl compact />
               </div>
+              <Link
+                href="/credits"
+                className="app-top-credit-chip inline-flex lg:hidden"
+                aria-label={`보유 코인 ${creditLabel(user, credits)}`}
+              >
+                <CreditCard className="h-3.5 w-3.5" />
+                {creditLabel(user, credits)}
+              </Link>
               <Link
                 href="/notifications"
                 className="app-top-icon-link inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
@@ -381,13 +394,6 @@ function MobileChrome({
           </div>
 
           <div className="mt-4 flex gap-2 overflow-x-auto pb-1 lg:hidden">
-            <LayoutModeControl compact className="shrink-0 sm:hidden" />
-            <Link
-              href="/credits"
-              className="shrink-0 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)]"
-            >
-              {user ? `${credits ?? '...'} 코인` : '플랜'}
-            </Link>
             {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
               const active = matchesPath(item, pathname);
 
@@ -411,12 +417,6 @@ function MobileChrome({
 
         <div className="app-top-header-shortcuts hidden border-t border-[var(--app-line)] bg-[var(--app-surface-muted)] lg:block">
           <div className="app-top-category-inner mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto px-8 py-3">
-            <Link
-              href="/credits"
-              className="app-top-category-chip shrink-0 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-sm text-[var(--app-copy)]"
-            >
-              {user ? `${credits ?? '...'} 코인` : '플랜'}
-            </Link>
             {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
               const active = matchesPath(item, pathname);
 
@@ -440,8 +440,8 @@ function MobileChrome({
         </div>
       </header>
 
-      <nav className="app-mobile-dock fixed inset-x-0 bottom-0 z-40 px-4 py-3 lg:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-4 gap-2">
+      <nav className="app-mobile-dock fixed inset-x-0 bottom-0 z-40 px-4 py-3 lg:hidden" aria-label="주 메뉴">
+        <div className="app-mobile-dock-inner mx-auto grid max-w-md grid-cols-4">
           {MOBILE_PRIMARY_NAV_ITEMS.map((item) => {
             const active = matchesPath(item, pathname);
 
