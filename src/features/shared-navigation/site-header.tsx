@@ -93,11 +93,21 @@ function DesktopNavLink({
   return (
     <Link
       href={item.href}
+      scroll={false}
+      onClick={(event) => {
+        if (active) event.preventDefault();
+      }}
       data-active={active}
-      className="app-nav-card flex items-center gap-3 px-3 py-3 text-[var(--app-copy-muted)]"
+      className={cn(
+        'app-nav-card flex items-center text-[var(--app-copy-muted)]',
+        compact ? 'gap-2 px-2.5 py-1.5' : 'gap-2.5 px-3 py-2'
+      )}
     >
       <span
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border bg-[var(--app-surface-muted)] font-[var(--font-heading)] text-sm font-semibold"
+        className={cn(
+          'flex shrink-0 items-center justify-center rounded-xl border bg-[var(--app-surface-muted)] font-[var(--font-heading)] font-semibold',
+          compact ? 'h-7 w-7 text-xs' : 'h-8 w-8 text-sm'
+        )}
         style={{
           borderColor: active ? meta.accent : 'var(--app-line)',
           color: meta.accent,
@@ -125,6 +135,31 @@ function DesktopNavLink({
   );
 }
 
+function DesktopNavChip({ item, pathname }: { item: NavItem; pathname: string }) {
+  const active = matchesPath(item, pathname);
+  const meta = getNavMeta(item);
+
+  return (
+    <Link
+      href={item.href}
+      scroll={false}
+      onClick={(event) => {
+        if (active) event.preventDefault();
+      }}
+      data-active={active}
+      className="app-nav-card flex min-h-10 items-center justify-center gap-1.5 px-2 py-2 text-xs font-medium text-[var(--app-copy-muted)]"
+    >
+      <span
+        className="font-[var(--font-heading)] text-xs"
+        style={{ color: meta.accent }}
+      >
+        {meta.glyph}
+      </span>
+      <span className="truncate">{item.label}</span>
+    </Link>
+  );
+}
+
 function DesktopSidebar({
   pathname,
   user,
@@ -144,7 +179,7 @@ function DesktopSidebar({
     <aside className="app-desktop-sidebar hidden flex-col overflow-hidden lg:flex">
       <div className="app-starfield" />
 
-      <div className="relative z-10 border-b border-[var(--app-line)] px-6 py-7">
+      <div className="relative z-10 border-b border-[var(--app-line)] px-6 py-5">
         <Link href="/" className="group block">
           <div className="font-[var(--font-heading)] text-[11px] tracking-[0.48em] text-[var(--app-gold)]/72">
             月 光 先 生
@@ -161,26 +196,68 @@ function DesktopSidebar({
         </Link>
       </div>
 
-      <div className="relative z-10 border-b border-[var(--app-line)] px-5 py-5">
-        <div className="flex items-center gap-3 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/16 font-[var(--font-heading)] text-lg text-[var(--app-gold-text)]">
-            {user ? '我' : '月'}
-          </div>
-          <div className="min-w-0">
-            <div className="truncate text-sm font-medium text-[var(--app-ivory)]">
-              {displayName} 선생님
+      <div className="relative z-10 border-b border-[var(--app-line)] px-5 py-3">
+        <div className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/16 font-[var(--font-heading)] text-lg text-[var(--app-gold-text)]">
+              {user ? '我' : '月'}
             </div>
-            <div className="mt-1 text-xs text-[var(--app-copy-soft)]">
-              {user ? `${credits ?? '...'} 코인 보유` : '로그인하면 기록 저장'}
+            <div className="min-w-0">
+              <div className="truncate text-sm font-medium text-[var(--app-ivory)]">
+                {displayName} 선생님
+              </div>
+              <div className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                {user ? `${credits ?? '...'} 코인 보유` : '로그인하면 기록 저장'}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 grid gap-2">
+            {user ? (
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-full border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-3 text-xs font-medium text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                로그아웃
+              </button>
+            ) : (
+              <Link
+                href={authHref}
+                scroll={false}
+                className="inline-flex h-9 w-full items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-3 text-xs font-medium text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface)]"
+              >
+                로그인
+              </Link>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href="/credits"
+                scroll={false}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 text-xs text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+              >
+                <CreditCard className="h-3.5 w-3.5" />
+                코인 충전
+              </Link>
+              <Link
+                href="/membership"
+                scroll={false}
+                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-[var(--app-gold)]/25 bg-[var(--app-gold)]/12 px-3 text-xs font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                프리미엄
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
-      <nav className="relative z-10 flex-1 space-y-5 overflow-y-auto px-4 py-5">
+      <nav className="relative z-10 flex-1 space-y-3 px-4 py-3">
         <div>
           <div className="app-caption px-2">주요 여정</div>
-          <div className="mt-3 space-y-2">
+          <div className="mt-2 space-y-1.5">
             {PRIMARY_NAV_ITEMS.map((item) => (
               <DesktopNavLink key={item.label} item={item} pathname={pathname} />
             ))}
@@ -189,69 +266,17 @@ function DesktopSidebar({
 
         <div>
           <div className="app-caption px-2">여섯 지혜</div>
-          <div className="mt-3 space-y-2">
+          <div className="mt-2 grid grid-cols-2 gap-2">
             {HEADER_SECONDARY_NAV_ITEMS.map((item) => (
-              <DesktopNavLink
-                key={item.label}
-                item={item}
-                pathname={pathname}
-                compact
-              />
+              <DesktopNavChip key={item.label} item={item} pathname={pathname} />
             ))}
           </div>
         </div>
       </nav>
 
-      <div className="relative z-10 border-t border-[var(--app-line)] px-5 py-5">
-        <div className="mb-3">
-          <div className="app-caption mb-2">보기 방식</div>
-          <LayoutModeControl />
-        </div>
-
-        <div className="rounded-[1.2rem] border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/10 p-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-[var(--app-gold-text)]">
-            <Sparkles className="h-4 w-4" />
-            프리미엄 플랜
-          </div>
-          <p className="mt-2 text-xs leading-6 text-[var(--app-copy-muted)]">
-            심층 리포트와 가족 사주를 한곳에서 이어보실 수 있습니다.
-          </p>
-          <div className="mt-3 grid gap-2">
-            <Link
-              href="/membership"
-              className="inline-flex h-9 items-center justify-center rounded-full bg-[var(--app-gold)] px-3 text-xs font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)]"
-            >
-              멤버십 보기
-            </Link>
-            <Link
-              href="/credits"
-              className="inline-flex h-9 items-center justify-center gap-2 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 text-xs text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-            >
-              <CreditCard className="h-3.5 w-3.5" />
-              코인 충전
-            </Link>
-          </div>
-        </div>
-
-        <div className="mt-3">
-          {user ? (
-            <button
-              type="button"
-              onClick={onSignOut}
-              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-            >
-              <LogOut className="h-4 w-4" />
-              로그아웃
-            </button>
-          ) : (
-            <Link
-              href={authHref}
-              className="inline-flex h-10 w-full items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-4 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface)]"
-            >
-              로그인
-            </Link>
-          )}
-        </div>
+      <div className="relative z-10 border-t border-[var(--app-line)] px-5 py-3">
+        <div className="app-caption mb-2">보기 방식</div>
+        <LayoutModeControl />
       </div>
     </aside>
   );

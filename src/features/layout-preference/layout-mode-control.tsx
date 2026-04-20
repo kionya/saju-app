@@ -65,7 +65,9 @@ export function LayoutModeControl({
     <div
       className={cn(
         'rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-1',
-        compact ? 'inline-flex items-center gap-1' : 'grid grid-cols-2 gap-1',
+        compact
+          ? 'hidden items-center gap-1 lg:inline-flex'
+          : 'hidden grid-cols-2 gap-1 lg:grid',
         className
       )}
       aria-label="레이아웃 보기 선택"

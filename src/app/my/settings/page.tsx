@@ -48,11 +48,11 @@ export default function MySettingsPage() {
           <div>
             <div className="app-caption">레이아웃 보기</div>
             <h2 className="mt-3 font-[var(--font-heading)] text-2xl font-semibold text-[var(--app-ivory)]">
-              PC와 모바일 보기 방식을 선생님께 맞게 바꿉니다
+              PC 보기 방식을 선생님께 맞게 바꿉니다
             </h2>
             <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-              세로형은 ZIP 세로 시안처럼 좌측 사이드바와 긴 흐름을 기본으로 쓰고,
-              가로형은 상단 네비를 중심으로 넓은 화면을 빠르게 훑는 방식입니다. 선택하면 바로 적용되고 이 브라우저에 저장됩니다.
+              모바일은 하단 독 중심의 안정적인 보기로 고정하고, PC에서만 세로형 좌측 사이드바와 가로형 상단 네비를 선택할 수 있습니다.
+              선택하면 바로 적용되고 이 브라우저에 저장됩니다.
             </p>
           </div>
           <LayoutModeControl />
