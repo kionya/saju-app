@@ -42,6 +42,19 @@ export interface TarotSpreadCard {
   reading: TarotReading;
 }
 
+export interface TarotPickerCard {
+  slot: number;
+  card: TarotApiCard;
+  orientation: TarotOrientation;
+}
+
+export interface TarotPickerDeck {
+  cards: TarotPickerCard[];
+  source: TarotDeckSource;
+  tone: TarotQuestionTone;
+  toneLabel: string;
+}
+
 const TAROT_API_CARDS_URL = 'https://tarotapi.dev/api/v1/cards';
 const REVALIDATE_SECONDS = 60 * 60 * 12;
 const TAROT_API_TIMEOUT_MS = 2_500;
@@ -415,6 +428,25 @@ export async function getTarotReadingForQuestion({
   });
 }
 
+export async function getTarotPickerDeck(question?: string): Promise<TarotPickerDeck> {
+  const deck = await getTarotDeck();
+  const normalizedQuestion = normalizeQuestion(question);
+  const seed = buildQuestionSeed(normalizedQuestion);
+  const cards = shuffleCards(deck.cards, `${seed}:picker`);
+  const tone = detectQuestionTone(normalizedQuestion);
+
+  return {
+    cards: cards.map((card, index) => ({
+      slot: index + 1,
+      card,
+      orientation: pickOrientation(`${seed}:picker:${index}:${card.name_short}`),
+    })),
+    source: deck.source,
+    tone,
+    toneLabel: TONE_LABELS[tone],
+  };
+}
+
 export async function getTarotSpreadForQuestion(question?: string): Promise<TarotSpreadCard[]> {
   const deck = await getTarotDeck();
   const normalizedQuestion = normalizeQuestion(question);
@@ -566,6 +598,22 @@ function pickCard(cards: TarotApiCard[], seed: string, excluded = new Set<string
 
 function pickOrientation(seed: string): TarotOrientation {
   return stableHash(seed) % 100 < 22 ? 'reversed' : 'upright';
+}
+
+function shuffleCards(cards: TarotApiCard[], seed: string) {
+  return cards
+    .map((card) => ({
+      card,
+      order: stableHash(`${seed}:${card.name_short}`),
+    }))
+    .sort((left, right) => {
+      if (left.order !== right.order) {
+        return left.order - right.order;
+      }
+
+      return left.card.name_short.localeCompare(right.card.name_short);
+    })
+    .map(({ card }) => card);
 }
 
 function normalizeOrientation(value?: string): TarotOrientation | null {

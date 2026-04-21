@@ -3,11 +3,12 @@ import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/badge';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import {
-  getTarotReadingForQuestion,
+  getTarotPickerDeck,
   getTarotSpreadForQuestion,
   normalizeQuestion,
 } from '@/lib/tarot-api';
 import { AppShell } from '@/shared/layout/app-shell';
+import { TarotCardPicker } from './tarot-card-picker';
 
 interface Props {
   searchParams: Promise<{ question?: string }>;
@@ -26,8 +27,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function TarotPickPage({ searchParams }: Props) {
   const { question } = await searchParams;
   const currentQuestion = normalizeQuestion(question);
-  const reading = await getTarotReadingForQuestion({ question: currentQuestion });
+  const pickerDeck = await getTarotPickerDeck(currentQuestion);
   const premiumSpread = await getTarotSpreadForQuestion(currentQuestion);
+  const sourceLabel = pickerDeck.source === 'api' ? '외부 78장 덱' : '로컬 78장 덱';
+  const pickerCards = pickerDeck.cards.map(({ card }) => ({ cardId: card.name_short }));
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
@@ -50,12 +53,12 @@ export default async function TarotPickPage({ searchParams }: Props) {
             </h1>
             <div className="text-sm text-[var(--app-plum)]">“{currentQuestion}”</div>
             <p className="mt-2 text-sm text-[var(--app-copy-muted)]">
-              오늘의 덱은 {reading.toneLabel}으로 차분히 섞어두었습니다
+              오늘의 덱은 {pickerDeck.toneLabel}으로 차분히 섞어두었습니다
             </p>
           </div>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
+        <section className="mt-8 grid gap-6 lg:grid-cols-[0.72fr_1.28fr]">
           <article className="app-panel p-6">
             <div className="app-caption">카드를 뽑기 전에</div>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
@@ -71,8 +74,8 @@ export default async function TarotPickPage({ searchParams }: Props) {
             </div>
 
             <div className="mt-5 rounded-[1.2rem] border border-[var(--app-plum)]/25 bg-[linear-gradient(135deg,rgba(166,124,181,0.12),rgba(10,18,36,0.9))] px-4 py-4 text-sm leading-7 text-[var(--app-copy)]">
-              같은 질문은 오늘 하루 같은 카드로 이어집니다. 새로고침을 해도 결과가 흔들리지
-              않도록 날짜와 질문을 함께 읽어 한 장을 정합니다.
+              화면이 열리면 덱이 새로 섞입니다. 직접 한 장을 고르거나 랜덤 버튼으로 한 장을
+              뽑으면 그 카드의 이름과 방향으로 리딩이 이어집니다.
             </div>
 
             <div className="mt-5 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4">
@@ -92,53 +95,11 @@ export default async function TarotPickPage({ searchParams }: Props) {
             </div>
           </article>
 
-          <article className="app-panel p-6">
-            <div className="relative mx-auto flex h-[20rem] max-w-md items-end justify-center">
-              {[-96, -64, -32].map((offset, index) => (
-                <div
-                  key={`left-${offset}`}
-                  className="absolute bottom-4 h-32 w-[4.5rem] rounded-[0.8rem] border border-[var(--app-plum)]/45 bg-[linear-gradient(180deg,rgba(166,124,181,0.96),rgba(20,24,44,0.92))]"
-                  style={{
-                    transform: `translateX(${offset}px) rotate(${(-26 + index * 8).toString()}deg)`,
-                    opacity: 0.72 + index * 0.08,
-                  }}
-                />
-              ))}
-              <div className="absolute bottom-7 z-10 flex h-40 w-28 items-center justify-center rounded-[1rem] border-2 border-[var(--app-gold)]/70 bg-[linear-gradient(180deg,rgba(210,176,114,0.94),rgba(166,124,181,0.88))] shadow-[0_0_36px_rgba(210,176,114,0.18)]">
-                <div className="font-[var(--font-heading)] text-5xl text-[var(--app-bg)]">月</div>
-              </div>
-              {[32, 64, 96].map((offset, index) => (
-                <div
-                  key={`right-${offset}`}
-                  className="absolute bottom-4 h-32 w-[4.5rem] rounded-[0.8rem] border border-[var(--app-plum)]/45 bg-[linear-gradient(180deg,rgba(166,124,181,0.96),rgba(20,24,44,0.92))]"
-                  style={{
-                    transform: `translateX(${offset}px) rotate(${(10 + index * 8).toString()}deg)`,
-                    opacity: 0.9 - index * 0.08,
-                  }}
-                />
-              ))}
-            </div>
-
-            <p className="mt-3 text-center text-xs tracking-[0.22em] text-[var(--app-gold)]/72">
-              마음에 닿는 한 장을 천천히 선택해주세요
-            </p>
-
-            <div className="mt-8 flex justify-center">
-              <Link
-                href={{
-                  pathname: '/tarot/daily/result',
-                  query: {
-                    question: currentQuestion,
-                    cardId: reading.card.name_short,
-                    orientation: reading.orientation,
-                  },
-                }}
-                className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--app-plum)] px-8 text-base font-semibold text-white transition-colors hover:bg-[color:rgba(166,124,181,0.88)]"
-              >
-                이 카드를 뽑겠습니다
-              </Link>
-            </div>
-          </article>
+          <TarotCardPicker
+            cards={pickerCards}
+            question={currentQuestion}
+            sourceLabel={sourceLabel}
+          />
         </section>
       </div>
     </AppShell>

@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import {
   getTarotDeck,
+  getTarotPickerDeck,
   getTarotReadingForQuestion,
   type TarotApiCard,
 } from './tarot-api';
+import { createRandomTarotDrawDeck, pickRandomTarotCard } from './tarot-picker-random';
 
 declare const test: (name: string, fn: () => void | Promise<void>) => void;
 
@@ -132,4 +134,57 @@ test('tarot reading stays stable for the same question on the same day', async (
   } finally {
     restoreFetch();
   }
+});
+
+test('tarot picker exposes a stable full deck for direct card selection', async () => {
+  mockFetch(
+    (async () => {
+      throw new Error('network unavailable');
+    }) as typeof fetch
+  );
+
+  try {
+    const first = await getTarotPickerDeck('지금 결정해야 할 선택에 대하여');
+    const second = await getTarotPickerDeck('지금 결정해야 할 선택에 대하여');
+
+    assert.equal(first.cards.length, 78);
+    assert.equal(new Set(first.cards.map(({ card }) => card.name_short)).size, 78);
+    assert.deepEqual(
+      first.cards.map(({ card, orientation }) => `${card.name_short}:${orientation}`),
+      second.cards.map(({ card, orientation }) => `${card.name_short}:${orientation}`)
+    );
+    assert.ok(
+      first.cards.every(
+        ({ orientation }) => orientation === 'upright' || orientation === 'reversed'
+      )
+    );
+  } finally {
+    restoreFetch();
+  }
+});
+
+test('tarot client picker can randomize card order and orientations', () => {
+  const cards = ['ar00', 'ma01', 'cu02', 'sw03'].map((cardId) => ({ cardId }));
+  const randomized = createRandomTarotDrawDeck(cards, () => 0);
+
+  assert.deepEqual(
+    randomized.map(({ slot }) => slot),
+    [1, 2, 3, 4]
+  );
+  assert.equal(new Set(randomized.map(({ cardId }) => cardId)).size, 4);
+  assert.ok(randomized.every(({ orientation }) => orientation === 'reversed'));
+  assert.notDeepEqual(
+    randomized.map(({ cardId }) => cardId),
+    cards.map(({ cardId }) => cardId)
+  );
+});
+
+test('tarot random draw picks one card from the visible deck', () => {
+  const deck = createRandomTarotDrawDeck(
+    ['ar00', 'ma01', 'cu02'].map((cardId) => ({ cardId })),
+    () => 0
+  );
+  const picked = pickRandomTarotCard(deck, () => 1);
+
+  assert.equal(picked?.cardId, deck[1]?.cardId);
 });
