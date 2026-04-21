@@ -136,7 +136,7 @@ function formatEvidenceKeyLabel(key: string) {
 function buildAiFallbackText(report: ReturnType<typeof buildSajuReport>) {
   const highlights = report.summaryHighlights.map((summary) => `- ${summary}`).join('\n');
   const evidence = report.evidenceCards
-    .map((card) => `- ${card.label}: ${card.title}`)
+    .map((card) => `- ${card.label}: ${card.title}. ${card.advice.todayAction}`)
     .join('\n');
   const citations = report.classicalCitations
     .map((citation) => `- ${citation.sourceTitle}: ${citation.title}`)
@@ -340,57 +340,80 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
         <section className="space-y-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="app-caption">명식 근거 정리</div>
+              <div className="app-caption">현실 조언 정리</div>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--app-ivory)]">
-                강약, 격국, 용신과 합충·공망·신살을 따로 봅니다.
+                전문 근거를 오늘의 행동으로 바꿔 봅니다.
               </h2>
             </div>
             <p className="max-w-xl text-sm leading-7 text-[var(--app-copy-muted)]">
-              상단 요약은 짧게 유지하고, 판단 근거는 아래 카드에서 항목별로 분리했습니다.
+              어려운 용어는 작게 두고, 무슨 뜻인지·삶에서 어떻게 보이는지·오늘 무엇을 하면 좋은지로 나눴습니다.
             </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {report.evidenceCards.map((card) => (
-              <article key={card.key} className="moon-orbit-card p-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="app-caption">{card.label}</div>
-                  <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[11px] text-[var(--app-copy-soft)]">
-                    {card.confidence}
-                  </span>
-                </div>
-                <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">{card.title}</h3>
-                <p className="app-body-copy mt-3 text-sm">{card.body}</p>
-                <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
-                  {card.source.map((source) => (
-                    <span
-                      key={`${card.key}-${source}`}
-                      className="rounded-full border border-[var(--app-gold)]/20 bg-[var(--app-gold)]/8 px-2.5 py-1 text-[var(--app-gold-soft)]"
-                    >
-                      {source}
+            {report.evidenceCards.map((card) => {
+              const adviceRows = [
+                { label: '뜻', value: card.advice.meaning },
+                { label: '현실', value: card.advice.lifePattern },
+                { label: '오늘', value: card.advice.todayAction },
+              ];
+
+              return (
+                <article key={card.key} className="moon-orbit-card p-5">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="app-caption">{card.label}</div>
+                    <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[11px] text-[var(--app-copy-soft)]">
+                      {card.confidence}
                     </span>
-                  ))}
-                  {card.topicMapping.map((topic) => (
-                    <span
-                      key={`${card.key}-${topic}`}
-                      className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[var(--app-copy-soft)]"
-                    >
-                      {FOCUS_TOPIC_META[topic].label}
-                    </span>
-                  ))}
-                </div>
-                <div className="mt-4 grid gap-2">
-                  {card.details.map((detail, index) => (
-                    <div
-                      key={`${card.key}-${index}-${detail}`}
-                      className="rounded-2xl border border-[var(--app-line)] bg-[rgba(8,10,18,0.32)] px-3 py-2 text-sm leading-7 text-[var(--app-copy)]"
-                    >
-                      {detail}
-                    </div>
-                  ))}
-                </div>
-              </article>
-            ))}
+                  </div>
+                  <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">{card.title}</h3>
+                  <p className="app-body-copy mt-3 text-sm">{card.body}</p>
+
+                  <div className="mt-5 divide-y divide-[var(--app-line)] border-y border-[var(--app-line)]">
+                    {adviceRows.map((row) => (
+                      <div key={`${card.key}-${row.label}`} className="grid gap-2 py-3 sm:grid-cols-[4.5rem_1fr]">
+                        <div className="text-xs font-medium tracking-[0.18em] text-[var(--app-gold-soft)]">
+                          {row.label}
+                        </div>
+                        <p className="text-sm leading-7 text-[var(--app-copy)]">{row.value}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
+                    {card.source.map((source) => (
+                      <span
+                        key={`${card.key}-${source}`}
+                        className="rounded-full border border-[var(--app-gold)]/20 bg-[var(--app-gold)]/8 px-2.5 py-1 text-[var(--app-gold-soft)]"
+                      >
+                        {source}
+                      </span>
+                    ))}
+                    {card.topicMapping.map((topic) => (
+                      <span
+                        key={`${card.key}-${topic}`}
+                        className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[var(--app-copy-soft)]"
+                      >
+                        {FOCUS_TOPIC_META[topic].label}
+                      </span>
+                    ))}
+                  </div>
+
+                  <details className="mt-4 border-t border-[var(--app-line)] pt-4">
+                    <summary className="cursor-pointer text-xs tracking-[0.18em] text-[var(--app-copy-soft)] transition-colors hover:text-[var(--app-ivory)]">
+                      계산 근거 보기
+                    </summary>
+                    <ul className="mt-3 space-y-2">
+                      {card.details.map((detail, index) => (
+                        <li key={`${card.key}-${index}-${detail}`} className="text-sm leading-7 text-[var(--app-copy-muted)]">
+                          {detail}
+                        </li>
+                      ))}
+                    </ul>
+                  </details>
+                </article>
+              );
+            })}
           </div>
         </section>
 

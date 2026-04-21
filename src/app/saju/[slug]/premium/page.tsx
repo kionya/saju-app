@@ -118,8 +118,9 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
       title: '2. 오행 분포와 강약',
       lead: `${dominant} 기운이 가장 앞에 있고, ${weakest} 기운을 어떻게 보완하느냐가 평생 균형의 핵심입니다.`,
       paragraphs: compactStrings([
-        strength ? `${strength.title}: ${strength.body}` : null,
-        strength?.details.join(' '),
+        strength ? `${strength.title}: ${strength.advice.meaning}` : null,
+        strength?.advice.lifePattern,
+        strength?.advice.todayAction,
         todayReport.summaryHighlights[1],
       ]),
       highlights: Object.entries(sajuData.fiveElements.byElement).map(
@@ -134,8 +135,8 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
         yongsinLabel ? `보완 축은 ${yongsinLabel}입니다.` : null,
       ]).join(' '),
       paragraphs: compactStrings([
-        pattern ? `${pattern.body} ${pattern.details.join(' ')}` : null,
-        yongsin ? `${yongsin.body} ${yongsin.details.join(' ')}` : null,
+        pattern ? `${pattern.body} ${pattern.advice.lifePattern}` : null,
+        yongsin ? `${yongsin.body} ${yongsin.advice.todayAction}` : null,
         `평생 운을 볼 때는 타고난 구조를 고정값으로 단정하기보다, ${supportLabels} 기운을 생활 환경과 선택 안에 얼마나 안정적으로 들이는지가 중요합니다.`,
       ]),
     },

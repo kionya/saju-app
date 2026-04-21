@@ -62,11 +62,18 @@ export interface ReportEvidenceComputed {
   specialSals?: string[];
 }
 
+export interface ReportEvidenceAdvice {
+  meaning: string;
+  lifePattern: string;
+  todayAction: string;
+}
+
 export interface ReportEvidenceCard {
   key: ReportEvidenceKey;
   label: string;
   title: string;
   body: string;
+  advice: ReportEvidenceAdvice;
   details: string[];
   computed: ReportEvidenceComputed;
   source: ReportEvidenceSource[];

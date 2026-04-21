@@ -1,4 +1,4 @@
-﻿import type { SajuDataV1, SajuSymbolRef, TenGodCode } from '@/domain/saju/engine/saju-data-v1';
+﻿import type { SajuDataV1, SajuSymbolRef, StrengthLevel, TenGodCode } from '@/domain/saju/engine/saju-data-v1';
 import type { OrreryRelation } from '@/domain/saju/engine/orrery-adapter';
 import {
   ELEMENT_INFO,
@@ -18,7 +18,7 @@ import type {
   ReportTimelineItem,
   SajuReport,
 } from './types';
-import { getEvidenceSource, getEvidenceTopicMapping } from './topic-rule-table';
+import { getEvidenceSource, getEvidenceTopicMapping, getReportTopicRule } from './topic-rule-table';
 
 export const FOCUS_TOPIC_META: Record<FocusTopic, FocusTopicMeta> = {
   today: {
@@ -94,6 +94,131 @@ const TEN_GOD_INTERPRETATION: Record<TenGodCode, string> = {
   정인: '돌봄, 후원, 배움의 흐름이 삶에서 중요한 힘으로 작용합니다. 누군가를 품고, 또 누군가에게 도움을 받는 인연이 크게 남습니다.',
 };
 
+const FOCUS_ACTION_NUDGE: Record<FocusTopic, string> = {
+  today: '오늘 안에 확인 가능한 작은 기준 하나로 끝내세요.',
+  love: '감정을 맞히려 애쓰기보다 바라는 점을 부드럽게 한 문장으로 말하세요.',
+  wealth: '금액, 날짜, 책임자를 확인한 뒤 움직이세요.',
+  career: '업무 범위와 마감 기준을 먼저 맞추세요.',
+  relationship: '상대의 의도를 추측하기보다 기대와 역할을 직접 확인하세요.',
+};
+
+const STRENGTH_ADVICE: Record<StrengthLevel, { meaning: string; lifePattern: string; action: Record<FocusTopic, string> }> = {
+  신강: {
+    meaning: '스스로 밀고 가는 힘이 강해 추진력은 좋지만, 과하면 혼자 떠안는 흐름으로 바뀌기 쉽습니다.',
+    lifePattern: '일이나 관계에서 먼저 정리하고 책임지려는 모습이 자주 나오며, 쉬는 타이밍을 놓치면 피로가 쌓입니다.',
+    action: {
+      today: '오늘은 맡을 일과 넘길 일을 한 줄로 나누고, 바로 처리할 일 하나만 먼저 끝내세요.',
+      love: '내 요구를 바로 밀어붙이기보다 상대가 받아들일 수 있는 표현으로 낮춰 말하세요.',
+      wealth: '새 지출이나 확장보다 이미 정한 예산과 회수 일정을 먼저 점검하세요.',
+      career: '주도권은 잡되 담당자, 마감일, 완성 기준을 나누어 혼자 떠안지 않게 하세요.',
+      relationship: '대화를 이끌더라도 마지막에는 상대가 중요하게 보는 기준을 한 번 확인하세요.',
+    },
+  },
+  중화: {
+    meaning: '한쪽으로 크게 치우치지 않아 조율 감각은 좋지만, 기준이 없으면 결정이 늦어질 수 있습니다.',
+    lifePattern: '여러 입장을 살피다 보니 균형은 잘 잡지만, 선택지를 오래 열어두며 에너지를 쓰는 편입니다.',
+    action: {
+      today: '오늘은 선택지를 더 늘리지 말고 결정 기준 하나와 마감 시간을 먼저 정하세요.',
+      love: '상대 마음을 오래 해석하기보다 지금 확인하고 싶은 감정 하나만 묻는 편이 좋습니다.',
+      wealth: '수익 가능성보다 손실 한도와 보류 기준을 먼저 정하면 흔들림이 줄어듭니다.',
+      career: '완벽한 답을 기다리기보다 오늘 안에 승인받을 수 있는 중간 결과물을 만드세요.',
+      relationship: '양쪽 입장을 모두 안고 가기보다 내가 지킬 선과 양보할 선을 분리하세요.',
+    },
+  },
+  신약: {
+    meaning: '외부 환경과 사람의 영향이 크게 들어오므로, 혼자 버티기보다 나를 받쳐주는 조건을 만드는 것이 중요합니다.',
+    lifePattern: '분위기나 상대 반응에 민감하게 흔들릴 수 있어, 좋은 사람과 안정된 루틴을 만날수록 실력이 잘 살아납니다.',
+    action: {
+      today: '오늘은 어려운 일을 혼자 끌지 말고 도움을 청할 사람과 확인할 자료를 먼저 정하세요.',
+      love: '상대에게 맞추기 전에 내 컨디션과 가능한 범위를 먼저 말해두세요.',
+      wealth: '큰 결정보다 고정비, 미납, 반복 지출처럼 새는 곳을 먼저 막는 편이 안전합니다.',
+      career: '성과 압박을 혼자 안기보다 우선순위와 필요한 지원을 구체적으로 요청하세요.',
+      relationship: '불편한 부탁은 바로 수락하지 말고 시간을 둔 뒤 가능한 범위를 답하세요.',
+    },
+  },
+};
+
+const TEN_GOD_ADVICE: Record<TenGodCode, { meaning: string; lifePattern: string; action: string }> = {
+  비견: {
+    meaning: '내 기준과 독립성이 강하게 작동하는 구조입니다.',
+    lifePattern: '비슷한 사람과 협력도 잘하지만 경쟁심이나 자존심이 함께 올라올 수 있습니다.',
+    action: '내가 직접 할 일과 함께 맞출 일을 분리하세요.',
+  },
+  겁재: {
+    meaning: '가까운 사람과 역할, 돈, 마음의 경계가 중요해지는 구조입니다.',
+    lifePattern: '정이 깊을수록 부탁과 부담이 섞이기 쉬워 나중에 서운함이 생길 수 있습니다.',
+    action: '친한 사이라도 금액, 일정, 책임 범위는 문장으로 남기세요.',
+  },
+  식신: {
+    meaning: '꾸준히 만들고 키워내는 힘이 삶을 안정시키는 구조입니다.',
+    lifePattern: '결과물을 쌓을 때 마음이 편해지고, 생활 리듬이 흐트러지면 자신감도 같이 흔들립니다.',
+    action: '작은 결과물 하나를 완성해 눈에 보이게 남기세요.',
+  },
+  상관: {
+    meaning: '표현, 문제 제기, 재능 발휘가 강하게 올라오는 구조입니다.',
+    lifePattern: '답답한 틀을 참기 어렵고, 말이 날카로워지면 관계나 조직에서 마찰이 생길 수 있습니다.',
+    action: '하고 싶은 말을 바로 던지기보다 목적과 요청을 나누어 말하세요.',
+  },
+  편재: {
+    meaning: '외부 기회, 사람, 돈의 흐름을 넓게 움직이는 구조입니다.',
+    lifePattern: '기회 포착은 빠르지만 관심사가 흩어지면 관리가 느슨해질 수 있습니다.',
+    action: '새 기회를 보기 전에 지금 가진 자원과 회수 계획을 먼저 적으세요.',
+  },
+  정재: {
+    meaning: '안정, 축적, 관리 감각이 중요한 구조입니다.',
+    lifePattern: '꾸준히 쌓는 데 강하지만 변화가 필요할 때도 익숙한 방식만 고집할 수 있습니다.',
+    action: '지킬 것 하나와 바꿀 것 하나를 분리해 결정하세요.',
+  },
+  편관: {
+    meaning: '압박, 경쟁, 책임 속에서 돌파력이 살아나는 구조입니다.',
+    lifePattern: '위기 대응은 빠르지만 긴장을 오래 품으면 몸과 마음이 쉽게 굳습니다.',
+    action: '가장 급한 문제 하나만 정하고 나머지는 순서를 늦추세요.',
+  },
+  정관: {
+    meaning: '책임, 기준, 평판, 질서가 판단의 중심에 놓이는 구조입니다.',
+    lifePattern: '맡은 역할을 제대로 해내려는 마음이 커서 신뢰를 얻지만, 완벽해야 한다는 압박도 같이 쌓입니다.',
+    action: '오늘 지켜야 할 기준과 내려놓아도 되는 기준을 하나씩만 정하세요.',
+  },
+  편인: {
+    meaning: '직관, 몰입, 남다른 이해 방식이 강하게 작동하는 구조입니다.',
+    lifePattern: '혼자 깊이 파고들 때 답을 잘 찾지만, 생각이 길어지면 실행이 늦어질 수 있습니다.',
+    action: '생각을 더 붙잡기보다 확인할 자료 하나와 실행할 행동 하나를 정하세요.',
+  },
+  정인: {
+    meaning: '배움, 후원, 돌봄을 통해 안정감이 커지는 구조입니다.',
+    lifePattern: '도움을 주고받는 인연이 중요하지만, 지나치게 기다리면 스스로 움직일 타이밍을 놓칠 수 있습니다.',
+    action: '도움받을 부분은 요청하고, 내가 바로 할 수 있는 부분은 작게 시작하세요.',
+  },
+};
+
+const ELEMENT_ADVICE: Record<Element, { keyword: string; lifePattern: string; action: string }> = {
+  목: {
+    keyword: '성장, 계획, 배움',
+    lifePattern: '새로운 루틴을 세우고 관계나 일을 조금씩 확장할 때 균형이 살아납니다.',
+    action: '오늘 할 일을 작은 단계로 나누고 첫 단계를 바로 시작하세요.',
+  },
+  화: {
+    keyword: '표현, 온기, 명확함',
+    lifePattern: '생각을 말이나 글로 밝히고, 사람 사이의 온도를 올릴 때 흐름이 풀립니다.',
+    action: '미뤄둔 답장이나 확인 메시지를 짧고 따뜻하게 보내세요.',
+  },
+  토: {
+    keyword: '정리, 안정, 약속',
+    lifePattern: '흩어진 일정과 물건, 돈의 자리를 정리할수록 마음의 중심도 잡힙니다.',
+    action: '일정, 지출, 약속 중 하나를 정리해 빈틈을 줄이세요.',
+  },
+  금: {
+    keyword: '기준, 결단, 경계',
+    lifePattern: '불필요한 것을 덜어내고 기준을 세울 때 판단이 선명해집니다.',
+    action: '오늘 하지 않을 일 하나를 정해 에너지를 아끼세요.',
+  },
+  수: {
+    keyword: '정보, 휴식, 유연함',
+    lifePattern: '자료를 확인하고 한 발 물러서 생각할 때 무리한 판단을 피할 수 있습니다.',
+    action: '결정 전에 필요한 정보 하나를 더 확인하고 잠깐 쉬어가세요.',
+  },
+};
+
 function clampScore(value: number) {
   return Math.max(48, Math.min(92, Math.round(value)));
 }
@@ -160,6 +285,97 @@ function getSpecialSalGroups(data: SajuDataV1) {
   if (specialSals.hongyeom) cautionary.push('홍염');
 
   return { supportive, cautionary };
+}
+
+function getTopicInfluence(key: ReportEvidenceCard['key'], focusTopic: FocusTopic) {
+  return getReportTopicRule(key).topicInfluence[focusTopic] ?? FOCUS_ACTION_NUDGE[focusTopic];
+}
+
+function buildPendingAdvice(label: string, focusTopic: FocusTopic) {
+  return {
+    meaning: `${label} 계산이 아직 충분히 채워지지 않아 단정하지 않고 참고 정보로만 봅니다.`,
+    lifePattern: '현재 화면에서는 결과를 확정하기보다 어떤 정보가 더 필요하고 어떤 방향을 확인해야 하는지 안내하는 단계입니다.',
+    todayAction: FOCUS_ACTION_NUDGE[focusTopic],
+  };
+}
+
+function buildStrengthAdvice(strength: SajuDataV1['strength'], focusTopic: FocusTopic) {
+  if (!strength) return buildPendingAdvice('강약', focusTopic);
+
+  const advice = STRENGTH_ADVICE[strength.level];
+  return {
+    meaning: advice.meaning,
+    lifePattern: advice.lifePattern,
+    todayAction: advice.action[focusTopic],
+  };
+}
+
+function buildPatternAdvice(pattern: SajuDataV1['pattern'], focusTopic: FocusTopic) {
+  if (!pattern?.tenGod) return buildPendingAdvice('격국', focusTopic);
+
+  const advice = TEN_GOD_ADVICE[pattern.tenGod];
+  return {
+    meaning: `${pattern.name}은 ${advice.meaning}`,
+    lifePattern: advice.lifePattern,
+    todayAction: `${advice.action} ${FOCUS_ACTION_NUDGE[focusTopic]}`,
+  };
+}
+
+function getElementAdvice(symbol: SajuSymbolRef) {
+  if (symbol.type !== 'element') return null;
+  return ELEMENT_ADVICE[symbol.value as Element] ?? null;
+}
+
+function buildYongsinAdvice(yongsin: SajuDataV1['yongsin'], focusTopic: FocusTopic) {
+  if (!yongsin) return buildPendingAdvice('용신', focusTopic);
+
+  const supportSymbols = [yongsin.primary, ...yongsin.secondary];
+  const yongsinLabel = formatSymbolList(supportSymbols);
+  const primaryAdvice = getElementAdvice(yongsin.primary);
+  const supportAdvice = supportSymbols
+    .map(getElementAdvice)
+    .filter((advice): advice is NonNullable<ReturnType<typeof getElementAdvice>> => Boolean(advice));
+  const supportKeywords = supportAdvice.map((advice) => advice.keyword);
+
+  return {
+    meaning: `${yongsinLabel}은 균형을 회복할 때 먼저 보태면 좋은 기운입니다. 생활 언어로는 ${supportKeywords.join(' · ') || '보완할 방향'}입니다.`,
+    lifePattern: supportAdvice.slice(0, 2).map((advice) => advice.lifePattern).join(' ') || '부족하거나 과한 축을 생활 습관과 환경 선택으로 조정할 때 균형이 살아납니다.',
+    todayAction: `${primaryAdvice?.action ?? FOCUS_ACTION_NUDGE[focusTopic]} ${getTopicInfluence('yongsin', focusTopic)}`,
+  };
+}
+
+function buildRelationAdvice(selected: OrreryRelation[], labels: string[], focusTopic: FocusTopic) {
+  if (selected.length === 0) return buildPendingAdvice('합충', focusTopic);
+
+  return {
+    meaning: '합충은 좋고 나쁨을 단정하는 표시가 아니라, 기운이 묶이거나 부딪히는 지점을 보는 보조 신호입니다.',
+    lifePattern: `${labels.join(' · ')} 흐름이 보여서 끌림, 협력, 마찰, 일정 변경이 한꺼번에 올라올 수 있습니다.`,
+    todayAction: `약속, 역할, 말의 의미를 한 번 더 확인하고 중요한 결정은 기록으로 남기세요. ${getTopicInfluence('relations', focusTopic)}`,
+  };
+}
+
+function buildGongmangAdvice(branches: string, slots: string[], focusTopic: FocusTopic) {
+  if (!branches) return buildPendingAdvice('공망', focusTopic);
+
+  const slotLabel = slots.length > 0 ? `${slots.join(' · ')} 쪽에서` : '특정 영역에서';
+  return {
+    meaning: '공망은 비어 있거나 늦게 채워지는 축을 보는 참고 신호입니다. 나쁘다는 뜻보다 확인이 더 필요하다는 뜻에 가깝습니다.',
+    lifePattern: `${branches} 공망은 ${slotLabel} 약속, 기대, 마무리가 흐려지기 쉬운 지점을 알려줍니다.`,
+    todayAction: `구두 약속, 입금, 일정, 답장처럼 빠지기 쉬운 항목을 체크리스트로 한 번 더 확인하세요. ${getTopicInfluence('gongmang', focusTopic)}`,
+  };
+}
+
+function buildSpecialSalsAdvice(supportive: string[], cautionary: string[], focusTopic: FocusTopic) {
+  if (supportive.length === 0 && cautionary.length === 0) return buildPendingAdvice('신살', focusTopic);
+
+  return {
+    meaning: '신살은 단독으로 운을 확정하는 요소가 아니라, 도움받는 통로와 주의할 속도를 세밀하게 나누는 보조 근거입니다.',
+    lifePattern: compactStrings([
+      supportive.length > 0 ? `${supportive.join(' · ')}은 도움, 호감, 기회가 들어오는 통로로 봅니다.` : null,
+      cautionary.length > 0 ? `${cautionary.join(' · ')}은 감정 과열, 말의 세기, 무리수를 조심하라는 신호로 봅니다.` : null,
+    ]).join(' '),
+    todayAction: `도움받을 통로는 활용하되, 주목이나 감정이 올라오는 순간에는 즉답을 피하세요. ${getTopicInfluence('specialSals', focusTopic)}`,
+  };
 }
 
 function buildFiveElementRatio(data: SajuDataV1): ReportEvidenceComputed['fiveElementRatio'] {
@@ -282,7 +498,7 @@ function buildSummaryHighlights(
   }
 }
 
-function buildStrengthEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+function buildStrengthEvidenceCard(data: SajuDataV1, focusTopic: FocusTopic): ReportEvidenceCard {
   const strength = data.strength;
   const computed = buildBaseComputed(data);
   const key = 'strength';
@@ -293,6 +509,7 @@ function buildStrengthEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
       label: '강약',
       title: '강약 계산 준비 중',
       body: '현재 저장본은 seed 데이터라 강약 점수와 근거가 아직 비어 있습니다.',
+      advice: buildStrengthAdvice(strength, focusTopic),
       details: ['강약 계산이 연결되면 일간을 돕는 힘과 누르는 힘의 균형을 이 카드에서 먼저 보여줍니다.'],
       computed,
       source: getEvidenceSource(key),
@@ -306,6 +523,7 @@ function buildStrengthEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     label: '강약',
     title: `${strength.level} · ${strength.score}점`,
     body: STRENGTH_INTERPRETATION[strength.level],
+    advice: buildStrengthAdvice(strength, focusTopic),
     details: strength.rationale.length > 0
       ? strength.rationale.slice(0, 3)
       : ['강약 점수는 계산되었고, 세부 근거 문장은 다음 단계에서 보강됩니다.'],
@@ -316,7 +534,7 @@ function buildStrengthEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
   };
 }
 
-function buildPatternEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+function buildPatternEvidenceCard(data: SajuDataV1, focusTopic: FocusTopic): ReportEvidenceCard {
   const pattern = data.pattern;
   const computed = buildBaseComputed(data);
   const key = 'pattern';
@@ -327,6 +545,7 @@ function buildPatternEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
       label: '격국',
       title: '격국 계산 준비 중',
       body: '격국 필드가 비어 있어도 카드 자리는 유지합니다.',
+      advice: buildPatternAdvice(pattern, focusTopic),
       details: ['월령과 십신 기준의 rule-based 계산이 들어오면 격국 근거가 이 카드로 정리됩니다.'],
       computed,
       source: getEvidenceSource(key),
@@ -342,6 +561,7 @@ function buildPatternEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     body: pattern.tenGod
       ? `${pattern.tenGod}의 역할감과 관계 패턴이 해석의 첫 기준으로 올라옵니다.`
       : '월령의 성격을 기준으로 명식의 큰 구조를 먼저 읽습니다.',
+    advice: buildPatternAdvice(pattern, focusTopic),
     details: pattern.rationale.length > 0
       ? pattern.rationale.slice(0, 3)
       : ['격국명은 준비되었고 상세 근거 문장은 다음 단계에서 보강됩니다.'],
@@ -352,7 +572,7 @@ function buildPatternEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
   };
 }
 
-function buildYongsinEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+function buildYongsinEvidenceCard(data: SajuDataV1, focusTopic: FocusTopic): ReportEvidenceCard {
   const yongsin = data.yongsin;
   const computed = buildBaseComputed(data);
   const key = 'yongsin';
@@ -363,6 +583,7 @@ function buildYongsinEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
       label: '용신',
       title: '용신 계산 준비 중',
       body: '용신과 기신 자리가 열려 있습니다.',
+      advice: buildYongsinAdvice(yongsin, focusTopic),
       details: ['조후와 억부 판정이 채워지면 보완해야 할 기운과 피해야 할 기운을 분리해 보여줍니다.'],
       computed,
       source: getEvidenceSource(key),
@@ -379,6 +600,7 @@ function buildYongsinEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     label: '용신',
     title: yongsinLabel,
     body: `${yongsin.method} 기준으로 ${yongsinLabel}을 보완 축으로 보고, 기신은 ${kiyshinLabel}입니다.`,
+    advice: buildYongsinAdvice(yongsin, focusTopic),
     details: yongsin.rationale.length > 0
       ? yongsin.rationale.slice(0, 3)
       : ['용신 값은 준비되었고 상세 판정 근거는 다음 단계에서 보강됩니다.'],
@@ -394,7 +616,7 @@ function formatRelationEvidenceLine(relation: OrreryRelation) {
   return `${pair}: ${relation.label}${relation.detail ? ` · ${relation.detail}` : ''}`;
 }
 
-function buildRelationEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+function buildRelationEvidenceCard(data: SajuDataV1, focusTopic: FocusTopic): ReportEvidenceCard {
   const key = 'relations';
   const relations = getOrreryExtension(data)?.relations ?? [];
   const tension = relations.find((relation) =>
@@ -420,6 +642,7 @@ function buildRelationEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     body: selected.length > 0
       ? '합충은 명식 안에서 기운이 묶이거나 부딪히는 지점을 보는 근거입니다.'
       : '현재 명식에서 화면에 우선 표시할 합충 관계는 아직 확인되지 않았습니다.',
+    advice: buildRelationAdvice(selected, labels, focusTopic),
     details: selected.length > 0
       ? selected.map(formatRelationEvidenceLine)
       : ['합충 데이터가 들어오면 어떤 글자끼리 작용하는지 이 카드에 분리해 표시됩니다.'],
@@ -445,7 +668,7 @@ function formatPillarSlot(slot: string) {
   }
 }
 
-function buildGongmangEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+function buildGongmangEvidenceCard(data: SajuDataV1, focusTopic: FocusTopic): ReportEvidenceCard {
   const key = 'gongmang';
   const gongmang = getOrreryExtension(data)?.gongmang;
   const branches = gongmang?.branches?.join('·') ?? '';
@@ -462,6 +685,7 @@ function buildGongmangEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     body: branches
       ? '공망은 비어 보이거나 지연되기 쉬운 축을 확인해 약속, 일정, 마무리 방식을 조정하는 근거입니다.'
       : '현재 저장본에서 공망 값은 아직 확인되지 않았습니다.',
+    advice: buildGongmangAdvice(branches, slots, focusTopic),
     details: slots.length > 0
       ? [`작용 위치: ${slots.join(' · ')}`]
       : ['공망 글자가 특정 주에 닿으면 이곳에 작용 위치가 함께 표시됩니다.'],
@@ -472,7 +696,7 @@ function buildGongmangEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
   };
 }
 
-function buildSpecialSalsEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
+function buildSpecialSalsEvidenceCard(data: SajuDataV1, focusTopic: FocusTopic): ReportEvidenceCard {
   const key = 'specialSals';
   const { supportive, cautionary } = getSpecialSalGroups(data);
   const names = [...supportive, ...cautionary];
@@ -492,6 +716,7 @@ function buildSpecialSalsEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     body: names.length > 0
       ? '신살은 도움을 받는 통로와 주의해야 할 속도를 함께 보는 보조 근거입니다.'
       : '현재 명식에서 우선 표시할 주요 신살은 아직 확인되지 않았습니다.',
+    advice: buildSpecialSalsAdvice(supportive, cautionary, focusTopic),
     details: details.length > 0 ? details : ['신살 데이터가 들어오면 도움/주의 흐름을 나누어 표시합니다.'],
     computed,
     source: getEvidenceSource(key),
@@ -500,14 +725,14 @@ function buildSpecialSalsEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
   };
 }
 
-function buildEvidenceCards(data: SajuDataV1): ReportEvidenceCard[] {
+function buildEvidenceCards(data: SajuDataV1, focusTopic: FocusTopic): ReportEvidenceCard[] {
   return [
-    buildStrengthEvidenceCard(data),
-    buildPatternEvidenceCard(data),
-    buildYongsinEvidenceCard(data),
-    buildRelationEvidenceCard(data),
-    buildGongmangEvidenceCard(data),
-    buildSpecialSalsEvidenceCard(data),
+    buildStrengthEvidenceCard(data, focusTopic),
+    buildPatternEvidenceCard(data, focusTopic),
+    buildYongsinEvidenceCard(data, focusTopic),
+    buildRelationEvidenceCard(data, focusTopic),
+    buildGongmangEvidenceCard(data, focusTopic),
+    buildSpecialSalsEvidenceCard(data, focusTopic),
   ];
 }
 
@@ -860,7 +1085,7 @@ export function buildSajuReport(
   const { luckyDates, cautionDates } = buildDates(input, data);
 
   const summaryHighlights = buildSummaryHighlights(data, focusTopic, scoreMap, dominant, weakest);
-  const evidenceCards = buildEvidenceCards(data);
+  const evidenceCards = buildEvidenceCards(data, focusTopic);
   const classicalCitations = buildClassicalCitations(data, evidenceCards, focusTopic);
 
   return {

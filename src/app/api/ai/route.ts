@@ -101,6 +101,7 @@ function formatEvidenceCards(report: SajuReport) {
     label: card.label,
     title: card.title,
     body: card.body,
+    advice: card.advice,
     details: card.details,
     computed: card.computed,
     source: card.source,
@@ -128,7 +129,7 @@ function buildReportFallback(report: SajuReport) {
     : report.summary;
   const evidence = report.evidenceCards
     .slice(0, 6)
-    .map((card) => `- ${card.label}: ${card.title}`)
+    .map((card) => `- ${card.label}: ${card.title}. 오늘 조언: ${card.advice.todayAction}`)
     .join('\n');
 
   return [

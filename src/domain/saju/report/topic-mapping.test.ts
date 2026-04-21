@@ -70,7 +70,10 @@ test('evidence cards expose computed facts, source, confidence, and topic mappin
         card.computed.dayMaster === data.dayMaster.stem &&
         card.source.length > 0 &&
         ['확정', '보통', '참고'].includes(card.confidence) &&
-        card.topicMapping.length > 0
+        card.topicMapping.length > 0 &&
+        card.advice.meaning.length > 0 &&
+        card.advice.lifePattern.length > 0 &&
+        card.advice.todayAction.length > 0
       );
     })
   );

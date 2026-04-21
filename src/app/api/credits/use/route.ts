@@ -155,7 +155,7 @@ function formatCurrentLuckSummary(currentLuck: SajuCurrentLuck | null) {
 
 function formatReportEvidence(cards: ReturnType<typeof buildSajuReport>['evidenceCards']) {
   return cards
-    .map((card) => `${card.label}: ${card.title}. ${card.body} ${card.details.slice(0, 2).join(' ')}`)
+    .map((card) => `${card.label}: ${card.title}. ${card.advice.meaning} ${card.advice.todayAction}`)
     .join(' ');
 }
 
