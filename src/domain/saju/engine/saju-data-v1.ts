@@ -608,9 +608,24 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+function hasEnrichedPillarData(value: SajuDataV1) {
+  const pillars = [
+    value.pillars.year,
+    value.pillars.month,
+    value.pillars.day,
+    value.pillars.hour,
+  ].filter((pillar): pillar is SajuPillar => Boolean(pillar));
+
+  return pillars.every(
+    (pillar) =>
+      Object.prototype.hasOwnProperty.call(pillar, 'stemTenGod') &&
+      Array.isArray(pillar.hiddenStems)
+  );
+}
+
 function shouldPreserveSajuDataV1(value: SajuDataV1) {
   if (value.metadata.source === 'python-engine') {
-    return true;
+    return hasEnrichedPillarData(value);
   }
 
   if (
@@ -624,11 +639,12 @@ function shouldPreserveSajuDataV1(value: SajuDataV1) {
         value.yongsin &&
         value.majorLuck &&
         value.currentLuck &&
-        value.extensions?.orrery
+        value.extensions?.orrery &&
+        hasEnrichedPillarData(value)
     );
   }
 
-  return value.metadata.completeness === 'complete';
+  return value.metadata.completeness === 'complete' && hasEnrichedPillarData(value);
 }
 
 function getPendingSections(base: SajuDataV1): SajuPendingSection[] {

@@ -14,8 +14,9 @@ import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { ELEMENT_INFO } from '@/lib/saju/elements';
 import type { Element } from '@/lib/saju/types';
-import { resolveReading } from '@/lib/saju/readings';
+import { isReadingId, resolveReading } from '@/lib/saju/readings';
 import { buildSajuReport, FOCUS_TOPIC_META, FOCUS_TOPIC_OPTIONS } from '@/domain/saju/report';
+import { buildFallbackInterpretation } from '@/server/ai/saju-interpretation';
 import { cn } from '@/lib/utils';
 import { AppPage, AppShell } from '@/shared/layout/app-shell';
 
@@ -133,25 +134,6 @@ function formatEvidenceKeyLabel(key: string) {
   }
 }
 
-function buildAiFallbackText(report: ReturnType<typeof buildSajuReport>) {
-  const highlights = report.summaryHighlights.map((summary) => `- ${summary}`).join('\n');
-  const evidence = report.evidenceCards
-    .map((card) => `- ${card.label}: ${card.title}`)
-    .join('\n');
-  const citations = report.classicalCitations
-    .map((citation) => `- ${citation.sourceTitle}: ${citation.title}`)
-    .join('\n');
-
-  return [
-    report.headline,
-    highlights,
-    `행동 제안: ${report.primaryAction.title} - ${report.primaryAction.description}`,
-    `주의 포인트: ${report.cautionAction.title} - ${report.cautionAction.description}`,
-    `근거 요약:\n${evidence}`,
-    citations ? `고전 근거/RAG 준비:\n${citations}` : '',
-  ].filter(Boolean).join('\n\n');
-}
-
 export default async function SajuResultPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { topic } = await searchParams;
@@ -260,7 +242,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                         </div>
                       </>
                     ) : (
-                      <div className="mt-5 text-xs text-[var(--app-copy-soft)]">미입력</div>
+                      <div className="mt-5 text-xs text-[var(--app-copy-soft)]">시간 미입력</div>
                     )}
                   </div>
                 ))}
@@ -309,7 +291,8 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           readingId={slug}
           topic={report.focusTopic}
           focusLabel={report.focusLabel}
-          fallbackText={buildAiFallbackText(report)}
+          fallbackInterpretation={buildFallbackInterpretation(report)}
+          cacheEnabled={isReadingId(slug)}
         />
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -691,7 +674,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                     {pillar.stem}
                   </span>
                 ) : (
-                  <span className="text-2xl text-[var(--app-copy-muted)]">?</span>
+                  <span className="text-xs text-[var(--app-copy-muted)]">시간</span>
                 )}
               </div>
             ))}
@@ -709,7 +692,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                     {pillar.branch}
                   </span>
                 ) : (
-                  <span className="text-2xl text-[var(--app-copy-muted)]">?</span>
+                  <span className="text-xs text-[var(--app-copy-muted)]">미입력</span>
                 )}
               </div>
             ))}

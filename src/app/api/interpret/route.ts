@@ -1,0 +1,192 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { buildSajuReport, normalizeFocusTopic } from '@/domain/saju/report';
+import { createServiceClient, hasSupabaseServiceEnv } from '@/lib/supabase/server';
+import { isReadingId, resolveReading } from '@/lib/saju/readings';
+import {
+  buildFallbackInterpretation,
+  createInterpretationPrompt,
+  parseInterpretationText,
+  SAJU_INTERPRETATION_PROMPT_VERSION,
+  type SajuAiInterpretation,
+} from '@/server/ai/saju-interpretation';
+import {
+  generateAiText,
+  getOpenAIInterpretationModel,
+  type AiFallbackReason,
+  type AiGenerationSource,
+} from '@/server/ai/openai-text';
+
+export const runtime = 'nodejs';
+export const maxDuration = 25;
+
+interface InterpretRequest {
+  readingId: string;
+  topic?: string;
+  regenerate?: boolean;
+}
+
+interface CachedInterpretationRow {
+  interpretation_json: SajuAiInterpretation;
+  model: string | null;
+  source: AiGenerationSource;
+  fallback_reason: AiFallbackReason | null;
+  error_message: string | null;
+  updated_at: string;
+}
+
+function readString(payload: Record<string, unknown>, key: string) {
+  const value = payload[key];
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function parseInterpretRequest(payload: unknown): InterpretRequest | null {
+  if (!payload || typeof payload !== 'object') return null;
+
+  const data = payload as Record<string, unknown>;
+  const readingId = readString(data, 'readingId');
+  if (!readingId) return null;
+
+  return {
+    readingId,
+    topic: readString(data, 'topic') || undefined,
+    regenerate: data.regenerate === true,
+  };
+}
+
+async function readCachedInterpretation(readingId: string, topic: string) {
+  if (!hasSupabaseServiceEnv || !isReadingId(readingId)) return null;
+
+  try {
+    const supabase = await createServiceClient();
+    const { data, error } = await supabase
+      .from('ai_interpretations')
+      .select('interpretation_json, model, source, fallback_reason, error_message, updated_at')
+      .eq('reading_id', readingId)
+      .eq('topic', topic)
+      .eq('prompt_version', SAJU_INTERPRETATION_PROMPT_VERSION)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return data as CachedInterpretationRow;
+  } catch {
+    return null;
+  }
+}
+
+async function writeCachedInterpretation(input: {
+  readingId: string;
+  topic: string;
+  interpretation: SajuAiInterpretation;
+  model: string | null;
+  source: AiGenerationSource;
+  fallbackReason: AiFallbackReason | null;
+  errorMessage: string | null;
+}) {
+  if (!hasSupabaseServiceEnv || !isReadingId(input.readingId)) return;
+  if (input.source !== 'openai') return;
+
+  try {
+    const supabase = await createServiceClient();
+    await supabase.from('ai_interpretations').upsert(
+      {
+        reading_id: input.readingId,
+        topic: input.topic,
+        prompt_version: SAJU_INTERPRETATION_PROMPT_VERSION,
+        interpretation_json: input.interpretation,
+        model: input.model,
+        source: input.source,
+        fallback_reason: input.fallbackReason,
+        error_message: input.errorMessage,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'reading_id,topic,prompt_version' }
+    );
+  } catch {
+    // Cache writes must never break the user-facing interpretation response.
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const parsed = parseInterpretRequest(await req.json().catch(() => null));
+
+  if (!parsed) {
+    return NextResponse.json(
+      { ok: false, error: 'readingId가 필요합니다.' },
+      { status: 400 }
+    );
+  }
+
+  const reading = await resolveReading(parsed.readingId);
+
+  if (!reading) {
+    return NextResponse.json(
+      { ok: false, error: '사주 결과를 찾지 못했습니다.' },
+      { status: 404 }
+    );
+  }
+
+  const topic = normalizeFocusTopic(parsed.topic);
+  const cacheable = isReadingId(parsed.readingId);
+
+  if (cacheable && !parsed.regenerate) {
+    const cached = await readCachedInterpretation(parsed.readingId, topic);
+    if (cached) {
+      return NextResponse.json({
+        ok: true,
+        readingId: parsed.readingId,
+        topic,
+        cached: true,
+        cacheable,
+        source: cached.source,
+        model: cached.model,
+        fallbackReason: cached.fallback_reason,
+        errorMessage: cached.error_message,
+        interpretation: cached.interpretation_json,
+        updatedAt: cached.updated_at,
+      });
+    }
+  }
+
+  const report = buildSajuReport(reading.input, reading.sajuData, topic);
+  const fallback = buildFallbackInterpretation(report);
+  const prompt = createInterpretationPrompt(reading, report);
+  const model = getOpenAIInterpretationModel();
+  const aiResult = await generateAiText({
+    ...prompt,
+    fallbackText: JSON.stringify(fallback),
+    model,
+    maxOutputTokens: 900,
+  });
+  const parsedInterpretation = parseInterpretationText(aiResult.text, fallback);
+  const source: AiGenerationSource =
+    aiResult.source === 'openai' && parsedInterpretation.ok ? 'openai' : 'fallback';
+  const fallbackReason =
+    source === 'fallback' ? aiResult.fallbackReason ?? 'empty_ai_response' : null;
+  const errorMessage =
+    source === 'fallback'
+      ? aiResult.errorMessage ?? parsedInterpretation.errorMessage
+      : null;
+
+  await writeCachedInterpretation({
+    readingId: parsed.readingId,
+    topic,
+    interpretation: parsedInterpretation.interpretation,
+    model: aiResult.model,
+    source,
+    fallbackReason,
+    errorMessage,
+  });
+
+  return NextResponse.json({
+    ok: true,
+    readingId: parsed.readingId,
+    topic,
+    cached: false,
+    cacheable,
+    source,
+    model: aiResult.model,
+    fallbackReason,
+    errorMessage,
+    interpretation: parsedInterpretation.interpretation,
+  });
+}

@@ -9,6 +9,7 @@ export interface AiTextRequest {
   instructions: string;
   input: string;
   fallbackText: string;
+  model?: string;
   maxOutputTokens?: number;
 }
 
@@ -21,6 +22,7 @@ export interface AiTextResult {
 }
 
 const DEFAULT_OPENAI_MODEL = 'gpt-5.2';
+const DEFAULT_OPENAI_INTERPRETATION_MODEL = 'gpt-4o';
 const OPENAI_TIMEOUT_MS = 15_000;
 
 function getOpenAIKey() {
@@ -29,6 +31,10 @@ function getOpenAIKey() {
 
 export function getOpenAIModel() {
   return process.env.OPENAI_MODEL?.trim() || DEFAULT_OPENAI_MODEL;
+}
+
+export function getOpenAIInterpretationModel() {
+  return process.env.OPENAI_INTERPRET_MODEL?.trim() || DEFAULT_OPENAI_INTERPRETATION_MODEL;
 }
 
 export function isOpenAIConfigured() {
@@ -43,7 +49,7 @@ function fallbackResult(
   return {
     source: 'fallback',
     text: request.fallbackText,
-    model: isOpenAIConfigured() ? getOpenAIModel() : null,
+    model: isOpenAIConfigured() ? request.model?.trim() || getOpenAIModel() : null,
     fallbackReason,
     errorMessage,
   };
@@ -60,6 +66,7 @@ export async function generateAiText(
 
   try {
     const { default: OpenAI } = await import('openai');
+    const model = request.model?.trim() || getOpenAIModel();
     const client = new OpenAI({
       apiKey,
       timeout: OPENAI_TIMEOUT_MS,
@@ -67,7 +74,7 @@ export async function generateAiText(
     });
 
     const response = await client.responses.create({
-      model: getOpenAIModel() as never,
+      model: model as never,
       instructions: request.instructions,
       input: request.input,
       max_output_tokens: request.maxOutputTokens ?? 700,
@@ -82,7 +89,7 @@ export async function generateAiText(
     return {
       source: 'openai',
       text,
-      model: getOpenAIModel(),
+      model,
       fallbackReason: null,
       errorMessage: null,
     };

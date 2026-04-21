@@ -2,7 +2,7 @@ type AiSourceBadgeState = 'idle' | 'loading' | 'openai' | 'fallback' | 'safe_red
 
 const BADGE_COPY: Record<AiSourceBadgeState, { label: string; className: string }> = {
   idle: {
-    label: '기본 해석 fallback',
+    label: '기본 해석',
     className: 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]',
   },
   loading: {
@@ -14,7 +14,7 @@ const BADGE_COPY: Record<AiSourceBadgeState, { label: string; className: string 
     className: 'border-emerald-400/24 bg-emerald-400/10 text-emerald-200',
   },
   fallback: {
-    label: '기본 해석 fallback',
+    label: '기본 해석',
     className: 'border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]',
   },
   safe_redirect: {
