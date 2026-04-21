@@ -643,40 +643,127 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
 
         <section className="app-panel p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-[var(--app-ivory)]">명식 원본</h2>
+            <h2 className="text-lg font-semibold text-[var(--app-ivory)]">사주 명반</h2>
             <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-              기본 정보
+              사주팔자 원국
             </Badge>
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-4">
+
+          {/* 주 레이블 */}
+          <div className="mt-5 grid grid-cols-4 gap-2 text-center">
+            {pillars.map(({ label }) => (
+              <div key={label} className="text-[11px] font-medium tracking-widest text-[var(--app-copy-muted)]">
+                {label}
+              </div>
+            ))}
+          </div>
+
+          {/* 십신 행 */}
+          <div className="mt-2 grid grid-cols-4 gap-2 text-center">
             {pillars.map(({ label, pillar }) => (
-              <div
-                key={label}
-                className="moon-saju-pillar p-4"
-                data-day={label === '일주'}
-              >
-                <div className="text-xs text-[var(--app-copy-soft)]">{label}</div>
+              <div key={label} className="flex h-7 items-center justify-center">
                 {pillar ? (
-                  <>
-                    <div className="mt-3 text-3xl font-semibold" style={{ color: ELEMENT_INFO[pillar.stemElement].color }}>
-                      {pillar.stem}
-                    </div>
-                    <div className="mt-1 text-3xl font-semibold" style={{ color: ELEMENT_INFO[pillar.branchElement].color }}>
-                      {pillar.branch}
-                    </div>
-                    <div className="mt-3 text-xs text-[var(--app-copy-soft)]">
-                      {pillar.stemElement} / {pillar.branchElement}
-                    </div>
-                    {formatHiddenStems(pillar) ? (
-                      <div className="mt-2 text-xs text-[var(--app-copy-soft)]">
-                        지장간 · {formatHiddenStems(pillar)}
-                      </div>
-                    ) : null}
-                  </>
+                  label === '일주' ? (
+                    <span className="rounded-full border border-[var(--app-gold-soft)]/30 bg-[var(--app-gold-soft)]/10 px-2 py-0.5 text-[11px] text-[var(--app-gold-soft)]">
+                      일간
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2 py-0.5 text-[11px] text-[var(--app-copy-soft)]">
+                      {pillar.stemTenGod}
+                    </span>
+                  )
                 ) : (
-                  <div className="pt-10 text-sm text-[var(--app-copy-soft)]">미입력</div>
+                  <span className="text-[11px] text-[var(--app-copy-muted)]">—</span>
                 )}
               </div>
+            ))}
+          </div>
+
+          {/* 천간 행 */}
+          <div className="mt-1 grid grid-cols-4 gap-2 text-center">
+            {pillars.map(({ label, pillar }) => (
+              <div key={label} className="flex h-14 items-center justify-center">
+                {pillar ? (
+                  <span
+                    className="text-4xl font-bold"
+                    style={{ color: ELEMENT_INFO[pillar.stemElement].color }}
+                  >
+                    {pillar.stem}
+                  </span>
+                ) : (
+                  <span className="text-2xl text-[var(--app-copy-muted)]">?</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* 지지 행 */}
+          <div className="grid grid-cols-4 gap-2 border-t border-b border-[var(--app-line)] py-1 text-center">
+            {pillars.map(({ label, pillar }) => (
+              <div key={label} className="flex h-14 items-center justify-center">
+                {pillar ? (
+                  <span
+                    className="text-4xl font-bold"
+                    style={{ color: ELEMENT_INFO[pillar.branchElement].color }}
+                  >
+                    {pillar.branch}
+                  </span>
+                ) : (
+                  <span className="text-2xl text-[var(--app-copy-muted)]">?</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* 지장간 행 (여기·중기 흐릿, 정기 강조) */}
+          <div className="mt-2 grid grid-cols-4 gap-2 text-center">
+            {pillars.map(({ label, pillar }) => (
+              <div key={label} className="flex min-h-[2rem] items-center justify-center">
+                {pillar && pillar.hiddenStems.length > 0 ? (
+                  <div className="flex items-center gap-1">
+                    {pillar.hiddenStems.map((hs, i) => {
+                      const isMain = i === pillar.hiddenStems.length - 1;
+                      return (
+                        <span
+                          key={`${hs.stem}-${i}`}
+                          className={`text-sm font-medium transition-opacity ${isMain ? 'opacity-100' : 'opacity-35'}`}
+                          style={{ color: ELEMENT_INFO[hs.element].color }}
+                        >
+                          {hs.stem}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <span className="text-[11px] text-[var(--app-copy-muted)]">{pillar ? '—' : '미입력'}</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* 지지 십신 행 (정기 기준) */}
+          <div className="mt-2 grid grid-cols-4 gap-2 text-center">
+            {pillars.map(({ label, pillar }) => {
+              const mainHidden = pillar?.hiddenStems.at(-1);
+              return (
+                <div key={label} className="flex h-6 items-center justify-center">
+                  {mainHidden?.tenGod ? (
+                    <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)]/50 px-2 py-0.5 text-[11px] text-[var(--app-copy-muted)]">
+                      {mainHidden.tenGod}
+                    </span>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 오행 범례 */}
+          <div className="mt-5 flex flex-wrap gap-3 border-t border-[var(--app-line)] pt-4">
+            {(Object.entries(ELEMENT_INFO) as [Element, typeof ELEMENT_INFO[Element]][]).map(([el, info]) => (
+              <span key={el} className="flex items-center gap-1.5 text-xs text-[var(--app-copy-muted)]">
+                <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: info.color }} />
+                {info.name.split(' ')[0]}
+              </span>
             ))}
           </div>
         </section>

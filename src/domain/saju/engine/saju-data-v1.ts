@@ -249,6 +249,8 @@ export interface SajuPillar {
   stemElement: Element;
   branchElement: Element;
   yinYang: YinYang;
+  /** 천간 십신. 일주 천간(일간)은 null */
+  stemTenGod: TenGodCode | null;
   hiddenStems: SajuHiddenStem[];
 }
 
@@ -472,6 +474,7 @@ function toSajuPillar(pillar: LegacyPillar): SajuPillar {
     stemElement: pillar.stemElement,
     branchElement: pillar.branchElement,
     yinYang: pillar.yinYang,
+    stemTenGod: null, // enrichPillar에서 채워짐
     hiddenStems: [],
   };
 }
@@ -643,14 +646,14 @@ function getPendingSections(base: SajuDataV1): SajuPendingSection[] {
 
 function enrichPillars(pillars: SajuPillars, dayMasterStem: Stem): SajuPillars {
   return {
-    year: enrichPillar(pillars.year, dayMasterStem),
-    month: enrichPillar(pillars.month, dayMasterStem),
-    day: enrichPillar(pillars.day, dayMasterStem),
-    hour: pillars.hour ? enrichPillar(pillars.hour, dayMasterStem) : null,
+    year: enrichPillar(pillars.year, dayMasterStem, false),
+    month: enrichPillar(pillars.month, dayMasterStem, false),
+    day: enrichPillar(pillars.day, dayMasterStem, true),
+    hour: pillars.hour ? enrichPillar(pillars.hour, dayMasterStem, false) : null,
   };
 }
 
-function enrichPillar(pillar: SajuPillar, dayMasterStem: Stem): SajuPillar {
+function enrichPillar(pillar: SajuPillar, dayMasterStem: Stem, isDayMaster: boolean): SajuPillar {
   const hiddenStems = BRANCH_HIDDEN_STEMS[pillar.branch].map((stem, index) => ({
     stem,
     element: STEM_ELEMENTS[stem],
@@ -660,6 +663,7 @@ function enrichPillar(pillar: SajuPillar, dayMasterStem: Stem): SajuPillar {
 
   return {
     ...pillar,
+    stemTenGod: isDayMaster ? null : getTenGod(dayMasterStem, pillar.stem),
     hiddenStems,
   };
 }
