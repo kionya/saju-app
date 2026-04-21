@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, hasSupabaseBrowserEnv } from '@/lib/supabase/client';
 import { Button, buttonVariants } from '@/components/ui/button';
 import type { User } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
@@ -17,6 +17,8 @@ export default function SiteHeader() {
   const [currentHash, setCurrentHash] = useState('');
 
   useEffect(() => {
+    if (!hasSupabaseBrowserEnv) return;
+
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
@@ -49,6 +51,11 @@ export default function SiteHeader() {
   }, [pathname]);
 
   async function signOut() {
+    if (!hasSupabaseBrowserEnv) {
+      router.push('/');
+      return;
+    }
+
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push('/');

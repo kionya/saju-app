@@ -59,6 +59,7 @@
   - `002_credit_functions.sql`
   - `003_profiles.sql`
   - `004_notifications.sql`
+  - `005_profile_birth_minutes.sql`
 - Confirm the push setup guide has been completed:
   - `docs/push-notifications-setup.md`
 

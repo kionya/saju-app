@@ -2,13 +2,16 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/badge';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import {
+  getTarotReadingForQuestion,
+  getTarotSpreadForQuestion,
+  normalizeQuestion,
+} from '@/lib/tarot-api';
 import { AppShell } from '@/shared/layout/app-shell';
 
 interface Props {
   searchParams: Promise<{ question?: string }>;
 }
-
-const DEFAULT_QUESTION = '지금 고민 중인 관계에 대하여';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -22,7 +25,9 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function TarotPickPage({ searchParams }: Props) {
   const { question } = await searchParams;
-  const currentQuestion = question?.trim() || DEFAULT_QUESTION;
+  const currentQuestion = normalizeQuestion(question);
+  const reading = await getTarotReadingForQuestion({ question: currentQuestion });
+  const premiumSpread = await getTarotSpreadForQuestion(currentQuestion);
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
@@ -45,7 +50,7 @@ export default async function TarotPickPage({ searchParams }: Props) {
             </h1>
             <div className="text-sm text-[var(--app-plum)]">“{currentQuestion}”</div>
             <p className="mt-2 text-sm text-[var(--app-copy-muted)]">
-              마음을 고르고 한 장을 선택해주세요
+              오늘의 덱은 {reading.toneLabel}으로 차분히 섞어두었습니다
             </p>
           </div>
         </section>
@@ -54,8 +59,8 @@ export default async function TarotPickPage({ searchParams }: Props) {
           <article className="app-panel p-6">
             <div className="app-caption">카드를 뽑기 전에</div>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-              한 번에 정답을 찾으려 하기보다, 지금 내 마음이 어디로 기울고 있는지를 차분히
-              살피는 마음으로 카드를 고르시면 좋습니다.
+              한 번에 정답을 찾으려 하기보다, 지금 내 마음이 어디로 기울고 있는지를
+              차분히 살피는 마음으로 카드를 고르시면 좋습니다.
             </p>
 
             <div className="mt-5 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4">
@@ -66,8 +71,24 @@ export default async function TarotPickPage({ searchParams }: Props) {
             </div>
 
             <div className="mt-5 rounded-[1.2rem] border border-[var(--app-plum)]/25 bg-[linear-gradient(135deg,rgba(166,124,181,0.12),rgba(10,18,36,0.9))] px-4 py-4 text-sm leading-7 text-[var(--app-copy)]">
-              사주와 결합한 프리미엄 리딩에서는 카드 한 장을 단순 해석으로 끝내지 않고,
-              선생님의 타고난 기운과 지금 시점의 마음 흐름을 함께 읽어드립니다.
+              같은 질문은 오늘 하루 같은 카드로 이어집니다. 새로고침을 해도 결과가 흔들리지
+              않도록 날짜와 질문을 함께 읽어 한 장을 정합니다.
+            </div>
+
+            <div className="mt-5 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4">
+              <div className="text-xs tracking-[0.22em] text-[var(--app-copy-soft)]">
+                PREMIUM SPREAD
+              </div>
+              <div className="mt-3 grid gap-2">
+                {premiumSpread.map(({ position }) => (
+                  <div
+                    key={position}
+                    className="rounded-[0.9rem] border border-[var(--app-line)] px-3 py-2 text-sm text-[var(--app-copy)]"
+                  >
+                    {position}
+                  </div>
+                ))}
+              </div>
             </div>
           </article>
 
@@ -99,14 +120,18 @@ export default async function TarotPickPage({ searchParams }: Props) {
             </div>
 
             <p className="mt-3 text-center text-xs tracking-[0.22em] text-[var(--app-gold)]/72">
-              ← → 카드를 좌우로 넘겨보세요
+              마음에 닿는 한 장을 천천히 선택해주세요
             </p>
 
             <div className="mt-8 flex justify-center">
               <Link
                 href={{
                   pathname: '/tarot/daily/result',
-                  query: { question: currentQuestion },
+                  query: {
+                    question: currentQuestion,
+                    cardId: reading.card.name_short,
+                    orientation: reading.orientation,
+                  },
                 }}
                 className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--app-plum)] px-8 text-base font-semibold text-white transition-colors hover:bg-[color:rgba(166,124,181,0.88)]"
               >

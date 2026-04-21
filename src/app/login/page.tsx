@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, hasSupabaseBrowserEnv } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import LegalLinks from '@/components/legal-links';
 
@@ -28,13 +28,20 @@ function getEmailLoginError(message?: string) {
 function LoginContent() {
   const searchParams = useSearchParams();
   const next = getSafeNext(searchParams.get('next'));
-  const supabase = createClient();
   const [email, setEmail] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
 
   async function signInWithProvider(provider: 'google' | 'kakao') {
+    if (!hasSupabaseBrowserEnv) {
+      setErrorMessage('Supabase 환경변수가 없어 로컬에서는 로그인을 사용할 수 없습니다.');
+      setStatusMessage('');
+      return;
+    }
+
+    const supabase = createClient();
+
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
@@ -45,6 +52,12 @@ function LoginContent() {
 
   async function requestEmailLink(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!hasSupabaseBrowserEnv) {
+      setErrorMessage('Supabase 환경변수가 없어 로컬에서는 로그인 링크를 보낼 수 없습니다.');
+      setStatusMessage('');
+      return;
+    }
 
     const trimmedEmail = email.trim();
     if (!trimmedEmail.includes('@')) {
@@ -57,6 +70,7 @@ function LoginContent() {
     setErrorMessage('');
     setStatusMessage('');
 
+    const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
       email: trimmedEmail,
       options: {
@@ -83,7 +97,9 @@ function LoginContent() {
           ✦ 사주명리
         </h1>
         <p className="mt-3 text-sm leading-6 text-[var(--app-copy-muted)]">
-          이메일 링크로 바로 가입하고 코인 3개를 무료로 받아보세요.
+          {hasSupabaseBrowserEnv
+            ? '이메일 링크로 바로 가입하고 코인 3개를 무료로 받아보세요.'
+            : '로컬 환경에서는 Supabase 설정 후 로그인을 사용할 수 있습니다.'}
         </p>
       </div>
 
@@ -111,7 +127,7 @@ function LoginContent() {
         </div>
         <Button
           type="submit"
-          disabled={isSubmittingEmail}
+          disabled={isSubmittingEmail || !hasSupabaseBrowserEnv}
           className="h-11 w-full rounded-2xl border border-[var(--app-gold)]/40 bg-[var(--app-gold)] text-[var(--app-ink)] hover:bg-[var(--app-gold-text)]"
         >
           {isSubmittingEmail ? '링크 보내는 중...' : '가입/로그인 링크 받기'}
@@ -163,6 +179,7 @@ function LoginContent() {
       <div className="space-y-3">
         <Button
           onClick={() => signInWithProvider('kakao')}
+          disabled={!hasSupabaseBrowserEnv}
           className="flex h-11 w-full items-center justify-center gap-3 rounded-2xl font-medium"
           style={{ backgroundColor: '#FEE500', color: '#191919' }}
         >
@@ -174,6 +191,7 @@ function LoginContent() {
 
         <Button
           onClick={() => signInWithProvider('google')}
+          disabled={!hasSupabaseBrowserEnv}
           className="flex h-11 w-full items-center justify-center gap-3 rounded-2xl bg-white text-slate-900 hover:bg-white/90"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">

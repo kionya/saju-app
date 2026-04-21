@@ -1,20 +1,22 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/badge';
-import {
-  TAROT_CARD_KEYWORDS,
-  TAROT_CARD_READING_COPY,
-  TAROT_TO_SAJU_BRIDGE,
-} from '@/content/moonlight';
+import { TAROT_CARD_KEYWORDS, TAROT_TO_SAJU_BRIDGE } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
-import { getTarotCardForQuestion } from '@/lib/home-content';
+import {
+  getTarotReadingForQuestion,
+  getTarotSpreadForQuestion,
+  normalizeQuestion,
+} from '@/lib/tarot-api';
 import { AppShell } from '@/shared/layout/app-shell';
 
 interface Props {
-  searchParams: Promise<{ question?: string }>;
+  searchParams: Promise<{
+    question?: string;
+    cardId?: string;
+    orientation?: string;
+  }>;
 }
-
-const DEFAULT_QUESTION = '지금 고민 중인 관계에 대하여';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -27,13 +29,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function TarotResultPage({ searchParams }: Props) {
-  const { question } = await searchParams;
-  const currentQuestion = question?.trim() || DEFAULT_QUESTION;
-  const card = getTarotCardForQuestion(currentQuestion);
-  const cardReading = TAROT_CARD_READING_COPY[card.name as keyof typeof TAROT_CARD_READING_COPY];
-  const keywordCopy =
-    TAROT_CARD_KEYWORDS.find(([name]) => name === card.name)?.[1] ??
-    '지금의 흐름을 차분히 살피세요.';
+  const { question, cardId, orientation } = await searchParams;
+  const currentQuestion = normalizeQuestion(question);
+  const reading = await getTarotReadingForQuestion({
+    question: currentQuestion,
+    cardId,
+    orientation,
+  });
+  const premiumSpread = await getTarotSpreadForQuestion(currentQuestion);
+  const sourceLabel = reading.source === 'api' ? '78장 덱 기준' : '로컬 덱 기준';
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
@@ -68,43 +72,51 @@ export default async function TarotResultPage({ searchParams }: Props) {
           <article className="app-panel p-6 text-center">
             <div className="mx-auto flex h-[15rem] w-[10rem] flex-col justify-between rounded-[1rem] border-2 border-[var(--app-gold)]/60 bg-[linear-gradient(160deg,rgba(166,124,181,0.95),rgba(82,55,101,0.98))] px-4 py-5">
               <div className="font-[var(--font-heading)] text-xs tracking-[0.22em] text-[var(--app-gold)]">
-                {cardReading.arcana}
+                {reading.shortName}
               </div>
-              <div className="font-[var(--font-heading)] text-5xl text-[var(--app-gold)]">月</div>
+              <div className="font-[var(--font-heading)] text-5xl text-[var(--app-gold)]">
+                {reading.cardMarker}
+              </div>
               <div className="font-[var(--font-heading)] text-[11px] tracking-[0.28em] text-[var(--app-gold)]">
-                {card.name.toUpperCase()}
+                {reading.orientationLabel}
               </div>
             </div>
             <div className="mt-5 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
-              {cardReading.title}
+              {reading.displayName}
             </div>
             <p className="mt-2 text-sm text-[var(--app-copy-muted)]">
-              {cardReading.arcana} · {cardReading.subtitle}
+              {reading.arcanaLabel} · {reading.subtitle}
             </p>
             <div className="mt-4 rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-sm leading-7 text-[var(--app-copy)]">
-              {keywordCopy}
+              {reading.keyword}
+            </div>
+            <div className="mt-4 text-xs tracking-[0.18em] text-[var(--app-copy-soft)]">
+              {sourceLabel}
             </div>
           </article>
 
           <article className="space-y-4">
             <div className="app-panel p-6">
               <div className="app-caption">카드가 건네는 말</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                {cardReading.guidance}
-              </p>
+              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{reading.guidance}</p>
             </div>
 
             <div className="rounded-[1.45rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(10,18,36,0.94))] px-5 py-5">
               <div className="app-caption">선생님의 사주와 만나면</div>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                {cardReading.sajuBlend}
+                {reading.sajuBlend}
               </p>
             </div>
 
             <div className="rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
               <div className="app-caption">이번 주 마음에 두실 한 가지</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                {cardReading.action}
+              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{reading.action}</p>
+            </div>
+
+            <div className="rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
+              <div className="app-caption">원문 카드 의미</div>
+              <p className="mt-4 text-sm leading-8 text-[var(--app-copy-muted)]">
+                {reading.meaningExcerpt}
               </p>
             </div>
 
@@ -140,6 +152,45 @@ export default async function TarotResultPage({ searchParams }: Props) {
               </Link>
             </div>
           </article>
+        </section>
+
+        <section className="mt-8 app-panel p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
+              프리미엄 3장 확장 흐름
+            </h2>
+            <Badge className="border-[var(--app-plum)]/25 bg-[var(--app-plum)]/10 text-[var(--app-plum)]">
+              사주 + 타로 통합
+            </Badge>
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {premiumSpread.map(({ position, reading: spreadReading }) => (
+              <article
+                key={position}
+                className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
+              >
+                <div className="text-xs tracking-[0.22em] text-[var(--app-copy-soft)]">
+                  {position}
+                </div>
+                <div className="mt-3 flex items-center gap-3">
+                  <div className="flex h-12 w-9 shrink-0 items-center justify-center rounded-[0.65rem] border border-[var(--app-gold)]/45 bg-[rgba(166,124,181,0.22)] font-[var(--font-heading)] text-[var(--app-gold)]">
+                    {spreadReading.cardMarker}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate font-[var(--font-heading)] text-lg text-[var(--app-ivory)]">
+                      {spreadReading.displayName}
+                    </div>
+                    <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                      {spreadReading.orientationLabel}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+                  {spreadReading.action}
+                </p>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section className="mt-8 app-panel p-6">

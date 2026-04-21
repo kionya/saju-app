@@ -30,6 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 .tmp-*.log
+.codex-run/
 
 # env files (never commit secrets; keep only the template)
 .env
