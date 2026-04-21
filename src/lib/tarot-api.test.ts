@@ -5,6 +5,7 @@ import {
   getTarotReadingForQuestion,
   type TarotApiCard,
 } from './tarot-api';
+import { getTarotCardImagePath, getTarotCardVisualTone } from './tarot-card-assets';
 import { createRandomTarotDrawDeck, pickRandomTarotCard } from './tarot-picker-random';
 
 declare const test: (name: string, fn: () => void | Promise<void>) => void;
@@ -173,6 +174,9 @@ test('tarot client picker can randomize card order and orientations', () => {
   );
   assert.equal(new Set(randomized.map(({ cardId }) => cardId)).size, 4);
   assert.ok(randomized.every(({ orientation }) => orientation === 'reversed'));
+  assert.ok(randomized.every(({ backTone }) => backTone === 'plum'));
+  assert.ok(randomized.every(({ tilt }) => tilt === -4));
+  assert.ok(randomized.every(({ lift }) => lift === -3));
   assert.notDeepEqual(
     randomized.map(({ cardId }) => cardId),
     cards.map(({ cardId }) => cardId)
@@ -187,4 +191,13 @@ test('tarot random draw picks one card from the visible deck', () => {
   const picked = pickRandomTarotCard(deck, () => 1);
 
   assert.equal(picked?.cardId, deck[1]?.cardId);
+});
+
+test('tarot card asset helpers map card IDs to public image paths and tones', () => {
+  assert.equal(getTarotCardImagePath('SW07'), '/images/tarot/cards/sw07.webp');
+  assert.equal(getTarotCardVisualTone('ar00').family, 'major');
+  assert.equal(getTarotCardVisualTone('cu09').family, 'cups');
+  assert.equal(getTarotCardVisualTone('pe10').family, 'pentacles');
+  assert.equal(getTarotCardVisualTone('sw07').family, 'swords');
+  assert.equal(getTarotCardVisualTone('wa04').family, 'wands');
 });

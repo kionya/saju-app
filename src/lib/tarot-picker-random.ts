@@ -8,12 +8,18 @@ export interface TarotPickerCardDraw {
   slot: number;
   cardId: string;
   orientation: TarotOrientation;
+  backTone: TarotCardBackTone;
+  backGlow: number;
+  tilt: number;
+  lift: number;
 }
 
 type RandomInt = (maxExclusive: number) => number;
+export type TarotCardBackTone = (typeof CARD_BACK_TONES)[number];
 
 const REVERSED_CHANCE_PERCENT = 22;
 const UINT32_RANGE = 0x1_0000_0000;
+const CARD_BACK_TONES = ['plum', 'indigo', 'jade', 'gold', 'rose'] as const;
 
 export function createRandomTarotDrawDeck(
   cards: TarotPickerCardInput[],
@@ -26,6 +32,10 @@ export function createRandomTarotDrawDeck(
     return {
       cardId: card.cardId,
       orientation,
+      backTone: CARD_BACK_TONES[randomInt(CARD_BACK_TONES.length)] ?? 'plum',
+      backGlow: randomInt(5),
+      tilt: randomInt(9) - 4,
+      lift: randomInt(7) - 3,
     };
   });
 

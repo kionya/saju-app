@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { TarotCardArtwork } from '@/components/tarot/tarot-card-artwork';
 import { Badge } from '@/components/ui/badge';
 import { TAROT_CARD_KEYWORDS, TAROT_TO_SAJU_BRIDGE } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
@@ -70,17 +71,15 @@ export default async function TarotResultPage({ searchParams }: Props) {
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
           <article className="app-panel p-6 text-center">
-            <div className="mx-auto flex h-[15rem] w-[10rem] flex-col justify-between rounded-[1rem] border-2 border-[var(--app-gold)]/60 bg-[linear-gradient(160deg,rgba(166,124,181,0.95),rgba(82,55,101,0.98))] px-4 py-5">
-              <div className="font-[var(--font-heading)] text-xs tracking-[0.22em] text-[var(--app-gold)]">
-                {reading.shortName}
-              </div>
-              <div className="font-[var(--font-heading)] text-5xl text-[var(--app-gold)]">
-                {reading.cardMarker}
-              </div>
-              <div className="font-[var(--font-heading)] text-[11px] tracking-[0.28em] text-[var(--app-gold)]">
-                {reading.orientationLabel}
-              </div>
-            </div>
+            <TarotCardArtwork
+              cardId={reading.card.name_short}
+              shortName={reading.shortName}
+              displayName={reading.displayName}
+              cardMarker={reading.cardMarker}
+              orientation={reading.orientation}
+              orientationLabel={reading.orientationLabel}
+              arcanaLabel={reading.arcanaLabel}
+            />
             <div className="mt-5 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
               {reading.displayName}
             </div>
