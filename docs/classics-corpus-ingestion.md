@@ -25,12 +25,59 @@ The evidence route uses the `SUPABASE_SERVICE_ROLE_KEY` path because corpus read
 
 ## Passage ingestion sequence
 
+This PR adds the first ingest CLI for the three public-safe Wikisource candidates.
+The default mode is a dry run, so it collects and normalizes text without writing
+to Supabase:
+
+```bash
+npm run ingest:classics -- --source=wikisource --dry-run
+```
+
+To collect one work only:
+
+```bash
+npm run ingest:classics -- --source=wikisource --work=ditian-sui --dry-run
+```
+
+Supported work keys:
+
+- `ditian-sui`
+- `qiongtong-baojian`
+- `sanming-tonghui-siku`
+
+After confirming dry-run counts, apply to Supabase with the service-role key from
+`.env.local`:
+
+```bash
+npm run ingest:classics -- --source=wikisource --work=all --apply
+```
+
+For an initial clean load, after confirming there are no reviewed Korean reading
+or translation rows yet, replace generated sections/passages for the target work:
+
+```bash
+npm run ingest:classics -- --source=wikisource --work=all --apply --replace
+```
+
+Then validate corpus counts:
+
+```bash
+npm run validate:classics
+```
+
+The CLI uses the MediaWiki Action API `action=parse` result for `wikitext`,
+`sections`, and `revid`. Each passage row stores source page and revision data in
+`source_line_ref`, plus a `provenance_hash`. It also attaches low-confidence
+`classic_passage_concept_tags` when an exact Chinese keyword maps to an existing
+concept tag, so Korean queries such as `용신` can return initial original-text
+evidence before translation and commentary layers are reviewed.
+
 1. Pick one `classic_work_versions` row whose `public_release_status` is `live` and whose `verification_status` is `provisional` or `reviewed`.
-2. Load source text from approved local/offline material first. If a future collector is used, confirm the source allows that access mode before running it.
+2. Load source text from approved local/offline material first. For the current Wikisource collector, use dry-run before applying and preserve page revision provenance.
 3. Insert `classic_sections` with stable `section_key`, `section_path`, source references, and sort order.
 4. Insert `classic_passages` with `original_text_zh`, optional `normalized_text_zh`, `source_line_ref`, and `provenance_hash`.
 5. Add `classic_readings_ko`, `classic_translations_ko`, and `classic_commentaries` only when their generation source and review state are explicit.
-6. Attach `classic_passage_concept_tags` for concepts such as `용신`, `조후`, `격국`, `강약`, `합충`, `공망`, and `신살`.
+6. Attach `classic_passage_concept_tags` for concepts such as `용신`, `조후`, `격국`, `강약`, `합충`, `공망`, and `신살`. The first Wikisource pass uses exact Chinese keyword tagging only; review-backed tags can overwrite or extend this later.
 7. Record each batch in `classic_ingest_runs`.
 
 ## Provenance checklist
