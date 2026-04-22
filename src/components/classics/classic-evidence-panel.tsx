@@ -17,7 +17,15 @@ function formatClassicEvidenceStatus(status: string, count: number) {
   return '검수 대기';
 }
 
+function formatClassicEvidenceSummary(item: ClassicEvidenceItem) {
+  if (item.passage.commentaryKo) return item.passage.commentaryKo;
+
+  return `${item.work.titleKo} ${item.section.titleKo} 문단은 ${item.provenance.verificationStatus === 'reviewed' ? '검수된' : '검수 전'} 고전 근거입니다. 한글 풀이가 연결되면 이 영역에 먼저 표시됩니다.`;
+}
+
 function ClassicEvidenceCard({ item }: { item: ClassicEvidenceItem }) {
+  const summary = formatClassicEvidenceSummary(item);
+
   return (
     <article className="moon-classic-quote p-5">
       <div className="flex flex-wrap items-center gap-2">
@@ -32,18 +40,36 @@ function ClassicEvidenceCard({ item }: { item: ClassicEvidenceItem }) {
       <div className="mt-4 text-xs uppercase tracking-[0.22em] text-[var(--app-copy-soft)]">
         {item.section.path} · {item.section.titleKo}
       </div>
-      <blockquote
-        lang="zh-Hant"
-        className="mt-3 break-words rounded-2xl border border-[var(--app-gold)]/14 bg-[var(--app-gold)]/8 px-4 py-4 font-[var(--font-heading)] text-lg leading-9 text-[var(--app-gold-text)]"
-      >
-        {item.passage.originalZh}
-      </blockquote>
 
-      <div className="mt-4 flex flex-col gap-3 text-sm leading-7 text-[var(--app-copy)]">
+      <div className="mt-3 rounded-2xl border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-4">
+        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--app-gold-soft)]">
+          한글 풀이
+        </div>
+        <p className="mt-2 text-sm leading-7 text-[var(--app-ivory)]">{summary}</p>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-3 text-sm leading-7 text-[var(--app-copy-muted)]">
         {item.passage.readingKo ? <p>독음 · {item.passage.readingKo}</p> : null}
         {item.passage.literalKo ? <p>직역 · {item.passage.literalKo}</p> : null}
-        {item.passage.commentaryKo ? <p>해설 · {item.passage.commentaryKo}</p> : null}
       </div>
+
+      <details className="group mt-4">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors hover:border-[var(--app-gold)]/30 hover:text-[var(--app-ivory)]">
+          <span>원문 보기</span>
+          <span
+            aria-hidden="true"
+            className="text-[var(--app-copy-soft)] transition-transform group-open:rotate-180"
+          >
+            ˅
+          </span>
+        </summary>
+        <blockquote
+          lang="zh-Hant"
+          className="mt-3 break-words rounded-2xl border border-[var(--app-gold)]/14 bg-[var(--app-surface-muted)] px-4 py-4 font-[var(--font-heading)] text-base leading-8 text-[var(--app-gold-text)]"
+        >
+          {item.passage.originalZh}
+        </blockquote>
+      </details>
 
       <div className="mt-4 flex flex-wrap gap-2 text-xs">
         <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-[var(--app-copy)]">

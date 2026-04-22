@@ -65,6 +65,14 @@ Then validate corpus counts:
 npm run validate:classics
 ```
 
+To add the first unreviewed Korean UI summaries for concept-tagged passages:
+
+```bash
+npm run seed:classics-summaries
+npm run seed:classics-summaries -- --apply
+npm run validate:classics -- --min-ui-summaries=1
+```
+
 The CLI uses the MediaWiki Action API `action=parse` result for `wikitext`,
 `sections`, and `revid`. Each passage row stores source page and revision data in
 `source_line_ref`, plus a `provenance_hash`. It also attaches low-confidence
@@ -93,7 +101,7 @@ metadata.
 2. Load source text from approved local/offline material first. For the current Wikisource collector, use dry-run before applying and preserve page revision provenance.
 3. Insert `classic_sections` with stable `section_key`, `section_path`, source references, and sort order.
 4. Insert `classic_passages` with `section_path`, `original_text_zh`, optional `normalized_text_zh`, `source_line_ref`, `provenance_hash`, `license_label`, and `verification_status`.
-5. Add `classic_readings_ko`, `classic_translations_ko`, and `classic_commentaries` only when their generation source and review state are explicit.
+5. Add `classic_readings_ko`, `classic_translations_ko`, and `classic_commentaries` only when their generation source and review state are explicit. The first Korean UI layer uses `classic_commentaries.commentary_type = 'ui_summary'`, `generated_by = 'hybrid'`, and `review_status = 'unreviewed'`.
 6. Attach `classic_passage_concept_tags` for concepts such as `용신`, `조후`, `격국`, `강약`, `합충`, `공망`, and `신살`. The first Wikisource pass uses exact Chinese keyword tagging only; review-backed tags can overwrite or extend this later.
 7. Record each batch in `classic_ingest_runs`.
 

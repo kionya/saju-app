@@ -41,12 +41,23 @@ async function main() {
   }
 
   const minPassages = Number.parseInt(args.minPassages, 10);
+  const minUiSummaries = Number.parseInt(args.minUiSummaries, 10);
   const tooSmall = rows.filter((row) => row.passage_count < minPassages);
+  const tooFewUiSummaries = rows.filter((row) => row.ui_summary_count < minUiSummaries);
   const missingRequired = rows.filter((row) => row.required_field_missing_count > 0);
   if (tooSmall.length > 0) {
     console.error(
       `Expected at least ${minPassages} passages for each work, but these were too small: ${tooSmall
         .map((row) => row.source_work_ref)
+        .join(', ')}`
+    );
+    process.exit(1);
+  }
+
+  if (tooFewUiSummaries.length > 0) {
+    console.error(
+      `Expected at least ${minUiSummaries} UI summaries for each work, but these were too small: ${tooFewUiSummaries
+        .map((row) => `${row.source_work_ref}=${row.ui_summary_count}`)
         .join(', ')}`
     );
     process.exit(1);
@@ -70,11 +81,14 @@ async function main() {
 function parseArgs(argv) {
   const args = {
     minPassages: '1',
+    minUiSummaries: '0',
   };
 
   for (const arg of argv) {
     if (arg.startsWith('--min-passages=')) {
       args.minPassages = arg.slice('--min-passages='.length);
+    } else if (arg.startsWith('--min-ui-summaries=')) {
+      args.minUiSummaries = arg.slice('--min-ui-summaries='.length);
     } else {
       throw new Error(`Unknown argument: ${arg}`);
     }
@@ -123,11 +137,29 @@ async function validateWorkVersion(supabase, sourceWorkRef) {
       supabase,
       version.work_version_id
     ),
+    ui_summary_count: await countUiSummariesForWorkVersion(
+      supabase,
+      version.work_version_id
+    ),
     required_field_missing_count: await countMissingRequiredPassageFields(
       supabase,
       version.work_version_id
     ),
   };
+}
+
+async function countUiSummariesForWorkVersion(supabase, workVersionId) {
+  const { count, error } = await supabase
+    .from('classic_commentaries')
+    .select('commentary_id', { count: 'exact', head: true })
+    .eq('work_version_id', workVersionId)
+    .eq('commentary_type', 'ui_summary');
+
+  if (error) {
+    throw new Error(`Could not count UI summaries: ${error.message}`);
+  }
+
+  return count ?? 0;
 }
 
 async function countMissingRequiredPassageFields(supabase, workVersionId) {
