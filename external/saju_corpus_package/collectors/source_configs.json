@@ -1,0 +1,149 @@
+{
+  "generated_at": "2026-04-21",
+  "works": [
+    {
+      "canonical_slug": "yuanhai-ziping",
+      "canonical_title_zh_hant": "淵海子平",
+      "canonical_title_ko": "연해자평",
+      "recommended_release": "conditional",
+      "versions": [
+        {
+          "source": "zh_wikisource",
+          "source_item_title": "淵海子平",
+          "page_title": "淵海子平",
+          "status": "partial_unfinished_source_unclear"
+        },
+        {
+          "source": "ctext",
+          "source_item_title": "淵海子平",
+          "urn": "ctp:wb727782",
+          "status": "community_text_reference_only"
+        }
+      ]
+    },
+    {
+      "canonical_slug": "ziping-zhenquan",
+      "canonical_title_zh_hant": "子平真詮",
+      "canonical_title_ko": "자평진전",
+      "recommended_release": "conditional",
+      "versions": [
+        {
+          "source": "zh_wikisource",
+          "source_item_title": "子平真诠",
+          "page_title": "子平真诠",
+          "status": "missing_redlink"
+        },
+        {
+          "source": "ctext",
+          "source_item_title": "子平真詮評注",
+          "urn": "ctp:wb631975",
+          "status": "annotated_text_reference_only"
+        }
+      ]
+    },
+    {
+      "canonical_slug": "ditian-sui",
+      "canonical_title_zh_hant": "滴天髓",
+      "canonical_title_ko": "적천수",
+      "recommended_release": "yes",
+      "versions": [
+        {
+          "source": "zh_wikisource",
+          "source_item_title": "滴天髓",
+          "page_title": "滴天髓",
+          "status": "primary_public"
+        },
+        {
+          "source": "ctext",
+          "source_item_title": "滴天髓闡微",
+          "urn": "ctp:wb221357",
+          "status": "commentary_layer"
+        }
+      ]
+    },
+    {
+      "canonical_slug": "qiongtong-baojian",
+      "canonical_title_zh_hant": "窮通寶鑑",
+      "canonical_title_ko": "궁통보감",
+      "recommended_release": "yes",
+      "versions": [
+        {
+          "source": "zh_wikisource",
+          "source_item_title": "穷通宝鉴",
+          "page_title": "穷通宝鉴",
+          "status": "primary_public"
+        },
+        {
+          "source": "ctext",
+          "source_item_title": "穷通宝鉴",
+          "urn": "ctp:wb346166",
+          "status": "secondary_reference"
+        }
+      ]
+    },
+    {
+      "canonical_slug": "sanming-tonghui",
+      "canonical_title_zh_hant": "三命通會",
+      "canonical_title_ko": "삼명통회",
+      "recommended_release": "yes",
+      "versions": [
+        {
+          "source": "zh_wikisource",
+          "source_item_title": "三命通會 (四庫全書本)",
+          "page_title": "三命通會 (四庫全書本)",
+          "status": "primary_public_complete"
+        },
+        {
+          "source": "zh_wikisource",
+          "source_item_title": "三命通會",
+          "page_title": "三命通會",
+          "status": "incomplete_do_not_use"
+        },
+        {
+          "source": "ctext",
+          "source_item_title": "三命通會",
+          "urn": null,
+          "ctext_res": "758991",
+          "status": "ocr_reference"
+        }
+      ]
+    }
+  ],
+  "public_datasets": [
+    {
+      "provider": "한국고전번역원",
+      "name": "한국고전번역원_고전원문_20240902",
+      "dataset_id": "15022432",
+      "format": "XML",
+      "usage": "한국 사료 원문 기반층"
+    },
+    {
+      "provider": "한국고전번역원",
+      "name": "한국고전번역원_서지정보_20210129",
+      "dataset_id": "15077112",
+      "format": "XML",
+      "usage": "번역/서지 메타데이터"
+    },
+    {
+      "provider": "국사편찬위원회",
+      "name": "조선왕조실록 정보_실록원문_20221103",
+      "dataset_id": "15053647",
+      "format": "text",
+      "usage": "원문 사료 기반층"
+    },
+    {
+      "provider": "국사편찬위원회",
+      "name": "조선왕조실록 정보_부가정보 인물 데이터_20231101",
+      "dataset_id": "15053645",
+      "format": "text",
+      "usage": "인물 검증 레이어"
+    },
+    {
+      "provider": "기상청",
+      "name": "조선왕조실록 기상기록_20200110",
+      "dataset_id": "15050689",
+      "format": "XLS",
+      "usage": "천문/기상/재이상서"
+    }
+  ]
+}

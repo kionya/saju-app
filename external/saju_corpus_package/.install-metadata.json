@@ -1,0 +1,18 @@
+{
+  "installed_from": "/Users/kionya/Downloads/codex_safe_setup_kit/saju_corpus_package.zip",
+  "zip_sha256": "55435ef374b3fb425ddeadfc75324b5a16c08b1263f4bb27f8b040b2569009b0",
+  "zip_copied": true,
+  "updated_files": [
+    "external/saju_corpus_package/README.md",
+    "external/saju_corpus_package/saju_source_manifest.csv",
+    "external/saju_corpus_package/saju_source_manifest.xlsx",
+    "external/saju_corpus_package/collectors/source_configs.json",
+    "external/saju_corpus_package/collectors/wikisource_client.ts",
+    "external/saju_corpus_package/collectors/ctext_client.ts",
+    "external/saju_corpus_package/integration/nextjs_reference_api.ts",
+    "external/saju_corpus_package/docs/saju_corpus_blueprint.md",
+    "external/saju_corpus_package/docs/saju_corpus_schema.sql"
+  ],
+  "skipped_identical": [],
+  "conflict_sidecars": []
+}

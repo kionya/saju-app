@@ -8,6 +8,7 @@ import type {
   SajuPillar,
 } from '@/domain/saju/engine/saju-data-v1';
 import { SajuAiInterpretationPanel } from '@/components/ai/saju-ai-interpretation-panel';
+import { ClassicEvidencePanel } from '@/components/classics/classic-evidence-panel';
 import { Badge } from '@/components/ui/badge';
 import DetailUnlock from '@/components/detail-unlock';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
@@ -134,6 +135,28 @@ function formatEvidenceKeyLabel(key: string) {
   }
 }
 
+function getPrimaryClassicEvidenceConcept(report: ReturnType<typeof buildSajuReport>) {
+  const primaryEvidence =
+    report.evidenceCards.find((card) => card.key === 'yongsin') ?? report.evidenceCards[0];
+
+  switch (primaryEvidence?.key) {
+    case 'yongsin':
+      return '용신';
+    case 'pattern':
+      return '격국';
+    case 'strength':
+      return '강약';
+    case 'relations':
+      return '합충';
+    case 'gongmang':
+      return '공망';
+    case 'specialSals':
+      return '신살';
+    default:
+      return '용신';
+  }
+}
+
 export default async function SajuResultPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { topic } = await searchParams;
@@ -152,6 +175,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
   ];
   const majorLuckPreview = sajuData.majorLuck?.slice(0, 6) ?? [];
   const currentMajorIndex = sajuData.currentLuck?.currentMajorLuck?.index ?? null;
+  const classicEvidenceConcept = getPrimaryClassicEvidenceConcept(report);
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -429,6 +453,8 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             </div>
           </section>
         ) : null}
+
+        <ClassicEvidencePanel concept={classicEvidenceConcept} />
 
         <section className="grid gap-4 lg:grid-cols-3">
           {report.insights.map((insight) => (

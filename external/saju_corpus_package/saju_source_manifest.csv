@@ -1,0 +1,24 @@
+﻿category,canonical_work,source_name,source_item_title,access_method,source_ref,status,completeness,text_quality,bulk_ingest,auth_required,license_or_terms,recommended_role,notes,source_url
+플랫폼,,Chinese Text Project API,CTP API,JSON API / Plugin API,api.ctext.org / readlink / gettext / getlink,검증됨,"챕터 단위 fulltext 가능, 상위 work subsections는 인증 필요 가능",공개판 기반 + 인쇄본 대조,비권장/제한,대형 work/추가 접근은 필요 가능,"자동 다운로드 금지, 요청 제한 존재",메타데이터 조회 + 선택적 비교 소스,URN은 opaque identifier로 취급,https://ctext.org/tools/api
+명리 고전,淵海子平,Chinese Text Project,淵海子平,Wiki text / URN,ctp:wb727782,검증됨,작품 페이지 확인,community edited text,비권장/제한,선택적,자동 다운로드 금지,보조 대조본,"作者 徐子平, 宋. 판본 공란",https://ctext.org/wiki.pl?if=gb&remap=gb&res=727782
+명리 고전,淵海子平,zh.wikisource,淵海子平,MediaWiki API / page HTML,title=淵海子平,검증됨,"72개 목차 확인, 그러나 미완성","출처 불명, 추가 검증 필요",가능,불필요,작품 PD-old + 사이트 텍스트 CC BY-SA 4.0,수집 가능하나 공개 전 수동 검수 필수,페이지 자체가 未完成 및 來源不明 경고 포함,https://zh.wikisource.org/wiki/淵海子平
+명리 고전,子平真詮,Chinese Text Project,子平真詮評注,Wiki text / URN,ctp:wb631975,검증됨,작품 페이지 확인,community edited text,비권장/제한,선택적,자동 다운로드 금지,자평진전 계열의 임시 1차 소스,정확히는 評注본이며 원전과 주석본을 구분 저장해야 함,https://ctext.org/wiki.pl?if=en&remap=gb&res=631975
+명리 고전,子平真詮,zh.wikisource,子平真诠,MediaWiki page,redlink,부재,실제 본문 페이지 없음,,불가,불필요,,사용 금지,포털 목록에는 있으나 실제 페이지는 redlink,https://zh.wikisource.org/wiki/Portal:科學技術
+명리 고전,滴天髓,zh.wikisource,滴天髓,MediaWiki API / page HTML,title=滴天髓,검증됨,작품 페이지 존재,사용 가능,가능,불필요,작품 PD-old + 사이트 텍스트 CC BY-SA 4.0,1차 공개 소스,기본 본문층으로 사용,https://zh.wikisource.org/wiki/滴天髓
+명리 고전,滴天髓,Chinese Text Project,滴天髓闡微,Wiki text / URN,ctp:wb221357,검증됨,작품 페이지 확인,community edited text,비권장/제한,선택적,자동 다운로드 금지,주석/비교 레이어,任鐵樵의 闡微본으로 기본 원전과 동일 취급 금지,https://ctext.org/wiki.pl?if=en&remap=gb&res=221357
+명리 고전,窮通寶鑑,zh.wikisource,穷通宝鉴,MediaWiki API / page HTML,title=穷通宝鉴,검증됨,작품 페이지 존재,사용 가능,가능,불필요,작품 PD-old 성격 + 사이트 텍스트 CC BY-SA 4.0,1차 공개 소스,명리 월령/용신 해석 레이어의 핵심 기본본,https://zh.wikisource.org/wiki/穷通宝鉴
+명리 고전,窮通寶鑑,Chinese Text Project,窮通寶鑑,Wiki text / URN,ctp:wb346166,검증됨,작품 페이지 확인,community/위키 계열,비권장/제한,선택적,자동 다운로드 금지,보조 대조본,"作者 馀春台, 明",https://ctext.org/wiki.pl?if=gb&remap=gb&res=346166
+명리 고전,三命通會,zh.wikisource,三命通會,MediaWiki API / page HTML,title=三命通會,검증됨,권1~권9만 존재,사용 가능하나 불완전,가능,불필요,작품 PD-old + 사이트 텍스트 CC BY-SA 4.0,사용 비권장,권10~권12 결락,https://zh.wikisource.org/wiki/三命通會
+명리 고전,三命通會,zh.wikisource,三命通會 (四庫全書本),MediaWiki API / page HTML,title=三命通會_(四庫全書本),검증됨,권1~권12 완전,공개용 기본본으로 적합,가능,불필요,작품 PD-old + 사이트 텍스트 CC BY-SA 4.0,1차 공개 소스,三命通會는 이 판본을 우선 채택 권장,https://zh.wikisource.org/wiki/三命通會_(四庫全書本)
+명리 고전,三命通會,Chinese Text Project,三命通會,Wiki text / OCR / alternative digital,res=758991,검증됨,권별 페이지 확인,OCR 생성판 + 다른 디지털판 존재,비권장/제한,선택적,자동 다운로드 금지,문자단위 diff 비교본,OCR 오탈자 가능성 명시,https://ctext.org/wiki.pl?if=en&res=758991
+국내 공공 데이터,,한국고전번역원,한국고전번역원_고전원문_20240902,공공데이터포털 파일(XML),data.go.kr 15022432,검증됨,1910년 이전 원문자료 다수,공공기관 배포본,가능,불필요,이용허락범위 제한 없음,한국 사료 원문 기반층,"문집류 제외, 역사류·법제류·총집류·의궤류 포함",https://www.data.go.kr/data/15022432/fileData.do
+국내 공공 데이터,,한국고전번역원,한국고전번역원_서지정보_20210129,공공데이터포털 파일(XML),data.go.kr 15077112,검증됨,번역서 서지정보,공공기관 배포본,가능,불필요,이용허락범위 제한 없음,판본/번역 메타데이터,국내외 간행 고전번역서 메타데이터 정리,https://www.data.go.kr/data/15077112/fileData.do
+국내 공공 데이터,,국사편찬위원회,조선왕조실록 정보_실록원문_20221103,공공데이터포털 파일,data.go.kr 15053647,검증됨,태조실록~철종실록 원문,공공기관 배포본,가능,불필요,무료,역학·천문·명리 관련 국가기록 근거층,UTF-8로 열람 필요,https://www.data.go.kr/data/15053647/fileData.do
+국내 공공 데이터,,국사편찬위원회,조선왕조실록 정보_부가정보 인물 데이터_20231101,공공데이터포털 파일,data.go.kr 15053645,검증됨,성명·신분·자·호·시호·본관·생몰년,공공기관 배포본,가능,불필요,무료,실존 인물 교차 검증,실록 인물 엔티티 정규화에 유용,https://www.data.go.kr/data/15053645/fileData.do
+국내 공공 데이터,,기상청,조선왕조실록 기상기록_20200110,공공데이터포털 파일/XLS,data.go.kr 15050689,검증됨,기상·기후·지변·재해·천문·재이상서 기록,공공기관 배포본,가능,불필요,무료,천문·재이상서 사료 레이어,원문 + 해설 포함,https://www.data.go.kr/data/15050689/fileData.do
+국내 학술/기관 API,,한국역대인물 종합정보시스템,OpenAPI,OpenAPI,people.aks.ac.kr openapi,검증됨,인물 정보 API,기관 제공 메타데이터,승인 후 가능,필수,사용신청 후 승인/인증키 발급,역사 인물 검증/보강,신청 승인 후 이메일로 인증키 발급,https://people.aks.ac.kr/front/openapi/openapiInfo.aks
+국내 학술/기관 API,,RINKS,한국학종합정보서비스 Open API,OpenAPI,rinks.aks.ac.kr OpenAPI,검증됨,통합 콘텐츠 목록/상세 제공,기관 통합 메타데이터,가능,가이드 확인 필요,기관 가이드 기준,보조 메타 검색 허브,여러 한국학 리소스 연결용,https://rinks.aks.ac.kr/service01.aspx?cate=OpenAPI소개
+학술 검증용,,DBpia Open API,검색 API / 비즈니스 API,OpenAPI,api.dbpia.co.kr,검증됨,논문 메타/상세 정보,학술 플랫폼,제한적,API 키 필수,상업적 재배포/무단 크롤링 금지,원문 대조표 탐색용 메타데이터,논문 본문 대량 적재 소스로 쓰면 안 됨,https://api.dbpia.co.kr/openApi/about/guide.do
+학술 검증용,,DBpia,부정이용/약관,공지/FAQ/약관,DBpia terms,검증됨,크롤링/대량 다운로드/상업 이용 제한 명시,공식 정책,불가,해당 없음,크롤링·대량 다운로드·영리 목적 이용 제한,법적/운영 리스크 가드레일,검증용 메타만 참고,https://www.dbpia.co.kr/link/agreement
+학술 검증용,,RISS,Linked Open Data,LOD,data.riss.kr,검증됨,연계 데이터 허브,기관 메타데이터,가능,일부 서비스별 상이,서비스별 상이,학술 메타 링크 연결,논문 원문 일괄 적재 소스가 아니라 메타 허브로 활용,https://data.riss.kr/
+학술 검증용,,RISS SAM API,SAM API,OpenAPI,sam.riss.kr,검증됨,학술관계분석 API,기관 서비스,제한적,"소속기관 대상, 개인 신청 불가",기관 인증키 필요,보조 학술 관계망 분석,개인 사업 직접 연동 소스로는 부적합할 수 있음,https://sam.riss.kr/openApiApply.do
