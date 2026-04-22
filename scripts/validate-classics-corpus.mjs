@@ -42,10 +42,20 @@ async function main() {
 
   const minPassages = Number.parseInt(args.minPassages, 10);
   const tooSmall = rows.filter((row) => row.passage_count < minPassages);
+  const missingRequired = rows.filter((row) => row.required_field_missing_count > 0);
   if (tooSmall.length > 0) {
     console.error(
       `Expected at least ${minPassages} passages for each work, but these were too small: ${tooSmall
         .map((row) => row.source_work_ref)
+        .join(', ')}`
+    );
+    process.exit(1);
+  }
+
+  if (missingRequired.length > 0) {
+    console.error(
+      `Missing required passage provenance fields: ${missingRequired
+        .map((row) => `${row.source_work_ref}=${row.required_field_missing_count}`)
         .join(', ')}`
     );
     process.exit(1);
@@ -113,7 +123,41 @@ async function validateWorkVersion(supabase, sourceWorkRef) {
       supabase,
       version.work_version_id
     ),
+    required_field_missing_count: await countMissingRequiredPassageFields(
+      supabase,
+      version.work_version_id
+    ),
   };
+}
+
+async function countMissingRequiredPassageFields(supabase, workVersionId) {
+  const passageRows = await loadAllRows(
+    supabase,
+    'classic_passages',
+    [
+      'passage_id',
+      'work_version_id',
+      'section_path',
+      'passage_no',
+      'original_text_zh',
+      'source_line_ref',
+      'provenance_hash',
+      'license_label',
+      'verification_status',
+    ].join(', ')
+  );
+
+  return passageRows.filter(
+    (row) =>
+      row.work_version_id === workVersionId &&
+      (!row.section_path ||
+        !row.passage_no ||
+        !row.original_text_zh ||
+        !row.source_line_ref ||
+        !row.provenance_hash ||
+        !row.license_label ||
+        !row.verification_status)
+  ).length;
 }
 
 async function countConceptTagsForWorkVersion(supabase, workVersionId) {

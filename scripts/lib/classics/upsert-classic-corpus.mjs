@@ -47,6 +47,7 @@ export function createSupabaseServiceClient() {
 
 export async function upsertClassicWorkCorpus({ supabase, collected, replace = false }) {
   const workVersion = await loadWorkVersion(supabase, collected.work.sourceWorkRef);
+  const licenseLabel = await loadEffectiveLicenseLabel(supabase, workVersion);
   const ingestRun = await startIngestRun({
     supabase,
     sourceId: workVersion.source_id,
@@ -66,11 +67,18 @@ export async function upsertClassicWorkCorpus({ supabase, collected, replace = f
       workVersionId: workVersion.work_version_id,
       sections: collected.sections,
     });
+    const sectionByKey = new Map(
+      collected.sections.map((section) => [section.sectionKey, section])
+    );
 
     const passageInputs = collected.passages.map((passage) => {
+      const section = sectionByKey.get(passage.sectionKey);
       const sectionId = sectionIdByKey.get(passage.sectionKey);
       if (!sectionId) {
         throw new Error(`Missing section id for passage section key ${passage.sectionKey}`);
+      }
+      if (!section) {
+        throw new Error(`Missing section metadata for passage section key ${passage.sectionKey}`);
       }
 
       return {
@@ -79,11 +87,14 @@ export async function upsertClassicWorkCorpus({ supabase, collected, replace = f
           work_version_id: workVersion.work_version_id,
           section_id: sectionId,
           passage_no: passage.passageNo,
+          section_path: section.sectionPath,
           original_text_zh: passage.originalTextZh,
           normalized_text_zh: passage.normalizedTextZh,
           script_type: passage.scriptType,
           provenance_hash: passage.provenanceHash,
           source_line_ref: passage.sourceLineRef,
+          license_label: licenseLabel,
+          verification_status: workVersion.verification_status,
           is_suspect: false,
           suspect_reason: null,
         },
@@ -134,7 +145,7 @@ export async function upsertClassicWorkCorpus({ supabase, collected, replace = f
 async function loadWorkVersion(supabase, sourceWorkRef) {
   const { data, error } = await supabase
     .from('classic_work_versions')
-    .select('work_version_id, source_id, source_work_ref')
+    .select('work_version_id, source_id, source_work_ref, license_override, verification_status')
     .eq('source_work_ref', sourceWorkRef)
     .single();
 
@@ -143,6 +154,26 @@ async function loadWorkVersion(supabase, sourceWorkRef) {
   }
 
   return data;
+}
+
+async function loadEffectiveLicenseLabel(supabase, workVersion) {
+  if (workVersion.license_override) return workVersion.license_override;
+
+  const { data, error } = await supabase
+    .from('classic_sources')
+    .select('license_label')
+    .eq('source_id', workVersion.source_id)
+    .single();
+
+  if (error) {
+    throw new Error(`Could not load license label for source ${workVersion.source_id}: ${error.message}`);
+  }
+
+  if (!data.license_label) {
+    throw new Error(`Missing license label for source ${workVersion.source_id}`);
+  }
+
+  return data.license_label;
 }
 
 async function startIngestRun({ supabase, sourceId, workVersionId, jobName }) {

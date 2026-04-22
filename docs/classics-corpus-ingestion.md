@@ -72,10 +72,27 @@ The CLI uses the MediaWiki Action API `action=parse` result for `wikitext`,
 concept tag, so Korean queries such as `용신` can return initial original-text
 evidence before translation and commentary layers are reviewed.
 
+`classic_passages` must carry the audit/export snapshot directly on the passage
+row:
+
+- `work_version_id`
+- `section_path`
+- `passage_no`
+- `original_text_zh`
+- `source_line_ref`
+- `provenance_hash`
+- `license_label`
+- `verification_status`
+
+`license_label` is copied from the effective source/version license at ingest
+time. For Wikisource rows this preserves the public-domain/CC BY-SA attribution
+condition alongside the original passage text instead of relying only on joined
+metadata.
+
 1. Pick one `classic_work_versions` row whose `public_release_status` is `live` and whose `verification_status` is `provisional` or `reviewed`.
 2. Load source text from approved local/offline material first. For the current Wikisource collector, use dry-run before applying and preserve page revision provenance.
 3. Insert `classic_sections` with stable `section_key`, `section_path`, source references, and sort order.
-4. Insert `classic_passages` with `original_text_zh`, optional `normalized_text_zh`, `source_line_ref`, and `provenance_hash`.
+4. Insert `classic_passages` with `section_path`, `original_text_zh`, optional `normalized_text_zh`, `source_line_ref`, `provenance_hash`, `license_label`, and `verification_status`.
 5. Add `classic_readings_ko`, `classic_translations_ko`, and `classic_commentaries` only when their generation source and review state are explicit.
 6. Attach `classic_passage_concept_tags` for concepts such as `용신`, `조후`, `격국`, `강약`, `합충`, `공망`, and `신살`. The first Wikisource pass uses exact Chinese keyword tagging only; review-backed tags can overwrite or extend this later.
 7. Record each batch in `classic_ingest_runs`.
