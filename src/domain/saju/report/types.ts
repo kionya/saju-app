@@ -62,12 +62,22 @@ export interface ReportEvidenceComputed {
   specialSals?: string[];
 }
 
+export interface ReportEvidenceExplainer {
+  term: string;
+  hanja?: string;
+  meaning: string;
+}
+
 export interface ReportEvidenceCard {
   key: ReportEvidenceKey;
   label: string;
   title: string;
   body: string;
   details: string[];
+  plainSummary?: string;
+  technicalSummary?: string;
+  practicalActions?: string[];
+  explainers?: ReportEvidenceExplainer[];
   computed: ReportEvidenceComputed;
   source: ReportEvidenceSource[];
   confidence: ReportEvidenceConfidence;

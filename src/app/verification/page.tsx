@@ -417,10 +417,9 @@ export default async function VerificationPage({ searchParams }: VerificationPag
                   </div>
                 </div>
                 <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
-                  <div className="app-caption">격국/용신 근거</div>
+                  <div className="app-caption">격국 근거</div>
                   <div className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
                     <p>{sajuAudit.calculation.pattern?.rationale.join(' ') ?? '격국 근거 없음'}</p>
-                    <p className="mt-3">{sajuAudit.calculation.yongsin?.rationale.join(' ') ?? '용신 근거 없음'}</p>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
@@ -428,6 +427,52 @@ export default async function VerificationPage({ searchParams }: VerificationPag
                   <div className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
                     <p className="font-semibold text-[var(--app-ivory)]">{sajuAudit.report.headline}</p>
                     <p className="mt-3">{sajuAudit.report.summaryHighlights.join(' ')}</p>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4 lg:col-span-3">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <div className="app-caption">용신 계산표</div>
+                      <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                        최종 {sajuAudit.calculation.yongsin?.primary.label ?? '없음'} · 신뢰도 {sajuAudit.calculation.yongsin?.confidence ?? '없음'}
+                      </div>
+                    </div>
+                    <div className="text-xs leading-6 text-[var(--app-copy-soft)]">
+                      조후/억부/오행보정 후보를 함께 비교합니다.
+                    </div>
+                  </div>
+                  <div className="mt-4 overflow-x-auto">
+                    <table className="min-w-full text-left text-sm">
+                      <thead className="text-xs uppercase tracking-[0.16em] text-[var(--app-copy-soft)]">
+                        <tr>
+                          <th className="whitespace-nowrap py-2 pr-4">순위</th>
+                          <th className="whitespace-nowrap py-2 pr-4">방식</th>
+                          <th className="whitespace-nowrap py-2 pr-4">후보</th>
+                          <th className="whitespace-nowrap py-2 pr-4">점수</th>
+                          <th className="min-w-80 py-2">근거</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--app-line)] text-[var(--app-copy)]">
+                        {(sajuAudit.calculation.yongsin?.candidates ?? []).map((candidate) => (
+                          <tr key={`${candidate.method}-${candidate.primary.label}-${candidate.score}`}>
+                            <td className="whitespace-nowrap py-3 pr-4">
+                              {candidate.role === 'primary' ? '1순위' : candidate.role === 'support' ? '보조' : '참고'}
+                            </td>
+                            <td className="whitespace-nowrap py-3 pr-4">{candidate.method}</td>
+                            <td className="whitespace-nowrap py-3 pr-4">
+                              {candidate.primary.label}
+                              {candidate.secondary.length > 0 ? ` / ${candidate.secondary.map((item) => item.label).join(' · ')}` : ''}
+                            </td>
+                            <td className="whitespace-nowrap py-3 pr-4">{candidate.score}</td>
+                            <td className="py-3 leading-7">{candidate.rationale.join(' ')}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="mt-4 grid gap-3 text-sm leading-7 text-[var(--app-copy)] lg:grid-cols-2">
+                    <p>{sajuAudit.calculation.yongsin?.plainSummary ?? '용신 쉬운 풀이 없음'}</p>
+                    <p>{sajuAudit.calculation.yongsin?.technicalSummary ?? '용신 전문 근거 없음'}</p>
                   </div>
                 </div>
               </div>

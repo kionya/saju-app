@@ -113,9 +113,9 @@ export async function getSajuVerificationAudit({
       {
         key: 'yongsin-rationale',
         label: '용신 방식과 근거',
-        ok: Boolean(data.yongsin?.primary && data.yongsin.rationale.length > 0),
+        ok: Boolean(data.yongsin?.primary && data.yongsin.rationale.length > 0 && data.yongsin.candidates?.length),
         detail: data.yongsin
-          ? `${data.yongsin.method} · ${data.yongsin.primary.label}`
+          ? `${data.yongsin.method} · ${data.yongsin.primary.label} · 후보 ${data.yongsin.candidates?.length ?? 0}개 · 신뢰도 ${data.yongsin.confidence ?? '미기재'}`
           : '용신 계산값이 없습니다.',
       },
       {
@@ -192,6 +192,10 @@ export async function getSajuVerificationAudit({
           title: card.title,
           body: card.body,
           details: card.details,
+          plainSummary: card.plainSummary,
+          technicalSummary: card.technicalSummary,
+          practicalActions: card.practicalActions,
+          explainers: card.explainers,
           computed: card.computed,
           source: card.source,
           confidence: card.confidence,

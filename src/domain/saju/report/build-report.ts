@@ -1,4 +1,10 @@
-﻿import type { SajuDataV1, SajuSymbolRef, TenGodCode } from '@/domain/saju/engine/saju-data-v1';
+﻿import type {
+  SajuDataV1,
+  SajuSymbolRef,
+  SajuYongsinCandidate,
+  TenGodCode,
+  YongsinConfidence,
+} from '@/domain/saju/engine/saju-data-v1';
 import type { OrreryRelation } from '@/domain/saju/engine/orrery-adapter';
 import {
   ELEMENT_INFO,
@@ -372,20 +378,45 @@ function buildYongsinEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
 
   const yongsinLabel = formatSymbolList([yongsin.primary, ...yongsin.secondary]);
   const kiyshinLabel = yongsin.kiyshin.length > 0 ? formatSymbolList(yongsin.kiyshin) : '기신 미기재';
+  const candidateDetails = yongsin.candidates?.slice(0, 3).map(formatYongsinCandidateDetail) ?? [];
+  const confidenceLabel = yongsin.confidence ?? '중간';
 
   return {
     key,
     label: '용신',
-    title: yongsinLabel,
-    body: `${yongsin.method} 기준으로 ${yongsinLabel}을 보완 축으로 보고, 기신은 ${kiyshinLabel}입니다.`,
-    details: yongsin.rationale.length > 0
-      ? yongsin.rationale.slice(0, 3)
-      : ['용신 값은 준비되었고 상세 판정 근거는 다음 단계에서 보강됩니다.'],
+    title: `1순위 ${yongsin.primary.label}${yongsin.secondary.length > 0 ? ` · 보조 ${formatSymbolList(yongsin.secondary)}` : ''}`,
+    body: yongsin.plainSummary ?? `${yongsin.method} 기준으로 ${yongsinLabel}을 보완 축으로 보고, 기신은 ${kiyshinLabel}입니다.`,
+    details: [
+      yongsin.technicalSummary ?? `${yongsin.method} 기준으로 ${yongsinLabel}을 보완 축으로 봅니다.`,
+      `주의해서 볼 기운: ${kiyshinLabel}. 이 기운은 무조건 나쁘다는 뜻이 아니라, 이미 과하거나 균형을 흐릴 때 조절이 필요하다는 뜻입니다.`,
+      ...candidateDetails,
+      ...yongsin.rationale.slice(0, 2),
+    ].filter(Boolean),
+    plainSummary: yongsin.plainSummary,
+    technicalSummary: yongsin.technicalSummary,
+    practicalActions: yongsin.practicalActions,
+    explainers: yongsin.terms?.map((term) => ({
+      term: term.term,
+      hanja: term.hanja,
+      meaning: term.meaning,
+    })),
     computed,
     source: getEvidenceSource(key),
-    confidence: yongsin.method === 'legacy-placeholder' ? '참고' : '보통',
+    confidence: yongsin.method === 'legacy-placeholder' ? '참고' : mapYongsinConfidence(confidenceLabel),
     topicMapping: getEvidenceTopicMapping(key),
   };
+}
+
+function mapYongsinConfidence(confidence: YongsinConfidence): ReportEvidenceCard['confidence'] {
+  if (confidence === '높음') return '확정';
+  if (confidence === '낮음') return '참고';
+  return '보통';
+}
+
+function formatYongsinCandidateDetail(candidate: SajuYongsinCandidate) {
+  const roleLabel = candidate.role === 'primary' ? '1순위' : candidate.role === 'support' ? '보조' : '참고';
+  const secondary = candidate.secondary.length > 0 ? `, 보조 ${formatSymbolList(candidate.secondary)}` : '';
+  return `${roleLabel} 후보: ${candidate.method} ${candidate.primary.label}${secondary} · ${candidate.score}점. ${candidate.plainSummary}`;
 }
 
 function formatRelationEvidenceLine(relation: OrreryRelation) {

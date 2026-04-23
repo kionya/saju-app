@@ -59,6 +59,8 @@ export type YongsinMethod =
   | '억부용신'
   | '희기신보정'
   | 'legacy-placeholder';
+export type YongsinConfidence = '높음' | '중간' | '낮음';
+export type YongsinCandidateRole = 'primary' | 'support' | 'reference';
 export type SajuSymbolType = 'stem' | 'branch' | 'element';
 type SeasonKey = 'spring' | 'summer' | 'autumn' | 'winter' | 'earth';
 type LocalDatePart = 'year' | 'month' | 'day' | 'hour' | 'minute';
@@ -91,6 +93,50 @@ const ELEMENT_HANJA: Record<Element, string> = {
   금: '金',
   수: '水',
 };
+
+const ELEMENT_PLAIN_EFFECT: Record<Element, string> = {
+  목: '막힌 흐름을 틔우고 새 방향을 세우는',
+  화: '차가운 기운을 데우고 표현력을 살리는',
+  토: '흩어진 기운을 붙잡아 현실감과 안정감을 만드는',
+  금: '복잡한 흐름을 정리하고 기준을 세우는',
+  수: '과열된 흐름을 식히고 생각을 깊게 만드는',
+};
+
+const ELEMENT_PRACTICAL_ACTIONS: Record<Element, string[]> = {
+  목: ['새 계획을 작게 시작하기', '걷기와 스트레칭으로 몸의 흐름 열기', '배움과 성장 루틴 만들기'],
+  화: ['햇빛을 쬐며 활동량 올리기', '말과 표현을 숨기지 않기', '작은 성취를 빠르게 확인하기'],
+  토: ['생활 리듬을 일정하게 고정하기', '돈과 일정을 장부처럼 정리하기', '약속과 책임 범위를 분명히 하기'],
+  금: ['우선순위와 기준을 글로 적기', '불필요한 관계와 일을 덜어내기', '정리·편집·검토 시간을 확보하기'],
+  수: ['수면과 회복 시간을 먼저 확보하기', '결정 전 자료를 모아 차분히 검토하기', '물가 산책이나 조용한 환경을 활용하기'],
+};
+
+const YONGSIN_TERM_EXPLANATIONS = [
+  {
+    term: '용신',
+    hanja: '用神',
+    meaning: '명식이 균형을 잡기 위해 가장 먼저 빌려 쓰는 핵심 기운입니다.',
+  },
+  {
+    term: '희신',
+    hanja: '喜神',
+    meaning: '용신을 도와 결과를 편하게 만드는 보조 기운입니다.',
+  },
+  {
+    term: '기신',
+    hanja: '忌神',
+    meaning: '이미 과하거나 균형을 흐릴 수 있어 조심해서 써야 하는 기운입니다.',
+  },
+  {
+    term: '조후',
+    hanja: '調候',
+    meaning: '계절의 춥고 더움, 마르고 습함을 먼저 맞추는 판단입니다.',
+  },
+  {
+    term: '억부',
+    hanja: '抑扶',
+    meaning: '일간이 너무 강하면 덜어내고 약하면 도와주는 강약 판단입니다.',
+  },
+] as const;
 
 const DAY_MASTER_METAPHORS: Record<Stem, string> = {
   '甲': '큰 나무',
@@ -319,12 +365,36 @@ export interface SajuSymbolRef {
   label: string;
 }
 
+export interface SajuYongsinTerm {
+  term: string;
+  hanja: string;
+  meaning: string;
+}
+
+export interface SajuYongsinCandidate {
+  method: YongsinMethod;
+  role: YongsinCandidateRole;
+  primary: SajuSymbolRef;
+  secondary: SajuSymbolRef[];
+  kiyshin: SajuSymbolRef[];
+  score: number;
+  rationale: string[];
+  plainSummary: string;
+  technicalSummary: string;
+}
+
 export interface SajuYongsin {
   primary: SajuSymbolRef;
   secondary: SajuSymbolRef[];
   kiyshin: SajuSymbolRef[];
   method: YongsinMethod;
   rationale: string[];
+  candidates?: SajuYongsinCandidate[];
+  confidence?: YongsinConfidence;
+  plainSummary?: string;
+  technicalSummary?: string;
+  practicalActions?: string[];
+  terms?: SajuYongsinTerm[];
 }
 
 export interface SajuMajorLuckCycle {
@@ -641,6 +711,15 @@ function hasEnrichedPillarData(value: SajuDataV1) {
   );
 }
 
+function hasEnrichedYongsinData(value: SajuDataV1) {
+  return Boolean(
+    value.yongsin?.candidates?.length &&
+      value.yongsin.confidence &&
+      value.yongsin.plainSummary &&
+      value.yongsin.technicalSummary
+  );
+}
+
 function shouldPreserveSajuDataV1(value: SajuDataV1) {
   if (value.metadata.source === 'python-engine') {
     return hasEnrichedPillarData(value);
@@ -658,11 +737,12 @@ function shouldPreserveSajuDataV1(value: SajuDataV1) {
         value.majorLuck &&
         value.currentLuck &&
         value.extensions?.orrery &&
+        hasEnrichedYongsinData(value) &&
         hasEnrichedPillarData(value)
     );
   }
 
-  return value.metadata.completeness === 'complete' && hasEnrichedPillarData(value);
+  return value.metadata.completeness === 'complete' && hasEnrichedPillarData(value) && hasEnrichedYongsinData(value);
 }
 
 function getPendingSections(base: SajuDataV1): SajuPendingSection[] {
@@ -842,57 +922,237 @@ function calculateYongsin(
 ): SajuYongsin {
   const monthSeason = SEASON_BY_BRANCH[pillars.month.branch];
   const seasonalOverride = getSeasonalYongsin(dayMasterElement, monthSeason);
+  const candidates = [
+    seasonalOverride
+      ? buildSeasonalYongsinCandidate({
+          monthBranch: pillars.month.branch,
+          monthSeason,
+          seasonalOverride,
+          score: 88,
+        })
+      : null,
+    buildBalanceYongsinCandidate(dayMasterElement, strength),
+    buildElementBalanceYongsinCandidate(fiveElements),
+  ].filter((candidate): candidate is Omit<SajuYongsinCandidate, 'role'> => Boolean(candidate));
+  const ranked = rankYongsinCandidates(candidates);
+  const primaryCandidate = ranked[0];
 
-  if (seasonalOverride) {
+  if (!primaryCandidate) {
+    const fallback = toElementSymbolRef(fiveElements.weakest);
     return {
-      primary: toElementSymbolRef(seasonalOverride.primary),
-      secondary: seasonalOverride.secondary.map(toElementSymbolRef),
-      kiyshin: seasonalOverride.kiyshin.map(toElementSymbolRef),
-      method: '조후용신',
-      rationale: [
-        seasonalOverride.reason,
-        `${pillars.month.branch}월은 ${formatSeasonLabel(monthSeason)}이라 조후를 먼저 보고 ${formatElementLabel(seasonalOverride.primary)}을(를) 우선했습니다.`,
-      ],
+      primary: fallback,
+      secondary: [toElementSymbolRef(generatorOf(fiveElements.weakest))],
+      kiyshin: [toElementSymbolRef(fiveElements.dominant)],
+      method: '희기신보정',
+      rationale: ['용신 후보 계산값이 비어 있어 가장 약한 오행을 임시 보완 축으로 잡았습니다.'],
+      candidates: [],
+      confidence: '낮음',
+      plainSummary: buildYongsinPlainSummary(fallback.value as Element),
+      technicalSummary: '후보 계산값이 비어 있어 오행 균형 기준을 임시 적용했습니다.',
+      practicalActions: ELEMENT_PRACTICAL_ACTIONS[fiveElements.weakest],
+      terms: [...YONGSIN_TERM_EXPLANATIONS],
     };
   }
 
+  const secondary = uniqueSymbolRefs([
+    ...primaryCandidate.secondary,
+    ...ranked
+      .slice(1)
+      .filter((candidate) => candidate.primary.value !== primaryCandidate.primary.value)
+      .slice(0, 1)
+      .map((candidate) => candidate.primary),
+  ]).slice(0, 2);
+  const confidence = getYongsinConfidence(ranked);
+  const comparisonLine = buildYongsinComparisonLine(ranked);
+  const primaryElement = primaryCandidate.primary.value as Element;
+
+  return {
+    primary: primaryCandidate.primary,
+    secondary,
+    kiyshin: primaryCandidate.kiyshin,
+    method: primaryCandidate.method,
+    rationale: [
+      ...primaryCandidate.rationale,
+      comparisonLine,
+    ],
+    candidates: ranked,
+    confidence,
+    plainSummary: buildYongsinPlainSummary(primaryElement, secondary),
+    technicalSummary: buildYongsinTechnicalSummary(primaryCandidate, ranked, confidence),
+    practicalActions: ELEMENT_PRACTICAL_ACTIONS[primaryElement],
+    terms: [...YONGSIN_TERM_EXPLANATIONS],
+  };
+}
+
+function buildSeasonalYongsinCandidate({
+  monthBranch,
+  monthSeason,
+  seasonalOverride,
+  score,
+}: {
+  monthBranch: Branch;
+  monthSeason: SeasonKey;
+  seasonalOverride: { primary: Element; secondary: Element[]; kiyshin: Element[]; reason: string };
+  score: number;
+}): Omit<SajuYongsinCandidate, 'role'> {
+  const primary = toElementSymbolRef(seasonalOverride.primary);
+
+  return {
+    primary,
+    secondary: seasonalOverride.secondary.map(toElementSymbolRef),
+    kiyshin: seasonalOverride.kiyshin.map(toElementSymbolRef),
+    method: '조후용신',
+    score,
+    rationale: [
+      seasonalOverride.reason,
+      `${monthBranch}월은 ${formatSeasonLabel(monthSeason)}이라 조후를 먼저 보고 ${primary.label}을(를) 후보로 올렸습니다.`,
+    ],
+    plainSummary: `${primary.label}은 계절의 치우침을 먼저 맞추는 후보입니다.`,
+    technicalSummary: `조후(調候) 기준: ${formatSeasonLabel(monthSeason)}의 온도·습도 치우침을 ${primary.label}로 조절합니다.`,
+  };
+}
+
+function buildBalanceYongsinCandidate(
+  dayMasterElement: Element,
+  strength: SajuStrength
+): Omit<SajuYongsinCandidate, 'role'> {
   if (strength.level === '신강') {
     const output = generatedBy(dayMasterElement);
     const officer = controllerOf(dayMasterElement);
+    const primary = toElementSymbolRef(output);
+
     return {
-      primary: toElementSymbolRef(output),
+      primary,
       secondary: [toElementSymbolRef(officer)],
       kiyshin: [toElementSymbolRef(dayMasterElement), toElementSymbolRef(generatorOf(dayMasterElement))],
       method: '억부용신',
+      score: clampScore(70 + Math.abs(strength.score - 50) * 0.32),
       rationale: [
-        `일간이 신강으로 계산되어 기운을 덜어내는 설기(${formatElementLabel(output)})와 관성(${formatElementLabel(officer)}) 쪽을 우선했습니다.`,
+        `일간이 신강(${strength.score}점)으로 계산되어 기운을 덜어내는 설기(${formatElementLabel(output)})와 관성(${formatElementLabel(officer)})을 후보로 올렸습니다.`,
       ],
+      plainSummary: `${primary.label}은 강한 기운을 밖으로 풀어 균형을 잡는 후보입니다.`,
+      technicalSummary: `억부(抑扶) 기준: 신강 명식이므로 일간을 더 돕기보다 설기·관성 방향을 봅니다.`,
     };
   }
 
   if (strength.level === '신약') {
     const resource = generatorOf(dayMasterElement);
+    const primary = toElementSymbolRef(resource);
+
     return {
-      primary: toElementSymbolRef(resource),
+      primary,
       secondary: [toElementSymbolRef(dayMasterElement)],
       kiyshin: [toElementSymbolRef(generatedBy(dayMasterElement)), toElementSymbolRef(controllerOf(dayMasterElement))],
       method: '억부용신',
+      score: clampScore(70 + Math.abs(strength.score - 50) * 0.32),
       rationale: [
-        `일간이 신약으로 계산되어 일간을 돕는 인성(${formatElementLabel(resource)})과 비겁(${formatElementLabel(dayMasterElement)}) 쪽을 우선했습니다.`,
+        `일간이 신약(${strength.score}점)으로 계산되어 일간을 돕는 인성(${formatElementLabel(resource)})과 비겁(${formatElementLabel(dayMasterElement)})을 후보로 올렸습니다.`,
       ],
+      plainSummary: `${primary.label}은 약한 일간을 받쳐 균형을 잡는 후보입니다.`,
+      technicalSummary: `억부(抑扶) 기준: 신약 명식이므로 일간을 생하고 지탱하는 인성·비겁 방향을 봅니다.`,
     };
   }
 
-  const weakest = fiveElements.weakest;
+  const weakest = dayMasterElement;
+  const primary = toElementSymbolRef(weakest);
+
   return {
-    primary: toElementSymbolRef(weakest),
+    primary,
+    secondary: [toElementSymbolRef(generatorOf(weakest))],
+    kiyshin: [toElementSymbolRef(generatedBy(weakest))],
+    method: '억부용신',
+    score: 62,
+    rationale: [
+      `일간 강약이 중화(${strength.score}점)에 가까워 억부 기준은 강하게 단정하지 않고 일간 자체를 보조 후보로만 둡니다.`,
+    ],
+    plainSummary: `${primary.label}은 일간의 기본 체력을 유지하는 보조 후보입니다.`,
+    technicalSummary: '억부(抑扶) 기준: 신강·신약 어느 한쪽으로 강하게 치우치지 않아 참고 후보로만 봅니다.',
+  };
+}
+
+function buildElementBalanceYongsinCandidate(
+  fiveElements: SajuFiveElements
+): Omit<SajuYongsinCandidate, 'role'> {
+  const weakest = fiveElements.weakest;
+  const primary = toElementSymbolRef(weakest);
+  const dominantScore = fiveElements.byElement[fiveElements.dominant].score;
+  const weakestScore = fiveElements.byElement[weakest].score;
+  const gap = Math.max(0, dominantScore - weakestScore);
+
+  return {
+    primary,
     secondary: [toElementSymbolRef(generatorOf(weakest))],
     kiyshin: [toElementSymbolRef(fiveElements.dominant)],
     method: '희기신보정',
+    score: clampScore(58 + gap * 5),
     rationale: [
-      `중화 명식으로 보고 가장 약한 ${formatElementLabel(weakest)}을(를) 먼저 보완하는 방향으로 맞췄습니다.`,
+      `오행 분포에서 ${formatElementLabel(weakest)} 점수는 ${round1(weakestScore)}점으로 가장 약하고, ${formatElementLabel(fiveElements.dominant)} 점수는 ${round1(dominantScore)}점으로 가장 강합니다.`,
     ],
+    plainSummary: `${primary.label}은 부족한 축을 채워 전체 균형을 맞추는 후보입니다.`,
+    technicalSummary: '희기신 보정 기준: 가장 약한 오행과 그 오행을 생하는 기운을 보완 후보로 봅니다.',
   };
+}
+
+function rankYongsinCandidates(
+  candidates: Omit<SajuYongsinCandidate, 'role'>[]
+): SajuYongsinCandidate[] {
+  return [...candidates]
+    .sort((a, b) => b.score - a.score)
+    .map((candidate, index) => ({
+      ...candidate,
+      role: index === 0 ? 'primary' : index === 1 ? 'support' : 'reference',
+    }));
+}
+
+function uniqueSymbolRefs(symbols: SajuSymbolRef[]) {
+  const seen = new Set<string>();
+  return symbols.filter((symbol) => {
+    if (seen.has(symbol.value)) return false;
+    seen.add(symbol.value);
+    return true;
+  });
+}
+
+function getYongsinConfidence(candidates: SajuYongsinCandidate[]): YongsinConfidence {
+  const [first, second] = candidates;
+  if (!first) return '낮음';
+  if (!second) return first.score >= 80 ? '높음' : '중간';
+
+  const scoreGap = first.score - second.score;
+  const hasMethodConflict = first.primary.value !== second.primary.value;
+  if (hasMethodConflict && scoreGap <= 6) return '낮음';
+  if (hasMethodConflict && scoreGap <= 12) return '중간';
+  return first.score >= 82 ? '높음' : '중간';
+}
+
+function buildYongsinPlainSummary(primaryElement: Element, secondary: SajuSymbolRef[] = []) {
+  const secondaryLabel = secondary.length > 0
+    ? ` 보조로는 ${secondary.map((symbol) => symbol.label).join(' · ')}을(를) 함께 봅니다.`
+    : '';
+
+  return `이 명식은 가장 먼저 ${formatElementLabel(primaryElement)} 기운을 보완 후보로 봅니다. 쉽게 말하면 ${ELEMENT_PLAIN_EFFECT[primaryElement]} 힘이 균형을 잡는 데 필요하다는 뜻입니다.${secondaryLabel}`;
+}
+
+function buildYongsinTechnicalSummary(
+  primaryCandidate: SajuYongsinCandidate,
+  ranked: SajuYongsinCandidate[],
+  confidence: YongsinConfidence
+) {
+  const methodFlow = ranked
+    .slice(0, 3)
+    .map((candidate) => `${candidate.method} ${candidate.score}점`)
+    .join(' / ');
+
+  return `전문적으로는 ${primaryCandidate.method}을 1순위로 두되, ${methodFlow}을 함께 대조했습니다. 현재 판정 신뢰도는 ${confidence}입니다.`;
+}
+
+function buildYongsinComparisonLine(candidates: SajuYongsinCandidate[]) {
+  if (candidates.length <= 1) {
+    return '비교 가능한 보조 후보가 적어 현재 후보를 참고값으로 표시합니다.';
+  }
+
+  const [first, second] = candidates;
+  return `후보 비교: ${first.method} ${first.primary.label} ${first.score}점, ${second.method} ${second.primary.label} ${second.score}점으로 계산했습니다.`;
 }
 
 function getTenGod(dayMasterStem: Stem, targetStem: Stem | null): TenGodCode | null {

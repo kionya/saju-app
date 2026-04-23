@@ -79,3 +79,15 @@ test('evidence cards expose computed facts, source, confidence, and topic mappin
   assert.ok(relationCard?.topicMapping.includes('relationship'));
   assert.ok(relationCard?.source.includes('orrery-reference'));
 });
+
+test('yongsin evidence card balances plain Korean, hanja glossary, and technical detail', () => {
+  const data = normalizeToSajuDataV1(birthInput, null);
+  const report = buildSajuReport(birthInput, data, 'today');
+  const yongsinCard = report.evidenceCards.find((card) => card.key === 'yongsin');
+
+  assert.ok(yongsinCard);
+  assert.match(yongsinCard.body, /쉽게 말하면/);
+  assert.ok(yongsinCard.explainers?.some((item) => item.term === '용신' && item.hanja === '用神'));
+  assert.ok((yongsinCard.practicalActions?.length ?? 0) >= 2);
+  assert.ok(yongsinCard.details.some((detail) => detail.includes('후보')));
+});

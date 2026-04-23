@@ -359,6 +359,40 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 </div>
                 <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">{card.title}</h3>
                 <p className="app-body-copy mt-3 text-sm">{card.body}</p>
+                {card.explainers && card.explainers.length > 0 ? (
+                  <div className="mt-4 border-t border-[var(--app-line)] pt-4">
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
+                      한자 풀이
+                    </div>
+                    <div className="mt-3 grid gap-2">
+                      {card.explainers.map((item) => (
+                        <div key={`${card.key}-${item.term}`} className="text-sm leading-7 text-[var(--app-copy)]">
+                          <span className="font-semibold text-[var(--app-ivory)]">
+                            {item.term}{item.hanja ? `(${item.hanja})` : ''}
+                          </span>
+                          <span className="text-[var(--app-copy-soft)]"> · {item.meaning}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+                {card.practicalActions && card.practicalActions.length > 0 ? (
+                  <div className="mt-4 border-t border-[var(--app-line)] pt-4">
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
+                      생활 적용
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {card.practicalActions.map((action) => (
+                        <span
+                          key={`${card.key}-${action}`}
+                          className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs leading-5 text-[var(--app-copy)]"
+                        >
+                          {action}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
                   {card.source.map((source) => (
                     <span

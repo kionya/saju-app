@@ -47,3 +47,21 @@ test('calculateSajuDataV1 records longitude-adjusted birth time metadata', () =>
   assert.equal(data.input.birthTimeCorrection?.adjustedBirth.day, 28);
   assert.equal(data.extensions?.orrery?.input.longitude, 126.978);
 });
+
+test('calculateSajuDataV1 exposes yongsin candidates and explanation layers', () => {
+  const data = calculateSajuDataV1({
+    year: 1982,
+    month: 1,
+    day: 29,
+    hour: 8,
+    gender: 'male',
+  });
+
+  assert.ok(data.yongsin?.primary);
+  assert.ok((data.yongsin?.candidates?.length ?? 0) >= 2);
+  assert.ok(data.yongsin?.confidence);
+  assert.match(data.yongsin?.plainSummary ?? '', /쉽게 말하면/);
+  assert.match(data.yongsin?.technicalSummary ?? '', /전문적으로는/);
+  assert.ok((data.yongsin?.practicalActions?.length ?? 0) >= 2);
+  assert.ok(data.yongsin?.terms?.some((term) => term.term === '용신' && term.hanja === '用神'));
+});
