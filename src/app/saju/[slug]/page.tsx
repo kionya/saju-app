@@ -17,7 +17,7 @@ import { ELEMENT_INFO } from '@/lib/saju/elements';
 import type { Branch, Element, Stem } from '@/lib/saju/types';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
 import { buildSajuReport, FOCUS_TOPIC_META, FOCUS_TOPIC_OPTIONS } from '@/domain/saju/report';
-import type { ReportScore, SajuReport } from '@/domain/saju/report';
+import type { ReportEvidenceCard, ReportScore, SajuReport } from '@/domain/saju/report';
 import { buildFallbackInterpretation } from '@/server/ai/saju-interpretation';
 import { cn } from '@/lib/utils';
 import { AppPage, AppShell } from '@/shared/layout/app-shell';
@@ -66,6 +66,29 @@ function formatBirthSummary(input: {
     ? `${input.birthLocation.label}${input.solarTimeMode === 'longitude' ? ' 경도 보정' : ''}`
     : '출생 지역 미입력';
   return `${input.year}년 ${input.month}월 ${input.day}일 · ${timeLabel} · ${genderLabel} · ${locationLabel}`;
+}
+
+const EVIDENCE_CARD_FULL_WIDTH_THRESHOLD = 320;
+
+function getCompactTextLength(value: string | null | undefined) {
+  return (value ?? '').replace(/\s+/g, '').length;
+}
+
+function shouldEvidenceCardUseFullRow(card: ReportEvidenceCard) {
+  const textLength = [
+    card.title,
+    card.body,
+    card.plainSummary,
+    card.technicalSummary,
+    ...card.details,
+    ...(card.practicalActions ?? []),
+    ...(card.explainers?.map((item) => `${item.term}${item.hanja ?? ''}${item.meaning}`) ?? []),
+  ].reduce((total, item) => total + getCompactTextLength(item), 0);
+
+  const supportingItemCount =
+    card.details.length + (card.practicalActions?.length ?? 0) + (card.explainers?.length ?? 0);
+
+  return textLength >= EVIDENCE_CARD_FULL_WIDTH_THRESHOLD || supportingItemCount >= 8;
 }
 
 function formatCurrentLuckTitle(currentLuck: SajuCurrentLuck | null) {
@@ -693,9 +716,15 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 </p>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-2">
                 {report.evidenceCards.map((card) => (
-                  <article key={card.key} className="moon-orbit-card p-5">
+                  <article
+                    key={card.key}
+                    className={cn(
+                      'moon-orbit-card p-5',
+                      shouldEvidenceCardUseFullRow(card) ? 'md:col-span-2' : undefined
+                    )}
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <div className="app-caption">{card.label}</div>
                       <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[11px] text-[var(--app-copy-soft)]">

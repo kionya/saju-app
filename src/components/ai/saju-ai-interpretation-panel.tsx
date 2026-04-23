@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FocusTopic } from '@/domain/saju/report';
 import type { SajuAiInterpretation } from '@/server/ai/saju-interpretation';
+import { cn } from '@/lib/utils';
 import { AiSourceBadge } from './ai-source-badge';
 
 type AiSource = 'openai' | 'fallback';
@@ -36,6 +37,16 @@ interface SajuAiInterpretationPanelProps {
   focusLabel: string;
   fallbackInterpretation: SajuAiInterpretation;
   cacheEnabled: boolean;
+}
+
+const INSIGHT_FULL_WIDTH_THRESHOLD = 96;
+
+function getCompactTextLength(value: string) {
+  return value.replace(/\s+/g, '').length;
+}
+
+function shouldInsightUseFullRow(insight: string) {
+  return getCompactTextLength(insight) >= INSIGHT_FULL_WIDTH_THRESHOLD;
 }
 
 function getFallbackReasonLabel(reason: FallbackReason | null, fromApi: boolean) {
@@ -146,11 +157,14 @@ export function SajuAiInterpretationPanel({
         <AiSourceBadge state={badgeState} />
       </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-3">
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
         {interpretation.insights.map((insight, index) => (
           <div
             key={`${index}-${insight}`}
-            className="rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
+            className={cn(
+              'rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4',
+              shouldInsightUseFullRow(insight) ? 'md:col-span-2' : undefined
+            )}
           >
             <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--app-copy-soft)]">
               Insight {index + 1}
