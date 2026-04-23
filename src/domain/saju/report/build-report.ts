@@ -816,66 +816,70 @@ function getHeadline(topic: FocusTopic, scoreMap: Record<ReportScore['key'], num
 function buildTopicActions(
   data: SajuDataV1,
   topic: FocusTopic,
-  supportElements: Element[]
+  supportElements: Element[],
+  scoreMap: Record<ReportScore['key'], number>
 ) {
   const bestTone = getElementTone(supportElements[0] ?? data.fiveElements.dominant);
   const cautionTone = getElementTone(data.fiveElements.weakest);
+  const supportLabel = bestTone.label;
+  const weaknessLabel = cautionTone.label;
+  const currentLuck = describeCurrentLuckHighlight(data.currentLuck);
 
   switch (topic) {
     case 'love':
       return {
         primaryAction: {
-          title: '관계 온도를 여는 한 가지',
-          description: `${bestTone.label} 기운을 살려 먼저 부드러운 안부를 건네보세요. 결론보다 분위기를 여는 표현이 연애 흐름을 더 편하게 만듭니다.`,
+          title: scoreMap.love >= 78 ? '마음을 먼저 표현해도 되는 구간' : '상대의 온도를 먼저 맞출 구간',
+          description: `연애운 ${scoreMap.love}점 기준입니다. ${supportLabel} 기운을 말투에 실어 짧은 안부나 가벼운 칭찬을 먼저 건네보세요. 오늘은 고백처럼 큰 결론보다 상대가 편하게 반응할 수 있는 분위기 만들기가 핵심입니다.`,
         },
         cautionAction: {
-          title: '연애에서 피할 흐름',
-          description: '상대의 반응을 바로 확정하려 하기보다, 오늘은 말의 속도와 감정의 온도를 한 번 낮춰 보는 편이 좋습니다.',
+          title: '확인 압박은 줄이기',
+          description: `${weaknessLabel} 기운이 흔들리면 상대 반응을 성급히 해석하기 쉽습니다. 답을 재촉하거나 마음을 시험하는 말보다, 약속의 시간과 표현 수위를 부드럽게 조절하는 편이 안정적입니다.`,
         },
       };
     case 'wealth':
       return {
         primaryAction: {
-          title: '돈 흐름을 정리하는 한 가지',
-          description: `${bestTone.label} 기운을 활용해 오늘 들어오고 나가는 돈을 한 번 표로 정리해 보세요. 새 기회보다 새는 곳을 잡는 힘이 먼저입니다.`,
+          title: scoreMap.wealth >= 78 ? '작은 수익 기회를 선별하기' : '새는 돈부터 막기',
+          description: `재물운 ${scoreMap.wealth}점 기준입니다. ${supportLabel} 기운은 돈의 흐름을 구조화하는 데 쓰는 것이 좋습니다. 오늘은 새 투자보다 고정비, 미뤄둔 정산, 결제 예정액을 먼저 확인하면 체감 재물운이 안정됩니다.`,
         },
         cautionAction: {
-          title: '재물에서 피할 흐름',
-          description: `${cautionTone.label} 기운이 약해지는 방식의 즉흥 지출은 줄이고, 확정 전 한 번 더 비교하는 편이 안정적입니다.`,
+          title: '즉흥 지출과 비교 부족 피하기',
+          description: `${weaknessLabel} 기운이 약해지는 방식의 소비는 만족보다 피로를 남기기 쉽습니다. 가격 비교 없이 결제하거나 지인 제안만 믿고 움직이는 선택은 오늘 한 번 더 보류하는 편이 좋습니다.`,
         },
       };
     case 'career':
       return {
         primaryAction: {
-          title: '일의 우선순위를 잡는 한 가지',
-          description: `${bestTone.label} 기운을 살려 오늘 해야 할 일을 세 단계로 나누세요. 제안이나 보고는 결론부터 정리하면 힘이 붙습니다.`,
+          title: scoreMap.career >= 78 ? '성과가 보이는 일부터 밀기' : '역할과 마감선부터 정리하기',
+          description: `직장운 ${scoreMap.career}점 기준입니다. ${supportLabel} 기운을 업무 정리에 쓰세요. 오늘은 할 일을 세 단계로 나누고, 보고나 제안은 결론을 먼저 말한 뒤 근거를 붙이면 평가와 전달력이 좋아집니다.`,
         },
         cautionAction: {
-          title: '직장에서 피할 흐름',
-          description: '여러 일을 동시에 넓히기보다, 지금 맡은 역할의 마감선과 책임 범위를 먼저 확인하는 편이 좋습니다.',
+          title: '업무 범위가 흐려지는 일 피하기',
+          description: `${currentLuck || '오늘은 단기 반응보다 선택의 방향을 먼저 정리하는 편이 좋습니다.'} 그래서 여러 일을 동시에 넓히기보다, 누가 무엇을 언제까지 맡는지 먼저 적어두는 편이 안전합니다.`,
         },
       };
     case 'relationship':
       return {
         primaryAction: {
-          title: '관계를 부드럽게 여는 한 가지',
-          description: `${bestTone.label} 기운을 살려 짧은 안부나 감사 표현을 먼저 건네보세요. 큰 대화보다 작은 확인이 흐름을 바꿉니다.`,
+          title: scoreMap.relationship >= 78 ? '먼저 연락해도 좋은 관계 흐름' : '거리감을 조율할 관계 흐름',
+          description: `관계운 ${scoreMap.relationship}점 기준입니다. 가족, 친구, 동료에게는 ${supportLabel} 기운을 살린 짧은 확인이 좋습니다. 큰 대화보다 안부, 감사, 일정 확인처럼 부담이 낮은 말이 관계의 물꼬를 엽니다.`,
         },
         cautionAction: {
-          title: '관계에서 피할 흐름',
-          description: '서운함을 바로 결론처럼 말하기보다, 사실과 감정을 나눠 말하면 불필요한 오해를 줄일 수 있습니다.',
+          title: '관계에서 서운함을 결론처럼 말하지 않기',
+          description: `${weaknessLabel} 축이 흔들리면 말의 의도보다 감정의 잔상이 커질 수 있습니다. 오늘은 “네가 항상” 같은 단정 대신, 사실과 감정을 나눠 말하면 오해를 줄일 수 있습니다.`,
         },
       };
     case 'today':
     default:
       return {
         primaryAction: {
-          title: `${bestTone.label} 기운을 살리는 한 가지`,
-          description: bestTone.move,
+          title: `${supportLabel} 기운을 오늘의 첫 행동으로 쓰기`,
+          description: `총운 ${scoreMap.overall}점 기준입니다. ${bestTone.move} 탭을 바꾸면 연애, 재물, 직장, 관계에 맞춘 실행 포인트로 다시 해석됩니다.`,
         },
         cautionAction: {
-          title: '오늘 피할 흐름',
-          description: cautionTone.avoid,
+          title: `${weaknessLabel} 쪽으로 기울어지는 흐름 조심`,
+          description: `${cautionTone.avoid} 오늘 탭에서는 전체 균형을 먼저 보고, 세부 탭에서는 해당 분야의 판단 기준을 따로 봅니다.`,
         },
       };
   }
@@ -1151,7 +1155,7 @@ export function buildSajuReport(
   const supportElements = getLuckyElementsFromSajuData(data);
   const dominant = ELEMENT_INFO[data.fiveElements.dominant].name.split(' ')[0];
   const weakest = ELEMENT_INFO[data.fiveElements.weakest].name.split(' ')[0];
-  const { primaryAction, cautionAction } = buildTopicActions(data, focusTopic, supportElements);
+  const { primaryAction, cautionAction } = buildTopicActions(data, focusTopic, supportElements, scoreMap);
   const { luckyDates, cautionDates } = buildDates(input, data);
 
   const summaryHighlights = buildSummaryHighlights(data, focusTopic, scoreMap, dominant, weakest);

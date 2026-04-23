@@ -121,3 +121,17 @@ test('timeline gives monthly and major luck as interpreted guidance', () => {
   assert.match(major.body, /대운|용신|원국/);
   assert.ok((major.points?.length ?? 0) >= 2);
 });
+
+test('focus actions change by selected topic', () => {
+  const data = normalizeToSajuDataV1(birthInput, null);
+  const reports = FOCUS_TOPIC_OPTIONS.map((option) => buildSajuReport(birthInput, data, option.key));
+  const actionBodies = new Set(
+    reports.map((report) => `${report.focusTopic}:${report.primaryAction.description}:${report.cautionAction.description}`)
+  );
+
+  assert.equal(actionBodies.size, FOCUS_TOPIC_OPTIONS.length);
+  assert.match(buildSajuReport(birthInput, data, 'love').primaryAction.description, /연애운/);
+  assert.match(buildSajuReport(birthInput, data, 'wealth').primaryAction.description, /재물운/);
+  assert.match(buildSajuReport(birthInput, data, 'career').primaryAction.description, /직장운/);
+  assert.match(buildSajuReport(birthInput, data, 'relationship').primaryAction.description, /관계운/);
+});

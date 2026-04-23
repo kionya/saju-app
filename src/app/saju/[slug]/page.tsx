@@ -304,21 +304,21 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 </div>
               </div>
             </div>
+
+            <div className="grid gap-4">
+              <article className="app-panel p-5">
+                <div className="app-caption">{report.focusLabel} 실행 포인트</div>
+                <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.primaryAction.title}</div>
+                <p className="app-body-copy mt-3 text-sm">{report.primaryAction.description}</p>
+              </article>
+              <article className="app-panel p-5">
+                <div className="app-caption">{report.focusLabel} 주의 포인트</div>
+                <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.cautionAction.title}</div>
+                <p className="app-body-copy mt-3 text-sm">{report.cautionAction.description}</p>
+              </article>
+            </div>
           </section>
         </div>
-
-        <section className="grid gap-4 lg:grid-cols-2">
-          <article className="app-panel p-5">
-            <div className="app-caption">{report.focusLabel} 행동 제안</div>
-            <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.primaryAction.title}</div>
-            <p className="app-body-copy mt-3 text-sm">{report.primaryAction.description}</p>
-          </article>
-          <article className="app-panel p-5">
-            <div className="app-caption">{report.focusLabel} 피할 포인트</div>
-            <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.cautionAction.title}</div>
-            <p className="app-body-copy mt-3 text-sm">{report.cautionAction.description}</p>
-          </article>
-        </section>
 
         <section className="grid gap-4 lg:grid-cols-3">
           {report.timeline.map((item) => (
