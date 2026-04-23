@@ -99,6 +99,76 @@ const TEN_GOD_INTERPRETATION: Record<TenGodCode, string> = {
   정인: '돌봄, 후원, 배움의 흐름이 삶에서 중요한 힘으로 작용합니다. 누군가를 품고, 또 누군가에게 도움을 받는 인연이 크게 남습니다.',
 };
 
+const CORE_TERM_EXPLAINERS = {
+  strength: [
+    {
+      term: '강약',
+      hanja: '强弱',
+      meaning: '일간이 명식 안에서 버티고 움직일 힘이 강한지 약한지를 보는 기준입니다.',
+    },
+    {
+      term: '일간',
+      hanja: '日干',
+      meaning: '태어난 날의 천간으로, 사주 해석에서 나 자신을 대표하는 글자입니다.',
+    },
+  ],
+  pattern: [
+    {
+      term: '격국',
+      hanja: '格局',
+      meaning: '월령과 십신을 중심으로 이 명식이 어떤 역할과 구조로 움직이는지 잡는 틀입니다.',
+    },
+    {
+      term: '월령',
+      hanja: '月令',
+      meaning: '태어난 달의 계절 기운입니다. 사주 전체 분위기를 잡는 가장 큰 배경으로 봅니다.',
+    },
+    {
+      term: '십신',
+      hanja: '十神',
+      meaning: '일간과 다른 글자의 관계를 열 가지 역할로 나눈 해석 언어입니다.',
+    },
+  ],
+  relations: [
+    {
+      term: '합',
+      hanja: '合',
+      meaning: '글자끼리 서로 끌어당겨 묶이거나 한 방향으로 힘이 모이는 관계입니다.',
+    },
+    {
+      term: '충',
+      hanja: '沖',
+      meaning: '글자끼리 부딪혀 변화, 이동, 긴장, 결정을 만들기 쉬운 관계입니다.',
+    },
+  ],
+  gongmang: [
+    {
+      term: '공망',
+      hanja: '空亡',
+      meaning: '있어도 바로 채워지지 않거나, 기대보다 늦게 드러나는 빈자리의 축입니다.',
+    },
+  ],
+  specialSals: [
+    {
+      term: '신살',
+      hanja: '神煞',
+      meaning: '원국을 보조적으로 읽는 표지입니다. 길흉을 단정하기보다 작용 방식과 속도를 살핍니다.',
+    },
+  ],
+};
+
+const EVIDENCE_ACTIONS = {
+  strength: {
+    신강: ['혼자 짊어지는 일 줄이기', '결정 전 한 번 더 조율하기', '강한 추진력을 역할 분담으로 나누기'],
+    중화: ['판단 기준을 먼저 정하기', '기회와 부담을 함께 비교하기', '결정을 너무 미루지 않기'],
+    신약: ['나를 돕는 환경 먼저 만들기', '무리한 약속 줄이기', '도움을 요청할 사람을 정해두기'],
+  },
+  pattern: ['반복되는 역할을 인식하기', '관계에서 맡는 자리를 정리하기', '일의 기준과 책임 범위 쓰기'],
+  relations: ['부딪히는 주제는 바로 결론내지 않기', '묶이는 관계는 약속을 명확히 하기', '변화 신호를 일정 관리에 반영하기'],
+  gongmang: ['중요 약속은 재확인하기', '비어 있는 역할을 무리해서 채우지 않기', '마감과 전달 과정을 한 번 더 점검하기'],
+  specialSals: ['도움 흐름은 적극 활용하기', '주의 흐름은 속도를 늦추기', '신살은 단정 대신 보조 힌트로 보기'],
+};
+
 function clampScore(value: number) {
   return Math.max(48, Math.min(92, Math.round(value)));
 }
@@ -314,6 +384,10 @@ function buildStrengthEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     details: strength.rationale.length > 0
       ? strength.rationale.slice(0, 3)
       : ['강약 점수는 계산되었고, 세부 근거 문장은 다음 단계에서 보강됩니다.'],
+    plainSummary: `쉽게 말하면 ${strength.level}은 내 기운을 밀고 나가는 힘과 외부 압력을 받아내는 힘의 균형입니다. 이 명식은 ${strength.score}점으로 계산되어 ${STRENGTH_INTERPRETATION[strength.level]}`,
+    technicalSummary: '전문적으로는 월령의 계절 보정, 일간을 돕는 오행, 일간을 소모시키는 오행, 지지의 뿌리를 함께 계산합니다.',
+    practicalActions: EVIDENCE_ACTIONS.strength[strength.level],
+    explainers: CORE_TERM_EXPLAINERS.strength,
     computed,
     source: getEvidenceSource(key),
     confidence: '확정',
@@ -345,11 +419,17 @@ function buildPatternEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     label: '격국',
     title: pattern.tenGod ? `${pattern.name} · ${pattern.tenGod}` : pattern.name,
     body: pattern.tenGod
-      ? `${pattern.tenGod}의 역할감과 관계 패턴이 해석의 첫 기준으로 올라옵니다.`
+      ? `${pattern.tenGod}의 역할감과 관계 패턴이 해석의 첫 기준으로 올라옵니다. 쉽게 말하면 삶에서 반복해서 맡게 되는 자리와 반응 방식을 보는 항목입니다.`
       : '월령의 성격을 기준으로 명식의 큰 구조를 먼저 읽습니다.',
     details: pattern.rationale.length > 0
       ? pattern.rationale.slice(0, 3)
       : ['격국명은 준비되었고 상세 근거 문장은 다음 단계에서 보강됩니다.'],
+    plainSummary: pattern.tenGod
+      ? `${pattern.name}은 ${pattern.tenGod}의 성격이 두드러진 구조입니다. 이 말은 삶에서 어떤 역할을 맡고 어떤 방식으로 인정받으려 하는지를 읽는 기준입니다.`
+      : '격국은 명식 전체의 역할 구조를 읽는 기준입니다.',
+    technicalSummary: '전문적으로는 월지의 주기운과 지장간을 일간 기준 십신으로 환산해 격국명을 정합니다.',
+    practicalActions: EVIDENCE_ACTIONS.pattern,
+    explainers: CORE_TERM_EXPLAINERS.pattern,
     computed,
     source: getEvidenceSource(key),
     confidence: '확정',
@@ -448,11 +528,17 @@ function buildRelationEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     label: '합충',
     title: labels.length > 0 ? labels.join(' · ') : '합충 근거 없음',
     body: selected.length > 0
-      ? '합충은 명식 안에서 기운이 묶이거나 부딪히는 지점을 보는 근거입니다.'
+      ? '합충은 명식 안에서 기운이 묶이거나 부딪히는 지점을 보는 근거입니다. 쉽게 말하면 관계, 이동, 결정의 압력이 어디서 생기는지 보는 항목입니다.'
       : '현재 명식에서 화면에 우선 표시할 합충 관계는 아직 확인되지 않았습니다.',
     details: selected.length > 0
       ? selected.map(formatRelationEvidenceLine)
       : ['합충 데이터가 들어오면 어떤 글자끼리 작용하는지 이 카드에 분리해 표시됩니다.'],
+    plainSummary: selected.length > 0
+      ? `${labels.join(' · ')} 흐름은 관계나 선택이 가만히 머물기보다 묶이거나 움직이는 지점을 보여줍니다.`
+      : '합충은 글자 사이의 끌림과 부딪힘을 보는 보조 근거입니다.',
+    technicalSummary: '전문적으로는 천간합, 천간충, 육합, 삼합, 방합, 충·형·해·파를 분리해 봅니다.',
+    practicalActions: EVIDENCE_ACTIONS.relations,
+    explainers: CORE_TERM_EXPLAINERS.relations,
     computed,
     source: getEvidenceSource(key),
     confidence: selected.length > 0 ? '보통' : '참고',
@@ -490,11 +576,17 @@ function buildGongmangEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     label: '공망',
     title: branches ? `${branches} 공망` : '공망 근거 없음',
     body: branches
-      ? '공망은 비어 보이거나 지연되기 쉬운 축을 확인해 약속, 일정, 마무리 방식을 조정하는 근거입니다.'
+      ? '공망은 비어 보이거나 지연되기 쉬운 축을 확인해 약속, 일정, 마무리 방식을 조정하는 근거입니다. 쉽게 말하면 기대가 바로 채워지지 않는 자리를 미리 확인하는 항목입니다.'
       : '현재 저장본에서 공망 값은 아직 확인되지 않았습니다.',
     details: slots.length > 0
       ? [`작용 위치: ${slots.join(' · ')}`]
       : ['공망 글자가 특정 주에 닿으면 이곳에 작용 위치가 함께 표시됩니다.'],
+    plainSummary: branches
+      ? `${branches} 공망은 해당 글자가 상징하는 일에서 공백, 지연, 재확인이 필요할 수 있음을 뜻합니다.`
+      : '공망은 빈자리와 지연 가능성을 보는 보조 근거입니다.',
+    technicalSummary: '전문적으로는 일주 기준 공망 글자를 잡고, 그 글자가 년·월·일·시 어느 자리에 닿는지 확인합니다.',
+    practicalActions: EVIDENCE_ACTIONS.gongmang,
+    explainers: CORE_TERM_EXPLAINERS.gongmang,
     computed,
     source: getEvidenceSource(key),
     confidence: branches ? '보통' : '참고',
@@ -520,9 +612,15 @@ function buildSpecialSalsEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     label: '신살',
     title: names.length > 0 ? names.slice(0, 5).join(' · ') : '주요 신살 없음',
     body: names.length > 0
-      ? '신살은 도움을 받는 통로와 주의해야 할 속도를 함께 보는 보조 근거입니다.'
+      ? '신살은 도움을 받는 통로와 주의해야 할 속도를 함께 보는 보조 근거입니다. 쉽게 말하면 이 명식에서 눈에 띄는 보너스 표지와 주의 표지를 나누어 보는 항목입니다.'
       : '현재 명식에서 우선 표시할 주요 신살은 아직 확인되지 않았습니다.',
     details: details.length > 0 ? details : ['신살 데이터가 들어오면 도움/주의 흐름을 나누어 표시합니다.'],
+    plainSummary: names.length > 0
+      ? `${names.slice(0, 5).join(' · ')}은 명식의 성향을 보조적으로 설명하는 표지입니다. 이것만으로 길흉을 단정하지 않고 원국과 함께 봅니다.`
+      : '신살은 원국 해석을 보완하는 부가 표지입니다.',
+    technicalSummary: '전문적으로는 일간·일지·연지 등을 기준으로 귀인, 도화, 양인, 백호 같은 보조 표지를 대조합니다.',
+    practicalActions: EVIDENCE_ACTIONS.specialSals,
+    explainers: CORE_TERM_EXPLAINERS.specialSals,
     computed,
     source: getEvidenceSource(key),
     confidence: '참고',

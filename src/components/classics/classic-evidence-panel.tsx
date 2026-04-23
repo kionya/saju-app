@@ -95,36 +95,50 @@ export async function ClassicEvidencePanel({
   const evidence = await getClassicEvidence({ concept });
 
   return (
-    <section className={cn('app-panel p-6', className)}>
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <div className="app-caption">고전 원문 근거</div>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--app-ivory)]">
-            {evidence.concept} 해석과 연결된 문단
-          </h2>
-        </div>
-        <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-          {formatClassicEvidenceStatus(evidence.status, evidence.count)}
-        </Badge>
-      </div>
+    <section className={cn('border-t border-[var(--app-line)] pt-6', className)}>
+      <details className="group">
+        <summary className="flex cursor-pointer list-none flex-col gap-3 rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-4 transition-colors hover:border-[var(--app-gold)]/30 sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            <span className="app-caption">참고 원문</span>
+            <span className="mt-2 block text-lg font-semibold text-[var(--app-ivory)]">
+              {evidence.concept} 고전 문단은 필요할 때만 펼쳐봅니다
+            </span>
+            <span className="mt-2 block text-sm leading-7 text-[var(--app-copy-muted)]">
+              일반 해석은 위 근거 카드만 봐도 충분합니다. 이 영역은 어떤 고전 원문과 연결했는지,
+              출처와 라이선스를 확인하려는 분을 위한 참고 자료입니다.
+            </span>
+          </span>
+          <span className="flex shrink-0 items-center gap-2">
+            <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+              {formatClassicEvidenceStatus(evidence.status, evidence.count)}
+            </Badge>
+            <span
+              aria-hidden="true"
+              className="text-[var(--app-copy-soft)] transition-transform group-open:rotate-180"
+            >
+              ˅
+            </span>
+          </span>
+        </summary>
 
-      {evidence.items.length > 0 ? (
-        <div className="mt-5 grid gap-4 lg:grid-cols-2">
-          {evidence.items.map((item) => (
-            <ClassicEvidenceCard key={item.passage.id} item={item} />
-          ))}
-        </div>
-      ) : (
-        <div className="mt-5 rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
-          <div className="text-sm font-semibold text-[var(--app-ivory)]">
-            원문 코퍼스 적재를 기다리고 있습니다
+        {evidence.items.length > 0 ? (
+          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+            {evidence.items.map((item) => (
+              <ClassicEvidenceCard key={item.passage.id} item={item} />
+            ))}
           </div>
-          <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-            검수된 문단이 연결되면 원문, 독음, 직역, 해설, 출처와 라이선스가 이 영역에 함께
-            표시됩니다. 지금은 신뢰할 수 있는 판본과 출처 기준을 먼저 맞추고 있습니다.
-          </p>
-        </div>
-      )}
+        ) : (
+          <div className="mt-5 rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
+            <div className="text-sm font-semibold text-[var(--app-ivory)]">
+              원문 코퍼스 적재를 기다리고 있습니다
+            </div>
+            <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+              검수된 문단이 연결되면 원문, 독음, 직역, 해설, 출처와 라이선스가 이 영역에 함께
+              표시됩니다. 지금은 신뢰할 수 있는 판본과 출처 기준을 먼저 맞추고 있습니다.
+            </p>
+          </div>
+        )}
+      </details>
     </section>
   );
 }

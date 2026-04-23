@@ -426,8 +426,6 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           </div>
         </section>
 
-        <ClassicEvidencePanel concept={classicEvidenceConcept} />
-
         <section className="grid gap-4 lg:grid-cols-3">
           {report.insights.map((insight) => (
             <article key={insight.title} className="app-panel p-6">
@@ -447,6 +445,8 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             </article>
           ))}
         </section>
+
+        <ClassicEvidencePanel concept={classicEvidenceConcept} />
 
         <section className="grid gap-4 lg:grid-cols-[0.88fr_1.12fr]">
           <article className="app-panel p-6">

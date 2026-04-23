@@ -91,3 +91,19 @@ test('yongsin evidence card balances plain Korean, hanja glossary, and technical
   assert.ok((yongsinCard.practicalActions?.length ?? 0) >= 2);
   assert.ok(yongsinCard.details.some((detail) => detail.includes('후보')));
 });
+
+test('core evidence cards include user-facing explainers beyond raw provenance', () => {
+  const data = normalizeToSajuDataV1(birthInput, null);
+  const report = buildSajuReport(birthInput, data, 'today');
+  const targetKeys = ['strength', 'pattern', 'relations', 'gongmang', 'specialSals'] as const;
+
+  for (const key of targetKeys) {
+    const card = report.evidenceCards.find((item) => item.key === key);
+
+    assert.ok(card, `${key} card should exist`);
+    assert.ok(card.plainSummary, `${key} should have a plain summary`);
+    assert.ok(card.technicalSummary, `${key} should have a technical summary`);
+    assert.ok((card.explainers?.length ?? 0) > 0, `${key} should explain hanja terms`);
+    assert.ok((card.practicalActions?.length ?? 0) > 0, `${key} should include practical actions`);
+  }
+});
