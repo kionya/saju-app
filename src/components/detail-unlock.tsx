@@ -6,11 +6,28 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+type DetailSectionKey = 'wealth' | 'love' | 'career' | 'health';
+
+interface DetailTopicBlock {
+  title: string;
+  body: string;
+  keywords?: string[];
+  tone?: 'core' | 'basis' | 'action' | 'caution' | 'flow' | 'safety';
+}
+
+interface DetailTopicContent {
+  lead: string;
+  scoreLabel?: string;
+  highlights?: string[];
+  blocks: DetailTopicBlock[];
+}
+
 interface DetailContent {
   wealth: string;
   love: string;
   career: string;
   health: string;
+  detailSections?: Partial<Record<DetailSectionKey, DetailTopicContent>>;
   luckyColor: string;
   luckyKeywords: string[];
 }
@@ -28,88 +45,249 @@ const SECTIONS = [
 ] as const;
 
 const DETAIL_SECTION_META: Record<
-  (typeof SECTIONS)[number]['key'],
+  DetailSectionKey,
   {
     eyebrow: string;
     focus: string;
     guidance: string;
+    color: string;
+    soft: string;
+    line: string;
+    label: string;
   }
 > = {
   wealth: {
     eyebrow: '돈의 구조',
     focus: '핵심 재물 흐름',
     guidance: '수입·지출·기회 판단을 분리해서 읽어보세요.',
+    color: '#34d399',
+    soft: 'rgba(52,211,153,0.11)',
+    line: 'rgba(52,211,153,0.35)',
+    label: '재물',
   },
   love: {
     eyebrow: '감정의 온도',
     focus: '핵심 애정 흐름',
     guidance: '상대의 반응보다 표현 방식과 속도에 주목해 보세요.',
+    color: '#fb7185',
+    soft: 'rgba(251,113,133,0.11)',
+    line: 'rgba(251,113,133,0.34)',
+    label: '연애',
   },
   career: {
     eyebrow: '역할과 성과',
     focus: '핵심 직업 흐름',
     guidance: '자리, 책임, 제안 타이밍을 나눠서 확인해 보세요.',
+    color: '#38bdf8',
+    soft: 'rgba(56,189,248,0.11)',
+    line: 'rgba(56,189,248,0.34)',
+    label: '직업',
   },
   health: {
     eyebrow: '몸의 균형',
     focus: '핵심 건강 흐름',
     guidance: '강한 기운과 약한 기운이 생활 리듬에 주는 영향을 봅니다.',
+    color: '#a78bfa',
+    soft: 'rgba(167,139,250,0.12)',
+    line: 'rgba(167,139,250,0.34)',
+    label: '건강',
   },
 };
 
-function splitSentences(text: string) {
-  return (
-    text
-      .replace(/\s+/g, ' ')
-      .match(/[^.!?。]+[.!?。]?/g)
-      ?.map((sentence) => sentence.trim())
-      .filter(Boolean) ?? [text.trim()]
-  );
+const TONE_LABELS: Record<NonNullable<DetailTopicBlock['tone']>, string> = {
+  core: '핵심',
+  basis: '근거',
+  action: '실천',
+  caution: '주의',
+  flow: '운 흐름',
+  safety: '안전',
+};
+
+function splitReadableParagraphs(text: string) {
+  return text
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?。])\s+/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 }
 
-function chunkSentences(sentences: string[], size: number) {
-  const chunks: string[] = [];
-
-  for (let index = 0; index < sentences.length; index += size) {
-    chunks.push(sentences.slice(index, index + size).join(' '));
-  }
-
-  return chunks;
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function ReadableDetailText({
+function HighlightedText({
   text,
-  focus,
+  keywords = [],
+  color,
 }: {
   text: string;
-  focus: string;
+  keywords?: string[];
+  color: string;
 }) {
-  const [lead = '', ...rest] = splitSentences(text);
-  const paragraphs = chunkSentences(rest, 2);
+  const cleanKeywords = [...new Set(keywords.map((keyword) => keyword.trim()).filter(Boolean))]
+    .sort((a, b) => b.length - a.length);
+
+  if (cleanKeywords.length === 0) return <>{text}</>;
+
+  const pattern = new RegExp(`(${cleanKeywords.map(escapeRegExp).join('|')})`, 'g');
+  const exact = new Set(cleanKeywords);
 
   return (
-    <div className="mt-4 space-y-4">
-      <div className="rounded-[1.15rem] border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/8 px-4 py-4">
-        <div className="app-caption">{focus}</div>
-        <p className="mt-2 text-base font-semibold leading-8 text-[var(--app-ivory)] sm:text-lg">
-          {lead}
-        </p>
+    <>
+      {text.split(pattern).map((part, index) =>
+        exact.has(part) ? (
+          <strong key={`${part}-${index}`} className="font-semibold" style={{ color }}>
+            {part}
+          </strong>
+        ) : (
+          <span key={`${part}-${index}`}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
+function fallbackTopicContent(text: string): DetailTopicContent {
+  const [lead = '', ...rest] = splitReadableParagraphs(text);
+
+  return {
+    lead,
+    blocks: rest.map((body, index) => ({
+      title: index === 0 ? '세부 풀이' : `세부 풀이 ${index + 1}`,
+      body,
+      tone: index === 0 ? 'basis' : 'flow',
+    })),
+  };
+}
+
+function DetailTopicReport({
+  topic,
+  label,
+  content,
+}: {
+  topic: DetailSectionKey;
+  label: string;
+  content: DetailTopicContent;
+}) {
+  const meta = DETAIL_SECTION_META[topic];
+
+  return (
+    <article
+      className="overflow-hidden rounded-[26px] border bg-[rgba(255,255,255,0.035)]"
+      style={{ borderColor: meta.line }}
+    >
+      <div
+        className="border-b px-5 py-5"
+        style={{
+          borderColor: meta.line,
+          background: `linear-gradient(135deg, ${meta.soft}, rgba(8,10,18,0.72))`,
+        }}
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="app-caption" style={{ color: meta.color }}>
+              {meta.eyebrow}
+            </div>
+            <div className="mt-2 text-xl font-semibold text-[var(--app-ivory)]">{label}</div>
+          </div>
+          <Badge
+            className="border text-xs"
+            style={{
+              borderColor: meta.line,
+              backgroundColor: meta.soft,
+              color: meta.color,
+            }}
+          >
+            {meta.label} 심화
+          </Badge>
+        </div>
+        <p className="mt-3 text-sm leading-7 text-[var(--app-copy-soft)]">{meta.guidance}</p>
       </div>
 
-      {paragraphs.length > 0 ? (
-        <div className="space-y-3">
-          {paragraphs.map((paragraph) => (
-            <p
-              key={paragraph}
-              className="text-sm leading-8 text-[var(--app-copy)] sm:text-[0.95rem]"
+      <div className="grid gap-4 p-5">
+        <div
+          className="rounded-[22px] border px-4 py-4"
+          style={{
+            borderColor: meta.line,
+            backgroundColor: meta.soft,
+          }}
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="app-caption" style={{ color: meta.color }}>
+              {meta.focus}
+            </span>
+            {content.scoreLabel ? (
+              <span
+                className="rounded-full border px-2.5 py-1 text-xs font-semibold"
+                style={{ borderColor: meta.line, color: meta.color }}
+              >
+                {content.scoreLabel}
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-3 text-base font-semibold leading-8 text-[var(--app-ivory)] sm:text-lg">
+            <HighlightedText text={content.lead} keywords={content.highlights} color={meta.color} />
+          </p>
+          {content.highlights && content.highlights.length > 0 ? (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {content.highlights.map((keyword) => (
+                <span
+                  key={`${topic}-${keyword}`}
+                  className="rounded-full border px-3 py-1 text-xs font-semibold"
+                  style={{
+                    borderColor: meta.line,
+                    backgroundColor: 'rgba(255,255,255,0.035)',
+                    color: meta.color,
+                  }}
+                >
+                  {keyword}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="grid gap-3 lg:grid-cols-2">
+          {content.blocks.map((block, index) => (
+            <section
+              key={`${topic}-${block.title}-${index}`}
+              className="rounded-[22px] border border-[var(--app-line)] bg-[rgba(8,10,18,0.3)] px-4 py-4"
             >
-              {paragraph}
-            </p>
+              <div className="flex items-center gap-2">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: block.tone === 'caution' ? '#fb7185' : meta.color }}
+                />
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-copy-soft)]">
+                  {block.tone ? TONE_LABELS[block.tone] : '풀이'}
+                </div>
+              </div>
+              <h3 className="mt-3 text-base font-semibold text-[var(--app-ivory)]">{block.title}</h3>
+              <p className="mt-3 text-sm leading-8 text-[var(--app-copy)]">
+                <HighlightedText
+                  text={block.body}
+                  keywords={[...(content.highlights ?? []), ...(block.keywords ?? [])]}
+                  color={block.tone === 'caution' ? '#fb7185' : meta.color}
+                />
+              </p>
+            </section>
           ))}
         </div>
-      ) : null}
-    </div>
+      </div>
+    </article>
   );
+}
+
+function getTopicContent(
+  content: DetailContent,
+  topic: DetailSectionKey
+): DetailTopicContent {
+  const structured = content.detailSections?.[topic];
+  if (structured?.lead && structured.blocks.length > 0) {
+    return structured;
+  }
+
+  return fallbackTopicContent(content[topic]);
 }
 
 export default function DetailUnlock({ slug, children }: Props) {
@@ -187,32 +365,15 @@ export default function DetailUnlock({ slug, children }: Props) {
 
         {children ? <div className="mt-6 space-y-5">{children}</div> : null}
 
-        <div className="mt-6 grid gap-3">
-          {SECTIONS.map(({ key, label }) => {
-            const meta = DETAIL_SECTION_META[key];
-
-            return (
-              <article
-                key={key}
-                className="rounded-[24px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="app-caption">{meta.eyebrow}</div>
-                    <div className="mt-2 text-lg font-semibold text-[var(--app-ivory)]">{label}</div>
-                  </div>
-                  <Badge className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-copy-muted)]">
-                    심화
-                  </Badge>
-                </div>
-                <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">{meta.guidance}</p>
-                <ReadableDetailText
-                  text={content[key as keyof Pick<DetailContent, 'wealth' | 'love' | 'career' | 'health'>]}
-                  focus={meta.focus}
-                />
-              </article>
-            );
-          })}
+        <div className="mt-6 grid gap-4">
+          {SECTIONS.map(({ key, label }) => (
+            <DetailTopicReport
+              key={key}
+              topic={key}
+              label={label}
+              content={getTopicContent(content, key)}
+            />
+          ))}
         </div>
 
         <div className="rounded-[24px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
