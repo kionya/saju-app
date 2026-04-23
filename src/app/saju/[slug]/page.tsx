@@ -14,7 +14,7 @@ import DetailUnlock from '@/components/detail-unlock';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { ELEMENT_INFO } from '@/lib/saju/elements';
-import type { Element } from '@/lib/saju/types';
+import type { Branch, Element, Stem } from '@/lib/saju/types';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
 import { buildSajuReport, FOCUS_TOPIC_META, FOCUS_TOPIC_OPTIONS } from '@/domain/saju/report';
 import type { ReportScore, SajuReport } from '@/domain/saju/report';
@@ -154,6 +154,74 @@ function formatCurrentLuckBody(currentLuck: SajuCurrentLuck | null, report?: Saj
   return notes.length > 0
     ? notes.join(' ')
     : '현재 운 정보는 계산되었지만 설명 문장은 아직 비어 있습니다.';
+}
+
+const STEM_READINGS: Record<Stem, string> = {
+  '甲': '갑',
+  '乙': '을',
+  '丙': '병',
+  '丁': '정',
+  '戊': '무',
+  '己': '기',
+  '庚': '경',
+  '辛': '신',
+  '壬': '임',
+  '癸': '계',
+};
+
+const BRANCH_READINGS: Record<Branch, string> = {
+  '子': '자',
+  '丑': '축',
+  '寅': '인',
+  '卯': '묘',
+  '辰': '진',
+  '巳': '사',
+  '午': '오',
+  '未': '미',
+  '申': '신',
+  '酉': '유',
+  '戌': '술',
+  '亥': '해',
+};
+
+function formatStemHint(pillar: SajuPillar) {
+  return `${pillar.stem} · ${STEM_READINGS[pillar.stem]} · ${pillar.yinYang}${ELEMENT_INFO[pillar.stemElement].name.split(' ')[0]}`;
+}
+
+function formatBranchHint(pillar: SajuPillar) {
+  return `${pillar.branch} · ${BRANCH_READINGS[pillar.branch]} · ${ELEMENT_INFO[pillar.branchElement].name.split(' ')[0]}`;
+}
+
+function formatHiddenStemHint(stem: Stem, element: Element) {
+  return `${stem} · ${STEM_READINGS[stem]} · ${ELEMENT_INFO[element].name.split(' ')[0]}`;
+}
+
+function HanjaHint({
+  character,
+  hint,
+  color,
+  className,
+}: {
+  character: string;
+  hint: string;
+  color: string;
+  className: string;
+}) {
+  return (
+    <span
+      className="group relative inline-flex cursor-help items-center justify-center outline-none"
+      tabIndex={0}
+      title={hint}
+      aria-label={hint}
+    >
+      <span className={className} style={{ color }}>
+        {character}
+      </span>
+      <span className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 -translate-x-1/2 whitespace-nowrap rounded-full border border-[var(--app-line)] bg-[rgba(8,10,18,0.96)] px-3 py-1 text-[11px] font-medium text-[var(--app-ivory)] opacity-0 shadow-[0_12px_32px_rgba(0,0,0,0.3)] transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+        {hint}
+      </span>
+    </span>
+  );
 }
 
 function formatLuckDescriptorTitle(label: string, descriptor: SajuLuckDescriptor | null) {
@@ -322,17 +390,21 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                     <div className="text-xs text-[var(--app-copy-soft)]">{label.replace('주', '')}</div>
                     {pillar ? (
                       <>
-                        <div
-                          className="mt-2 font-[var(--font-heading)] text-2xl font-semibold"
-                          style={{ color: ELEMENT_INFO[pillar.stemElement].color }}
-                        >
-                          {pillar.stem}
+                        <div className="mt-2">
+                          <HanjaHint
+                            character={pillar.stem}
+                            hint={formatStemHint(pillar)}
+                            color={ELEMENT_INFO[pillar.stemElement].color}
+                            className="font-[var(--font-heading)] text-[2rem] font-semibold leading-none sm:text-[2.25rem]"
+                          />
                         </div>
-                        <div
-                          className="mt-1 font-[var(--font-heading)] text-xl font-semibold"
-                          style={{ color: ELEMENT_INFO[pillar.branchElement].color }}
-                        >
-                          {pillar.branch}
+                        <div className="mt-1">
+                          <HanjaHint
+                            character={pillar.branch}
+                            hint={formatBranchHint(pillar)}
+                            color={ELEMENT_INFO[pillar.branchElement].color}
+                            className="font-[var(--font-heading)] text-[1.8rem] font-semibold leading-none sm:text-[2rem]"
+                          />
                         </div>
                       </>
                     ) : (
@@ -469,14 +541,14 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               {/* 천간 행 */}
               <div className="mt-1 grid grid-cols-4 gap-2 text-center">
                 {pillars.map(({ label, pillar }) => (
-                  <div key={label} className="flex h-14 items-center justify-center">
+                  <div key={label} className="flex h-16 items-center justify-center sm:h-20">
                     {pillar ? (
-                      <span
-                        className="text-4xl font-bold"
-                        style={{ color: ELEMENT_INFO[pillar.stemElement].color }}
-                      >
-                        {pillar.stem}
-                      </span>
+                      <HanjaHint
+                        character={pillar.stem}
+                        hint={formatStemHint(pillar)}
+                        color={ELEMENT_INFO[pillar.stemElement].color}
+                        className="font-[var(--font-heading)] text-[3rem] font-bold leading-none sm:text-[3.45rem]"
+                      />
                     ) : (
                       <span className="text-xs text-[var(--app-copy-muted)]">시간</span>
                     )}
@@ -487,14 +559,14 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               {/* 지지 행 */}
               <div className="grid grid-cols-4 gap-2 border-t border-b border-[var(--app-line)] py-1 text-center">
                 {pillars.map(({ label, pillar }) => (
-                  <div key={label} className="flex h-14 items-center justify-center">
+                  <div key={label} className="flex h-16 items-center justify-center sm:h-20">
                     {pillar ? (
-                      <span
-                        className="text-4xl font-bold"
-                        style={{ color: ELEMENT_INFO[pillar.branchElement].color }}
-                      >
-                        {pillar.branch}
-                      </span>
+                      <HanjaHint
+                        character={pillar.branch}
+                        hint={formatBranchHint(pillar)}
+                        color={ELEMENT_INFO[pillar.branchElement].color}
+                        className="font-[var(--font-heading)] text-[3rem] font-bold leading-none sm:text-[3.45rem]"
+                      />
                     ) : (
                       <span className="text-xs text-[var(--app-copy-muted)]">미입력</span>
                     )}
@@ -513,10 +585,14 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                           return (
                             <span
                               key={`${hs.stem}-${i}`}
-                              className={`text-sm font-medium transition-opacity ${isMain ? 'opacity-100' : 'opacity-35'}`}
-                              style={{ color: ELEMENT_INFO[hs.element].color }}
+                              className={`transition-opacity ${isMain ? 'opacity-100' : 'opacity-35'}`}
                             >
-                              {hs.stem}
+                              <HanjaHint
+                                character={hs.stem}
+                                hint={formatHiddenStemHint(hs.stem, hs.element)}
+                                color={ELEMENT_INFO[hs.element].color}
+                                className="font-[var(--font-heading)] text-base font-medium leading-none"
+                              />
                             </span>
                           );
                         })}

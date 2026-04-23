@@ -3,6 +3,7 @@
 import { ONBOARDING_CONSENTS } from '@/content/moonlight';
 
 export type OnboardingSpeechTone = 'friendly' | 'polite' | 'standard';
+export type OnboardingProfileSource = 'manual' | 'self' | 'family';
 
 export interface SajuOnboardingDraft {
   year: string;
@@ -18,6 +19,7 @@ export interface SajuOnboardingDraft {
   solarTimeMode: 'standard' | 'longitude';
   gender: string;
   nickname: string;
+  loadedProfileSource: OnboardingProfileSource;
   tone: OnboardingSpeechTone;
   consents: Record<string, boolean>;
 }
@@ -45,6 +47,7 @@ export function createInitialOnboardingDraft(): SajuOnboardingDraft {
     solarTimeMode: 'standard',
     gender: '',
     nickname: '',
+    loadedProfileSource: 'manual',
     tone: 'polite',
     consents: createConsentState(),
   };
@@ -84,6 +87,10 @@ export function loadOnboardingDraft(): SajuOnboardingDraft {
       solarTimeMode: parsed.solarTimeMode === 'longitude' ? 'longitude' : 'standard',
       gender: typeof parsed.gender === 'string' ? parsed.gender : '',
       nickname: typeof parsed.nickname === 'string' ? parsed.nickname : '',
+      loadedProfileSource:
+        parsed.loadedProfileSource === 'self' || parsed.loadedProfileSource === 'family'
+          ? parsed.loadedProfileSource
+          : 'manual',
       tone:
         parsed.tone === 'friendly' || parsed.tone === 'polite' || parsed.tone === 'standard'
           ? parsed.tone
@@ -110,6 +117,10 @@ export function getHonorificLabel(nickname: string) {
   if (!trimmed) return '선생님';
   if (trimmed.endsWith('님') || trimmed.endsWith('선생님')) return trimmed;
   return `${trimmed} 선생님`;
+}
+
+export function shouldAutoSavePersonalProfile(source: OnboardingProfileSource) {
+  return source !== 'family';
 }
 
 export function buildTonePreview(tone: OnboardingSpeechTone, nickname: string) {

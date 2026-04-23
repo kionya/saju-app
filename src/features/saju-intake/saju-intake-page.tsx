@@ -27,6 +27,7 @@ import {
   getHonorificLabel,
   loadOnboardingDraft,
   saveOnboardingDraft,
+  shouldAutoSavePersonalProfile,
   type OnboardingSpeechTone,
   type SajuOnboardingDraft,
 } from './onboarding-storage';
@@ -457,9 +458,14 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
       solarTimeMode: profile.birthLocationCode ? profile.solarTimeMode : 'standard',
       gender: profile.gender ?? '',
       nickname: profile.nickname || current.nickname,
+      loadedProfileSource: profile.source,
     }));
     setErrorMessage('');
-    setProfileLoadMessage(`${profile.label} 정보를 입력칸에 불러왔습니다.`);
+    setProfileLoadMessage(
+      profile.source === 'family'
+        ? `${profile.label} 가족 프로필을 불러왔습니다. 결과를 열어도 내 정보는 바뀌지 않습니다.`
+        : `${profile.label} 정보를 입력칸에 불러왔습니다.`
+    );
   }
 
   function validateBirthStep() {
@@ -522,24 +528,26 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
       }
 
       clearOnboardingDraft();
-      void fetch('/api/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          displayName: form.nickname.trim(),
-          birthYear: parsed.input.year,
-          birthMonth: parsed.input.month,
-          birthDay: parsed.input.day,
-          birthHour: parsed.input.hour ?? null,
-          birthMinute: parsed.input.minute ?? null,
-          birthLocationCode: parsed.input.birthLocation?.code ?? null,
-          birthLocationLabel: parsed.input.birthLocation?.label ?? '',
-          birthLatitude: parsed.input.birthLocation?.latitude ?? null,
-          birthLongitude: parsed.input.birthLocation?.longitude ?? null,
-          solarTimeMode: parsed.input.solarTimeMode ?? 'standard',
-          gender: parsed.input.gender ?? null,
-        }),
-      }).catch(() => undefined);
+      if (shouldAutoSavePersonalProfile(form.loadedProfileSource)) {
+        void fetch('/api/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            displayName: form.nickname.trim(),
+            birthYear: parsed.input.year,
+            birthMonth: parsed.input.month,
+            birthDay: parsed.input.day,
+            birthHour: parsed.input.hour ?? null,
+            birthMinute: parsed.input.minute ?? null,
+            birthLocationCode: parsed.input.birthLocation?.code ?? null,
+            birthLocationLabel: parsed.input.birthLocation?.label ?? '',
+            birthLatitude: parsed.input.birthLocation?.latitude ?? null,
+            birthLongitude: parsed.input.birthLocation?.longitude ?? null,
+            solarTimeMode: parsed.input.solarTimeMode ?? 'standard',
+            gender: parsed.input.gender ?? null,
+          }),
+        }).catch(() => undefined);
+      }
 
       router.push(`/saju/${data.id}`);
     } catch {
