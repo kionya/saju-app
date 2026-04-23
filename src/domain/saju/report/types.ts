@@ -102,6 +102,7 @@ export interface SajuReport {
   focusBadge: string;
   focusScoreKey: ReportScore['key'];
   headline: string;
+  dayMasterSummary: string;
   summary: string;
   summaryHighlights: string[];
   evidenceCards: ReportEvidenceCard[];

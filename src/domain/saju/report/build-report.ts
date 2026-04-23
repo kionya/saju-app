@@ -377,26 +377,25 @@ function buildSummaryHighlights(
   dominant: string,
   weakest: string
 ) {
-  const dayMasterSummary = getDayMasterSummary(data);
   const supportLabels = getSupportElementLabels(data) || dominant;
   const currentLuck = describeCurrentLuckHighlight(data.currentLuck);
 
   switch (topic) {
     case 'love':
       return compactStrings([
-        `${dayMasterSummary} 연애에서는 감정을 크게 몰아가기보다 상대의 리듬을 넓게 받아들이는 방식이 잘 맞습니다.`,
+        '연애에서는 감정을 크게 몰아가기보다 상대의 리듬을 넓게 받아들이는 방식이 잘 맞습니다.',
         `연애 흐름은 ${scoreMap.love}점으로, ${supportLabels} 기운을 표현 방식에 보태면 마음을 전하는 속도가 더 부드러워집니다.`,
         currentLuck || `${dominant} 기운은 매력을 빠르게 드러내지만, ${weakest} 보완을 의식할수록 관계의 온도가 오래 안정됩니다.`,
       ]).slice(0, 3);
     case 'wealth':
       return compactStrings([
-        `${dayMasterSummary} 재물에서는 큰 흐름을 읽는 감각이 장점이지만, 당장의 기회보다 구조를 먼저 보는 편이 좋습니다.`,
+        '재물에서는 큰 흐름을 읽는 감각이 장점이지만, 당장의 기회보다 구조를 먼저 보는 편이 좋습니다.',
         `재물 흐름은 ${scoreMap.wealth}점으로, ${dominant} 기운의 장점을 살리되 ${weakest} 축이 약해지는 지출 습관을 먼저 정리해야 합니다.`,
         currentLuck || formatElementDistribution(data),
       ]).slice(0, 3);
     case 'career':
       return compactStrings([
-        `${dayMasterSummary} 직장에서는 판을 넓게 보고 역할의 순서를 정리하는 힘이 성과로 이어집니다.`,
+        '직장에서는 판을 넓게 보고 역할의 순서를 정리하는 힘이 성과로 이어집니다.',
         `직장 흐름은 ${scoreMap.career}점으로, ${supportLabels} 기운을 활용하면 제안, 정리, 피드백의 힘이 더 살아납니다.`,
         data.pattern
           ? `${data.pattern.name} 흐름을 기준으로 책임과 자리의 무게를 읽으면 오늘의 업무 판단이 더 선명해집니다.`
@@ -404,14 +403,14 @@ function buildSummaryHighlights(
       ]).slice(0, 3);
     case 'relationship':
       return compactStrings([
-        `${dayMasterSummary} 관계에서는 한 번에 결론을 내기보다 말의 순서와 거리감을 조율하는 쪽이 편합니다.`,
+        '관계에서는 한 번에 결론을 내기보다 말의 순서와 거리감을 조율하는 쪽이 편합니다.',
         `관계 흐름은 ${scoreMap.relationship}점으로, ${supportLabels} 기운을 살리면 가까운 사람과의 오해를 줄이고 대화의 온도를 맞추기 좋습니다.`,
         currentLuck || `${dominant} 기운이 앞서기 쉬운 날이라 ${weakest} 보완을 의식할수록 감정의 균형이 안정됩니다.`,
       ]).slice(0, 3);
     case 'today':
     default:
       return compactStrings([
-        dayMasterSummary,
+        '오늘은 원국의 기본 성향 위에 현재 운의 속도와 균형을 함께 봅니다.',
         `${dominant} 기운이 전면에 서 있어 장점은 빠르게 드러나지만, ${weakest} 보완을 의식할수록 오늘 흐름이 더 오래 안정적으로 이어집니다.`,
         currentLuck || formatElementDistribution(data),
       ]).slice(0, 3);
@@ -1158,6 +1157,7 @@ export function buildSajuReport(
   const { primaryAction, cautionAction } = buildTopicActions(data, focusTopic, supportElements, scoreMap);
   const { luckyDates, cautionDates } = buildDates(input, data);
 
+  const dayMasterSummary = getDayMasterSummary(data);
   const summaryHighlights = buildSummaryHighlights(data, focusTopic, scoreMap, dominant, weakest);
   const evidenceCards = buildEvidenceCards(data);
 
@@ -1167,7 +1167,8 @@ export function buildSajuReport(
     focusBadge: meta.badge,
     focusScoreKey,
     headline: getHeadline(focusTopic, scoreMap),
-    summary: summaryHighlights.join(' '),
+    dayMasterSummary,
+    summary: compactStrings([dayMasterSummary, ...summaryHighlights]).join(' '),
     summaryHighlights,
     evidenceCards,
     scores,

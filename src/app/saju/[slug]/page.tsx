@@ -17,7 +17,7 @@ import { ELEMENT_INFO } from '@/lib/saju/elements';
 import type { Element } from '@/lib/saju/types';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
 import { buildSajuReport, FOCUS_TOPIC_META, FOCUS_TOPIC_OPTIONS } from '@/domain/saju/report';
-import type { SajuReport } from '@/domain/saju/report';
+import type { ReportScore, SajuReport } from '@/domain/saju/report';
 import { buildFallbackInterpretation } from '@/server/ai/saju-interpretation';
 import { cn } from '@/lib/utils';
 import { AppPage, AppShell } from '@/shared/layout/app-shell';
@@ -83,6 +83,53 @@ function formatCurrentLuckTitle(currentLuck: SajuCurrentLuck | null) {
 function getTimelineItem(report: SajuReport, label: string) {
   return report.timeline.find((item) => item.label === label) ?? null;
 }
+
+const SCORE_CARD_VISUALS: Record<
+  ReportScore['key'],
+  {
+    panel: string;
+    caption: string;
+    score: string;
+    bar: string;
+    glow: string;
+  }
+> = {
+  overall: {
+    panel: 'border-amber-300/34 bg-[linear-gradient(145deg,rgba(245,158,11,0.2),rgba(18,20,33,0.94))]',
+    caption: 'text-amber-200',
+    score: 'text-amber-50',
+    bar: 'bg-amber-300',
+    glow: 'bg-amber-300/18',
+  },
+  love: {
+    panel: 'border-rose-300/30 bg-[linear-gradient(145deg,rgba(244,63,94,0.16),rgba(18,20,33,0.94))]',
+    caption: 'text-rose-200',
+    score: 'text-rose-50',
+    bar: 'bg-rose-300',
+    glow: 'bg-rose-300/16',
+  },
+  wealth: {
+    panel: 'border-emerald-300/30 bg-[linear-gradient(145deg,rgba(16,185,129,0.17),rgba(18,20,33,0.94))]',
+    caption: 'text-emerald-200',
+    score: 'text-emerald-50',
+    bar: 'bg-emerald-300',
+    glow: 'bg-emerald-300/15',
+  },
+  career: {
+    panel: 'border-sky-300/30 bg-[linear-gradient(145deg,rgba(14,165,233,0.16),rgba(18,20,33,0.94))]',
+    caption: 'text-sky-200',
+    score: 'text-sky-50',
+    bar: 'bg-sky-300',
+    glow: 'bg-sky-300/15',
+  },
+  relationship: {
+    panel: 'border-fuchsia-300/26 bg-[linear-gradient(145deg,rgba(217,70,239,0.13),rgba(18,20,33,0.94))]',
+    caption: 'text-fuchsia-200',
+    score: 'text-fuchsia-50',
+    bar: 'bg-fuchsia-300',
+    glow: 'bg-fuchsia-300/14',
+  },
+};
 
 function formatCurrentLuckBody(currentLuck: SajuCurrentLuck | null, report?: SajuReport) {
   if (!currentLuck) {
@@ -202,23 +249,21 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             <h1 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-[var(--app-ivory)] sm:text-4xl">
               {report.headline}
             </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--app-copy-muted)] sm:text-base">
+              {report.dayMasterSummary}
+            </p>
             <div className="mt-5 grid max-w-2xl gap-3">
-              {report.summaryHighlights.map((summary, index) => (
+              {report.summaryHighlights.map((summary) => (
                 <p
-                  key={`${index}-${summary}`}
-                  className={cn(
-                    'rounded-2xl border bg-[var(--app-surface-muted)] px-4 py-3 leading-8',
-                    index === 0
-                      ? 'border-[var(--app-gold)]/24 text-base text-[var(--app-ivory)] sm:text-lg'
-                      : 'border-[var(--app-line)] text-sm text-[var(--app-copy)] sm:text-base'
-                  )}
+                  key={summary}
+                  className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-8 text-[var(--app-copy)] sm:text-base"
                 >
                   {summary}
                 </p>
               ))}
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-wrap gap-2" aria-label="해석 주제 선택">
               {FOCUS_TOPIC_OPTIONS.map((option) => (
                 <Link
                   key={option.key}
@@ -233,6 +278,25 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                   {option.label}
                 </Link>
               ))}
+            </div>
+
+            <div className="mt-4 overflow-hidden rounded-[24px] border border-[var(--app-gold)]/22 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(24,27,44,0.94))]">
+              <div className="grid gap-0 sm:grid-cols-2">
+                <div className="p-4 sm:p-5">
+                  <div className="app-caption">{report.focusLabel} 실행 포인트</div>
+                  <div className="mt-2 text-lg font-semibold leading-7 text-[var(--app-ivory)]">
+                    {report.primaryAction.title}
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{report.primaryAction.description}</p>
+                </div>
+                <div className="border-t border-[var(--app-line)] p-4 sm:border-l sm:border-t-0 sm:p-5">
+                  <div className="app-caption">{report.focusLabel} 주의 포인트</div>
+                  <div className="mt-2 text-lg font-semibold leading-7 text-[var(--app-ivory)]">
+                    {report.cautionAction.title}
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{report.cautionAction.description}</p>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -304,21 +368,41 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 </div>
               </div>
             </div>
-
-            <div className="grid gap-4">
-              <article className="app-panel p-5">
-                <div className="app-caption">{report.focusLabel} 실행 포인트</div>
-                <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.primaryAction.title}</div>
-                <p className="app-body-copy mt-3 text-sm">{report.primaryAction.description}</p>
-              </article>
-              <article className="app-panel p-5">
-                <div className="app-caption">{report.focusLabel} 주의 포인트</div>
-                <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.cautionAction.title}</div>
-                <p className="app-body-copy mt-3 text-sm">{report.cautionAction.description}</p>
-              </article>
-            </div>
           </section>
         </div>
+
+        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          {report.scores.map((score) => {
+            const isFocusedScore = report.focusScoreKey === score.key;
+            const visual = SCORE_CARD_VISUALS[score.key];
+
+            return (
+              <article
+                key={score.key}
+                className={cn(
+                  'relative overflow-hidden rounded-[24px] border p-5 shadow-[0_18px_48px_rgba(0,0,0,0.22)]',
+                  visual.panel,
+                  isFocusedScore ? 'ring-1 ring-[var(--app-gold)]/45' : ''
+                )}
+              >
+                <div className={cn('pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full blur-3xl', visual.glow)} />
+                <div className="relative">
+                  <div className={cn('text-xs font-semibold uppercase tracking-[0.2em]', visual.caption)}>
+                    {score.label}
+                  </div>
+                  <div className="mt-3 flex items-end gap-2">
+                    <span className={cn('text-4xl font-semibold', visual.score)}>{score.score}</span>
+                    <span className="pb-1 text-sm text-[var(--app-copy-soft)]">/ 100</span>
+                  </div>
+                  <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div className={cn('h-full rounded-full', visual.bar)} style={{ width: `${score.score}%` }} />
+                  </div>
+                  <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">{score.summary}</p>
+                </div>
+              </article>
+            );
+          })}
+        </section>
 
         <section className="grid gap-4 lg:grid-cols-3">
           {report.timeline.map((item) => (
@@ -349,31 +433,6 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           fallbackInterpretation={buildFallbackInterpretation(report)}
           cacheEnabled={isReadingId(slug)}
         />
-
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {report.scores.map((score) => {
-            const isFocusedScore = report.focusScoreKey === score.key;
-
-            return (
-              <article
-                key={score.key}
-                className={cn(
-                  'app-panel p-5',
-                  isFocusedScore
-                    ? 'border-[var(--app-gold)]/35 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(15,18,32,0.92))]'
-                    : ''
-                )}
-              >
-                <div className="app-caption">{score.label}</div>
-                <div className="mt-3 flex items-end gap-2">
-                  <span className="text-4xl font-semibold text-[var(--app-ivory)]">{score.score}</span>
-                  <span className="pb-1 text-sm text-[var(--app-copy-soft)]">/ 100</span>
-                </div>
-                <p className="app-body-copy mt-4 text-sm">{score.summary}</p>
-              </article>
-            );
-          })}
-        </section>
 
         <section className="space-y-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

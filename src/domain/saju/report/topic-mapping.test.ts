@@ -59,6 +59,15 @@ test('relationship topic uses relationship-specific copy instead of love copy', 
   assert.ok(report.summaryHighlights.some((summary) => summary.includes('관계 흐름')));
 });
 
+test('day master summary is separated from topic highlight cards', () => {
+  const data = normalizeToSajuDataV1(birthInput, null);
+  const report = buildSajuReport(birthInput, data, 'love');
+
+  assert.match(report.dayMasterSummary, /일간/);
+  assert.ok(report.summary.includes(report.dayMasterSummary));
+  assert.ok(report.summaryHighlights.every((summary) => !summary.startsWith(report.dayMasterSummary)));
+});
+
 test('evidence cards expose computed facts, source, confidence, and topic mapping', () => {
   const data = normalizeToSajuDataV1(birthInput, null);
   const report = buildSajuReport(birthInput, data, 'today');
