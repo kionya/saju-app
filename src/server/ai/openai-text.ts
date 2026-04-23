@@ -22,7 +22,7 @@ export interface AiTextResult {
 }
 
 const DEFAULT_OPENAI_MODEL = 'gpt-5.2';
-const DEFAULT_OPENAI_INTERPRETATION_MODEL = 'gpt-4o';
+const DEFAULT_OPENAI_INTERPRETATION_MODEL = 'gpt-5.2-chat-latest';
 const OPENAI_TIMEOUT_MS = 15_000;
 
 function getOpenAIKey() {

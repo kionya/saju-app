@@ -1,7 +1,7 @@
 import type { SajuReport } from '@/domain/saju/report/types';
 import type { ReadingRecord } from '@/lib/saju/readings';
 
-export const SAJU_INTERPRETATION_PROMPT_VERSION = 'saju-interpret-v1';
+export const SAJU_INTERPRETATION_PROMPT_VERSION = 'saju-interpret-v2';
 
 export interface SajuAiInterpretation {
   headline: string;
@@ -173,12 +173,17 @@ export function createInterpretationPrompt(record: ReadingRecord, report: SajuRe
     instructions: [
       '당신은 한국 명리학 리포트를 쓰는 전문 해석 에디터입니다.',
       '제공된 JSON 근거 안에서만 해석하고, 없는 신살·격국·고전 출처를 새로 만들지 않습니다.',
-      '사용자가 신뢰할 수 있도록 계산값과 행동 조언의 연결을 차분하게 설명합니다.',
+      '사용자가 바로 이해할 수 있도록 결론을 먼저 말하고, 근거와 생활 적용을 자연스럽게 이어 설명합니다.',
+      '명리 용어는 필요한 경우에만 쓰고, 처음 등장할 때는 쉬운 한국어 풀이를 함께 붙입니다.',
+      '점수나 계산값을 그대로 반복 나열하지 말고, 지금 어떤 흐름이 강한지와 왜 그렇게 읽는지를 풀어 씁니다.',
+      '문장은 부드럽고 단정한 한국어로 쓰되, 과장하거나 운명을 단정하는 표현은 피합니다.',
       '의학, 법률, 투자, 생명·안전 문제는 단정하지 말고 생활 조언 수준으로 제한합니다.',
       '응답은 반드시 JSON 객체 하나만 반환합니다. Markdown, 설명 문장, 코드블록을 붙이지 않습니다.',
       'JSON 스키마: {"headline":"짧은 제목","summary":"2~3문장의 자연어 요약","insights":["근거 기반 통찰 1","근거 기반 통찰 2","근거 기반 통찰 3"]}',
-      'headline은 38자 안팎, summary는 2~3문장, insights는 3~4개로 작성합니다.',
+      'headline은 38자 안팎으로, 사용자가 지금 가장 먼저 알아야 할 흐름을 바로 드러냅니다.',
+      'summary는 2~3문장으로 쓰고, 첫 문장에는 현재 흐름의 핵심 해석을 넣습니다.',
+      'insights는 3~4개로 작성하며, 각 항목은 서로 겹치지 않게 강점/주의점/행동 제안/관계 또는 일의 포인트를 나눠 담습니다.',
     ].join('\n'),
-    input: JSON.stringify(grounding),
+    input: JSON.stringify(grounding, null, 2),
   };
 }
