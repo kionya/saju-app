@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -91,6 +92,26 @@ interface SavedBirthProfile {
 }
 
 type ProfileLoadStatus = 'idle' | 'loading' | 'ready' | 'anonymous' | 'empty' | 'error';
+type LocationSearchStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
+
+interface BirthLocationSearchResult {
+  id: string;
+  label: string;
+  displayName: string;
+  latitude: number;
+  longitude: number;
+  source: string;
+  sourceRef: string;
+  license: string;
+}
+
+interface BirthLocationSearchResponse {
+  ok: boolean;
+  error?: string;
+  provider?: string;
+  attribution?: string;
+  items?: BirthLocationSearchResult[];
+}
 
 function getPrevPath(step: OnboardingStep) {
   switch (step) {
@@ -230,6 +251,9 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
   const [savedProfileOptions, setSavedProfileOptions] = useState<SavedBirthProfile[]>([]);
   const [profileLoadStatus, setProfileLoadStatus] = useState<ProfileLoadStatus>('idle');
   const [profileLoadMessage, setProfileLoadMessage] = useState('');
+  const [locationSearchStatus, setLocationSearchStatus] = useState<LocationSearchStatus>('idle');
+  const [locationSearchMessage, setLocationSearchMessage] = useState('');
+  const [locationSearchResults, setLocationSearchResults] = useState<BirthLocationSearchResult[]>([]);
   const honorific = useMemo(() => getHonorificLabel(form.nickname), [form.nickname]);
   const tonePreview = useMemo(
     () => buildTonePreview(form.tone, form.nickname),
@@ -327,6 +351,69 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
       birthLatitude: code === 'custom' ? current.birthLatitude : '',
       birthLongitude: code === 'custom' ? current.birthLongitude : '',
     }));
+    setLocationSearchStatus('idle');
+    setLocationSearchMessage('');
+    setLocationSearchResults([]);
+  }
+
+  function updateCustomBirthLocationLabel(value: string) {
+    setForm((current) => ({ ...current, birthLocationLabel: value }));
+    setLocationSearchStatus('idle');
+    setLocationSearchMessage('');
+    setLocationSearchResults([]);
+  }
+
+  async function searchBirthLocationCoordinates() {
+    const query = form.birthLocationLabel.trim();
+    if (query.length < 2) {
+      setLocationSearchStatus('error');
+      setLocationSearchMessage('지역명을 두 글자 이상 입력해 주세요.');
+      setLocationSearchResults([]);
+      return;
+    }
+
+    setLocationSearchStatus('loading');
+    setLocationSearchMessage('');
+    setLocationSearchResults([]);
+
+    try {
+      const response = await fetch(`/api/geo/birth-location?q=${encodeURIComponent(query)}`, {
+        cache: 'force-cache',
+      });
+      const data = (await response.json().catch(() => null)) as BirthLocationSearchResponse | null;
+
+      if (!response.ok || !data?.ok) {
+        setLocationSearchStatus('error');
+        setLocationSearchMessage(data?.error ?? '지역 좌표를 찾지 못했습니다.');
+        return;
+      }
+
+      const items = data.items ?? [];
+      setLocationSearchResults(items);
+      setLocationSearchStatus(items.length > 0 ? 'ready' : 'empty');
+      setLocationSearchMessage(
+        items.length > 0
+          ? '가장 가까운 지역을 골라 위도와 경도를 적용해 주세요.'
+          : '검색 결과가 없습니다. 시/군/구 이름이나 영문 지명을 함께 입력해 보세요.'
+      );
+    } catch {
+      setLocationSearchStatus('error');
+      setLocationSearchMessage('지역 좌표를 찾는 중 네트워크 오류가 발생했습니다.');
+    }
+  }
+
+  function applyBirthLocationSearchResult(result: BirthLocationSearchResult) {
+    setForm((current) => ({
+      ...current,
+      birthLocationCode: 'custom',
+      birthLocationLabel: result.label,
+      birthLatitude: String(result.latitude),
+      birthLongitude: String(result.longitude),
+      solarTimeMode: 'longitude',
+    }));
+    setLocationSearchStatus('ready');
+    setLocationSearchMessage(`${result.label} 좌표를 적용했습니다.`);
+    setLocationSearchResults([]);
   }
 
   function applySavedProfile(profile: SavedBirthProfile) {
@@ -770,45 +857,104 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                   </div>
 
                   {form.birthLocationCode === 'custom' ? (
-                    <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                      <div>
-                        <Label htmlFor="birth-location-label" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
-                          지역명
-                        </Label>
-                        <Input
-                          id="birth-location-label"
-                          value={form.birthLocationLabel}
-                          onChange={(event) => updateField('birthLocationLabel', event.target.value)}
-                          placeholder="예: 목포"
-                          className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
-                        />
+                    <div className="mt-4">
+                      <div className="grid gap-4 sm:grid-cols-[1.2fr_0.8fr_0.8fr]">
+                        <div>
+                          <Label htmlFor="birth-location-label" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
+                            지역명
+                          </Label>
+                          <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                            <Input
+                              id="birth-location-label"
+                              value={form.birthLocationLabel}
+                              onChange={(event) => updateCustomBirthLocationLabel(event.target.value)}
+                              placeholder="예: 목포, 강릉, Osaka"
+                              className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="lg"
+                              onClick={searchBirthLocationCoordinates}
+                              disabled={locationSearchStatus === 'loading'}
+                              className="h-11 rounded-2xl border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-3 text-xs font-semibold text-[var(--app-gold-text)] hover:bg-[var(--app-gold)]/16"
+                            >
+                              <Search className="h-3.5 w-3.5" aria-hidden="true" />
+                              {locationSearchStatus === 'loading' ? '검색 중' : '좌표 찾기'}
+                            </Button>
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor="birth-latitude" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
+                            위도
+                          </Label>
+                          <Input
+                            id="birth-latitude"
+                            inputMode="decimal"
+                            value={form.birthLatitude}
+                            onChange={(event) => updateField('birthLatitude', event.target.value)}
+                            placeholder="예: 34.8118"
+                            className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="birth-longitude" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
+                            경도
+                          </Label>
+                          <Input
+                            id="birth-longitude"
+                            inputMode="decimal"
+                            value={form.birthLongitude}
+                            onChange={(event) => updateField('birthLongitude', event.target.value)}
+                            placeholder="예: 126.3922"
+                            className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <Label htmlFor="birth-latitude" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
-                          위도
-                        </Label>
-                        <Input
-                          id="birth-latitude"
-                          inputMode="decimal"
-                          value={form.birthLatitude}
-                          onChange={(event) => updateField('birthLatitude', event.target.value)}
-                          placeholder="예: 34.8118"
-                          className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="birth-longitude" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
-                          경도
-                        </Label>
-                        <Input
-                          id="birth-longitude"
-                          inputMode="decimal"
-                          value={form.birthLongitude}
-                          onChange={(event) => updateField('birthLongitude', event.target.value)}
-                          placeholder="예: 126.3922"
-                          className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
-                        />
-                      </div>
+
+                      {locationSearchMessage ? (
+                        <p
+                          className={cn(
+                            'mt-3 text-xs leading-6',
+                            locationSearchStatus === 'error'
+                              ? 'text-red-200'
+                              : 'text-[var(--app-copy-soft)]'
+                          )}
+                        >
+                          {locationSearchMessage}
+                        </p>
+                      ) : null}
+
+                      {locationSearchResults.length > 0 ? (
+                        <div className="mt-3 space-y-2">
+                          {locationSearchResults.map((result) => (
+                            <button
+                              key={result.id}
+                              type="button"
+                              onClick={() => applyBirthLocationSearchResult(result)}
+                              className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-4 py-3 text-left transition-colors hover:border-[var(--app-gold)]/40 hover:bg-[var(--app-surface)]"
+                            >
+                              <span className="min-w-0">
+                                <span className="block text-sm font-semibold text-[var(--app-ivory)]">
+                                  {result.label}
+                                </span>
+                                <span className="mt-1 block truncate text-xs text-[var(--app-copy-soft)]">
+                                  {result.displayName}
+                                </span>
+                                <span className="mt-1 block text-xs text-[var(--app-copy-muted)]">
+                                  위도 {result.latitude} · 경도 {result.longitude}
+                                </span>
+                              </span>
+                              <span className="shrink-0 rounded-full border border-[var(--app-gold)]/30 px-3 py-1 text-xs font-semibold text-[var(--app-gold-text)]">
+                                적용
+                              </span>
+                            </button>
+                          ))}
+                          <p className="text-xs leading-6 text-[var(--app-copy-soft)]">
+                            좌표 데이터: OpenStreetMap contributors, ODbL 1.0
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
                   ) : null}
 
