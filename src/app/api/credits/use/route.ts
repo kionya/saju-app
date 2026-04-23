@@ -68,11 +68,11 @@ export async function POST(req: NextRequest) {
 function buildDetailReportContent(reading: NonNullable<Awaited<ReturnType<typeof resolveReading>>>) {
   const saju = reading.sajuData;
   const lucky = getLuckyElementsFromSajuData(saju);
+  const todayReport = buildSajuReport(reading.input, saju, 'today');
   const wealthReport = buildSajuReport(reading.input, saju, 'wealth');
   const loveReport = buildSajuReport(reading.input, saju, 'love');
   const careerReport = buildSajuReport(reading.input, saju, 'career');
   const relationshipReport = buildSajuReport(reading.input, saju, 'relationship');
-  const evidenceSummary = formatReportEvidence(wealthReport.evidenceCards);
   const dominant = ELEMENT_INFO[saju.fiveElements.dominant];
   const weakest = ELEMENT_INFO[saju.fiveElements.weakest];
   const personality = getPersonalityFromSajuData(saju);
@@ -86,44 +86,66 @@ function buildDetailReportContent(reading: NonNullable<Awaited<ReturnType<typeof
   const currentMajorLabel = saju.currentLuck?.currentMajorLuck?.ganzi;
   const saewoonLabel = saju.currentLuck?.saewoon?.ganzi;
   const wolwoonLabel = saju.currentLuck?.wolwoon?.ganzi;
+  const supportLabels = formatElementNames(lucky);
+  const overallScore = getReportScore(todayReport, 'overall');
+  const wealthScore = getReportScore(wealthReport, 'wealth');
+  const loveScore = getReportScore(loveReport, 'love');
+  const careerScore = getReportScore(careerReport, 'career');
 
   return {
     wealth: joinNarrative([
-      wealthReport.headline,
-      wealthReport.summary,
+      `${wealthReport.headline} 재물운은 ${wealthScore}점으로, 무조건 큰돈이 들어온다는 뜻이 아니라 돈을 다루는 판단력과 흐름의 안정도를 보는 점수입니다.`,
+      `${dominant.name} 기운이 강하게 드러나고 ${weakest.name} 보완이 필요한 명식이라, 오늘의 재물 판단은 수입 확대보다 지출 구조와 약속된 금액을 먼저 점검할 때 정확해집니다.`,
+      yongsinLabel ? `용신·보완축은 ${yongsinLabel}로 잡히므로, 새 투자나 충동 구매보다 자료 확인, 비교, 정산처럼 균형을 회복하는 선택이 재물운을 살립니다.` : '',
       wealthReport.primaryAction.description,
-      evidenceSummary,
+      wealthReport.cautionAction.description,
+      formatReportEvidence(wealthReport.evidenceCards),
       currentFlowLabel
-        ? `지금 재물 판단은 ${currentFlowLabel} 흐름을 함께 보며 속도를 조절하는 편이 좋습니다.`
+        ? `지금 재물 판단은 ${currentFlowLabel} 흐름 위에서 봐야 하므로, 당장 커 보이는 기회보다 몇 달 뒤에도 유지 가능한 선택인지 확인하는 편이 좋습니다.`
         : '',
       currentFlowSummary,
     ]),
     love: joinNarrative([
-      loveReport.headline,
-      `${personality} 인간관계에서는 ${ELEMENT_INFO[saju.pillars.day.stemElement].traits[1]} 성향이 드러나기 쉬우며, ${lucky.map((element) => ELEMENT_INFO[element].name.split(' ')[0]).join('·')} 기운의 사람과 조화가 좋습니다.`,
-      loveReport.summary,
+      `${loveReport.headline} 연애운은 ${loveScore}점으로, 상대가 반드시 이렇게 행동한다는 예측이 아니라 내가 관계에서 쓰기 쉬운 표현 방식과 조율 포인트를 보는 값입니다.`,
+      `${personality} 연애에서는 마음이 커질수록 표현의 폭도 커질 수 있으니, 오늘은 감정을 증명하려 하기보다 상대가 받아들이기 쉬운 속도로 말하는 것이 좋습니다.`,
+      supportLabels ? `이번 흐름을 돕는 오행은 ${supportLabels}입니다. 이 기운은 친밀감을 무리하게 밀어붙이기보다 안부, 칭찬, 약속 확인처럼 부담이 낮은 표현에 쓰는 편이 안정적입니다.` : '',
+      loveReport.primaryAction.description,
+      loveReport.cautionAction.description,
       formatReportEvidence(relationshipReport.evidenceCards),
       strengthLabel ? `현재 저장본 기준으로는 ${strengthLabel} 흐름이라 관계 속도 조절이 중요합니다.` : '',
       saewoonLabel ? `특히 ${saewoonLabel} 세운에서는 감정 표현의 강약을 세심하게 맞추는 편이 유리합니다.` : '',
     ]),
     career: joinNarrative([
-      careerReport.headline,
-      careerReport.summary,
+      `${careerReport.headline} 직업운은 ${careerScore}점으로, 합격이나 승진을 단정하는 값이 아니라 현재 명식에서 일의 추진력, 정리력, 평가 흐름을 함께 본 참고 점수입니다.`,
+      `강한 ${dominant.name} 기운은 직업적으로 ${dominant.traits[2]}과 ${dominant.traits[0]}이 필요한 역할에서 장점으로 쓰기 좋습니다. 다만 ${weakest.name} 축이 약해지는 방식으로 일을 넓히면 피로가 커질 수 있습니다.`,
+      careerReport.primaryAction.description,
+      careerReport.cautionAction.description,
       formatReportEvidence(careerReport.evidenceCards),
-      `강한 ${dominant.name} 기운은 직업적으로 ${dominant.traits[2]} 분야에서 두각을 나타냅니다. ${dominant.keywords[0]} 관련 업종이나 ${dominant.traits[0]}이(가) 필요한 직무에서 성과를 냅니다.`,
       patternLabel ? `${patternLabel} 흐름을 기준으로 역할과 자리의 무게를 읽으면 직업 해석이 훨씬 선명해집니다.` : '',
       currentMajorLabel ? `지금은 ${currentMajorLabel} 대운권이라 단기 성과보다 방향성과 포지션을 길게 잡는 해석이 잘 맞습니다.` : '',
     ]),
     health: joinNarrative([
-      `${saju.dayMaster.stem}일간의 건강은 ${dominant.keywords[3]} 기관에 과부하가 걸리지 않도록 생활 리듬을 고르게 지키는 쪽이 중요합니다.`,
-      `강한 오행이 과하면 오히려 해당 장기에 부담이 올 수 있으니, ${weakest.name} 기운과 관련된 ${weakest.keywords[3]} 기관을 꾸준히 관리하며 균형을 잡는 편이 좋습니다.`,
-      yongsinLabel ? `현재 보완 포인트는 ${yongsinLabel} 쪽이라 몸을 차분히 회복시키는 환경을 일부러 만들어주는 것이 도움이 됩니다.` : '',
-      wolwoonLabel ? `이번 달은 ${wolwoonLabel} 월운 기준으로 수면과 생활 리듬을 고르게 유지하는 편이 좋습니다.` : '',
-      lucky[0] ? `${ELEMENT_INFO[lucky[0]].keywords[0]} 계열 루틴을 일상에 넣으면 몸의 균형을 회복하는 데 보탬이 됩니다.` : '',
+      `건강운은 의학적 진단이 아니라 명식의 강한 기운과 부족한 기운이 생활 리듬에 주는 부담을 읽는 참고 해석입니다. 전체 흐름은 ${overallScore}점 기준으로 보되, 몸 상태는 실제 증상과 의료 판단을 우선해야 합니다.`,
+      `${saju.dayMaster.stem}일간은 ${dominant.name} 기운이 강하게 드러나는 명식이라, 과로하거나 한쪽 리듬으로 몰릴 때 피로가 쌓이기 쉽습니다. 그래서 오늘은 강하게 밀어붙이는 관리보다 수면, 식사, 움직임의 균형을 먼저 잡는 편이 안전합니다.`,
+      `보완 포인트는 ${weakest.name}입니다. 이 말은 특정 질병을 뜻하는 것이 아니라, 부족한 기운의 성질처럼 휴식, 정리, 속도 조절을 생활 안에 넣어야 균형이 잡힌다는 의미입니다.`,
+      yongsinLabel ? `용신·보완축 ${yongsinLabel}는 몸과 마음이 한쪽으로 치우치지 않게 돕는 기준으로만 참고하세요.` : '',
+      wolwoonLabel ? `이번 달은 ${wolwoonLabel} 월운 기준으로 무리한 변화보다 반복 가능한 루틴을 유지하는 편이 좋습니다.` : '',
+      '통증, 불면, 소화 문제처럼 실제 증상이 있으면 운세 해석보다 의료 전문가의 진단과 치료를 우선해야 합니다.',
     ]),
     luckyColor: dominant.color,
     luckyKeywords: [...new Set(lucky.flatMap((element) => ELEMENT_INFO[element].keywords.slice(0, 2)))],
   };
+}
+
+function getReportScore(
+  report: ReturnType<typeof buildSajuReport>,
+  key: ReturnType<typeof buildSajuReport>['scores'][number]['key']
+) {
+  return report.scores.find((score) => score.key === key)?.score ?? 0;
+}
+
+function formatElementNames(elements: ReturnType<typeof getLuckyElementsFromSajuData>) {
+  return elements.map((element) => ELEMENT_INFO[element].name.split(' ')[0]).join(' · ');
 }
 
 function formatSymbolList(symbols: SajuSymbolRef[]) {

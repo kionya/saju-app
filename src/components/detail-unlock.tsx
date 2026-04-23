@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,11 +17,12 @@ interface DetailContent {
 
 interface Props {
   slug: string;
+  children?: ReactNode;
 }
 
 const SECTIONS = [
   { key: 'wealth', label: '재물운' },
-  { key: 'love', label: '애정운' },
+  { key: 'love', label: '연애운' },
   { key: 'career', label: '직업운' },
   { key: 'health', label: '건강운' },
 ] as const;
@@ -110,7 +112,7 @@ function ReadableDetailText({
   );
 }
 
-export default function DetailUnlock({ slug }: Props) {
+export default function DetailUnlock({ slug, children }: Props) {
   const [state, setState] = useState<'locked' | 'loading' | 'unlocked' | 'error'>('locked');
   const [content, setContent] = useState<DetailContent | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
@@ -158,12 +160,13 @@ export default function DetailUnlock({ slug }: Props) {
 
   if (state === 'unlocked' && content) {
     return (
-      <section className="app-panel space-y-5 p-6">
+      <section className="relative overflow-hidden rounded-[32px] border border-[var(--app-gold)]/26 bg-[linear-gradient(180deg,rgba(14,18,34,0.98),rgba(5,10,22,0.98))] p-5 sm:p-7">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(210,176,114,0.62),transparent)]" />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="app-caption">상세 해석 리포트</div>
             <h2 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
-              확장 해석이 열렸습니다
+              1코인 상세 리포트가 열렸습니다
             </h2>
           </div>
           <div className="flex items-center gap-2">
@@ -179,10 +182,12 @@ export default function DetailUnlock({ slug }: Props) {
         <p className="app-body-copy text-sm">
           {access === 'daily_reuse'
             ? '오늘 이미 열어본 상세 해석이라 코인 차감 없이 다시 보여드립니다.'
-            : '재물, 애정, 직업, 건강 흐름을 현재 명식과 운세 문맥에 맞춰 확장해서 읽은 결과입니다.'}
+            : '명반, 오행, 근거, 대운 흐름을 먼저 확인한 뒤 재물·연애·직업·건강을 분야별로 풀이합니다.'}
         </p>
 
-        <div className="grid gap-3">
+        {children ? <div className="mt-6 space-y-5">{children}</div> : null}
+
+        <div className="mt-6 grid gap-3">
           {SECTIONS.map(({ key, label }) => {
             const meta = DETAIL_SECTION_META[key];
 
