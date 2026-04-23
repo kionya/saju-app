@@ -5,7 +5,11 @@ import {
   parseAiRequest,
 } from './route';
 import {
+  AI_CHAT_BUNDLE_COST,
+  AI_CHAT_BUNDLE_SIZE,
+  AI_CHAT_FREE_TURNS,
   createAiChatBillingSummary,
+  getAiChatTurnPlan,
   getAvailableCreditsTotal,
   shouldChargeAiChat,
 } from '@/lib/credits/ai-chat-access';
@@ -16,7 +20,7 @@ test('dialogue fallback copy explains that fallback answers do not charge coins'
   const text = buildDialogueFallback('오늘 관계운을 짧게 알려줘');
 
   assert.match(text, /기본 안내/);
-  assert.match(text, /코인을 차감하지 않습니다/);
+  assert.match(text, /횟수와 코인을 차감하지 않습니다/);
 });
 
 test('AI route blocks unsafe dialogue before fallback generation', async () => {
@@ -56,10 +60,48 @@ test('ai chat billing policy charges only successful OpenAI replies', () => {
   assert.equal(shouldChargeAiChat('fallback'), false);
   assert.equal(getAvailableCreditsTotal({ balance: 2, subscription_balance: 3 }), 5);
 
-  assert.deepEqual(createAiChatBillingSummary('charged', 4), {
+  assert.deepEqual(createAiChatBillingSummary('charged_bundle', 4), {
     feature: 'ai_chat',
-    cost: 1,
-    status: 'charged',
+    cost: AI_CHAT_BUNDLE_COST,
+    status: 'charged_bundle',
     remaining: 4,
+    turnNumber: null,
+    freeTurnsRemaining: null,
+    bundleTurnsRemaining: null,
+    bundleSize: AI_CHAT_BUNDLE_SIZE,
+  });
+});
+
+test('ai chat turn plan gives first three turns for free before paid bundles start', () => {
+  assert.deepEqual(getAiChatTurnPlan(0), {
+    status: 'free_intro',
+    cost: 0,
+    turnNumber: 1,
+    freeTurnsRemaining: AI_CHAT_FREE_TURNS - 1,
+    bundleTurnsRemaining: 0,
+  });
+
+  assert.deepEqual(getAiChatTurnPlan(2), {
+    status: 'free_intro',
+    cost: 0,
+    turnNumber: 3,
+    freeTurnsRemaining: 0,
+    bundleTurnsRemaining: 0,
+  });
+
+  assert.deepEqual(getAiChatTurnPlan(3), {
+    status: 'charged_bundle',
+    cost: AI_CHAT_BUNDLE_COST,
+    turnNumber: 4,
+    freeTurnsRemaining: 0,
+    bundleTurnsRemaining: 2,
+  });
+
+  assert.deepEqual(getAiChatTurnPlan(4), {
+    status: 'bundle_included',
+    cost: 0,
+    turnNumber: 5,
+    freeTurnsRemaining: 0,
+    bundleTurnsRemaining: 1,
   });
 });

@@ -3,14 +3,14 @@ import { createServiceClient } from '@/lib/supabase/server';
 export type Feature =
   | 'detail_report'   // 1 크레딧
   | 'compat'          // 2 크레딧
-  | 'ai_chat'         // 1 크레딧
+  | 'ai_chat'         // 3 크레딧 / 3회 묶음
   | 'daewoon'         // 3 크레딧
   | 'calendar';       // 2 크레딧
 
 const CREDIT_COSTS: Record<Feature, number> = {
   detail_report: 1,
   compat: 2,
-  ai_chat: 1,
+  ai_chat: 3,
   daewoon: 3,
   calendar: 2,
 };
@@ -33,14 +33,13 @@ export async function getCredits(userId: string): Promise<{ balance: number; sub
   return data;
 }
 
-export async function deductCredits(
+async function deductCreditsWithCost(
   userId: string,
-  feature: Feature
+  feature: Feature,
+  cost: number
 ): Promise<{ success: boolean; remaining: number; error?: string }> {
-  const cost = CREDIT_COSTS[feature];
   const supabase = await createServiceClient();
 
-  // 원자적 차감: RPC 사용
   const { data, error } = await supabase.rpc('deduct_credits', {
     p_user_id: userId,
     p_cost: cost,
@@ -48,10 +47,29 @@ export async function deductCredits(
   });
 
   if (error || !data?.success) {
-    return { success: false, remaining: 0, error: error?.message ?? '코인이 부족합니다.' };
+    return {
+      success: false,
+      remaining: data?.remaining ?? 0,
+      error: error?.message ?? '코인이 부족합니다.',
+    };
   }
 
   return { success: true, remaining: data.remaining };
+}
+
+export async function deductCredits(
+  userId: string,
+  feature: Feature
+): Promise<{ success: boolean; remaining: number; error?: string }> {
+  return deductCreditsWithCost(userId, feature, CREDIT_COSTS[feature]);
+}
+
+export async function deductCreditsAmount(
+  userId: string,
+  feature: Feature,
+  cost: number
+): Promise<{ success: boolean; remaining: number; error?: string }> {
+  return deductCreditsWithCost(userId, feature, cost);
 }
 
 export async function addCredits(

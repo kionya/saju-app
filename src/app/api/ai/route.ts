@@ -10,9 +10,12 @@ import type { SajuReport } from '@/domain/saju/report/types';
 import {
   createAiChatBillingSummary,
   getAvailableCreditsTotal,
+  getAiChatSuccessfulTurns,
+  getAiChatTurnPlan,
+  recordAiChatIncludedTurn,
   shouldChargeAiChat,
 } from '@/lib/credits/ai-chat-access';
-import { deductCredits, getCredits } from '@/lib/credits/deduct';
+import { deductCreditsAmount, getCredits } from '@/lib/credits/deduct';
 import { resolveReading, type ReadingRecord } from '@/lib/saju/readings';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -94,7 +97,7 @@ export function buildDialogueFallback(message: string) {
   return [
     'AI 대화 연결이 아직 준비되지 않아 기본 안내로 답변드립니다.',
     `남겨주신 질문: “${message}”`,
-    '지금은 사주 결과 페이지의 핵심 요약, 강약, 격국, 용신, 합충·공망·신살 근거를 먼저 확인해 주세요. OpenAI가 정상 연결되면 이 자리에 개인화된 대화 답변이 표시되고, fallback 응답은 코인을 차감하지 않습니다.',
+    '지금은 사주 결과 페이지의 핵심 요약, 강약, 격국, 용신, 합충·공망·신살 근거를 먼저 확인해 주세요. OpenAI가 정상 연결되면 이 자리에 개인화된 대화 답변이 표시되고, fallback 응답은 횟수와 코인을 차감하지 않습니다.',
   ].join('\n\n');
 }
 
@@ -247,14 +250,16 @@ async function handleDialogue(request: DialogueAiRequest) {
   const configured = isOpenAIConfigured();
   const currentCredits = await getCredits(user.id);
   const availableCredits = getAvailableCreditsTotal(currentCredits);
+  const successfulTurns = await getAiChatSuccessfulTurns(user.id);
+  const turnPlan = getAiChatTurnPlan(successfulTurns);
 
-  if (configured && availableCredits < 1) {
+  if (configured && turnPlan.cost > 0 && availableCredits < turnPlan.cost) {
     return NextResponse.json(
       {
         ok: false,
         error: '코인이 부족합니다.',
         configured,
-        billing: createAiChatBillingSummary('insufficient_credits', availableCredits),
+        billing: createAiChatBillingSummary('insufficient_credits', availableCredits, turnPlan),
       },
       { status: 402 }
     );
@@ -273,30 +278,42 @@ async function handleDialogue(request: DialogueAiRequest) {
       ok: true,
       mode: request.mode,
       configured,
-      billing: createAiChatBillingSummary('not_charged_fallback', availableCredits),
+      billing: createAiChatBillingSummary('not_charged_fallback', availableCredits, turnPlan),
       ...result,
     });
   }
 
-  const deducted = await deductCredits(user.id, 'ai_chat');
+  if (turnPlan.status === 'charged_bundle') {
+    const deducted = await deductCreditsAmount(user.id, 'ai_chat', turnPlan.cost);
 
-  if (!deducted.success) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: '코인이 부족합니다.',
-        configured,
-        billing: createAiChatBillingSummary('insufficient_credits', deducted.remaining),
-      },
-      { status: 402 }
-    );
+    if (!deducted.success) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: '코인이 부족합니다.',
+          configured,
+          billing: createAiChatBillingSummary('insufficient_credits', deducted.remaining, turnPlan),
+        },
+        { status: 402 }
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      mode: request.mode,
+      configured,
+      billing: createAiChatBillingSummary('charged_bundle', deducted.remaining, turnPlan),
+      ...result,
+    });
   }
+
+  await recordAiChatIncludedTurn(user.id, turnPlan);
 
   return NextResponse.json({
     ok: true,
     mode: request.mode,
     configured,
-    billing: createAiChatBillingSummary('charged', deducted.remaining),
+    billing: createAiChatBillingSummary(turnPlan.status, availableCredits, turnPlan),
     ...result,
   });
 }

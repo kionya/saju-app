@@ -51,7 +51,7 @@ const INITIAL_MESSAGE: ChatMessage = {
   model: null,
   errorMessage: null,
   text:
-    '편하게 한 줄로 남겨주세요. 먼저 안전 신호를 살피고, OpenAI가 연결되어 있으면 AI 답변을, 연결 전이면 기본 해석 fallback을 보여드립니다.',
+    '편하게 한 줄로 남겨주세요. 처음 3회는 무료이고, 이후에는 3회 묶음마다 3코인으로 이어집니다. 먼저 안전 신호를 살피고, OpenAI가 연결되어 있으면 AI 답변을, 연결 전이면 기본 해석 fallback을 보여드립니다.',
 };
 
 function createMessageId(prefix: string) {
@@ -84,16 +84,20 @@ function getBillingLabel(billing: AiChatBillingSummary | null | undefined) {
   if (!billing) return null;
 
   switch (billing.status) {
-    case 'charged':
-      return `${billing.cost}코인 차감 · 잔여 ${billing.remaining ?? 0}개`;
+    case 'free_intro':
+      return `첫 3회 무료 · ${billing.freeTurnsRemaining ?? 0}회 남음`;
+    case 'charged_bundle':
+      return `${billing.bundleSize}회 묶음 시작 · ${billing.cost}코인 차감 · 이번 묶음 ${billing.bundleTurnsRemaining ?? 0}회 남음 · 잔여 ${billing.remaining ?? 0}개`;
+    case 'bundle_included':
+      return `결제된 ${billing.bundleSize}회 묶음 사용 중 · 이번 묶음 ${billing.bundleTurnsRemaining ?? 0}회 남음`;
     case 'not_charged_fallback':
-      return `fallback 응답 · 코인 차감 없음 · 잔여 ${billing.remaining ?? 0}개`;
+      return `fallback 응답 · 횟수/코인 차감 없음 · 잔여 ${billing.remaining ?? 0}개`;
     case 'not_charged_safe_redirect':
-      return '안전 안내 전환 · 코인 차감 없음';
+      return '안전 안내 전환 · 횟수/코인 차감 없음';
     case 'auth_required':
-      return `${billing.cost}코인 대화는 로그인 후 사용할 수 있습니다.`;
+      return '대화는 로그인 후 사용할 수 있습니다.';
     case 'insufficient_credits':
-      return `코인 부족 · 현재 ${billing.remaining ?? 0}개`;
+      return `${billing.bundleSize}회 묶음 시작에 ${billing.cost}코인이 필요합니다 · 현재 ${billing.remaining ?? 0}개`;
     default:
       return null;
   }
@@ -108,7 +112,7 @@ function getConnectionSummary(
   }
 
   if (!latestAssistant || latestAssistant.id === INITIAL_MESSAGE.id) {
-    return '질문 1회당 1코인입니다. OpenAI 응답일 때만 1코인이 차감되고, fallback 응답이나 안전 안내는 차감되지 않습니다.';
+    return '처음 3회는 무료입니다. 이후에는 OpenAI 응답 기준으로 3회 묶음마다 3코인이 차감되고, fallback 응답과 안전 안내는 횟수에도 포함되지 않습니다.';
   }
 
   if (latestAssistant.source === 'openai') {
@@ -315,9 +319,10 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
           </button>
         </div>
         <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
-          질문 1회당 1코인입니다. OpenAI 응답일 때만 코인이 차감되고,
-          fallback 응답과 안전 안내는 차감되지 않습니다. 대화 저장은 아직 하지
-          않으며, 새로고침하면 현재 화면의 메시지는 사라집니다.
+          처음 3회는 무료입니다. 이후에는 OpenAI 응답 기준으로 3회 묶음마다
+          3코인이 차감되고, fallback 응답과 안전 안내는 횟수와 코인을 차감하지
+          않습니다. 대화 저장은 아직 하지 않으며, 새로고침하면 현재 화면의
+          메시지는 사라집니다.
         </p>
 
         {errorMessage ? (
