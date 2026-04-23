@@ -56,6 +56,11 @@ interface ProfileApiBirthFields {
   birthDay: number | null;
   birthHour: number | null;
   birthMinute: number | null;
+  birthLocationCode: string | null;
+  birthLocationLabel: string;
+  birthLatitude: number | null;
+  birthLongitude: number | null;
+  solarTimeMode: 'standard' | 'longitude';
   gender: 'male' | 'female' | null;
 }
 
@@ -88,6 +93,11 @@ interface SavedBirthProfile {
   birthDay: number;
   birthHour: number | null;
   birthMinute: number | null;
+  birthLocationCode: string;
+  birthLocationLabel: string;
+  birthLatitude: number | null;
+  birthLongitude: number | null;
+  solarTimeMode: 'standard' | 'longitude';
   gender: 'male' | 'female' | null;
 }
 
@@ -186,7 +196,10 @@ function formatSavedProfileDetail(profile: ProfileApiBirthFields) {
             : ` ${String(profile.birthMinute).padStart(2, '0')}분`
         }`;
   const genderLabel = profile.gender === 'male' ? '남성' : profile.gender === 'female' ? '여성' : '성별 미선택';
-  return `${dateLabel} · ${hourLabel} · ${genderLabel}`;
+  const locationLabel = profile.birthLocationLabel
+    ? ` · ${profile.birthLocationLabel}${profile.solarTimeMode === 'longitude' ? ' 경도 보정' : ''}`
+    : '';
+  return `${dateLabel} · ${hourLabel} · ${genderLabel}${locationLabel}`;
 }
 
 function buildSavedProfileOptions(data: ProfileApiResponse): SavedBirthProfile[] {
@@ -204,6 +217,11 @@ function buildSavedProfileOptions(data: ProfileApiResponse): SavedBirthProfile[]
       birthDay: data.profile.birthDay,
       birthHour: data.profile.birthHour,
       birthMinute: data.profile.birthMinute,
+      birthLocationCode: data.profile.birthLocationCode ?? '',
+      birthLocationLabel: data.profile.birthLocationLabel ?? '',
+      birthLatitude: data.profile.birthLatitude,
+      birthLongitude: data.profile.birthLongitude,
+      solarTimeMode: data.profile.solarTimeMode ?? 'standard',
       gender: data.profile.gender,
     });
   }
@@ -222,6 +240,11 @@ function buildSavedProfileOptions(data: ProfileApiResponse): SavedBirthProfile[]
       birthDay: profile.birthDay,
       birthHour: profile.birthHour,
       birthMinute: profile.birthMinute,
+      birthLocationCode: profile.birthLocationCode ?? '',
+      birthLocationLabel: profile.birthLocationLabel ?? '',
+      birthLatitude: profile.birthLatitude,
+      birthLongitude: profile.birthLongitude,
+      solarTimeMode: profile.solarTimeMode ?? 'standard',
       gender: profile.gender,
     });
   });
@@ -427,6 +450,11 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
         profile.birthHour === null || profile.birthMinute === null
           ? ''
           : String(profile.birthMinute),
+      birthLocationCode: profile.birthLocationCode,
+      birthLocationLabel: profile.birthLocationLabel,
+      birthLatitude: profile.birthLatitude === null ? '' : String(profile.birthLatitude),
+      birthLongitude: profile.birthLongitude === null ? '' : String(profile.birthLongitude),
+      solarTimeMode: profile.birthLocationCode ? profile.solarTimeMode : 'standard',
       gender: profile.gender ?? '',
       nickname: profile.nickname || current.nickname,
     }));
@@ -504,6 +532,11 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
           birthDay: parsed.input.day,
           birthHour: parsed.input.hour ?? null,
           birthMinute: parsed.input.minute ?? null,
+          birthLocationCode: parsed.input.birthLocation?.code ?? null,
+          birthLocationLabel: parsed.input.birthLocation?.label ?? '',
+          birthLatitude: parsed.input.birthLocation?.latitude ?? null,
+          birthLongitude: parsed.input.birthLocation?.longitude ?? null,
+          solarTimeMode: parsed.input.solarTimeMode ?? 'standard',
           gender: parsed.input.gender ?? null,
         }),
       }).catch(() => undefined);

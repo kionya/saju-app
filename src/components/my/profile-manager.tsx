@@ -2,10 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { HOUR_OPTIONS } from '@/lib/home-content';
+import { BIRTH_LOCATION_PRESETS } from '@/lib/saju/birth-location';
+import type { SolarTimeMode } from '@/lib/saju/types';
 import type { FamilyProfile, UserProfile } from '@/lib/profile';
 
 const RELATIONSHIP_OPTIONS = [
@@ -31,6 +34,11 @@ type ProfileFormState = {
   birthDay: string;
   birthHour: string;
   birthMinute: string;
+  birthLocationCode: string;
+  birthLocationLabel: string;
+  birthLatitude: string;
+  birthLongitude: string;
+  solarTimeMode: SolarTimeMode;
   gender: '' | 'male' | 'female';
   note: string;
 };
@@ -43,9 +51,35 @@ type FamilyFormState = {
   birthDay: string;
   birthHour: string;
   birthMinute: string;
+  birthLocationCode: string;
+  birthLocationLabel: string;
+  birthLatitude: string;
+  birthLongitude: string;
+  solarTimeMode: SolarTimeMode;
   gender: '' | 'male' | 'female';
   note: string;
 };
+
+type BirthLocationFormFields = Pick<
+  ProfileFormState,
+  'birthLocationCode' | 'birthLocationLabel' | 'birthLatitude' | 'birthLongitude' | 'solarTimeMode' | 'birthHour'
+>;
+
+type LocationSearchStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
+
+interface BirthLocationSearchResult {
+  id: string;
+  label: string;
+  displayName: string;
+  latitude: number;
+  longitude: number;
+}
+
+interface BirthLocationSearchResponse {
+  ok: boolean;
+  error?: string;
+  items?: BirthLocationSearchResult[];
+}
 
 function toProfileFormState(profile: UserProfile): ProfileFormState {
   return {
@@ -55,6 +89,11 @@ function toProfileFormState(profile: UserProfile): ProfileFormState {
     birthDay: profile.birthDay ? String(profile.birthDay) : '',
     birthHour: profile.birthHour === null ? '' : String(profile.birthHour),
     birthMinute: profile.birthMinute === null ? '' : String(profile.birthMinute),
+    birthLocationCode: profile.birthLocationCode ?? '',
+    birthLocationLabel: profile.birthLocationLabel,
+    birthLatitude: profile.birthLatitude === null ? '' : String(profile.birthLatitude),
+    birthLongitude: profile.birthLongitude === null ? '' : String(profile.birthLongitude),
+    solarTimeMode: profile.solarTimeMode,
     gender: profile.gender ?? '',
     note: profile.note,
   };
@@ -69,6 +108,11 @@ function toFamilyFormState(profile: FamilyProfile): FamilyFormState {
     birthDay: profile.birthDay ? String(profile.birthDay) : '',
     birthHour: profile.birthHour === null ? '' : String(profile.birthHour),
     birthMinute: profile.birthMinute === null ? '' : String(profile.birthMinute),
+    birthLocationCode: profile.birthLocationCode ?? '',
+    birthLocationLabel: profile.birthLocationLabel,
+    birthLatitude: profile.birthLatitude === null ? '' : String(profile.birthLatitude),
+    birthLongitude: profile.birthLongitude === null ? '' : String(profile.birthLongitude),
+    solarTimeMode: profile.solarTimeMode,
     gender: profile.gender ?? '',
     note: profile.note,
   };
@@ -80,13 +124,19 @@ function formatBirthSummary(profile: {
   birthDay: number | null;
   birthHour: number | null;
   birthMinute: number | null;
+  birthLocationLabel?: string;
+  solarTimeMode?: SolarTimeMode;
 }) {
   if (!profile.birthYear || !profile.birthMonth || !profile.birthDay) {
     return '생년월일 미입력';
   }
 
+  const locationLabel = profile.birthLocationLabel
+    ? ` · ${profile.birthLocationLabel}${profile.solarTimeMode === 'longitude' ? ' 경도 보정' : ''}`
+    : '';
+
   if (profile.birthHour === null) {
-    return `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay} · 시간 미입력`;
+    return `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay} · 시간 미입력${locationLabel}`;
   }
 
   const minuteLabel =
@@ -94,7 +144,7 @@ function formatBirthSummary(profile: {
       ? ''
       : ` ${String(profile.birthMinute).padStart(2, '0')}분`;
 
-  return `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay} · ${profile.birthHour}시${minuteLabel}`;
+  return `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay} · ${profile.birthHour}시${minuteLabel}${locationLabel}`;
 }
 
 const EMPTY_FAMILY_FORM: FamilyFormState = {
@@ -105,6 +155,11 @@ const EMPTY_FAMILY_FORM: FamilyFormState = {
   birthDay: '',
   birthHour: '',
   birthMinute: '',
+  birthLocationCode: '',
+  birthLocationLabel: '',
+  birthLatitude: '',
+  birthLongitude: '',
+  solarTimeMode: 'standard',
   gender: '',
   note: '',
 };
@@ -113,6 +168,260 @@ const FIELD_LABEL_CLASS = 'mb-1.5 block text-sm text-[var(--app-copy-muted)]';
 const FORM_CONTROL_CLASS = 'moon-form-control px-3 py-2 text-sm';
 const SELECT_CONTROL_CLASS = `${FORM_CONTROL_CLASS} appearance-none`;
 const TEXTAREA_CONTROL_CLASS = `${FORM_CONTROL_CLASS} leading-7`;
+
+function BirthLocationEditor({
+  idPrefix,
+  value,
+  onChange,
+}: {
+  idPrefix: string;
+  value: BirthLocationFormFields;
+  onChange: (patch: Partial<BirthLocationFormFields>) => void;
+}) {
+  const [status, setStatus] = useState<LocationSearchStatus>('idle');
+  const [message, setMessage] = useState('');
+  const [results, setResults] = useState<BirthLocationSearchResult[]>([]);
+  const selectedPreset = BIRTH_LOCATION_PRESETS.find((item) => item.code === value.birthLocationCode);
+
+  function resetSearch() {
+    setStatus('idle');
+    setMessage('');
+    setResults([]);
+  }
+
+  function updateBirthLocationCode(code: string) {
+    const preset = BIRTH_LOCATION_PRESETS.find((item) => item.code === code);
+
+    if (!code) {
+      onChange({
+        birthLocationCode: '',
+        birthLocationLabel: '',
+        birthLatitude: '',
+        birthLongitude: '',
+        solarTimeMode: 'standard',
+      });
+    } else if (preset) {
+      onChange({
+        birthLocationCode: preset.code,
+        birthLocationLabel: preset.label,
+        birthLatitude: String(preset.latitude),
+        birthLongitude: String(preset.longitude),
+        solarTimeMode: 'longitude',
+      });
+    } else {
+      onChange({
+        birthLocationCode: 'custom',
+        birthLocationLabel: value.birthLocationLabel,
+        birthLatitude: value.birthLatitude,
+        birthLongitude: value.birthLongitude,
+        solarTimeMode: 'longitude',
+      });
+    }
+
+    resetSearch();
+  }
+
+  function updateCustomLabel(label: string) {
+    onChange({ birthLocationLabel: label });
+    resetSearch();
+  }
+
+  async function searchBirthLocationCoordinates() {
+    const query = value.birthLocationLabel.trim();
+    if (query.length < 2) {
+      setStatus('error');
+      setMessage('지역명을 두 글자 이상 입력해 주세요.');
+      setResults([]);
+      return;
+    }
+
+    setStatus('loading');
+    setMessage('');
+    setResults([]);
+
+    try {
+      const response = await fetch(`/api/geo/birth-location?q=${encodeURIComponent(query)}`, {
+        cache: 'force-cache',
+      });
+      const data = (await response.json().catch(() => null)) as BirthLocationSearchResponse | null;
+
+      if (!response.ok || !data?.ok) {
+        setStatus('error');
+        setMessage(data?.error ?? '지역 좌표를 찾지 못했습니다.');
+        return;
+      }
+
+      const items = data.items ?? [];
+      setResults(items);
+      setStatus(items.length > 0 ? 'ready' : 'empty');
+      setMessage(
+        items.length > 0
+          ? '가장 가까운 지역을 골라 위도와 경도를 적용해 주세요.'
+          : '검색 결과가 없습니다. 시/군/구 이름이나 영문 지명을 함께 입력해 보세요.'
+      );
+    } catch {
+      setStatus('error');
+      setMessage('지역 좌표를 찾는 중 네트워크 오류가 발생했습니다.');
+    }
+  }
+
+  function applySearchResult(result: BirthLocationSearchResult) {
+    onChange({
+      birthLocationCode: 'custom',
+      birthLocationLabel: result.label,
+      birthLatitude: String(result.latitude),
+      birthLongitude: String(result.longitude),
+      solarTimeMode: 'longitude',
+    });
+    setStatus('ready');
+    setMessage(`${result.label} 좌표를 적용했습니다.`);
+    setResults([]);
+  }
+
+  return (
+    <div className="moon-orbit-card p-4 md:col-span-2">
+      <div className="grid gap-4 sm:grid-cols-[1.15fr_0.85fr]">
+        <div>
+          <label className={FIELD_LABEL_CLASS} htmlFor={`${idPrefix}-birth-location`}>
+            출생지
+          </label>
+          <select
+            id={`${idPrefix}-birth-location`}
+            value={value.birthLocationCode}
+            onChange={(event) => updateBirthLocationCode(event.target.value)}
+            className={SELECT_CONTROL_CLASS}
+          >
+            <option value="" className="bg-slate-950">지역 미입력</option>
+            {BIRTH_LOCATION_PRESETS.map((location) => (
+              <option key={location.code} value={location.code} className="bg-slate-950">
+                {location.label}
+              </option>
+            ))}
+            <option value="custom" className="bg-slate-950">직접 입력</option>
+          </select>
+        </div>
+
+        <div>
+          <label className={FIELD_LABEL_CLASS} htmlFor={`${idPrefix}-solar-time-mode`}>
+            시간 보정
+          </label>
+          <select
+            id={`${idPrefix}-solar-time-mode`}
+            value={value.birthLocationCode ? value.solarTimeMode : 'standard'}
+            onChange={(event) => onChange({ solarTimeMode: event.target.value as SolarTimeMode })}
+            disabled={!value.birthLocationCode || !value.birthHour}
+            className={`${SELECT_CONTROL_CLASS} disabled:cursor-not-allowed disabled:opacity-55`}
+          >
+            <option value="standard" className="bg-slate-950">표준시 그대로</option>
+            <option value="longitude" className="bg-slate-950">경도 보정</option>
+          </select>
+        </div>
+      </div>
+
+      {value.birthLocationCode === 'custom' ? (
+        <div className="mt-4">
+          <div className="grid gap-3 sm:grid-cols-[1.2fr_0.8fr_0.8fr]">
+            <div>
+              <label className={FIELD_LABEL_CLASS} htmlFor={`${idPrefix}-birth-location-label`}>
+                지역명
+              </label>
+              <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+                <Input
+                  id={`${idPrefix}-birth-location-label`}
+                  value={value.birthLocationLabel}
+                  onChange={(event) => updateCustomLabel(event.target.value)}
+                  placeholder="예: 목포, 강릉, Osaka"
+                  className={FORM_CONTROL_CLASS}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={searchBirthLocationCoordinates}
+                  disabled={status === 'loading'}
+                  className="rounded-2xl border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-3 text-xs font-semibold text-[var(--app-gold-text)] hover:bg-[var(--app-gold)]/16"
+                >
+                  <Search className="h-3.5 w-3.5" aria-hidden="true" />
+                  {status === 'loading' ? '검색 중' : '좌표 찾기'}
+                </Button>
+              </div>
+            </div>
+            <div>
+              <label className={FIELD_LABEL_CLASS} htmlFor={`${idPrefix}-birth-latitude`}>
+                위도
+              </label>
+              <Input
+                id={`${idPrefix}-birth-latitude`}
+                inputMode="decimal"
+                value={value.birthLatitude}
+                onChange={(event) => onChange({ birthLatitude: event.target.value })}
+                placeholder="예: 34.8118"
+                className={FORM_CONTROL_CLASS}
+              />
+            </div>
+            <div>
+              <label className={FIELD_LABEL_CLASS} htmlFor={`${idPrefix}-birth-longitude`}>
+                경도
+              </label>
+              <Input
+                id={`${idPrefix}-birth-longitude`}
+                inputMode="decimal"
+                value={value.birthLongitude}
+                onChange={(event) => onChange({ birthLongitude: event.target.value })}
+                placeholder="예: 126.3922"
+                className={FORM_CONTROL_CLASS}
+              />
+            </div>
+          </div>
+
+          {message ? (
+            <p className={`mt-3 text-xs leading-6 ${status === 'error' ? 'text-red-200' : 'text-[var(--app-copy-soft)]'}`}>
+              {message}
+            </p>
+          ) : null}
+
+          {results.length > 0 ? (
+            <div className="mt-3 space-y-2">
+              {results.map((result) => (
+                <button
+                  key={result.id}
+                  type="button"
+                  onClick={() => applySearchResult(result)}
+                  className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-4 py-3 text-left transition-colors hover:border-[var(--app-gold)]/40 hover:bg-[var(--app-surface)]"
+                >
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-[var(--app-ivory)]">
+                      {result.label}
+                    </span>
+                    <span className="mt-1 block truncate text-xs text-[var(--app-copy-soft)]">
+                      {result.displayName}
+                    </span>
+                    <span className="mt-1 block text-xs text-[var(--app-copy-muted)]">
+                      위도 {result.latitude} · 경도 {result.longitude}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-full border border-[var(--app-gold)]/30 px-3 py-1 text-xs font-semibold text-[var(--app-gold-text)]">
+                    적용
+                  </span>
+                </button>
+              ))}
+              <p className="text-xs leading-6 text-[var(--app-copy-soft)]">
+                좌표 데이터: OpenStreetMap contributors, ODbL 1.0
+              </p>
+            </div>
+          ) : null}
+        </div>
+      ) : selectedPreset ? (
+        <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
+          {selectedPreset.label} 기준 위도 {selectedPreset.latitude} · 경도 {selectedPreset.longitude}
+        </p>
+      ) : null}
+
+      <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
+        출생지를 저장하면 동경 135도 한국 표준시와의 경도 차이를 시주 경계 판단에 반영할 수 있습니다.
+      </p>
+    </div>
+  );
+}
 
 export default function ProfileManager({
   initialProfile,
@@ -336,6 +645,11 @@ export default function ProfileManager({
               />
             </div>
           </div>
+          <BirthLocationEditor
+            idPrefix="profile"
+            value={profileForm}
+            onChange={(patch) => setProfileForm((current) => ({ ...current, ...patch }))}
+          />
           <div className="md:col-span-2">
             <label className={FIELD_LABEL_CLASS}>메모</label>
             <textarea
@@ -468,6 +782,11 @@ export default function ProfileManager({
               />
             </div>
           </div>
+          <BirthLocationEditor
+            idPrefix="family"
+            value={familyForm}
+            onChange={(patch) => setFamilyForm((current) => ({ ...current, ...patch }))}
+          />
           <div>
             <select
               value={familyForm.gender}

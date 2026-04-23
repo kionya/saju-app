@@ -1,20 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, hasSupabaseServerEnv } from '@/lib/supabase/server';
 import {
+  isMissingBirthLocationColumnError,
   isMissingBirthMinuteColumnError,
   isMissingFamilyProfilesTableError,
   upsertProfile,
   type UserProfile,
 } from '@/lib/profile';
+import type { SolarTimeMode } from '@/lib/saju/types';
 
 const PROFILE_SELECT =
   'display_name, birth_year, birth_month, birth_day, birth_hour, gender, note';
 const PROFILE_SELECT_WITH_MINUTE =
   'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note';
+const PROFILE_SELECT_WITH_LOCATION =
+  'display_name, birth_year, birth_month, birth_day, birth_hour, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
+const PROFILE_SELECT_FULL =
+  'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
 const FAMILY_PROFILE_SELECT =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, gender, note, created_at';
 const FAMILY_PROFILE_SELECT_WITH_MINUTE =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, created_at';
+const FAMILY_PROFILE_SELECT_WITH_LOCATION =
+  'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, gender, note, created_at, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
+const FAMILY_PROFILE_SELECT_FULL =
+  'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, created_at, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
 
 type ProfileRow = {
   display_name?: string | null;
@@ -23,6 +33,11 @@ type ProfileRow = {
   birth_day?: number | null;
   birth_hour?: number | null;
   birth_minute?: number | null;
+  birth_location_code?: string | null;
+  birth_location_label?: string | null;
+  birth_latitude?: number | null;
+  birth_longitude?: number | null;
+  solar_time_mode?: SolarTimeMode | null;
   gender?: 'male' | 'female' | null;
   note?: string | null;
 };
@@ -41,6 +56,81 @@ function parseOptionalInt(value: unknown, min: number, max: number) {
   return parsed;
 }
 
+function parseOptionalNumber(value: unknown, min: number, max: number) {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) return null;
+  return parsed;
+}
+
+function readString(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function parseBirthLocationFields(data: Record<string, unknown>) {
+  const code = readString(data.birthLocationCode);
+  const label = readString(data.birthLocationLabel);
+  const latitude = parseOptionalNumber(data.birthLatitude, -90, 90);
+  const longitude = parseOptionalNumber(data.birthLongitude, -180, 180);
+  const hasLocationInput = Boolean(code || label || data.birthLatitude || data.birthLongitude);
+
+  if (!hasLocationInput) {
+    return {
+      ok: true as const,
+      birthLocationCode: null,
+      birthLocationLabel: '',
+      birthLatitude: null,
+      birthLongitude: null,
+      solarTimeMode: 'standard' as SolarTimeMode,
+    };
+  }
+
+  if (!code || !label || latitude === null || longitude === null) {
+    return { ok: false as const };
+  }
+
+  return {
+    ok: true as const,
+    birthLocationCode: code,
+    birthLocationLabel: label,
+    birthLatitude: latitude,
+    birthLongitude: longitude,
+    solarTimeMode: data.solarTimeMode === 'longitude' ? 'longitude' as const : 'standard' as const,
+  };
+}
+
+async function loadWithProfileSelectFallback<T>(
+  loader: (columns: string) => PromiseLike<{ data: T | null; error: unknown }>,
+  selectCandidates: string[]
+) {
+  let lastResponse: { data: T | null; error: unknown } | null = null;
+
+  for (const columns of selectCandidates) {
+    const response = await loader(columns);
+    lastResponse = response;
+
+    if (
+      response.error &&
+      (isMissingBirthMinuteColumnError(response.error) ||
+        isMissingBirthLocationColumnError(response.error))
+    ) {
+      continue;
+    }
+
+    return response;
+  }
+
+  return lastResponse!;
+}
+
+function getErrorMessage(error: unknown) {
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message ?? '알 수 없는 오류가 발생했습니다.');
+  }
+
+  return '알 수 없는 오류가 발생했습니다.';
+}
+
 function parseProfile(payload: unknown): UserProfile | null {
   if (!payload || typeof payload !== 'object') return null;
 
@@ -49,6 +139,7 @@ function parseProfile(payload: unknown): UserProfile | null {
   const note = typeof data.note === 'string' ? data.note.trim() : '';
   const gender =
     data.gender === 'male' || data.gender === 'female' ? data.gender : null;
+  const birthLocation = parseBirthLocationFields(data);
 
   const birthYear =
     data.birthYear === '' || data.birthYear === undefined || data.birthYear === null
@@ -77,7 +168,8 @@ function parseProfile(payload: unknown): UserProfile | null {
     (data.birthDay !== '' && data.birthDay !== undefined && data.birthDay !== null && birthDay === null) ||
     (data.birthHour !== '' && data.birthHour !== undefined && data.birthHour !== null && birthHour === null) ||
     (data.birthMinute !== '' && data.birthMinute !== undefined && data.birthMinute !== null && birthMinute === null) ||
-    (birthHour === null && birthMinute !== null)
+    (birthHour === null && birthMinute !== null) ||
+    !birthLocation.ok
   ) {
     return null;
   }
@@ -89,6 +181,11 @@ function parseProfile(payload: unknown): UserProfile | null {
     birthDay,
     birthHour,
     birthMinute,
+    birthLocationCode: birthLocation.birthLocationCode,
+    birthLocationLabel: birthLocation.birthLocationLabel,
+    birthLatitude: birthLocation.birthLatitude,
+    birthLongitude: birthLocation.birthLongitude,
+    solarTimeMode: birthLocation.solarTimeMode,
     gender,
     note,
   };
@@ -130,24 +227,26 @@ export async function GET() {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
-  let profileResponse = await loadProfile(PROFILE_SELECT_WITH_MINUTE);
+  const profileResponse = await loadWithProfileSelectFallback(loadProfile, [
+    PROFILE_SELECT_FULL,
+    PROFILE_SELECT_WITH_LOCATION,
+    PROFILE_SELECT_WITH_MINUTE,
+    PROFILE_SELECT,
+  ]);
 
-  if (profileResponse.error && isMissingBirthMinuteColumnError(profileResponse.error)) {
-    profileResponse = await loadProfile(PROFILE_SELECT);
-  }
-
-  let familyResponse = await loadFamilyProfiles(FAMILY_PROFILE_SELECT_WITH_MINUTE);
-
-  if (familyResponse.error && isMissingBirthMinuteColumnError(familyResponse.error)) {
-    familyResponse = await loadFamilyProfiles(FAMILY_PROFILE_SELECT);
-  }
+  const familyResponse = await loadWithProfileSelectFallback(loadFamilyProfiles, [
+    FAMILY_PROFILE_SELECT_FULL,
+    FAMILY_PROFILE_SELECT_WITH_LOCATION,
+    FAMILY_PROFILE_SELECT_WITH_MINUTE,
+    FAMILY_PROFILE_SELECT,
+  ]);
 
   if (profileResponse.error) {
-    return NextResponse.json({ error: profileResponse.error.message }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(profileResponse.error) }, { status: 500 });
   }
 
   if (familyResponse.error && !isMissingFamilyProfilesTableError(familyResponse.error)) {
-    return NextResponse.json({ error: familyResponse.error.message }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(familyResponse.error) }, { status: 500 });
   }
 
   const profile = profileResponse.data as ProfileRow | null;
@@ -162,6 +261,11 @@ export async function GET() {
       birthDay: profile?.birth_day ?? null,
       birthHour: profile?.birth_hour ?? null,
       birthMinute: profile?.birth_minute ?? null,
+      birthLocationCode: profile?.birth_location_code ?? null,
+      birthLocationLabel: profile?.birth_location_label ?? '',
+      birthLatitude: profile?.birth_latitude ?? null,
+      birthLongitude: profile?.birth_longitude ?? null,
+      solarTimeMode: profile?.solar_time_mode === 'longitude' ? 'longitude' : 'standard',
       gender: profile?.gender ?? null,
       note: profile?.note ?? '',
     },
@@ -176,6 +280,11 @@ export async function GET() {
           birthDay: profile.birth_day ?? null,
           birthHour: profile.birth_hour ?? null,
           birthMinute: profile.birth_minute ?? null,
+          birthLocationCode: profile.birth_location_code ?? null,
+          birthLocationLabel: profile.birth_location_label ?? '',
+          birthLatitude: profile.birth_latitude ?? null,
+          birthLongitude: profile.birth_longitude ?? null,
+          solarTimeMode: profile.solar_time_mode === 'longitude' ? 'longitude' : 'standard',
           gender: profile.gender ?? null,
           note: profile.note ?? '',
           createdAt: profile.created_at,

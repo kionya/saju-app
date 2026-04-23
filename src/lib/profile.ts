@@ -1,5 +1,6 @@
 import { createServiceClient, hasSupabaseServerEnv, hasSupabaseServiceEnv } from '@/lib/supabase/server';
 import { requireAccount } from '@/lib/account';
+import type { SolarTimeMode } from '@/lib/saju/types';
 
 export interface BirthProfileFields {
   birthYear: number | null;
@@ -7,6 +8,11 @@ export interface BirthProfileFields {
   birthDay: number | null;
   birthHour: number | null;
   birthMinute: number | null;
+  birthLocationCode: string | null;
+  birthLocationLabel: string;
+  birthLatitude: number | null;
+  birthLongitude: number | null;
+  solarTimeMode: SolarTimeMode;
   gender: 'male' | 'female' | null;
   note: string;
 }
@@ -28,12 +34,22 @@ const PROFILE_SELECT =
   'display_name, birth_year, birth_month, birth_day, birth_hour, gender, note';
 const PROFILE_SELECT_WITH_MINUTE =
   'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note';
+const PROFILE_SELECT_WITH_LOCATION =
+  'display_name, birth_year, birth_month, birth_day, birth_hour, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
+const PROFILE_SELECT_FULL =
+  'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
 const FAMILY_PROFILE_SELECT =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, gender, note, created_at';
 const FAMILY_PROFILE_SELECT_WITH_MINUTE =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, created_at';
+const FAMILY_PROFILE_SELECT_WITH_LOCATION =
+  'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, gender, note, created_at, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
+const FAMILY_PROFILE_SELECT_FULL =
+  'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, created_at, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
 const BIRTH_MINUTE_MIGRATION_ERROR =
   '운영 DB에 출생 분 저장 컬럼이 아직 적용되지 않았습니다. 005_profile_birth_minutes.sql 마이그레이션이 필요합니다.';
+const BIRTH_LOCATION_MIGRATION_ERROR =
+  '운영 DB에 출생 지역 저장 컬럼이 아직 적용되지 않았습니다. 009_profile_birth_locations.sql 마이그레이션이 필요합니다.';
 
 type ProfileRow = {
   display_name?: string | null;
@@ -42,6 +58,11 @@ type ProfileRow = {
   birth_day?: number | null;
   birth_hour?: number | null;
   birth_minute?: number | null;
+  birth_location_code?: string | null;
+  birth_location_label?: string | null;
+  birth_latitude?: number | null;
+  birth_longitude?: number | null;
+  solar_time_mode?: SolarTimeMode | null;
   gender?: 'male' | 'female' | null;
   note?: string | null;
 };
@@ -59,6 +80,18 @@ function toNumberOrNull(value: number | null | undefined) {
 
 function removeBirthMinute<T extends Record<string, unknown>>(payload: T) {
   const { birth_minute: _birthMinute, ...rest } = payload;
+  return rest;
+}
+
+function removeBirthLocation<T extends Record<string, unknown>>(payload: T) {
+  const {
+    birth_location_code: _birthLocationCode,
+    birth_location_label: _birthLocationLabel,
+    birth_latitude: _birthLatitude,
+    birth_longitude: _birthLongitude,
+    solar_time_mode: _solarTimeMode,
+    ...rest
+  } = payload;
   return rest;
 }
 
@@ -95,6 +128,106 @@ export function isMissingBirthMinuteColumnError(error: unknown) {
   );
 }
 
+export function isMissingBirthLocationColumnError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+
+  const code = 'code' in error ? String(error.code ?? '') : '';
+  const message = 'message' in error ? String(error.message ?? '') : '';
+  const details = 'details' in error ? String(error.details ?? '') : '';
+  const hint = 'hint' in error ? String(error.hint ?? '') : '';
+  const combined = `${message} ${details} ${hint}`;
+
+  return (
+    (combined.includes('birth_location') ||
+      combined.includes('birth_latitude') ||
+      combined.includes('birth_longitude') ||
+      combined.includes('solar_time_mode')) &&
+    (code === '42703' ||
+      code === 'PGRST204' ||
+      combined.includes('column') ||
+      combined.includes('schema cache'))
+  );
+}
+
+function hasProfileBirthLocation(profile: BirthProfileFields) {
+  return Boolean(
+    profile.birthLocationCode ||
+      profile.birthLocationLabel ||
+      profile.birthLatitude !== null ||
+      profile.birthLongitude !== null ||
+      profile.solarTimeMode === 'longitude'
+  );
+}
+
+async function writeProfilePayloadWithFallback<
+  T extends Record<string, unknown>,
+  R extends { error: unknown },
+>(
+  profile: BirthProfileFields,
+  payload: T,
+  write: (payload: T) => PromiseLike<R>
+) {
+  let currentPayload = payload;
+  let response = await write(currentPayload);
+
+  for (let attempt = 0; response.error && attempt < 2; attempt += 1) {
+    let nextPayload: Record<string, unknown> | null = null;
+
+    if (isMissingBirthMinuteColumnError(response.error)) {
+      if (profile.birthMinute !== null) {
+        throw new Error(BIRTH_MINUTE_MIGRATION_ERROR);
+      }
+      nextPayload = removeBirthMinute(currentPayload);
+    }
+
+    if (isMissingBirthLocationColumnError(response.error)) {
+      if (hasProfileBirthLocation(profile)) {
+        throw new Error(BIRTH_LOCATION_MIGRATION_ERROR);
+      }
+      nextPayload = removeBirthLocation(nextPayload ?? currentPayload);
+    }
+
+    if (!nextPayload) break;
+
+    currentPayload = nextPayload as T;
+    response = await write(currentPayload);
+  }
+
+  return response;
+}
+
+async function loadWithProfileSelectFallback<T>(
+  loader: (columns: string) => PromiseLike<{ data: T | null; error: unknown }>,
+  selectCandidates: string[]
+) {
+  let lastResponse: { data: T | null; error: unknown } | null = null;
+
+  for (const columns of selectCandidates) {
+    const response = await loader(columns);
+    lastResponse = response;
+
+    if (
+      response.error &&
+      (isMissingBirthMinuteColumnError(response.error) ||
+        isMissingBirthLocationColumnError(response.error))
+    ) {
+      continue;
+    }
+
+    return response;
+  }
+
+  return lastResponse!;
+}
+
+function getErrorMessage(error: unknown) {
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message ?? '알 수 없는 오류가 발생했습니다.');
+  }
+
+  return '알 수 없는 오류가 발생했습니다.';
+}
+
 function mapUserProfile(row: ProfileRow | null | undefined): UserProfile {
   return {
     displayName: row?.display_name ?? '',
@@ -103,6 +236,11 @@ function mapUserProfile(row: ProfileRow | null | undefined): UserProfile {
     birthDay: toNumberOrNull(row?.birth_day),
     birthHour: toNumberOrNull(row?.birth_hour),
     birthMinute: toNumberOrNull(row?.birth_minute),
+    birthLocationCode: row?.birth_location_code ?? null,
+    birthLocationLabel: row?.birth_location_label ?? '',
+    birthLatitude: toNumberOrNull(row?.birth_latitude),
+    birthLongitude: toNumberOrNull(row?.birth_longitude),
+    solarTimeMode: row?.solar_time_mode === 'longitude' ? 'longitude' : 'standard',
     gender: row?.gender ?? null,
     note: row?.note ?? '',
   };
@@ -118,6 +256,11 @@ function mapFamilyProfile(row: FamilyProfileRow): FamilyProfile {
     birthDay: toNumberOrNull(row.birth_day),
     birthHour: toNumberOrNull(row.birth_hour),
     birthMinute: toNumberOrNull(row.birth_minute),
+    birthLocationCode: row.birth_location_code ?? null,
+    birthLocationLabel: row.birth_location_label ?? '',
+    birthLatitude: toNumberOrNull(row.birth_latitude),
+    birthLongitude: toNumberOrNull(row.birth_longitude),
+    solarTimeMode: row.solar_time_mode === 'longitude' ? 'longitude' : 'standard',
     gender: row.gender ?? null,
     note: row.note ?? '',
     createdAt: row.created_at,
@@ -138,6 +281,11 @@ export async function getProfileSettingsData(redirectPath: string) {
         birthDay: null,
         birthHour: null,
         birthMinute: null,
+        birthLocationCode: null,
+        birthLocationLabel: '',
+        birthLatitude: null,
+        birthLongitude: null,
+        solarTimeMode: 'standard',
         gender: null,
         note: '',
       } satisfies UserProfile,
@@ -161,26 +309,28 @@ export async function getProfileSettingsData(redirectPath: string) {
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
-  let profileResponse = await loadProfile(PROFILE_SELECT_WITH_MINUTE);
+  const profileResponse = await loadWithProfileSelectFallback(loadProfile, [
+    PROFILE_SELECT_FULL,
+    PROFILE_SELECT_WITH_LOCATION,
+    PROFILE_SELECT_WITH_MINUTE,
+    PROFILE_SELECT,
+  ]);
 
-  if (profileResponse.error && isMissingBirthMinuteColumnError(profileResponse.error)) {
-    profileResponse = await loadProfile(PROFILE_SELECT);
-  }
-
-  let familyResponse = await loadFamilyProfiles(FAMILY_PROFILE_SELECT_WITH_MINUTE);
-
-  if (familyResponse.error && isMissingBirthMinuteColumnError(familyResponse.error)) {
-    familyResponse = await loadFamilyProfiles(FAMILY_PROFILE_SELECT);
-  }
+  const familyResponse = await loadWithProfileSelectFallback(loadFamilyProfiles, [
+    FAMILY_PROFILE_SELECT_FULL,
+    FAMILY_PROFILE_SELECT_WITH_LOCATION,
+    FAMILY_PROFILE_SELECT_WITH_MINUTE,
+    FAMILY_PROFILE_SELECT,
+  ]);
 
   if (profileResponse.error) {
-    throw new Error(profileResponse.error.message);
+    throw new Error(getErrorMessage(profileResponse.error));
   }
 
   const profile = mapUserProfile(profileResponse.data as ProfileRow | null);
 
   if (familyResponse.error && !isMissingFamilyProfilesTableError(familyResponse.error)) {
-    throw new Error(familyResponse.error.message);
+    throw new Error(getErrorMessage(familyResponse.error));
   }
 
   const familyProfiles: FamilyProfile[] =
@@ -211,22 +361,22 @@ export async function upsertProfile(userId: string, profile: UserProfile) {
     birth_day: profile.birthDay,
     birth_hour: profile.birthHour,
     birth_minute: profile.birthMinute,
+    birth_location_code: profile.birthLocationCode,
+    birth_location_label: profile.birthLocationLabel || null,
+    birth_latitude: profile.birthLatitude,
+    birth_longitude: profile.birthLongitude,
+    solar_time_mode: profile.solarTimeMode,
     gender: profile.gender,
     note: profile.note || null,
     updated_at: new Date().toISOString(),
   };
 
-  let response = await service.from('profiles').upsert(payload);
-
-  if (response.error && isMissingBirthMinuteColumnError(response.error)) {
-    if (profile.birthMinute !== null) {
-      throw new Error(BIRTH_MINUTE_MIGRATION_ERROR);
-    }
-    response = await service.from('profiles').upsert(removeBirthMinute(payload));
-  }
+  const response = await writeProfilePayloadWithFallback(profile, payload, (nextPayload) =>
+    service.from('profiles').upsert(nextPayload)
+  );
 
   if (response.error) {
-    throw new Error(response.error.message);
+    throw new Error(getErrorMessage(response.error));
   }
 }
 
@@ -245,33 +395,29 @@ export async function createFamilyProfile(
     birth_day: profile.birthDay,
     birth_hour: profile.birthHour,
     birth_minute: profile.birthMinute,
+    birth_location_code: profile.birthLocationCode,
+    birth_location_label: profile.birthLocationLabel || null,
+    birth_latitude: profile.birthLatitude,
+    birth_longitude: profile.birthLongitude,
+    solar_time_mode: profile.solarTimeMode,
     gender: profile.gender,
     note: profile.note || null,
     updated_at: new Date().toISOString(),
   };
 
-  let response = await service
-    .from('family_profiles')
-    .insert(payload)
-    .select('id')
-    .single();
-
-  if (response.error && isMissingBirthMinuteColumnError(response.error)) {
-    if (profile.birthMinute !== null) {
-      throw new Error(BIRTH_MINUTE_MIGRATION_ERROR);
-    }
-    response = await service
+  const response = await writeProfilePayloadWithFallback(profile, payload, (nextPayload) =>
+    service
       .from('family_profiles')
-      .insert(removeBirthMinute(payload))
+      .insert(nextPayload)
       .select('id')
-      .single();
-  }
+      .single()
+  );
 
   if (response.error || !response.data) {
     if (isMissingFamilyProfilesTableError(response.error)) {
       throw new Error('운영 DB에 가족 프로필 테이블이 아직 적용되지 않았습니다. 003_profiles.sql 마이그레이션이 필요합니다.');
     }
-    throw new Error(response.error?.message ?? '가족 프로필을 저장하지 못했습니다.');
+    throw new Error(response.error ? getErrorMessage(response.error) : '가족 프로필을 저장하지 못했습니다.');
   }
 
   return response.data.id as string;
@@ -292,33 +438,29 @@ export async function updateFamilyProfile(
     birth_day: profile.birthDay,
     birth_hour: profile.birthHour,
     birth_minute: profile.birthMinute,
+    birth_location_code: profile.birthLocationCode,
+    birth_location_label: profile.birthLocationLabel || null,
+    birth_latitude: profile.birthLatitude,
+    birth_longitude: profile.birthLongitude,
+    solar_time_mode: profile.solarTimeMode,
     gender: profile.gender,
     note: profile.note || null,
     updated_at: new Date().toISOString(),
   };
 
-  let response = await service
-    .from('family_profiles')
-    .update(payload)
-    .eq('id', familyProfileId)
-    .eq('user_id', userId);
-
-  if (response.error && isMissingBirthMinuteColumnError(response.error)) {
-    if (profile.birthMinute !== null) {
-      throw new Error(BIRTH_MINUTE_MIGRATION_ERROR);
-    }
-    response = await service
+  const response = await writeProfilePayloadWithFallback(profile, payload, (nextPayload) =>
+    service
       .from('family_profiles')
-      .update(removeBirthMinute(payload))
+      .update(nextPayload)
       .eq('id', familyProfileId)
-      .eq('user_id', userId);
-  }
+      .eq('user_id', userId)
+  );
 
   if (response.error) {
     if (isMissingFamilyProfilesTableError(response.error)) {
       throw new Error('운영 DB에 가족 프로필 테이블이 아직 적용되지 않았습니다. 003_profiles.sql 마이그레이션이 필요합니다.');
     }
-    throw new Error(response.error.message);
+    throw new Error(getErrorMessage(response.error));
   }
 }
 

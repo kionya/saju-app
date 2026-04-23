@@ -279,16 +279,6 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               </div>
             </div>
 
-            <div className="app-panel p-5">
-              <div className="app-caption">{report.focusLabel} 행동 제안</div>
-              <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.primaryAction.title}</div>
-              <p className="app-body-copy mt-3 text-sm">{report.primaryAction.description}</p>
-            </div>
-            <div className="app-panel p-5">
-              <div className="app-caption">{report.focusLabel} 피할 포인트</div>
-              <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.cautionAction.title}</div>
-              <p className="app-body-copy mt-3 text-sm">{report.cautionAction.description}</p>
-            </div>
             <div className="rounded-[24px] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 p-5">
               <div className="text-sm text-[var(--app-gold-soft)]">날짜 포인트</div>
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
@@ -316,6 +306,19 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             </div>
           </section>
         </div>
+
+        <section className="grid gap-4 lg:grid-cols-2">
+          <article className="app-panel p-5">
+            <div className="app-caption">{report.focusLabel} 행동 제안</div>
+            <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.primaryAction.title}</div>
+            <p className="app-body-copy mt-3 text-sm">{report.primaryAction.description}</p>
+          </article>
+          <article className="app-panel p-5">
+            <div className="app-caption">{report.focusLabel} 피할 포인트</div>
+            <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{report.cautionAction.title}</div>
+            <p className="app-body-copy mt-3 text-sm">{report.cautionAction.description}</p>
+          </article>
+        </section>
 
         <section className="grid gap-4 lg:grid-cols-3">
           {report.timeline.map((item) => (

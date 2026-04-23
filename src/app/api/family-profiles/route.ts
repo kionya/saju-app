@@ -6,12 +6,56 @@ import {
   updateFamilyProfile,
   type FamilyProfileInput,
 } from '@/lib/profile';
+import type { SolarTimeMode } from '@/lib/saju/types';
 
 function parseOptionalInt(value: unknown, min: number, max: number) {
   if (value === null || value === undefined || value === '') return null;
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < min || parsed > max) return null;
   return parsed;
+}
+
+function parseOptionalNumber(value: unknown, min: number, max: number) {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) return null;
+  return parsed;
+}
+
+function readString(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function parseBirthLocationFields(data: Record<string, unknown>) {
+  const code = readString(data.birthLocationCode);
+  const label = readString(data.birthLocationLabel);
+  const latitude = parseOptionalNumber(data.birthLatitude, -90, 90);
+  const longitude = parseOptionalNumber(data.birthLongitude, -180, 180);
+  const hasLocationInput = Boolean(code || label || data.birthLatitude || data.birthLongitude);
+
+  if (!hasLocationInput) {
+    return {
+      ok: true as const,
+      birthLocationCode: null,
+      birthLocationLabel: '',
+      birthLatitude: null,
+      birthLongitude: null,
+      solarTimeMode: 'standard' as SolarTimeMode,
+    };
+  }
+
+  if (!code || !label || latitude === null || longitude === null) {
+    return { ok: false as const };
+  }
+
+  return {
+    ok: true as const,
+    birthLocationCode: code,
+    birthLocationLabel: label,
+    birthLatitude: latitude,
+    birthLongitude: longitude,
+    solarTimeMode: data.solarTimeMode === 'longitude' ? 'longitude' as const : 'standard' as const,
+  };
 }
 
 function parseFamilyProfile(
@@ -26,6 +70,7 @@ function parseFamilyProfile(
   const note = typeof data.note === 'string' ? data.note.trim() : '';
   const gender =
     data.gender === 'male' || data.gender === 'female' ? data.gender : null;
+  const birthLocation = parseBirthLocationFields(data);
 
   if (!label || !relationship) {
     return null;
@@ -58,7 +103,8 @@ function parseFamilyProfile(
     (data.birthDay !== '' && data.birthDay !== undefined && data.birthDay !== null && birthDay === null) ||
     (data.birthHour !== '' && data.birthHour !== undefined && data.birthHour !== null && birthHour === null) ||
     (data.birthMinute !== '' && data.birthMinute !== undefined && data.birthMinute !== null && birthMinute === null) ||
-    (birthHour === null && birthMinute !== null)
+    (birthHour === null && birthMinute !== null) ||
+    !birthLocation.ok
   ) {
     return null;
   }
@@ -71,6 +117,11 @@ function parseFamilyProfile(
     birthDay,
     birthHour,
     birthMinute,
+    birthLocationCode: birthLocation.birthLocationCode,
+    birthLocationLabel: birthLocation.birthLocationLabel,
+    birthLatitude: birthLocation.birthLatitude,
+    birthLongitude: birthLocation.birthLongitude,
+    solarTimeMode: birthLocation.solarTimeMode,
     gender,
     note,
   };
