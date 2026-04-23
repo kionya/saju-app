@@ -139,7 +139,11 @@ function createReportGrounding(record: ReadingRecord, report: SajuReport) {
       month: record.input.month,
       day: record.input.day,
       hour: record.input.hour ?? null,
+      minute: record.input.minute ?? null,
       gender: record.input.gender ?? null,
+      location: record.input.birthLocation ?? null,
+      solarTimeMode: record.input.solarTimeMode ?? 'standard',
+      birthTimeCorrection: data.input.birthTimeCorrection ?? null,
     },
     focus: {
       topic: report.focusTopic,

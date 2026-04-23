@@ -6,10 +6,16 @@ import type {
   Pillar as LegacyPillar,
   SajuResult as LegacySajuResult,
   Stem,
+  SolarTimeMode,
   YinYang,
 } from '@/lib/saju/types';
 import { Solar } from 'lunar-typescript';
 import { calculateSaju } from '@/lib/saju/pillars';
+import {
+  buildBirthTimeCorrection,
+  DEFAULT_BIRTH_TIMEZONE,
+  type BirthTimeCorrection,
+} from '@/lib/saju/birth-location';
 import {
   buildOrreryReferenceExtension,
   type SajuOrreryExtension,
@@ -215,6 +221,11 @@ export interface SajuInputSnapshot {
   calendar: 'solar';
   timezone: string;
   location: string | null;
+  locationCode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  solarTimeMode?: SolarTimeMode;
+  birthTimeCorrection?: BirthTimeCorrection | null;
   jasiMethod?: JasiMethod | null;
   birth: {
     year: number;
@@ -361,13 +372,20 @@ export function seedSajuDataV1FromLegacy(
   }
 ): SajuDataV1 {
   const calculatedAt = options?.calculatedAt ?? new Date().toISOString();
+  const birthTimeCorrection = buildBirthTimeCorrection(input);
+  const timezone = input.birthLocation?.timezone ?? options?.timezone ?? DEFAULT_BIRTH_TIMEZONE;
 
   const seed: SajuDataV1 = {
     schemaVersion: SAJU_DATA_V1,
     input: {
       calendar: 'solar',
-      timezone: options?.timezone ?? 'Asia/Seoul',
-      location: options?.location ?? null,
+      timezone,
+      location: input.birthLocation?.label ?? options?.location ?? null,
+      locationCode: input.birthLocation?.code ?? null,
+      latitude: input.birthLocation?.latitude ?? null,
+      longitude: input.birthLocation?.longitude ?? null,
+      solarTimeMode: input.solarTimeMode ?? 'standard',
+      birthTimeCorrection,
       jasiMethod: input.jasiMethod ?? null,
       birth: {
         year: input.year,
@@ -1196,15 +1214,22 @@ function toMajorLuckCycle(
 }
 
 function getBirthSolar(input: SajuInputSnapshot) {
-  const hour = input.hourKnown ? input.birth.hour ?? UNKNOWN_HOUR : UNKNOWN_HOUR;
-  const minute = input.hourKnown
-    ? input.birth.minute ?? KNOWN_MINUTE
-    : UNKNOWN_MINUTE;
+  const correctedBirth = input.birthTimeCorrection?.adjustedBirth;
+  const hour = correctedBirth
+    ? correctedBirth.hour
+    : input.hourKnown
+      ? input.birth.hour ?? UNKNOWN_HOUR
+      : UNKNOWN_HOUR;
+  const minute = correctedBirth
+    ? correctedBirth.minute
+    : input.hourKnown
+      ? input.birth.minute ?? KNOWN_MINUTE
+      : UNKNOWN_MINUTE;
 
   return Solar.fromYmdHms(
-    input.birth.year,
-    input.birth.month,
-    input.birth.day,
+    correctedBirth?.year ?? input.birth.year,
+    correctedBirth?.month ?? input.birth.month,
+    correctedBirth?.day ?? input.birth.day,
     hour,
     minute,
     0

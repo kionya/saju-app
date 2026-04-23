@@ -16,6 +16,7 @@ import {
   ONBOARDING_TONE_OPTIONS,
 } from '@/content/moonlight';
 import { parseBirthInputDraft } from '@/domain/saju/validators/birth-input';
+import { BIRTH_LOCATION_PRESETS } from '@/lib/saju/birth-location';
 import { toSlug } from '@/lib/saju/pillars';
 import { cn } from '@/lib/utils';
 import {
@@ -129,6 +130,11 @@ function buildBirthPayload(form: SajuOnboardingDraft) {
     unknownTime: form.hour === '',
     jasiMethod: form.jasiMethod,
     gender: form.gender,
+    birthLocationCode: form.birthLocationCode,
+    birthLocationLabel: form.birthLocationLabel,
+    birthLatitude: form.birthLatitude,
+    birthLongitude: form.birthLongitude,
+    solarTimeMode: form.birthLocationCode ? form.solarTimeMode : 'standard',
   };
 }
 
@@ -310,6 +316,17 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
     value: SajuOnboardingDraft[K]
   ) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateBirthLocation(code: string) {
+    setForm((current) => ({
+      ...current,
+      birthLocationCode: code,
+      solarTimeMode: code ? 'longitude' : 'standard',
+      birthLocationLabel: code === 'custom' ? current.birthLocationLabel : '',
+      birthLatitude: code === 'custom' ? current.birthLatitude : '',
+      birthLongitude: code === 'custom' ? current.birthLongitude : '',
+    }));
   }
 
   function applySavedProfile(profile: SavedBirthProfile) {
@@ -706,6 +723,98 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                       <option value="female">여성</option>
                     </select>
                   </div>
+                </div>
+
+                <div className="mt-4 rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="grid gap-4 sm:grid-cols-[1.15fr_0.85fr]">
+                    <div>
+                      <Label htmlFor="birth-location" className="mb-2 block text-sm text-[var(--app-copy)]">
+                        출생 지역
+                      </Label>
+                      <select
+                        id="birth-location"
+                        value={form.birthLocationCode}
+                        onChange={(event) => updateBirthLocation(event.target.value)}
+                        className="h-12 w-full rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-ivory)]"
+                      >
+                        <option value="">지역 미입력</option>
+                        {BIRTH_LOCATION_PRESETS.map((location) => (
+                          <option key={location.code} value={location.code}>
+                            {location.label}
+                          </option>
+                        ))}
+                        <option value="custom">직접 입력</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="solar-time-mode" className="mb-2 block text-sm text-[var(--app-copy)]">
+                        시간 보정
+                      </Label>
+                      <select
+                        id="solar-time-mode"
+                        value={form.birthLocationCode ? form.solarTimeMode : 'standard'}
+                        onChange={(event) =>
+                          updateField(
+                            'solarTimeMode',
+                            event.target.value as SajuOnboardingDraft['solarTimeMode']
+                          )
+                        }
+                        disabled={!form.birthLocationCode || form.hour === ''}
+                        className="h-12 w-full rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-ivory)] disabled:cursor-not-allowed disabled:opacity-55"
+                      >
+                        <option value="standard">표준시 그대로</option>
+                        <option value="longitude">경도 보정</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {form.birthLocationCode === 'custom' ? (
+                    <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                      <div>
+                        <Label htmlFor="birth-location-label" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
+                          지역명
+                        </Label>
+                        <Input
+                          id="birth-location-label"
+                          value={form.birthLocationLabel}
+                          onChange={(event) => updateField('birthLocationLabel', event.target.value)}
+                          placeholder="예: 목포"
+                          className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="birth-latitude" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
+                          위도
+                        </Label>
+                        <Input
+                          id="birth-latitude"
+                          inputMode="decimal"
+                          value={form.birthLatitude}
+                          onChange={(event) => updateField('birthLatitude', event.target.value)}
+                          placeholder="예: 34.8118"
+                          className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="birth-longitude" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
+                          경도
+                        </Label>
+                        <Input
+                          id="birth-longitude"
+                          inputMode="decimal"
+                          value={form.birthLongitude}
+                          onChange={(event) => updateField('birthLongitude', event.target.value)}
+                          placeholder="예: 126.3922"
+                          className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
+                    출생 지역을 넣으면 동경 135도 한국 표준시 기준과의 차이를 계산해 시주 경계 판단에 반영합니다.
+                  </p>
                 </div>
 
                 <div className="mt-8 flex gap-3">

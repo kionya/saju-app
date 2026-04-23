@@ -46,15 +46,25 @@ function formatBirthSummary(input: {
   month: number;
   day: number;
   hour?: number;
+  minute?: number;
   gender?: 'male' | 'female';
+  birthLocation?: { label: string } | null;
+  solarTimeMode?: string;
 }) {
-  const timeLabel = input.hour !== undefined ? `${input.hour}시 기준` : '태어난 시간 미입력';
+  const minuteLabel =
+    input.hour !== undefined && input.minute !== undefined
+      ? ` ${String(input.minute).padStart(2, '0')}분`
+      : '';
+  const timeLabel = input.hour !== undefined ? `${input.hour}시${minuteLabel} 기준` : '태어난 시간 미입력';
   const genderLabel = input.gender
     ? input.gender === 'male'
       ? '남성'
       : '여성'
     : '성별 미선택';
-  return `${input.year}년 ${input.month}월 ${input.day}일 · ${timeLabel} · ${genderLabel}`;
+  const locationLabel = input.birthLocation?.label
+    ? `${input.birthLocation.label}${input.solarTimeMode === 'longitude' ? ' 경도 보정' : ''}`
+    : '출생 지역 미입력';
+  return `${input.year}년 ${input.month}월 ${input.day}일 · ${timeLabel} · ${genderLabel} · ${locationLabel}`;
 }
 
 function formatCurrentLuckTitle(currentLuck: SajuCurrentLuck | null) {

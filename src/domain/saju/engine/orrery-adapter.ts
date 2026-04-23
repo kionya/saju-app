@@ -420,8 +420,8 @@ export function buildOrreryReferenceExtension(data: SajuDataV1): SajuOrreryExten
       gender: toOrreryGender(data.input.gender),
       unknownTime: !data.input.hourKnown,
       jasiMethod: toOrreryJasiMethod(data.input.jasiMethod),
-      latitude: null,
-      longitude: null,
+      latitude: data.input.latitude ?? null,
+      longitude: data.input.longitude ?? null,
       timezone: data.input.timezone,
     },
     pillars,
@@ -441,12 +441,13 @@ export function buildOrreryReferenceExtension(data: SajuDataV1): SajuOrreryExten
 }
 
 function createEightCharFromInput(data: SajuDataV1) {
-  const hour = data.input.hourKnown ? data.input.birth.hour ?? 12 : 12;
-  const minute = data.input.hourKnown ? data.input.birth.minute ?? 30 : 0;
+  const correctedBirth = data.input.birthTimeCorrection?.adjustedBirth;
+  const hour = correctedBirth ? correctedBirth.hour : data.input.hourKnown ? data.input.birth.hour ?? 12 : 12;
+  const minute = correctedBirth ? correctedBirth.minute : data.input.hourKnown ? data.input.birth.minute ?? 30 : 0;
   const solar = Solar.fromYmdHms(
-    data.input.birth.year,
-    data.input.birth.month,
-    data.input.birth.day,
+    correctedBirth?.year ?? data.input.birth.year,
+    correctedBirth?.month ?? data.input.birth.month,
+    correctedBirth?.day ?? data.input.birth.day,
     hour,
     minute,
     0

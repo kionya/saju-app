@@ -11,6 +11,11 @@ export interface SajuOnboardingDraft {
   hour: string;
   minute: string;
   jasiMethod: 'split' | 'unified';
+  birthLocationCode: string;
+  birthLocationLabel: string;
+  birthLatitude: string;
+  birthLongitude: string;
+  solarTimeMode: 'standard' | 'longitude';
   gender: string;
   nickname: string;
   tone: OnboardingSpeechTone;
@@ -33,6 +38,11 @@ export function createInitialOnboardingDraft(): SajuOnboardingDraft {
     hour: '',
     minute: '',
     jasiMethod: 'unified',
+    birthLocationCode: '',
+    birthLocationLabel: '',
+    birthLatitude: '',
+    birthLongitude: '',
+    solarTimeMode: 'standard',
     gender: '',
     nickname: '',
     tone: 'polite',
@@ -67,6 +77,11 @@ export function loadOnboardingDraft(): SajuOnboardingDraft {
       hour: typeof parsed.hour === 'string' ? parsed.hour : '',
       minute: typeof parsed.minute === 'string' ? parsed.minute : '',
       jasiMethod: parsed.jasiMethod === 'split' ? 'split' : 'unified',
+      birthLocationCode: typeof parsed.birthLocationCode === 'string' ? parsed.birthLocationCode : '',
+      birthLocationLabel: typeof parsed.birthLocationLabel === 'string' ? parsed.birthLocationLabel : '',
+      birthLatitude: typeof parsed.birthLatitude === 'string' ? parsed.birthLatitude : '',
+      birthLongitude: typeof parsed.birthLongitude === 'string' ? parsed.birthLongitude : '',
+      solarTimeMode: parsed.solarTimeMode === 'longitude' ? 'longitude' : 'standard',
       gender: typeof parsed.gender === 'string' ? parsed.gender : '',
       nickname: typeof parsed.nickname === 'string' ? parsed.nickname : '',
       tone:

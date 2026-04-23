@@ -3,6 +3,15 @@ export type Branch = '子' | '丑' | '寅' | '卯' | '辰' | '巳' | '午' | '�
 export type Element = '목' | '화' | '토' | '금' | '수';
 export type YinYang = '양' | '음';
 export type JasiMethod = 'split' | 'unified';
+export type SolarTimeMode = 'standard' | 'longitude';
+
+export interface BirthLocation {
+  code?: string;
+  label: string;
+  latitude: number;
+  longitude: number;
+  timezone?: string;
+}
 
 export interface Pillar {
   stem: Stem;
@@ -32,4 +41,6 @@ export interface BirthInput {
   unknownTime?: boolean;
   jasiMethod?: JasiMethod;
   gender?: 'male' | 'female';
+  birthLocation?: BirthLocation | null;
+  solarTimeMode?: SolarTimeMode;
 }

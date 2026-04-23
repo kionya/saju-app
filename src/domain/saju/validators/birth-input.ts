@@ -1,4 +1,5 @@
 import type { BirthInput } from '@/lib/saju/types';
+import { DEFAULT_BIRTH_TIMEZONE, getBirthLocationPreset } from '@/lib/saju/birth-location';
 
 export interface BirthInputDraft {
   year?: unknown;
@@ -9,6 +10,11 @@ export interface BirthInputDraft {
   unknownTime?: unknown;
   jasiMethod?: unknown;
   gender?: unknown;
+  birthLocationCode?: unknown;
+  birthLocationLabel?: unknown;
+  birthLatitude?: unknown;
+  birthLongitude?: unknown;
+  solarTimeMode?: unknown;
 }
 
 interface ParseBirthInputOptions {
@@ -28,12 +34,25 @@ function toInt(value: unknown): number | null {
   return Number.isInteger(parsed) ? parsed : null;
 }
 
+function toNumber(value: unknown): number | null {
+  if (value === '' || value === null || value === undefined) {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function readString(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
 function getDaysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
 export function isValidBirthInput(input: BirthInput): boolean {
-  const { year, month, day, hour, minute, jasiMethod, unknownTime } = input;
+  const { year, month, day, hour, minute, jasiMethod, unknownTime, birthLocation, solarTimeMode } = input;
 
   if (
     !Number.isInteger(year) ||
@@ -69,7 +88,49 @@ export function isValidBirthInput(input: BirthInput): boolean {
     return false;
   }
 
+  if (solarTimeMode !== undefined && solarTimeMode !== 'standard' && solarTimeMode !== 'longitude') {
+    return false;
+  }
+
+  if (birthLocation) {
+    if (
+      !birthLocation.label.trim() ||
+      !Number.isFinite(birthLocation.latitude) ||
+      !Number.isFinite(birthLocation.longitude) ||
+      birthLocation.latitude < -90 ||
+      birthLocation.latitude > 90 ||
+      birthLocation.longitude < -180 ||
+      birthLocation.longitude > 180
+    ) {
+      return false;
+    }
+  }
+
   return true;
+}
+
+function parseBirthLocation(draft: BirthInputDraft): BirthInput['birthLocation'] | 'invalid' {
+  const code = readString(draft.birthLocationCode);
+  if (!code) return null;
+
+  if (code !== 'custom') {
+    return getBirthLocationPreset(code) ?? 'invalid';
+  }
+
+  const label = readString(draft.birthLocationLabel) || '직접 입력 지역';
+  const latitude = toNumber(draft.birthLatitude);
+  const longitude = toNumber(draft.birthLongitude);
+
+  if (latitude === null || longitude === null) return 'invalid';
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return 'invalid';
+
+  return {
+    code: 'custom',
+    label,
+    latitude,
+    longitude,
+    timezone: DEFAULT_BIRTH_TIMEZONE,
+  };
 }
 
 export function parseBirthInputDraft(
@@ -125,6 +186,14 @@ export function parseBirthInputDraft(
     return { ok: false, error: '정밀 입력에서는 성별 선택이 필요합니다.' };
   }
 
+  const birthLocation = parseBirthLocation(draft);
+  if (birthLocation === 'invalid') {
+    return { ok: false, error: '출생 지역의 위도와 경도를 다시 확인해 주세요.' };
+  }
+
+  const solarTimeMode: BirthInput['solarTimeMode'] =
+    draft.solarTimeMode === 'longitude' && birthLocation ? 'longitude' : 'standard';
+
   const input: BirthInput = {
     year,
     month,
@@ -134,6 +203,8 @@ export function parseBirthInputDraft(
     unknownTime,
     jasiMethod,
     gender,
+    birthLocation,
+    solarTimeMode,
   };
 
   if (!isValidBirthInput(input)) {

@@ -43,6 +43,19 @@ function deriveBirthInputFromSajuData(
     unknownTime: !sajuData.input.hourKnown,
     jasiMethod: sajuData.input.jasiMethod ?? sajuData.extensions?.orrery?.input.jasiMethod ?? fallback.jasiMethod,
     gender: sajuData.input.gender ?? fallback.gender ?? undefined,
+    birthLocation:
+      sajuData.input.location &&
+      typeof sajuData.input.latitude === 'number' &&
+      typeof sajuData.input.longitude === 'number'
+        ? {
+            code: sajuData.input.locationCode ?? undefined,
+            label: sajuData.input.location,
+            latitude: sajuData.input.latitude,
+            longitude: sajuData.input.longitude,
+            timezone: sajuData.input.timezone,
+          }
+        : fallback.birthLocation ?? undefined,
+    solarTimeMode: sajuData.input.solarTimeMode ?? fallback.solarTimeMode,
   };
 }
 

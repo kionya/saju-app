@@ -10,13 +10,15 @@ import type {
   JasiMethod,
 } from './types';
 import { isValidBirthInput } from '@/domain/saju/validators/birth-input';
+import {
+  DEFAULT_BIRTH_TIMEZONE,
+  getBirthCalculationDateTime,
+  getBirthLocationPreset,
+} from './birth-location';
 
 const STEMS: Stem[] = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸'];
 const BRANCHES: Branch[] = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
 const ELEMENTS: Element[] = ['목', '화', '토', '금', '수'];
-const UNKNOWN_HOUR = 12;
-const UNKNOWN_MINUTE = 0;
-const KNOWN_MINUTE = 30;
 
 const STEM_ELEMENTS: Record<Stem, Element> = {
   '甲': '목', '乙': '목',
@@ -59,14 +61,6 @@ function toPillar(stemValue: string, branchValue: string): Pillar {
   };
 }
 
-function getCalculationTime(input: BirthInput): { hour: number; minute: number } {
-  if (input.unknownTime || input.hour === undefined) {
-    return { hour: UNKNOWN_HOUR, minute: UNKNOWN_MINUTE };
-  }
-
-  return { hour: input.hour, minute: input.minute ?? KNOWN_MINUTE };
-}
-
 function getEightCharSect(jasiMethod?: JasiMethod) {
   return jasiMethod === 'split' ? 1 : 2;
 }
@@ -83,17 +77,25 @@ function countElements(pillars: (Pillar | null)[]): Record<Element, number> {
   return counts;
 }
 
+function encodeCoordinateForSlug(value: number) {
+  return String(Math.round(value * 10000) / 10000).replace('-', 'n').replace('.', 'p');
+}
+
+function decodeCoordinateFromSlug(value: string) {
+  const parsed = Number(value.replace(/^n/, '-').replace('p', '.'));
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 export function calculateSaju(input: BirthInput): SajuResult {
   if (!isValidBirthInput(input)) {
     throw new Error('생년월일시 정보가 올바르지 않습니다.');
   }
 
-  const { year, month, day } = input;
-  const calculationTime = getCalculationTime(input);
+  const calculationTime = getBirthCalculationDateTime(input);
   const solar = Solar.fromYmdHms(
-    year,
-    month,
-    day,
+    calculationTime.year,
+    calculationTime.month,
+    calculationTime.day,
     calculationTime.hour,
     calculationTime.minute,
     0
@@ -147,6 +149,20 @@ export function toSlug(input: BirthInput): string {
     parts.push(input.gender);
   }
 
+  if (input.birthLocation) {
+    if (input.birthLocation.code === 'custom') {
+      parts.push('loccustom');
+      parts.push(`lat${encodeCoordinateForSlug(input.birthLocation.latitude)}`);
+      parts.push(`lon${encodeCoordinateForSlug(input.birthLocation.longitude)}`);
+    } else if (input.birthLocation.code) {
+      parts.push(`loc${input.birthLocation.code}`);
+    }
+
+    if (input.solarTimeMode === 'longitude') {
+      parts.push('solarlongitude');
+    }
+  }
+
   return parts.join('-');
 }
 
@@ -159,6 +175,9 @@ export function fromSlug(slug: string): BirthInput | null {
   if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
 
   const result: BirthInput = { year, month, day };
+  let customLocationRequested = false;
+  let customLatitude: number | null = null;
+  let customLongitude: number | null = null;
 
   for (const token of parts.slice(3)) {
     if (token === 'male' || token === 'female') {
@@ -179,10 +198,52 @@ export function fromSlug(slug: string): BirthInput | null {
       continue;
     }
 
+    if (token.startsWith('loc')) {
+      if (token === 'loccustom') {
+        customLocationRequested = true;
+        continue;
+      }
+
+      const location = getBirthLocationPreset(token.slice(3));
+      if (location) {
+        result.birthLocation = location;
+      }
+      continue;
+    }
+
+    if (token === 'solarlongitude') {
+      result.solarTimeMode = 'longitude';
+      continue;
+    }
+
+    if (token.startsWith('lat')) {
+      customLatitude = decodeCoordinateFromSlug(token.slice(3));
+      continue;
+    }
+
+    if (token.startsWith('lon')) {
+      customLongitude = decodeCoordinateFromSlug(token.slice(3));
+      continue;
+    }
+
     const parsedHour = parseInt(token, 10);
     if (!Number.isNaN(parsedHour)) {
       result.hour = parsedHour;
     }
+  }
+
+  if (customLocationRequested && customLatitude !== null && customLongitude !== null) {
+    result.birthLocation = {
+      code: 'custom',
+      label: '직접 입력 지역',
+      latitude: customLatitude,
+      longitude: customLongitude,
+      timezone: DEFAULT_BIRTH_TIMEZONE,
+    };
+  }
+
+  if (result.solarTimeMode === 'longitude' && !result.birthLocation) {
+    result.solarTimeMode = 'standard';
   }
 
   return isValidBirthInput(result) ? result : null;

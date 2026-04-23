@@ -365,7 +365,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
 
           {sajuAudit.status === 'ready' ? (
             <>
-              <div className="mt-5 grid gap-3 lg:grid-cols-4">
+              <div className="mt-5 grid gap-3 lg:grid-cols-5">
                 <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
                   <div className="app-caption">engine</div>
                   <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
@@ -388,6 +388,14 @@ export default async function VerificationPage({ searchParams }: VerificationPag
                   <div className="app-caption">strength</div>
                   <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
                     {sajuAudit.calculation.strength?.level ?? '없음'} · {sajuAudit.calculation.strength?.score ?? '-'}점
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">location</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {sajuAudit.calculation.birthTimeCorrection
+                      ? `${sajuAudit.input.birthLocation?.label ?? '출생지'} ${sajuAudit.calculation.birthTimeCorrection.offsetMinutes}분`
+                      : '보정 없음'}
                   </div>
                 </div>
                 <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">

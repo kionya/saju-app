@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { calculateSajuDataV1, normalizeToSajuDataV1 } from './saju-data-v1';
+import { getBirthLocationPreset } from '@/lib/saju/birth-location';
 
 declare const test: (name: string, fn: () => void) => void;
 
@@ -24,4 +25,25 @@ test('normalizeToSajuDataV1 enriches older complete data missing stem ten gods',
   assert.ok(normalized.pillars.year.stemTenGod);
   assert.ok(normalized.pillars.month.stemTenGod);
   assert.ok(normalized.pillars.hour?.stemTenGod);
+});
+
+test('calculateSajuDataV1 records longitude-adjusted birth time metadata', () => {
+  const seoul = getBirthLocationPreset('seoul');
+  assert.ok(seoul);
+
+  const data = calculateSajuDataV1({
+    year: 1982,
+    month: 1,
+    day: 29,
+    hour: 0,
+    minute: 10,
+    gender: 'male',
+    birthLocation: seoul,
+    solarTimeMode: 'longitude',
+  });
+
+  assert.equal(data.input.location, '서울');
+  assert.equal(data.input.birthTimeCorrection?.offsetMinutes, -32);
+  assert.equal(data.input.birthTimeCorrection?.adjustedBirth.day, 28);
+  assert.equal(data.extensions?.orrery?.input.longitude, 126.978);
 });

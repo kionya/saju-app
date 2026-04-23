@@ -119,6 +119,14 @@ export async function getSajuVerificationAudit({
           : '용신 계산값이 없습니다.',
       },
       {
+        key: 'birth-location-time-correction',
+        label: '출생 지역 경도 보정',
+        ok: data.input.solarTimeMode !== 'longitude' || Boolean(data.input.birthTimeCorrection),
+        detail: data.input.birthTimeCorrection
+          ? `${data.input.location ?? '출생지'} 기준 ${data.input.birthTimeCorrection.offsetMinutes}분 보정`
+          : '출생 지역 경도 보정은 적용되지 않았습니다.',
+      },
+      {
         key: 'report-grounding',
         label: '화면 문장 근거 카드',
         ok: report.evidenceCards.length > 0,
@@ -160,6 +168,7 @@ export async function getSajuVerificationAudit({
           hour: data.pillars.hour ? formatPillar(data.pillars.hour) : null,
         },
         dayMaster: data.dayMaster,
+        birthTimeCorrection: data.input.birthTimeCorrection ?? null,
         fiveElements: data.fiveElements,
         tenGods: data.tenGods,
         strength: data.strength,
