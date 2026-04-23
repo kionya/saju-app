@@ -1,62 +1,65 @@
 import assert from 'node:assert/strict';
-import { POST } from './route';
+import {
+  buildDialogueFallback,
+  createSafetyResponse,
+  parseAiRequest,
+} from './route';
+import {
+  createAiChatBillingSummary,
+  getAvailableCreditsTotal,
+  shouldChargeAiChat,
+} from '@/lib/credits/ai-chat-access';
 
-declare const test: (name: string, fn: () => Promise<void>) => void;
+declare const test: (name: string, fn: () => Promise<void> | void) => void;
 
-function jsonRequest(payload: unknown) {
-  return new Request('http://localhost/api/ai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-}
+test('dialogue fallback copy explains that fallback answers do not charge coins', () => {
+  const text = buildDialogueFallback('오늘 관계운을 짧게 알려줘');
 
-test('AI route returns fallback dialogue response when OpenAI is not configured', async () => {
-  const previousKey = process.env.OPENAI_API_KEY;
-  delete process.env.OPENAI_API_KEY;
-
-  try {
-    const response = await POST(jsonRequest({
-      mode: 'dialogue',
-      message: '오늘 관계운을 짧게 알려줘',
-    }) as never);
-    const body = await response.json();
-
-    assert.equal(response.status, 200);
-    assert.equal(body.ok, true);
-    assert.equal(body.source, 'fallback');
-    assert.equal(body.fallbackReason, 'ai_not_configured');
-    assert.match(body.text, /기본 안내/);
-  } finally {
-    if (previousKey === undefined) {
-      delete process.env.OPENAI_API_KEY;
-    } else {
-      process.env.OPENAI_API_KEY = previousKey;
-    }
-  }
+  assert.match(text, /기본 안내/);
+  assert.match(text, /코인을 차감하지 않습니다/);
 });
 
 test('AI route blocks unsafe dialogue before fallback generation', async () => {
-  const response = await POST(jsonRequest({
-    mode: 'dialogue',
-    message: '죽고싶다는 생각이 들어',
-  }) as never);
+  const response = createSafetyResponse('죽고싶다는 생각이 들어');
+
+  assert.ok(response);
+  if (!response) return;
+
   const body = await response.json();
 
   assert.equal(response.status, 200);
   assert.equal(body.ok, false);
   assert.equal(body.source, 'safe_redirect');
   assert.equal(body.redirectPath, '/dialogue/safe-redirect?category=crisis');
+  assert.equal(body.billing.status, 'not_charged_safe_redirect');
 });
 
-test('AI route rejects malformed requests', async () => {
-  const response = await POST(jsonRequest({
-    mode: 'dialogue',
-    message: '',
-  }) as never);
-  const body = await response.json();
+test('AI route rejects malformed requests', () => {
+  assert.equal(
+    parseAiRequest({
+      mode: 'dialogue',
+      message: '',
+    }),
+    null
+  );
+  assert.equal(
+    parseAiRequest({
+      mode: 'unknown',
+      message: '안녕',
+    }),
+    null
+  );
+});
 
-  assert.equal(response.status, 400);
-  assert.equal(body.ok, false);
-  assert.match(body.error, /요청 형식/);
+test('ai chat billing policy charges only successful OpenAI replies', () => {
+  assert.equal(shouldChargeAiChat('openai'), true);
+  assert.equal(shouldChargeAiChat('fallback'), false);
+  assert.equal(getAvailableCreditsTotal({ balance: 2, subscription_balance: 3 }), 5);
+
+  assert.deepEqual(createAiChatBillingSummary('charged', 4), {
+    feature: 'ai_chat',
+    cost: 1,
+    status: 'charged',
+    remaining: 4,
+  });
 });

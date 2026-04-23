@@ -2,19 +2,19 @@ type AiSourceBadgeState = 'idle' | 'loading' | 'openai' | 'fallback' | 'safe_red
 
 const BADGE_COPY: Record<AiSourceBadgeState, { label: string; className: string }> = {
   idle: {
-    label: '기본 해석',
+    label: '준비됨',
     className: 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]',
   },
   loading: {
-    label: 'AI 확인 중',
+    label: '응답 확인 중',
     className: 'border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]',
   },
   openai: {
-    label: 'AI 생성됨',
+    label: 'OpenAI 응답',
     className: 'border-emerald-400/24 bg-emerald-400/10 text-emerald-200',
   },
   fallback: {
-    label: '기본 해석',
+    label: 'Fallback 응답',
     className: 'border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]',
   },
   safe_redirect: {
@@ -22,7 +22,7 @@ const BADGE_COPY: Record<AiSourceBadgeState, { label: string; className: string 
     className: 'border-[var(--app-coral)]/32 bg-[var(--app-coral)]/10 text-[var(--app-coral)]',
   },
   error: {
-    label: '연결 확인 필요',
+    label: '확인 필요',
     className: 'border-[var(--app-coral)]/32 bg-[var(--app-coral)]/10 text-[var(--app-coral)]',
   },
 };

@@ -3,6 +3,7 @@
 import { FormEvent, startTransition, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AiSourceBadge } from '@/components/ai/ai-source-badge';
+import type { AiChatBillingSummary } from '@/lib/credits/ai-chat-access';
 
 type AiSource = 'openai' | 'fallback' | 'safe_redirect';
 type FallbackReason = 'ai_not_configured' | 'empty_ai_response' | 'openai_error';
@@ -18,6 +19,8 @@ interface DialogueAiResponse {
   source?: AiSource;
   text?: string;
   model?: string | null;
+  configured?: boolean;
+  billing?: AiChatBillingSummary;
   fallbackReason?: FallbackReason | null;
   errorMessage?: string | null;
   redirectPath?: string | null;
@@ -30,6 +33,8 @@ interface ChatMessage {
   text: string;
   source?: AiSource;
   model?: string | null;
+  configured?: boolean;
+  billing?: AiChatBillingSummary;
   fallbackReason?: FallbackReason | null;
   errorMessage?: string | null;
 }
@@ -41,7 +46,7 @@ interface DialogueChatPanelProps {
 const INITIAL_MESSAGE: ChatMessage = {
   id: 'assistant-intro',
   role: 'assistant',
-  source: 'fallback',
+  source: undefined,
   fallbackReason: null,
   model: null,
   errorMessage: null,
@@ -75,6 +80,49 @@ function getFallbackLabel(reason: FallbackReason | null | undefined) {
   }
 }
 
+function getBillingLabel(billing: AiChatBillingSummary | null | undefined) {
+  if (!billing) return null;
+
+  switch (billing.status) {
+    case 'charged':
+      return `${billing.cost}코인 차감 · 잔여 ${billing.remaining ?? 0}개`;
+    case 'not_charged_fallback':
+      return `fallback 응답 · 코인 차감 없음 · 잔여 ${billing.remaining ?? 0}개`;
+    case 'not_charged_safe_redirect':
+      return '안전 안내 전환 · 코인 차감 없음';
+    case 'auth_required':
+      return `${billing.cost}코인 대화는 로그인 후 사용할 수 있습니다.`;
+    case 'insufficient_credits':
+      return `코인 부족 · 현재 ${billing.remaining ?? 0}개`;
+    default:
+      return null;
+  }
+}
+
+function getConnectionSummary(
+  latestAssistant: ChatMessage | undefined,
+  status: ChatStatus
+) {
+  if (status === 'loading') {
+    return '로그인과 코인을 확인한 뒤 OpenAI 응답 가능 여부를 살피고 있습니다.';
+  }
+
+  if (!latestAssistant || latestAssistant.id === INITIAL_MESSAGE.id) {
+    return '질문 1회당 1코인입니다. OpenAI 응답일 때만 1코인이 차감되고, fallback 응답이나 안전 안내는 차감되지 않습니다.';
+  }
+
+  if (latestAssistant.source === 'openai') {
+    const billingLabel = getBillingLabel(latestAssistant.billing);
+    return `최근 답변은 OpenAI로 생성되었습니다.${billingLabel ? ` ${billingLabel}` : ''}`;
+  }
+
+  if (latestAssistant.source === 'fallback') {
+    return `최근 답변은 fallback으로 내려왔습니다.${latestAssistant.configured === false ? ' OpenAI 키가 연결되지 않았거나 읽히지 않았습니다.' : ''}`;
+  }
+
+  return '안전 안내 기준으로 일반 대화를 중단했습니다.';
+}
+
 export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
   const router = useRouter();
   const [input, setInput] = useState('');
@@ -84,6 +132,7 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
 
   const latestAssistant = messages.findLast((message) => message.role === 'assistant');
   const badgeState = getBadgeState(status, latestAssistant);
+  const connectionSummary = getConnectionSummary(latestAssistant, status);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -122,7 +171,12 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
       }
 
       if (!response.ok || !payload.ok) {
-        throw new Error(payload.error ?? 'AI 답변을 불러오지 못했습니다.');
+        const billingLabel = getBillingLabel(payload.billing);
+        throw new Error(
+          [payload.error ?? 'AI 답변을 불러오지 못했습니다.', billingLabel]
+            .filter(Boolean)
+            .join(' ')
+        );
       }
 
       const assistantMessage: ChatMessage = {
@@ -131,6 +185,8 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
         source: payload.source ?? 'fallback',
         text: payload.text ?? '기본 안내를 불러왔습니다.',
         model: payload.model ?? null,
+        configured: payload.configured,
+        billing: payload.billing,
         fallbackReason: payload.fallbackReason ?? null,
         errorMessage: payload.errorMessage ?? null,
       };
@@ -160,6 +216,9 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
               현재 대화는 비스트리밍 응답입니다. 위기·의료·법률·투자 판단은
               답변 생성 전에 SAFE_REDIRECT로 전환하고, OpenAI 연결 전에는 기본
               해석 fallback으로 안전하게 내려갑니다.
+            </p>
+            <p className="mt-3 max-w-3xl text-xs leading-6 text-[var(--app-copy-soft)]">
+              {connectionSummary}
             </p>
           </div>
           <AiSourceBadge state={badgeState} />
@@ -200,13 +259,18 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
                 }`}
               >
                 <p className="whitespace-pre-line text-sm leading-8">{message.text}</p>
-                {!isUser ? (
+                {!isUser && (message.source || message.errorMessage || message.billing) ? (
                   <div className="mt-3 flex flex-wrap gap-2 text-xs leading-6 text-[var(--app-copy-soft)]">
                     {message.source === 'openai' ? (
-                      <span>AI 생성됨 · 모델 {message.model ?? 'OpenAI'}</span>
+                      <span>OpenAI 응답 · 모델 {message.model ?? 'OpenAI'}</span>
                     ) : (
-                      <span>{getFallbackLabel(message.fallbackReason)}</span>
+                      <span>
+                        {message.configured === false
+                          ? 'Fallback 응답 · OpenAI 키 미연결'
+                          : getFallbackLabel(message.fallbackReason)}
+                      </span>
                     )}
+                    {getBillingLabel(message.billing) ? <span>{getBillingLabel(message.billing)}</span> : null}
                     {message.errorMessage ? <span>오류: {message.errorMessage}</span> : null}
                   </div>
                 ) : null}
@@ -251,8 +315,9 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
           </button>
         </div>
         <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
-          위기 문장은 일반 답변을 막고 안전 안내로 이동합니다. 대화 저장은 아직
-          하지 않으며, 새로고침하면 현재 화면의 메시지는 사라집니다.
+          질문 1회당 1코인입니다. OpenAI 응답일 때만 코인이 차감되고,
+          fallback 응답과 안전 안내는 차감되지 않습니다. 대화 저장은 아직 하지
+          않으며, 새로고침하면 현재 화면의 메시지는 사라집니다.
         </p>
 
         {errorMessage ? (

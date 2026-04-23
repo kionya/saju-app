@@ -7,8 +7,15 @@ import {
 } from '@/domain/saju/report/build-report';
 import { getReportTopicRulesForTopic } from '@/domain/saju/report/topic-rule-table';
 import type { SajuReport } from '@/domain/saju/report/types';
+import {
+  createAiChatBillingSummary,
+  getAvailableCreditsTotal,
+  shouldChargeAiChat,
+} from '@/lib/credits/ai-chat-access';
+import { deductCredits, getCredits } from '@/lib/credits/deduct';
 import { resolveReading, type ReadingRecord } from '@/lib/saju/readings';
-import { generateAiText } from '@/server/ai/openai-text';
+import { createClient } from '@/lib/supabase/server';
+import { generateAiText, isOpenAIConfigured } from '@/server/ai/openai-text';
 
 export const runtime = 'nodejs';
 export const maxDuration = 20;
@@ -34,7 +41,7 @@ function readString(payload: Record<string, unknown>, key: string) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function parseAiRequest(payload: unknown): ParsedAiRequest | null {
+export function parseAiRequest(payload: unknown): ParsedAiRequest | null {
   if (!payload || typeof payload !== 'object') return null;
 
   const data = payload as Record<string, unknown>;
@@ -60,7 +67,7 @@ function parseAiRequest(payload: unknown): ParsedAiRequest | null {
   return null;
 }
 
-function createSafetyResponse(message: string) {
+export function createSafetyResponse(message: string, includeAiChatBilling = true) {
   const safety = detectSafeRedirect(message);
 
   if (!safety.shouldBlockResponse) return null;
@@ -72,14 +79,18 @@ function createSafetyResponse(message: string) {
     text: safety.userMessage,
     safety,
     redirectPath: safety.redirectPath,
+    configured: isOpenAIConfigured(),
+    ...(includeAiChatBilling
+      ? { billing: createAiChatBillingSummary('not_charged_safe_redirect', null) }
+      : {}),
   });
 }
 
-function buildDialogueFallback(message: string) {
+export function buildDialogueFallback(message: string) {
   return [
     'AI 대화 연결이 아직 준비되지 않아 기본 안내로 답변드립니다.',
     `남겨주신 질문: “${message}”`,
-    '지금은 사주 결과 페이지의 핵심 요약, 강약, 격국, 용신, 합충·공망·신살 근거를 먼저 확인해 주세요. OpenAI 키와 결제가 연결되면 이 자리에 개인화된 대화 답변이 표시됩니다.',
+    '지금은 사주 결과 페이지의 핵심 요약, 강약, 격국, 용신, 합충·공망·신살 근거를 먼저 확인해 주세요. OpenAI가 정상 연결되면 이 자리에 개인화된 대화 답변이 표시되고, fallback 응답은 코인을 차감하지 않습니다.',
   ].join('\n\n');
 }
 
@@ -210,6 +221,39 @@ async function handleDialogue(request: DialogueAiRequest) {
   const safetyResponse = createSafetyResponse(request.message);
   if (safetyResponse) return safetyResponse;
 
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: '로그인이 필요합니다.',
+        configured: isOpenAIConfigured(),
+        billing: createAiChatBillingSummary('auth_required', null),
+      },
+      { status: 401 }
+    );
+  }
+
+  const configured = isOpenAIConfigured();
+  const currentCredits = await getCredits(user.id);
+  const availableCredits = getAvailableCreditsTotal(currentCredits);
+
+  if (configured && availableCredits < 1) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: '코인이 부족합니다.',
+        configured,
+        billing: createAiChatBillingSummary('insufficient_credits', availableCredits),
+      },
+      { status: 402 }
+    );
+  }
+
   const prompt = createDialoguePrompt(request.message);
   const fallbackText = buildDialogueFallback(request.message);
   const result = await generateAiText({
@@ -218,16 +262,42 @@ async function handleDialogue(request: DialogueAiRequest) {
     maxOutputTokens: 600,
   });
 
+  if (!shouldChargeAiChat(result.source)) {
+    return NextResponse.json({
+      ok: true,
+      mode: request.mode,
+      configured,
+      billing: createAiChatBillingSummary('not_charged_fallback', availableCredits),
+      ...result,
+    });
+  }
+
+  const deducted = await deductCredits(user.id, 'ai_chat');
+
+  if (!deducted.success) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: '코인이 부족합니다.',
+        configured,
+        billing: createAiChatBillingSummary('insufficient_credits', deducted.remaining),
+      },
+      { status: 402 }
+    );
+  }
+
   return NextResponse.json({
     ok: true,
     mode: request.mode,
+    configured,
+    billing: createAiChatBillingSummary('charged', deducted.remaining),
     ...result,
   });
 }
 
 async function handleSajuReport(request: SajuReportAiRequest) {
   const safetyResponse = request.question
-    ? createSafetyResponse(request.question)
+    ? createSafetyResponse(request.question, false)
     : null;
   if (safetyResponse) return safetyResponse;
 
