@@ -74,18 +74,6 @@ export interface ReportEvidenceCard {
   topicMapping: FocusTopic[];
 }
 
-export interface ReportClassicalCitation {
-  key: string;
-  sourceTitle: string;
-  sourceLabel: string;
-  theme: string;
-  title: string;
-  sourceNote: string;
-  interpretation: string;
-  matchedEvidenceKeys: ReportEvidenceKey[];
-  statusLabel: string;
-}
-
 export interface FocusTopicMeta {
   label: string;
   badge: string;
@@ -106,7 +94,6 @@ export interface SajuReport {
   summary: string;
   summaryHighlights: string[];
   evidenceCards: ReportEvidenceCard[];
-  classicalCitations: ReportClassicalCitation[];
   scores: ReportScore[];
   primaryAction: ReportAction;
   cautionAction: ReportAction;

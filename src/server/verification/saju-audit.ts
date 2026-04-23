@@ -78,7 +78,13 @@ export async function getSajuVerificationAudit({
     const data = reading.sajuData;
     const report = buildSajuReport(reading.input, data, normalizedTopic);
     const conceptForClassics = chooseClassicConcept(report);
-    const hasLegacyCitationLayer = report.classicalCitations.length > 0;
+    const legacyCitations = Array.isArray(
+      (report as unknown as Record<string, unknown>).classicalCitations
+    )
+      ? ((report as unknown as { classicalCitations: Array<{ statusLabel?: string }> })
+          .classicalCitations)
+      : [];
+    const hasLegacyCitationLayer = legacyCitations.length > 0;
     const kasiKeyConfigured = Boolean(process.env.KASI_SERVICE_KEY?.trim());
     const checks: SajuVerificationCheck[] = [
       {
@@ -131,8 +137,8 @@ export async function getSajuVerificationAudit({
         label: '구형 고전 요약 레이어',
         ok: !hasLegacyCitationLayer,
         detail: hasLegacyCitationLayer
-          ? 'buildSajuReport가 아직 RAG 연결 전 classicalCitations를 생성합니다. 화면에는 숨겼지만 AI grounding에서는 별도 정리가 필요합니다.'
-          : '구형 고전 요약 레이어가 없습니다.',
+          ? 'buildSajuReport가 아직 구형 classicalCitations를 생성합니다. 화면/API/AI grounding에서 제거해야 합니다.'
+          : '구형 고전 요약 레이어가 제거되었습니다.',
       },
     ];
 
@@ -185,8 +191,8 @@ export async function getSajuVerificationAudit({
         primaryAction: report.primaryAction,
         cautionAction: report.cautionAction,
         classicalCitationAudit: {
-          count: report.classicalCitations.length,
-          statusLabels: [...new Set(report.classicalCitations.map((item) => item.statusLabel))],
+          count: legacyCitations.length,
+          statusLabels: [...new Set(legacyCitations.map((item) => item.statusLabel).filter(Boolean))],
           warning: hasLegacyCitationLayer
             ? '이 값은 실제 passage DB 인용이 아니라 예전 요약 레이어입니다.'
             : null,
