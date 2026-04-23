@@ -99,6 +99,67 @@ const TEN_GOD_INTERPRETATION: Record<TenGodCode, string> = {
   정인: '돌봄, 후원, 배움의 흐름이 삶에서 중요한 힘으로 작용합니다. 누군가를 품고, 또 누군가에게 도움을 받는 인연이 크게 남습니다.',
 };
 
+const GAN_ELEMENT_MAP: Record<string, Element> = {
+  甲: '목',
+  乙: '목',
+  丙: '화',
+  丁: '화',
+  戊: '토',
+  己: '토',
+  庚: '금',
+  辛: '금',
+  壬: '수',
+  癸: '수',
+};
+
+const JI_ELEMENT_MAP: Record<string, Element> = {
+  子: '수',
+  丑: '토',
+  寅: '목',
+  卯: '목',
+  辰: '토',
+  巳: '화',
+  午: '화',
+  未: '토',
+  申: '금',
+  酉: '금',
+  戌: '토',
+  亥: '수',
+};
+
+const LUCK_ELEMENT_GUIDE: Record<Element, { theme: string; chance: string; caution: string; action: string }> = {
+  목: {
+    theme: '새 계획, 성장, 공부, 관계 확장',
+    chance: '새로운 역할이나 배움이 열릴 때 빨리 싹을 틔우는 힘이 있습니다.',
+    caution: '방향을 너무 많이 벌리면 시작은 많은데 마무리가 약해질 수 있습니다.',
+    action: '계획을 세 개 이하로 줄이고, 한 가지는 매주 반복해 보세요.',
+  },
+  화: {
+    theme: '표현, 노출, 인정, 속도',
+    chance: '말, 발표, 브랜딩, 관계의 온도를 올리는 데 힘이 붙습니다.',
+    caution: '감정과 속도가 앞서면 피로와 오해가 같이 커질 수 있습니다.',
+    action: '중요한 말은 바로 꺼내되, 결론 전 한 번 더 확인하세요.',
+  },
+  토: {
+    theme: '안정, 책임, 자산화, 생활 기반',
+    chance: '흩어진 일을 구조화하고 오래 가져갈 기반을 만들기 좋습니다.',
+    caution: '안정을 중시하다 변화 타이밍을 놓치거나 책임을 과하게 안을 수 있습니다.',
+    action: '고정비, 역할, 생활 루틴을 정리해 부담을 숫자로 확인하세요.',
+  },
+  금: {
+    theme: '정리, 기준, 계약, 결단',
+    chance: '기준을 세우고 불필요한 것을 덜어내는 판단력이 살아납니다.',
+    caution: '말이 차갑게 들리거나 결과만 보고 관계의 온도를 놓칠 수 있습니다.',
+    action: '계약, 일정, 책임 범위를 문장으로 남겨 오해를 줄이세요.',
+  },
+  수: {
+    theme: '휴식, 판단, 정보, 이동',
+    chance: '생각을 깊게 하고 정보를 모아 다음 선택의 질을 높이기 좋습니다.',
+    caution: '고민이 길어지면 실행이 늦어지고 감정이 안쪽으로 고일 수 있습니다.',
+    action: '잠, 자료 정리, 이동 계획처럼 흐름을 정돈하는 루틴을 먼저 잡으세요.',
+  },
+};
+
 const CORE_TERM_EXPLAINERS = {
   strength: [
     {
@@ -894,37 +955,143 @@ function buildInsights(data: SajuDataV1, topic: FocusTopic): ReportInsight[] {
   return insights;
 }
 
+function getGanziElements(ganzi?: string | null) {
+  if (!ganzi) return [];
+
+  const [gan, ji] = Array.from(ganzi);
+  const elements = [GAN_ELEMENT_MAP[gan], JI_ELEMENT_MAP[ji]].filter(
+    (element): element is Element => Boolean(element)
+  );
+
+  return [...new Set(elements)];
+}
+
+function formatElementLabels(elements: Element[]) {
+  return elements.map((element) => ELEMENT_INFO[element].name.split(' ')[0]).join(' · ');
+}
+
+function formatLuckWindow(cycle: NonNullable<SajuDataV1['currentLuck']>['currentMajorLuck']) {
+  if (!cycle) return '';
+  if (cycle.startAge !== null && cycle.endAge !== null) return `${cycle.startAge}-${cycle.endAge}세`;
+  if (cycle.startAge !== null) return `${cycle.startAge}세 이후`;
+  if (cycle.endAge !== null) return `${cycle.endAge}세 이전`;
+  return '';
+}
+
+function describeTopicLuckFocus(topic: FocusTopic) {
+  switch (topic) {
+    case 'love':
+      return '연애에서는 감정의 확신보다 표현의 온도와 반복되는 관계 패턴을 먼저 보세요.';
+    case 'wealth':
+      return '재물에서는 새 기회보다 현금 흐름, 지출 구조, 계약 조건을 먼저 확인하는 쪽이 안전합니다.';
+    case 'career':
+      return '직장에서는 맡을 역할과 책임 범위를 선명하게 잡을수록 운이 실제 성과로 이어집니다.';
+    case 'relationship':
+      return '관계에서는 가까운 사람과의 거리감, 말의 순서, 약속의 명확성이 핵심입니다.';
+    case 'today':
+    default:
+      return '오늘은 큰 결론보다 지금 반복하면 앞으로 편해질 선택을 먼저 잡는 것이 좋습니다.';
+  }
+}
+
+function buildMonthlyLuckReading(data: SajuDataV1, topic: FocusTopic) {
+  const wolwoon = data.currentLuck?.wolwoon;
+  const monthlyElements = getGanziElements(wolwoon?.ganzi);
+  const supportElements = getLuckyElementsFromSajuData(data);
+  const supportMatch = monthlyElements.find((element) => supportElements.includes(element));
+  const dominant = data.fiveElements.dominant;
+  const mainElement = monthlyElements[0] ?? supportElements[0] ?? dominant;
+  const mainGuide = LUCK_ELEMENT_GUIDE[mainElement];
+  const supportLabel = supportMatch ? ELEMENT_INFO[supportMatch].name.split(' ')[0] : null;
+
+  return {
+    headline: wolwoon?.ganzi
+      ? `${wolwoon.ganzi} 월운은 ${formatElementLabels(monthlyElements) || mainGuide.theme} 흐름을 건드립니다.`
+      : `${ELEMENT_INFO[mainElement].name.split(' ')[0]} 중심 루틴을 만들면 흐름이 붙습니다.`,
+    body: wolwoon?.ganzi
+      ? `${wolwoon.ganzi} 월운은 ${mainGuide.theme}을 현실에서 점검하게 합니다. ${supportLabel ? `특히 ${supportLabel} 기운이 보완 축과 맞아 이번 달은 약한 부분을 실제 습관으로 채우기 좋습니다.` : mainGuide.chance} ${describeTopicLuckFocus(topic)}`
+      : `이번 달은 ${mainGuide.theme}을 정리하는 흐름으로 읽습니다. 중요한 선택은 한 번에 몰지 말고 주 단위로 나눠 확인하는 편이 안정적입니다.`,
+    points: compactStrings([
+      `기회: ${mainGuide.chance}`,
+      `주의: ${mainGuide.caution}`,
+      `이번 달 실행: ${mainGuide.action}`,
+    ]),
+  };
+}
+
+function buildMajorLuckReading(data: SajuDataV1, topic: FocusTopic) {
+  const currentMajor = data.currentLuck?.currentMajorLuck;
+  const cautionTone = getElementTone(data.fiveElements.weakest);
+
+  if (!currentMajor) {
+    return {
+      headline: `${cautionTone.label} 보완이 성과 차이를 만듭니다.`,
+      body: cautionTone.avoid,
+      points: [
+        '성별 또는 생시 정보가 채워지면 현재 대운 구간을 더 정확히 계산합니다.',
+        '대운이 비어 있을 때는 원국의 강약, 용신, 월운을 먼저 기준으로 삼습니다.',
+      ],
+    };
+  }
+
+  const majorElements = getGanziElements(currentMajor.ganzi);
+  const supportElements = getLuckyElementsFromSajuData(data);
+  const supportMatches = majorElements.filter((element) => supportElements.includes(element));
+  const dominantMatches = majorElements.filter((element) => element === data.fiveElements.dominant);
+  const mainElement = supportMatches[0] ?? majorElements[0] ?? data.fiveElements.dominant;
+  const mainGuide = LUCK_ELEMENT_GUIDE[mainElement];
+  const window = formatLuckWindow(currentMajor);
+  const supportText =
+    supportMatches.length > 0
+      ? `${formatElementLabels(supportMatches)} 기운이 용신/보완 축과 맞아, 이 대운은 약한 부분을 채우는 방향으로 쓰기 좋습니다.`
+      : dominantMatches.length > 0
+        ? `${formatElementLabels(dominantMatches)} 기운이 원국의 강한 축을 다시 자극하므로, 성과는 빠르지만 과속과 피로를 조심해야 합니다.`
+        : `${formatElementLabels(majorElements)} 기운이 원국에 새 배경으로 들어와, 익숙한 방식보다 역할과 환경을 조정하는 선택이 중요합니다.`;
+
+  return {
+    headline: `${currentMajor.ganzi} 대운은 ${mainGuide.theme}을 장기 과제로 올립니다.`,
+    body: compactStrings([
+      window ? `${window} 구간의 ${currentMajor.ganzi} 대운입니다.` : `${currentMajor.ganzi} 대운입니다.`,
+      supportText,
+      `${mainGuide.chance} ${describeTopicLuckFocus(topic)}`,
+    ]).join(' '),
+    points: compactStrings([
+      `기회: ${mainGuide.chance}`,
+      `주의: ${mainGuide.caution}`,
+      `장기 실행: ${mainGuide.action}`,
+    ]),
+  };
+}
+
 function buildTimeline(data: SajuDataV1, topic: FocusTopic): ReportTimelineItem[] {
   const bestTone = getElementTone(
     getLuckyElementsFromSajuData(data)[0] ?? data.fiveElements.dominant
   );
-  const cautionTone = getElementTone(data.fiveElements.weakest);
-  const dominant = ELEMENT_INFO[data.fiveElements.dominant].name.split(' ')[0];
-  const currentMajor = data.currentLuck?.currentMajorLuck;
-  const saewoon = data.currentLuck?.saewoon;
   const wolwoon = data.currentLuck?.wolwoon;
+  const monthlyLuck = buildMonthlyLuckReading(data, topic);
+  const majorLuck = buildMajorLuckReading(data, topic);
 
   return [
     {
       label: '오늘',
       headline: `${bestTone.cue}을 먼저 살리는 날`,
       body: `${FOCUS_TOPIC_META[topic].subtitle} 오늘은 ${bestTone.move}${wolwoon?.ganzi ? ` 현재 월운은 ${wolwoon.ganzi}라 작은 말투와 생활 리듬의 조절이 실제 체감 차이로 이어집니다.` : ''}`,
+      points: [
+        `먼저 할 일: ${bestTone.move}`,
+        `피할 흐름: ${getElementTone(data.fiveElements.weakest).avoid}`,
+      ],
     },
     {
       label: '이번 달',
-      headline: `${dominant} 중심 루틴을 만들면 흐름이 붙습니다.`,
-      body: saewoon?.ganzi
-        ? `${saewoon.ganzi} 세운이 들어온 해라 ${topic === 'wealth' ? '돈의 흐름을 넓히기보다 새는 지출을 먼저 정리하는 편이' : topic === 'love' || topic === 'relationship' ? '관계의 결론을 서두르기보다 반복되는 감정 패턴을 읽어보는 편이' : topic === 'career' ? '일의 방향을 길게 보고 역할 정리를 먼저 하는 편이' : '우선순위를 나눠 보는 편이'} 더 유리합니다.`
-        : '초반에는 정리와 조율, 후반에는 실행과 연결에 힘이 붙는 패턴입니다. 중요한 선택은 한 번에 몰지 않는 편이 안정적입니다.',
+      headline: monthlyLuck.headline,
+      body: monthlyLuck.body,
+      points: monthlyLuck.points,
     },
     {
       label: '대운 흐름',
-      headline: currentMajor?.ganzi
-        ? `${currentMajor.ganzi} 대운의 큰 방향을 읽어야 할 시기입니다.`
-        : `${cautionTone.label} 보완이 성과 차이를 만듭니다.`,
-      body: currentMajor
-        ? `${currentMajor.notes.slice(0, 2).join(' ')} 지금은 단기 결과 하나보다 앞으로 몇 해를 끌고 갈 선택의 결을 먼저 보는 편이 좋습니다.`
-        : cautionTone.avoid,
+      headline: majorLuck.headline,
+      body: majorLuck.body,
+      points: majorLuck.points,
     },
   ];
 }

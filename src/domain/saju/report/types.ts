@@ -24,6 +24,7 @@ export interface ReportTimelineItem {
   label: string;
   headline: string;
   body: string;
+  points?: string[];
 }
 
 export type ReportEvidenceKey =

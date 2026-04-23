@@ -35,7 +35,10 @@ interface PremiumReportSection {
   eyebrow: string;
   title: string;
   lead: string;
+  decision: string;
   paragraphs: string[];
+  keyPoints?: string[];
+  actionItems?: string[];
   highlights?: string[];
 }
 
@@ -61,6 +64,19 @@ function formatLuckRange(cycle: { startAge: number | null; endAge: number | null
 function formatMajorLuckLine(cycle: NonNullable<ReadingRecord['sajuData']['majorLuck']>[number]) {
   const note = cycle.notes.slice(0, 2).join(' ') || '이 시기의 대운 흐름은 세부 해석 보강 대상입니다.';
   return `${formatLuckRange(cycle)} · ${cycle.ganzi}: ${note}`;
+}
+
+function getTimelineItem(report: ReturnType<typeof buildSajuReport>, label: string) {
+  return report.timeline.find((item) => item.label === label) ?? null;
+}
+
+function compactList(items: Array<string | null | undefined>, max = 4) {
+  return [...new Set(compactStrings(items))].slice(0, max);
+}
+
+function formatScoreFocus(report: ReturnType<typeof buildSajuReport>) {
+  const focused = report.scores.find((score) => score.key === report.focusScoreKey);
+  return focused ? `${report.focusLabel} ${focused.score}점 · ${focused.summary}` : '';
 }
 
 function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSection[] {
@@ -93,6 +109,9 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
   const currentMajor = sajuData.currentLuck?.currentMajorLuck;
   const saewoon = sajuData.currentLuck?.saewoon;
   const wolwoon = sajuData.currentLuck?.wolwoon;
+  const todayFlow = getTimelineItem(todayReport, '오늘');
+  const monthlyFlow = getTimelineItem(todayReport, '이번 달');
+  const majorFlow = getTimelineItem(todayReport, '대운 흐름');
   const yongsinLabel = sajuData.yongsin
     ? formatSymbolList([sajuData.yongsin.primary, ...sajuData.yongsin.secondary])
     : yongsin?.title ?? '';
@@ -107,21 +126,36 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
           ? `${sajuData.dayMaster.stem} 일간은 ${sajuData.dayMaster.metaphor}의 결을 지녀 삶의 방향을 읽을 때 이 상징을 먼저 봅니다.`
           : null,
       ]).join(' '),
+      decision: `${sajuData.dayMaster.stem} 일간은 타고난 반응 속도와 자기 표현 방식의 중심입니다. 이 리포트에서는 성격 묘사보다 “어떤 환경에서 실력이 잘 나오는가”를 먼저 봅니다.`,
       paragraphs: compactStrings([
         getPersonalityFromSajuData(sajuData),
-        `명식의 네 기둥은 ${pillars.join(' · ')}로 놓이며, 일간이 서 있는 자리와 월령의 계절감이 평생 해석의 출발점이 됩니다.`,
         todayReport.summaryHighlights[0],
       ]),
+      keyPoints: compactList([
+        `원국: ${pillars.join(' · ')}`,
+        `월령 기준: ${sajuData.pillars.month.ganzi}`,
+        `일간 상징: ${sajuData.dayMaster.metaphor ?? sajuData.dayMaster.stem}`,
+      ]),
+      actionItems: compactList([
+        '내가 빨리 반응하는 상황과 늦게 결정해야 하는 상황을 구분하세요.',
+        '성향을 장점/단점으로만 보지 말고 잘 맞는 환경을 찾는 기준으로 쓰세요.',
+      ], 2),
     },
     {
       eyebrow: '균형 진단',
       title: '2. 오행 분포와 강약',
       lead: `${dominant} 기운이 가장 앞에 있고, ${weakest} 기운을 어떻게 보완하느냐가 평생 균형의 핵심입니다.`,
+      decision: strength?.plainSummary ?? `${dominant}은 쓰기 쉬운 장점이고, ${weakest}은 의식적으로 보완해야 하는 약한 축입니다.`,
       paragraphs: compactStrings([
-        strength ? `${strength.title}: ${strength.body}` : null,
-        strength?.details.join(' '),
+        strength?.technicalSummary,
         todayReport.summaryHighlights[1],
       ]),
+      keyPoints: compactList([
+        strength ? `${strength.title} · ${strength.confidence}` : null,
+        `강한 오행: ${dominant}`,
+        `보완 오행: ${weakest}`,
+      ]),
+      actionItems: strength?.practicalActions?.slice(0, 3),
       highlights: Object.entries(sajuData.fiveElements.byElement).map(
         ([element, value]) => `${formatElementName(element as keyof typeof ELEMENT_INFO)} ${value.percentage}% · ${value.state}`
       ),
@@ -133,11 +167,21 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
         pattern ? `${pattern.title}을 기준으로 삶의 역할과 관계 패턴을 먼저 읽습니다.` : null,
         yongsinLabel ? `보완 축은 ${yongsinLabel}입니다.` : null,
       ]).join(' '),
+      decision: yongsin?.plainSummary ?? `이 명식은 ${supportLabels} 기운을 어떻게 쓰느냐가 균형의 핵심입니다.`,
       paragraphs: compactStrings([
-        pattern ? `${pattern.body} ${pattern.details.join(' ')}` : null,
-        yongsin ? `${yongsin.body} ${yongsin.details.join(' ')}` : null,
+        pattern?.plainSummary,
+        yongsin?.technicalSummary,
         `평생 운을 볼 때는 타고난 구조를 고정값으로 단정하기보다, ${supportLabels} 기운을 생활 환경과 선택 안에 얼마나 안정적으로 들이는지가 중요합니다.`,
       ]),
+      keyPoints: compactList([
+        pattern ? `격국: ${pattern.title}` : null,
+        yongsinLabel ? `보완 축: ${yongsinLabel}` : null,
+        yongsin?.details.find((detail) => detail.includes('후보')),
+      ]),
+      actionItems: compactList([
+        ...(yongsin?.practicalActions ?? []),
+        ...(pattern?.practicalActions ?? []),
+      ], 4),
     },
     {
       eyebrow: '인생 큰 흐름',
@@ -145,10 +189,16 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
       lead: currentMajor
         ? `현재는 ${currentMajor.ganzi} 대운권에 있어 ${formatLuckRange(currentMajor)} 구간의 선택이 다음 흐름을 여는 기준이 됩니다.`
         : '대운은 10년 단위로 삶의 배경이 바뀌는 큰 흐름입니다.',
+      decision: majorFlow?.body ?? '대운은 사건 하나를 맞히는 항목이 아니라, 선택의 배경과 장기 과제를 읽는 항목입니다.',
       paragraphs: compactStrings([
-        currentMajor?.notes.join(' '),
-        '아래 대운 흐름은 특정 사건을 단정하기보다, 어느 시기에 확장·정리·관계 조율의 과제가 커지는지 보는 장기 지도입니다.',
+        majorFlow?.headline,
+        '아래 대운 목록은 특정 사건을 단정하기보다, 어느 시기에 확장·정리·관계 조율의 과제가 커지는지 보는 장기 지도입니다.',
       ]),
+      keyPoints: majorFlow?.points,
+      actionItems: compactList([
+        majorFlow?.points?.find((point) => point.startsWith('장기 실행')),
+        '올해 결정은 지금 대운의 장기 과제와 맞는지 먼저 확인하세요.',
+      ], 2),
       highlights: majorLuckHighlights.length > 0
         ? majorLuckHighlights
         : ['성별 또는 생시 정보가 부족해 대운 시작 시점은 아직 산정되지 않았습니다.'],
@@ -160,34 +210,69 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
         saewoon?.ganzi ? `${saewoon.ganzi} 세운` : null,
         wolwoon?.ganzi ? `${wolwoon.ganzi} 월운` : null,
       ]).join(' · ') || '현재 세운과 월운은 기본 흐름 중심으로 해석합니다.',
+      decision: compactStrings([
+        todayFlow?.body,
+        monthlyFlow?.body,
+      ]).join(' ') || '현재 운은 세운과 월운을 함께 놓고 오늘의 선택 속도와 이번 달 루틴을 조절하는 방식으로 봅니다.',
       paragraphs: compactStrings([
         saewoon?.notes.join(' '),
         wolwoon?.notes.join(' '),
-        todayReport.timeline[1]?.body,
-        todayReport.timeline[2]?.body,
       ]),
+      keyPoints: compactList([
+        todayFlow?.headline,
+        monthlyFlow?.headline,
+        majorFlow?.headline,
+      ]),
+      actionItems: compactList([
+        ...(todayFlow?.points ?? []),
+        ...(monthlyFlow?.points ?? []),
+      ], 4),
     },
     {
       eyebrow: '생활 분야',
       title: '6. 재물·연애·직장·관계',
       lead: '평생 리포트에서는 한 분야만 따로 떼어 보지 않고, 돈·마음·역할·사람 사이의 균형을 함께 봅니다.',
+      decision: '유료 상세에서는 분야별 운을 길게 늘어놓기보다, 지금 실제로 판단해야 할 우선순위를 나눠 보여줍니다.',
       paragraphs: compactStrings([
-        `재물: ${wealthReport.summaryHighlights.join(' ')} ${wealthReport.primaryAction.description}`,
-        `연애: ${loveReport.summaryHighlights.join(' ')} ${loveReport.primaryAction.description}`,
-        `직장: ${careerReport.summaryHighlights.join(' ')} ${careerReport.primaryAction.description}`,
-        `관계: ${relationshipReport.summaryHighlights.join(' ')} ${relationshipReport.primaryAction.description}`,
+        `재물: ${wealthReport.primaryAction.description}`,
+        `연애: ${loveReport.primaryAction.description}`,
+        `직장: ${careerReport.primaryAction.description}`,
+        `관계: ${relationshipReport.primaryAction.description}`,
+      ]),
+      keyPoints: compactList([
+        formatScoreFocus(wealthReport),
+        formatScoreFocus(loveReport),
+        formatScoreFocus(careerReport),
+        formatScoreFocus(relationshipReport),
+      ]),
+      actionItems: compactList([
+        wealthReport.cautionAction.description,
+        loveReport.cautionAction.description,
+        careerReport.cautionAction.description,
+        relationshipReport.cautionAction.description,
       ]),
     },
     {
       eyebrow: '활용 전략',
       title: '7. 합충·공망·신살을 반영한 평생 조언',
       lead: `좋은 운은 ${supportLabels} 기운을 현실의 루틴으로 만들 때 오래 갑니다.`,
+      decision: '합충·공망·신살은 겁을 주는 장식이 아니라, 어디서 속도가 붙고 어디서 확인 절차가 필요한지 알려주는 보조 신호입니다.',
       paragraphs: compactStrings([
-        relations ? `${relations.title}: ${relations.body} ${relations.details.join(' ')}` : null,
-        gongmang ? `${gongmang.title}: ${gongmang.body} ${gongmang.details.join(' ')}` : null,
-        specialSals ? `${specialSals.title}: ${specialSals.body} ${specialSals.details.join(' ')}` : null,
+        relations?.plainSummary ?? relations?.body,
+        gongmang?.plainSummary ?? gongmang?.body,
+        specialSals?.plainSummary ?? specialSals?.body,
         '운의 강한 구간에서는 속도를 내되, 약한 축이 드러나는 시기에는 결정을 늦추고 확인 절차를 늘리는 방식이 가장 현실적인 보완책입니다.',
       ]),
+      keyPoints: compactList([
+        relations ? `합충: ${relations.title}` : null,
+        gongmang ? `공망: ${gongmang.title}` : null,
+        specialSals ? `신살: ${specialSals.title}` : null,
+      ]),
+      actionItems: compactList([
+        ...(relations?.practicalActions ?? []),
+        ...(gongmang?.practicalActions ?? []),
+        ...(specialSals?.practicalActions ?? []),
+      ], 4),
     },
   ];
 }
@@ -284,16 +369,51 @@ export default async function SajuPremiumPage({ params }: Props) {
                     <h3 className="mt-3 font-[var(--font-heading)] text-xl font-semibold leading-8 text-[var(--app-ivory)]">
                       {section.title}
                     </h3>
-                    <p className="mt-4 rounded-[1rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-4 text-base font-semibold leading-8 text-[var(--app-ivory)]">
-                      {section.lead}
-                    </p>
+                    <div className="mt-4 rounded-[1rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-4">
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
+                        핵심 판단
+                      </div>
+                      <p className="mt-2 text-base font-semibold leading-8 text-[var(--app-ivory)]">
+                        {section.decision || section.lead}
+                      </p>
+                    </div>
+                    {section.keyPoints && section.keyPoints.length > 0 ? (
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                        {section.keyPoints.map((point) => (
+                          <div
+                            key={`${section.title}-${point}`}
+                            className="rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]"
+                          >
+                            {point}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
                     <div className="mt-4 space-y-3">
+                      <p className="text-sm font-semibold text-[var(--app-ivory)]">{section.lead}</p>
                       {section.paragraphs.map((paragraph) => (
                         <p key={paragraph} className="text-sm leading-8 text-[var(--app-copy)]">
                           {paragraph}
                         </p>
                       ))}
                     </div>
+                    {section.actionItems && section.actionItems.length > 0 ? (
+                      <div className="mt-5 border-t border-[var(--app-line)] pt-4">
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
+                          실행 / 주의
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {section.actionItems.map((item) => (
+                            <span
+                              key={`${section.title}-${item}`}
+                              className="rounded-full border border-[var(--app-line)] bg-[rgba(8,10,18,0.28)] px-3 py-1 text-xs leading-5 text-[var(--app-copy)]"
+                            >
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                     {section.highlights && section.highlights.length > 0 ? (
                       <div className="mt-5 grid gap-2">
                         {section.highlights.map((highlight) => (

@@ -107,3 +107,17 @@ test('core evidence cards include user-facing explainers beyond raw provenance',
     assert.ok((card.practicalActions?.length ?? 0) > 0, `${key} should include practical actions`);
   }
 });
+
+test('timeline gives monthly and major luck as interpreted guidance', () => {
+  const data = normalizeToSajuDataV1(birthInput, null);
+  const report = buildSajuReport(birthInput, data, 'today');
+  const monthly = report.timeline.find((item) => item.label === '이번 달');
+  const major = report.timeline.find((item) => item.label === '대운 흐름');
+
+  assert.ok(monthly, 'monthly timeline item should exist');
+  assert.ok(major, 'major luck timeline item should exist');
+  assert.match(monthly.body, /월운|이번 달/);
+  assert.ok((monthly.points?.length ?? 0) >= 3);
+  assert.match(major.body, /대운|용신|원국/);
+  assert.ok((major.points?.length ?? 0) >= 2);
+});

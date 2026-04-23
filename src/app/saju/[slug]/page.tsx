@@ -17,6 +17,7 @@ import { ELEMENT_INFO } from '@/lib/saju/elements';
 import type { Element } from '@/lib/saju/types';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
 import { buildSajuReport, FOCUS_TOPIC_META, FOCUS_TOPIC_OPTIONS } from '@/domain/saju/report';
+import type { SajuReport } from '@/domain/saju/report';
 import { buildFallbackInterpretation } from '@/server/ai/saju-interpretation';
 import { cn } from '@/lib/utils';
 import { AppPage, AppShell } from '@/shared/layout/app-shell';
@@ -79,10 +80,23 @@ function formatCurrentLuckTitle(currentLuck: SajuCurrentLuck | null) {
   return parts.length > 0 ? parts.join(' · ') : '현재 운 계산 준비 중';
 }
 
-function formatCurrentLuckBody(currentLuck: SajuCurrentLuck | null) {
+function getTimelineItem(report: SajuReport, label: string) {
+  return report.timeline.find((item) => item.label === label) ?? null;
+}
+
+function formatCurrentLuckBody(currentLuck: SajuCurrentLuck | null, report?: SajuReport) {
   if (!currentLuck) {
     return '현재 대운과 세운, 월운을 아직 계산하지 못했습니다. 운 계산이 연결되면 이 자리에 현재 시점 해석이 표시됩니다.';
   }
+
+  const enriched = report
+    ? [
+        getTimelineItem(report, '대운 흐름')?.body,
+        getTimelineItem(report, '이번 달')?.body,
+      ].filter(Boolean)
+    : [];
+
+  if (enriched.length > 0) return enriched.join(' ');
 
   const notes = [
     ...(currentLuck.currentMajorLuck?.notes ?? []).slice(0, 2),
@@ -167,6 +181,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
   const majorLuckPreview = sajuData.majorLuck?.slice(0, 6) ?? [];
   const currentMajorIndex = sajuData.currentLuck?.currentMajorLuck?.index ?? null;
   const classicEvidenceConcept = getPrimaryClassicEvidenceConcept(report);
+  const currentMajorFlow = getTimelineItem(report, '대운 흐름');
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -302,6 +317,28 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           </section>
         </div>
 
+        <section className="grid gap-4 lg:grid-cols-3">
+          {report.timeline.map((item) => (
+            <article key={item.label} className="app-panel p-6">
+              <div className="app-caption">{item.label}</div>
+              <h2 className="mt-3 text-2xl font-semibold leading-8 text-[var(--app-ivory)]">{item.headline}</h2>
+              <p className="app-body-copy mt-4 text-sm">{item.body}</p>
+              {item.points && item.points.length > 0 ? (
+                <div className="mt-5 grid gap-2">
+                  {item.points.map((point) => (
+                    <div
+                      key={`${item.label}-${point}`}
+                      className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-2 text-sm leading-7 text-[var(--app-copy)]"
+                    >
+                      {point}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </article>
+          ))}
+        </section>
+
         <SajuAiInterpretationPanel
           readingId={slug}
           topic={report.focusTopic}
@@ -436,16 +473,6 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           ))}
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
-          {report.timeline.map((item) => (
-            <article key={item.label} className="app-panel p-6">
-              <div className="app-caption">{item.label}</div>
-              <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">{item.headline}</h2>
-              <p className="app-body-copy mt-4 text-sm">{item.body}</p>
-            </article>
-          ))}
-        </section>
-
         <ClassicEvidencePanel concept={classicEvidenceConcept} />
 
         <section className="grid gap-4 lg:grid-cols-[0.88fr_1.12fr]">
@@ -454,7 +481,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
               {formatCurrentLuckTitle(sajuData.currentLuck)}
             </h2>
-            <p className="app-body-copy mt-4 text-sm">{formatCurrentLuckBody(sajuData.currentLuck)}</p>
+            <p className="app-body-copy mt-4 text-sm">{formatCurrentLuckBody(sajuData.currentLuck, report)}</p>
 
             <div className="mt-5 grid gap-3">
               <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
@@ -465,9 +492,21 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                     : '성별이 있어야 대운 방향을 확정할 수 있습니다.'}
                 </div>
                 <p className="app-body-copy mt-2 text-sm">
-                  {sajuData.currentLuck?.currentMajorLuck?.notes.slice(0, 2).join(' ') ??
+                  {currentMajorFlow?.body ??
                     '현재 저장본에는 대운 범위가 아직 비어 있습니다.'}
                 </p>
+                {currentMajorFlow?.points && currentMajorFlow.points.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {currentMajorFlow.points.map((point) => (
+                      <span
+                        key={`current-major-${point}`}
+                        className="rounded-full border border-[var(--app-line)] bg-[rgba(8,10,18,0.24)] px-3 py-1 text-xs leading-5 text-[var(--app-copy-muted)]"
+                      >
+                        {point}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
