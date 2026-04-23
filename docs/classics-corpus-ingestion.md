@@ -5,7 +5,7 @@ This app now has the first production-oriented slice for classical saju evidence
 - Vendor input: `external/saju_corpus_package/`
 - Migration: `supabase/migrations/006_classics_corpus.sql`
 - Evidence route: `GET /api/classics/evidence?concept=용신`
-- UI surface: saju result page, below the existing classical citation summary
+- UI surface: saju result page, in the DB-backed `고전 원문 근거` panel
 
 ## Current scope
 
@@ -128,8 +128,24 @@ Keep these blocked or reference-only until manually reviewed:
 
 - General `三命通會` Wikisource page with missing 권10-권12
 - `淵海子平` Wikisource page marked unfinished/source-unclear
+- `子平真詮` Wikisource redlink / missing base text
 - `子平真詮評注` when it is being treated as if it were the base text
 - CText OCR/community text as a standalone public source
+
+Reference-only rows use `public_release_status = 'hold'` and
+`is_reference_only = true`. They may exist in `classic_work_versions`, but
+`search_classic_evidence` must never expose them. Apply or seed this catalog
+state with:
+
+```bash
+npm run seed:classics-holds
+npm run seed:classics-holds -- --apply
+```
+
+The evidence function is tag-gated: a passage must have a matching
+`classic_passage_concept_tags` row for the requested concept before it can be
+ranked. Text matches can improve rank, but they cannot make an untagged passage
+visible.
 
 ## Verification
 
@@ -139,3 +155,24 @@ After ingesting passages, verify:
 - The saju result page renders original text, source reference, and license label.
 - `npm run typecheck` still passes.
 - Any ingest script logs a `classic_ingest_runs` row with record counts and errors.
+
+`npm run validate:classics` also fails when:
+
+- A passage is missing source/version/license/provenance fields.
+- A `hold`/reference-only work version accidentally becomes live.
+- The general incomplete `三命通會` page is live.
+- The evidence API returns a non-live/unreviewed row.
+- The evidence API returns a row that is not tagged with the requested concept.
+
+## Merge map
+
+The original recommended sequence was:
+
+- PR #6: schema/API/UI base
+- PR #7: Wikisource three-work ingest script and dry-run validation
+- PR #8: Supabase dev DB load and evidence API verification
+- PR #9: Korean UI summary layer and source/license display
+- PR #10: production UI cleanup
+
+After PR #10, the next maintenance slice is the public-hold catalog gate and
+validator hardening in `008_classics_hold_metadata_and_tag_gated_evidence.sql`.

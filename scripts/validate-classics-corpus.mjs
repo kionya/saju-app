@@ -16,6 +16,17 @@ const EXPECTED_WIKISOURCE_REFS = [
   'title=三命通會_(四庫全書本)',
 ];
 
+const EXPECTED_PUBLIC_HOLD_REFS = [
+  'title=三命通會',
+  'title=淵海子平',
+  'title=子平真詮',
+  'ctp:wb631975',
+  'ctp:wb727782',
+  'ctp:wb221357',
+  'ctp:wb346166',
+  'ctp:wb758991',
+];
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   loadLocalEnv(projectRoot);
@@ -29,10 +40,17 @@ async function main() {
   const orphanCount = await countOrphanPassages(supabase);
   const suspectCount = await countSuspectPassages(supabase);
   const latestRuns = await loadLatestRuns(supabase);
+  const holdRows = await validatePublicHoldWorkVersions(supabase);
+  const missingCatalogProvenanceCount = await countMissingCatalogProvenance(supabase);
+  const apiGateAudit = await validateEvidenceApiGate(supabase);
 
   console.table(rows);
+  console.table(holdRows);
   console.log(`orphan_passages=${orphanCount}`);
   console.log(`suspect_passages=${suspectCount}`);
+  console.log(`missing_catalog_provenance_passages=${missingCatalogProvenanceCount}`);
+  console.log(`api_non_live_or_unreviewed_results=${apiGateAudit.nonLiveOrUnreviewedCount}`);
+  console.log(`api_untagged_results=${apiGateAudit.untaggedCount}`);
   console.log('latest_ingest_runs=');
   for (const run of latestRuns) {
     console.log(
@@ -45,6 +63,7 @@ async function main() {
   const tooSmall = rows.filter((row) => row.passage_count < minPassages);
   const tooFewUiSummaries = rows.filter((row) => row.ui_summary_count < minUiSummaries);
   const missingRequired = rows.filter((row) => row.required_field_missing_count > 0);
+  const invalidHolds = holdRows.filter((row) => !row.valid_hold);
   if (tooSmall.length > 0) {
     console.error(
       `Expected at least ${minPassages} passages for each work, but these were too small: ${tooSmall
@@ -74,6 +93,30 @@ async function main() {
 
   if (orphanCount > 0) {
     console.error('Found orphan classic_passages rows.');
+    process.exit(1);
+  }
+
+  if (invalidHolds.length > 0) {
+    console.error(
+      `Expected public hold/reference-only rows, but these failed: ${invalidHolds
+        .map((row) => `${row.source_work_ref}:${row.reason}`)
+        .join(', ')}`
+    );
+    process.exit(1);
+  }
+
+  if (missingCatalogProvenanceCount > 0) {
+    console.error('Found passages missing source/version/license/provenance fields.');
+    process.exit(1);
+  }
+
+  if (apiGateAudit.nonLiveOrUnreviewedCount > 0) {
+    console.error('Evidence API returned non-live or unreviewed/blocked rows.');
+    process.exit(1);
+  }
+
+  if (apiGateAudit.untaggedCount > 0) {
+    console.error('Evidence API returned rows not tagged with the requested concept.');
     process.exit(1);
   }
 }
@@ -238,6 +281,151 @@ async function countSuspectPassages(supabase) {
   }
 
   return count ?? 0;
+}
+
+async function validatePublicHoldWorkVersions(supabase) {
+  const { data, error } = await supabase
+    .from('classic_work_versions')
+    .select(
+      'source_work_ref, public_release_status, verification_status, completeness_status, is_reference_only'
+    )
+    .in('source_work_ref', EXPECTED_PUBLIC_HOLD_REFS);
+
+  if (error) {
+    throw new Error(`Could not load public hold work versions: ${error.message}`);
+  }
+
+  const byRef = new Map((data ?? []).map((row) => [row.source_work_ref, row]));
+
+  return EXPECTED_PUBLIC_HOLD_REFS.map((sourceWorkRef) => {
+    const row = byRef.get(sourceWorkRef);
+    if (!row) {
+      return {
+        source_work_ref: sourceWorkRef,
+        release: null,
+        verification: null,
+        completeness: null,
+        reference_only: false,
+        valid_hold: false,
+        reason: 'missing',
+      };
+    }
+
+    const validHold =
+      row.public_release_status === 'hold' &&
+      row.is_reference_only === true &&
+      row.verification_status !== 'reviewed' &&
+      row.verification_status !== 'provisional';
+
+    return {
+      source_work_ref: row.source_work_ref,
+      release: row.public_release_status,
+      verification: row.verification_status,
+      completeness: row.completeness_status,
+      reference_only: row.is_reference_only,
+      valid_hold: validHold,
+      reason: validHold ? 'ok' : 'not_hold_reference_only',
+    };
+  });
+}
+
+async function countMissingCatalogProvenance(supabase) {
+  const passageRows = await loadAllRows(
+    supabase,
+    'classic_passages',
+    'passage_id, work_version_id, source_line_ref, provenance_hash, license_label'
+  );
+  const versionRows = await loadAllRows(
+    supabase,
+    'classic_work_versions',
+    'work_version_id, source_id, source_url, source_work_ref, license_override'
+  );
+  const sourceRows = await loadAllRows(
+    supabase,
+    'classic_sources',
+    'source_id, license_label'
+  );
+
+  const versionById = new Map(versionRows.map((row) => [row.work_version_id, row]));
+  const sourceById = new Map(sourceRows.map((row) => [row.source_id, row]));
+
+  return passageRows.filter((passage) => {
+    const version = versionById.get(passage.work_version_id);
+    const source = version ? sourceById.get(version.source_id) : null;
+    const effectiveLicense = version?.license_override ?? source?.license_label ?? null;
+
+    return (
+      !version ||
+      !source ||
+      !version.source_url ||
+      !version.source_work_ref ||
+      !effectiveLicense ||
+      !passage.source_line_ref ||
+      !passage.provenance_hash ||
+      !passage.license_label
+    );
+  }).length;
+}
+
+async function validateEvidenceApiGate(supabase) {
+  const conceptTags = await loadAllRows(
+    supabase,
+    'classic_concept_tags',
+    'concept_tag_id, concept_slug, concept_name_ko, concept_name_zh'
+  );
+  const tagRows = await loadAllRows(
+    supabase,
+    'classic_passage_concept_tags',
+    'passage_id, concept_tag_id'
+  );
+  const tagIdsByPassageId = new Map();
+
+  for (const tagRow of tagRows) {
+    const tagIds = tagIdsByPassageId.get(tagRow.passage_id) ?? new Set();
+    tagIds.add(tagRow.concept_tag_id);
+    tagIdsByPassageId.set(tagRow.passage_id, tagIds);
+  }
+
+  let nonLiveOrUnreviewedCount = 0;
+  let untaggedCount = 0;
+
+  for (const tag of conceptTags) {
+    const queries = [
+      tag.concept_slug,
+      tag.concept_name_ko,
+      tag.concept_name_zh,
+    ].filter(Boolean);
+
+    for (const query of queries) {
+      const { data, error } = await supabase.rpc('search_classic_evidence', {
+        p_concept: query,
+        p_limit: 20,
+      });
+
+      if (error) {
+        throw new Error(`Evidence API gate check failed for ${query}: ${error.message}`);
+      }
+
+      for (const row of data ?? []) {
+        if (
+          row.public_release_status !== 'live' ||
+          !['reviewed', 'provisional'].includes(row.verification_status)
+        ) {
+          nonLiveOrUnreviewedCount += 1;
+        }
+
+        const passageTagIds = tagIdsByPassageId.get(row.passage_id);
+        if (!passageTagIds?.has(tag.concept_tag_id)) {
+          untaggedCount += 1;
+        }
+      }
+    }
+  }
+
+  return {
+    nonLiveOrUnreviewedCount,
+    untaggedCount,
+  };
 }
 
 async function loadLatestRuns(supabase) {
