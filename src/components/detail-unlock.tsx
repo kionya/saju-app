@@ -35,6 +35,7 @@ interface DetailContent {
 interface Props {
   slug: string;
   children?: ReactNode;
+  referenceChildren?: ReactNode;
 }
 
 const SECTIONS = [
@@ -290,7 +291,7 @@ function getTopicContent(
   return fallbackTopicContent(content[topic]);
 }
 
-export default function DetailUnlock({ slug, children }: Props) {
+export default function DetailUnlock({ slug, children, referenceChildren }: Props) {
   const [state, setState] = useState<'locked' | 'loading' | 'unlocked' | 'error'>('locked');
   const [content, setContent] = useState<DetailContent | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
@@ -360,7 +361,7 @@ export default function DetailUnlock({ slug, children }: Props) {
         <p className="app-body-copy text-sm">
           {access === 'daily_reuse'
             ? '오늘 이미 열어본 상세 해석이라 코인 차감 없이 다시 보여드립니다.'
-            : '명반, 오행, 근거, 대운 흐름을 먼저 확인한 뒤 재물·연애·직업·건강을 분야별로 풀이합니다.'}
+            : '핵심 해석을 먼저 읽고, 필요하면 아래에서 근거와 계산 설명까지 이어서 확인할 수 있습니다.'}
         </p>
 
         {children ? <div className="mt-6 space-y-5">{children}</div> : null}
@@ -399,6 +400,8 @@ export default function DetailUnlock({ slug, children }: Props) {
             ))}
           </div>
         </div>
+
+        {referenceChildren ? <div className="mt-6 space-y-5">{referenceChildren}</div> : null}
       </section>
     );
   }

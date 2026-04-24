@@ -548,7 +548,128 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
         </section>
 
         <div>
-          <DetailUnlock slug={slug}>
+          <DetailUnlock
+            slug={slug}
+            referenceChildren={
+              <section className="space-y-4">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <div className="app-caption">왜 이렇게 읽는지</div>
+                    <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--app-ivory)]">
+                      처음에는 쉬운 풀이만 읽고, 필요할 때만 전문 근거를 펼쳐보세요.
+                    </h2>
+                  </div>
+                  <p className="max-w-xl text-sm leading-7 text-[var(--app-copy-muted)]">
+                    강약, 격국, 용신과 합충·공망·신살은 해석의 배경입니다. 카드마다 먼저 쉬운 설명을 보여드리고,
+                    자세한 계산과 용어는 아래에 접어두었습니다.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {report.evidenceCards.map((card) => (
+                    <article
+                      key={card.key}
+                      className={cn(
+                        'moon-orbit-card p-5',
+                        shouldEvidenceCardUseFullRow(card) ? 'md:col-span-2' : undefined
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="app-caption">{card.label}</div>
+                        <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[11px] text-[var(--app-copy-soft)]">
+                          {card.confidence}
+                        </span>
+                      </div>
+                      <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">{card.title}</h3>
+                      <p className="mt-3 text-sm leading-8 text-[var(--app-copy)]">
+                        {card.plainSummary || card.body}
+                      </p>
+
+                      <details className="mt-4 rounded-2xl border border-[var(--app-line)] bg-[rgba(8,10,18,0.24)] px-4 py-3">
+                        <summary className="cursor-pointer list-none text-sm font-medium text-[var(--app-gold-text)]">
+                          전문 근거 펼치기
+                        </summary>
+
+                        <div className="mt-4 space-y-4">
+                          {card.technicalSummary ? (
+                            <p className="text-sm leading-7 text-[var(--app-copy-muted)]">{card.technicalSummary}</p>
+                          ) : null}
+
+                          <p className="app-body-copy text-sm">{card.body}</p>
+
+                          {card.explainers && card.explainers.length > 0 ? (
+                            <div className="border-t border-[var(--app-line)] pt-4">
+                              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
+                                한자 풀이
+                              </div>
+                              <div className="mt-3 grid gap-2">
+                                {card.explainers.map((item) => (
+                                  <div key={`${card.key}-${item.term}`} className="text-sm leading-7 text-[var(--app-copy)]">
+                                    <span className="font-semibold text-[var(--app-ivory)]">
+                                      {item.term}{item.hanja ? `(${item.hanja})` : ''}
+                                    </span>
+                                    <span className="text-[var(--app-copy-soft)]"> · {item.meaning}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          {card.practicalActions && card.practicalActions.length > 0 ? (
+                            <div className="border-t border-[var(--app-line)] pt-4">
+                              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
+                                생활 적용
+                              </div>
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {card.practicalActions.map((action) => (
+                                  <span
+                                    key={`${card.key}-${action}`}
+                                    className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs leading-5 text-[var(--app-copy)]"
+                                  >
+                                    {action}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          ) : null}
+
+                          <div className="flex flex-wrap gap-2 text-[11px]">
+                            {card.source.map((source) => (
+                              <span
+                                key={`${card.key}-${source}`}
+                                className="rounded-full border border-[var(--app-gold)]/20 bg-[var(--app-gold)]/8 px-2.5 py-1 text-[var(--app-gold-soft)]"
+                              >
+                                {source}
+                              </span>
+                            ))}
+                            {card.topicMapping.map((topic) => (
+                              <span
+                                key={`${card.key}-${topic}`}
+                                className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[var(--app-copy-soft)]"
+                              >
+                                {FOCUS_TOPIC_META[topic].label}
+                              </span>
+                            ))}
+                          </div>
+
+                          <div className="grid gap-2">
+                            {card.details.map((detail, index) => (
+                              <div
+                                key={`${card.key}-${index}-${detail}`}
+                                className="rounded-2xl border border-[var(--app-line)] bg-[rgba(8,10,18,0.32)] px-3 py-2 text-sm leading-7 text-[var(--app-copy)]"
+                              >
+                                {detail}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </details>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            }
+          >
             <section className="app-panel p-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-[var(--app-ivory)]">사주 명반</h2>
@@ -728,103 +849,6 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               fallbackInterpretation={buildFallbackInterpretation(report)}
               cacheEnabled={isReadingId(slug)}
             />
-
-            <section className="space-y-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <div className="app-caption">명식 근거 정리</div>
-                  <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--app-ivory)]">
-                    강약, 격국, 용신과 합충·공망·신살을 따로 봅니다.
-                  </h2>
-                </div>
-                <p className="max-w-xl text-sm leading-7 text-[var(--app-copy-muted)]">
-                  해석 문장보다 먼저 계산 근거를 확인할 수 있도록 항목별로 분리했습니다.
-                </p>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-2">
-                {report.evidenceCards.map((card) => (
-                  <article
-                    key={card.key}
-                    className={cn(
-                      'moon-orbit-card p-5',
-                      shouldEvidenceCardUseFullRow(card) ? 'md:col-span-2' : undefined
-                    )}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="app-caption">{card.label}</div>
-                      <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[11px] text-[var(--app-copy-soft)]">
-                        {card.confidence}
-                      </span>
-                    </div>
-                    <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">{card.title}</h3>
-                    <p className="app-body-copy mt-3 text-sm">{card.body}</p>
-                    {card.explainers && card.explainers.length > 0 ? (
-                      <div className="mt-4 border-t border-[var(--app-line)] pt-4">
-                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
-                          한자 풀이
-                        </div>
-                        <div className="mt-3 grid gap-2">
-                          {card.explainers.map((item) => (
-                            <div key={`${card.key}-${item.term}`} className="text-sm leading-7 text-[var(--app-copy)]">
-                              <span className="font-semibold text-[var(--app-ivory)]">
-                                {item.term}{item.hanja ? `(${item.hanja})` : ''}
-                              </span>
-                              <span className="text-[var(--app-copy-soft)]"> · {item.meaning}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                    {card.practicalActions && card.practicalActions.length > 0 ? (
-                      <div className="mt-4 border-t border-[var(--app-line)] pt-4">
-                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
-                          생활 적용
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {card.practicalActions.map((action) => (
-                            <span
-                              key={`${card.key}-${action}`}
-                              className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs leading-5 text-[var(--app-copy)]"
-                            >
-                              {action}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                    <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
-                      {card.source.map((source) => (
-                        <span
-                          key={`${card.key}-${source}`}
-                          className="rounded-full border border-[var(--app-gold)]/20 bg-[var(--app-gold)]/8 px-2.5 py-1 text-[var(--app-gold-soft)]"
-                        >
-                          {source}
-                        </span>
-                      ))}
-                      {card.topicMapping.map((topic) => (
-                        <span
-                          key={`${card.key}-${topic}`}
-                          className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-2.5 py-1 text-[var(--app-copy-soft)]"
-                        >
-                          {FOCUS_TOPIC_META[topic].label}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="mt-4 grid gap-2">
-                      {card.details.map((detail, index) => (
-                        <div
-                          key={`${card.key}-${index}-${detail}`}
-                          className="rounded-2xl border border-[var(--app-line)] bg-[rgba(8,10,18,0.32)] px-3 py-2 text-sm leading-7 text-[var(--app-copy)]"
-                        >
-                          {detail}
-                        </div>
-                      ))}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
 
             <section className="grid gap-4 lg:grid-cols-[0.88fr_1.12fr]">
               <article className="app-panel p-6">
