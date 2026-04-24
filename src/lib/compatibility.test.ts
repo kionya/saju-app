@@ -45,6 +45,12 @@ test('compatibility interpretation compares two saved people and emits evidence 
   assert.match(result.headline, /나님과 큰아들님/);
   assert.ok(result.score >= 52 && result.score <= 92);
   assert.ok(result.evidence.length >= 4);
+  assert.equal(result.practicalCards.length, 4);
+  assert.deepEqual(
+    result.practicalCards.map((card) => card.key),
+    ['conflict', 'communication', 'money', 'distance']
+  );
   assert.match(result.relationshipLensBody, /말의 무게|가족/);
+  assert.match(result.practicalCards[1]?.eyebrow ?? '', /대화 방식/);
   assert.match(result.dataNote ?? '', /태어난 시간이|출생지/);
 });

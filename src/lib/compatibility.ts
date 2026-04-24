@@ -109,6 +109,15 @@ export interface CompatibilityEvidenceItem {
   body: string;
 }
 
+export interface CompatibilityPracticalCard {
+  key: 'conflict' | 'communication' | 'money' | 'distance';
+  eyebrow: string;
+  title: string;
+  summary: string;
+  practice: string;
+  tone: 'coral' | 'sky' | 'gold' | 'jade';
+}
+
 export interface CompatibilityInterpretation {
   relationship: CompatibilityRelationshipSlug;
   label: string;
@@ -122,10 +131,138 @@ export interface CompatibilityInterpretation {
   practiceSummary: string;
   currentFlowSummary: string;
   evidence: CompatibilityEvidenceItem[];
+  practicalCards: CompatibilityPracticalCard[];
   dataNote: string | null;
   relationshipLensTitle: string;
   relationshipLensBody: string;
 }
+
+const COMMUNICATION_STYLES: Record<
+  Element,
+  { label: string; summary: string; need: string; caution: string }
+> = {
+  목: {
+    label: '방향부터 먼저 꺼내는 편',
+    summary: '핵심 방향과 가능성을 먼저 말해야 답답함이 풀리는 타입입니다.',
+    need: '결론이 아직 아니어도 어디로 가는 이야기인지 먼저 알려주면 마음이 놓입니다.',
+    caution: '상대가 천천히 정리하는 타입이면 다그친다고 느껴질 수 있습니다.',
+  },
+  화: {
+    label: '반응과 온도가 빠른 편',
+    summary: '표정과 말투의 온도를 빨리 읽고, 반응도 바로 돌아오길 바라는 타입입니다.',
+    need: '짧게라도 바로 반응해 주면 마음이 풀립니다.',
+    caution: '답이 늦거나 무덤덤하면 내용보다 태도에 먼저 서운함이 올라오기 쉽습니다.',
+  },
+  토: {
+    label: '정리와 안정이 먼저인 편',
+    summary: '감정만 앞세우기보다 현실적인 기준과 생활 맥락을 함께 확인해야 편안해지는 타입입니다.',
+    need: '말의 뜻과 앞으로의 기준을 같이 들으면 신뢰가 생깁니다.',
+    caution: '상대는 공감이 필요한데 기준만 말하면 차갑게 들릴 수 있습니다.',
+  },
+  금: {
+    label: '기준과 결론을 분명히 하려는 편',
+    summary: '말을 길게 돌리기보다 핵심과 기준을 선명하게 잡을 때 안심하는 타입입니다.',
+    need: '중요한 대화일수록 조건, 약속, 범위를 문장으로 남기면 편합니다.',
+    caution: '좋은 뜻으로 정리한 말도 상대에게는 평가나 지적으로 들릴 수 있습니다.',
+  },
+  수: {
+    label: '생각을 모은 뒤 말하는 편',
+    summary: '겉반응보다 속마음을 먼저 정리하고 나서 말을 꺼내는 타입입니다.',
+    need: '바로 답을 요구하기보다 생각할 시간을 주면 오히려 더 진솔해집니다.',
+    caution: '말수가 줄면 무심해 보일 수 있어, 침묵의 뜻을 오해받기 쉽습니다.',
+  },
+};
+
+const MONEY_STYLES: Record<Element, { label: string; summary: string; caution: string }> = {
+  목: {
+    label: '성장과 확장 쪽에 돈을 쓰는 편',
+    summary: '배움, 기회, 사람 연결처럼 앞으로 늘어날 가능성이 보이면 지출을 긍정적으로 보는 흐름입니다.',
+    caution: '좋은 명분이 많아질수록 실제 유지 비용 점검이 늦어질 수 있습니다.',
+  },
+  화: {
+    label: '속도와 체감이 있는 곳에 돈을 쓰는 편',
+    summary: '바로 체감되는 만족, 관계의 분위기, 눈에 띄는 변화에 돈이 움직이기 쉬운 흐름입니다.',
+    caution: '기분이 올라간 날의 결제가 반복되면 생각보다 지출 피로가 빨리 쌓일 수 있습니다.',
+  },
+  토: {
+    label: '안정과 생활 기반을 먼저 보는 편',
+    summary: '생활비, 고정비, 집안의 기반처럼 오래 유지될 구조에 돈을 두는 쪽이 마음이 놓이는 흐름입니다.',
+    caution: '안전을 중시하다 필요한 변화나 투자까지 너무 늦출 수 있습니다.',
+  },
+  금: {
+    label: '기준과 효율을 따져 돈을 쓰는 편',
+    summary: '가격, 품질, 조건, 약속이 선명해야 지출 결정을 편하게 내리는 흐름입니다.',
+    caution: '기준이 분명한 만큼 상대는 계산적이거나 차갑다고 느낄 수 있습니다.',
+  },
+  수: {
+    label: '비교와 유보를 거쳐 돈을 쓰는 편',
+    summary: '자료를 더 모으고 흐름을 한 번 더 보면서 지출을 늦추는 쪽이 기본값에 가깝습니다.',
+    caution: '판단을 오래 미루면 필요한 결제까지 타이밍을 놓치거나 답답함을 살 수 있습니다.',
+  },
+};
+
+const DISTANCE_STYLES: Record<Element, { label: string; summary: string; caution: string }> = {
+  목: {
+    label: '자주 움직이며 연결될 때 안정되는 편',
+    summary: '연락과 만남의 흐름이 너무 끊기지 않아야 관계가 살아 있다고 느끼는 편입니다.',
+    caution: '연결이 뜸해지면 생각보다 빨리 관계 온도가 식었다고 받아들일 수 있습니다.',
+  },
+  화: {
+    label: '반응과 표현이 가까울수록 안심하는 편',
+    summary: '마음이 보이는 표현과 빠른 반응이 있을 때 관계의 온도를 신뢰하는 편입니다.',
+    caution: '표현이 줄면 실제 거리보다 훨씬 멀어졌다고 느끼기 쉽습니다.',
+  },
+  토: {
+    label: '정해진 리듬이 있을 때 편안한 편',
+    summary: '자주가 아니라도 꾸준한 패턴이 있으면 관계를 안정적으로 느끼는 편입니다.',
+    caution: '약속된 리듬이 깨지면 작은 변화도 크게 불안하게 읽을 수 있습니다.',
+  },
+  금: {
+    label: '개인 공간이 있어야 편안한 편',
+    summary: '가까워도 각자 정리할 시간과 선이 남아 있어야 관계가 오래 간다고 느끼는 편입니다.',
+    caution: '상대가 자주 확인받고 싶어 하면 차갑거나 벽이 있다고 보일 수 있습니다.',
+  },
+  수: {
+    label: '감정을 가라앉힐 여백이 필요한 편',
+    summary: '바로 붙어서 해결하기보다 생각과 감정을 정리할 시간이 있을 때 더 편안해지는 편입니다.',
+    caution: '시간을 달라는 뜻이 회피처럼 보이면 서운함이 길게 남을 수 있습니다.',
+  },
+};
+
+const RELATIONSHIP_PRACTICE_GUIDES: Record<
+  CompatibilityRelationshipSlug,
+  {
+    conflict: string;
+    communication: string;
+    money: string;
+    distance: string;
+  }
+> = {
+  lover: {
+    conflict: '감정이 올라온 날엔 답부터 요구하지 말고, 서운했던 장면 하나만 먼저 꺼내는 방식이 훨씬 잘 맞습니다.',
+    communication: '연애에서는 큰 결론보다 짧은 확인과 따뜻한 말투가 먼저 들어가야 대화가 풀립니다.',
+    money: '데이트 비용, 선물, 큰 지출은 분위기 따라 즉흥으로 정하지 말고 기준을 짧게라도 미리 합의해 두는 편이 좋습니다.',
+    distance: '연락 빈도와 혼자 쉬는 시간의 기준을 먼저 맞춰 두면 괜한 서운함이 크게 줄어듭니다.',
+  },
+  family: {
+    conflict: '가족 관계는 맞는 말보다 듣기 쉬운 말이 더 중요합니다. 지적보다 부탁 형식으로 말하면 갈등이 훨씬 덜 커집니다.',
+    communication: '가르치려는 말보다 확인과 공감을 먼저 두면 가족 사이의 말이 훨씬 부드럽게 들어갑니다.',
+    money: '생활비, 지원, 선물, 회비처럼 반복되는 돈은 정과 의리만 믿고 넘기지 말고 기준을 분명히 하는 편이 좋습니다.',
+    distance: '가까운 사이라도 간섭의 빈도와 도움 요청의 선을 정해두면 관계가 오래 편안합니다.',
+  },
+  friend: {
+    conflict: '친구 사이는 기대를 말로 바꾸는 순간이 중요합니다. 부탁과 서운함을 한 문장에 섞지 않는 편이 좋습니다.',
+    communication: '친구 관계는 무거운 대화보다 가벼운 확인과 솔직한 한마디가 더 오래 갑니다.',
+    money: '빌려주고 받는 돈, 회비, 선물, 여행비는 친하다는 이유로 흐리지 말고 먼저 맞추는 편이 안전합니다.',
+    distance: '연락이 뜸해도 괜찮은 기준과 꼭 챙겨야 하는 순간을 나눠 두면 서운함이 적습니다.',
+  },
+  partner: {
+    conflict: '함께 일하는 사이는 감정 토론보다 기준 정리가 먼저입니다. 누가 무엇을 언제까지 맡는지 문장으로 남기세요.',
+    communication: '업무 파트너 관계는 말의 온도보다 전달 순서와 결론의 명확함이 더 중요하게 작동합니다.',
+    money: '비용 분담, 수익 기준, 정산 시점은 초반에 문서나 메모로 남겨야 신뢰가 오래 갑니다.',
+    distance: '보고 주기와 개인 판단 범위를 정해두면 과한 간섭이나 방치처럼 느껴지는 일을 줄일 수 있습니다.',
+  },
+};
 
 function canonicalPairKey<T extends string>(left: T, right: T, order: readonly T[]) {
   const leftIndex = order.indexOf(left);
@@ -407,6 +544,212 @@ function buildRelationshipSummaries(
   };
 }
 
+function getReportScore(
+  report: ReturnType<typeof buildSajuReport>,
+  key: 'overall' | 'love' | 'wealth' | 'career' | 'relationship'
+) {
+  return report.scores.find((item) => item.key === key)?.score ?? 70;
+}
+
+function resolveConnectionTopic(relationship: CompatibilityRelationshipSlug) {
+  if (relationship === 'lover') return 'love' as const;
+  if (relationship === 'partner') return 'career' as const;
+  return 'relationship' as const;
+}
+
+function buildConflictCard(
+  relationship: CompatibilityRelationshipSlug,
+  stemInteraction: ReturnType<typeof summarizeStemInteraction>,
+  elementInteraction: ReturnType<typeof summarizeElementInteraction>,
+  branchInteraction: ReturnType<typeof summarizeBranchInteraction>
+): CompatibilityPracticalCard {
+  const guide = RELATIONSHIP_PRACTICE_GUIDES[relationship].conflict;
+
+  if (branchInteraction.caution?.label === '충') {
+    return {
+      key: 'conflict',
+      eyebrow: '갈등 포인트',
+      title: '정면으로 부딪히는 말싸움이 커지기 쉽습니다',
+      summary: `${branchInteraction.caution.detail} 서로 맞는 말부터 세우면 감정이 더 상하기 쉽고, 먼저 강한 표현이 나간 쪽이 오래 후회할 수 있습니다.`,
+      practice: guide,
+      tone: 'coral',
+    };
+  }
+
+  if (branchInteraction.caution?.label === '형') {
+    return {
+      key: 'conflict',
+      eyebrow: '갈등 포인트',
+      title: '쌓아두다 예민해지는 방식의 마찰을 조심하셔야 합니다',
+      summary: `${branchInteraction.caution.detail} 당장 큰 싸움이 아니어도 작은 압박이 반복되면 갑자기 날카롭게 터질 수 있는 구조입니다.`,
+      practice: guide,
+      tone: 'coral',
+    };
+  }
+
+  if (branchInteraction.caution?.label === '파' || branchInteraction.caution?.label === '해') {
+    return {
+      key: 'conflict',
+      eyebrow: '갈등 포인트',
+      title: '사소한 기대 어긋남이 생각보다 크게 남을 수 있습니다',
+      summary: `${branchInteraction.caution.detail} 겉으로는 넘어간 듯 보여도 속피로나 실망감이 길게 남기 쉬워, 작은 약속일수록 더 분명히 하는 편이 낫습니다.`,
+      practice: guide,
+      tone: 'coral',
+    };
+  }
+
+  if (elementInteraction.label.includes('누를 수 있는 흐름')) {
+    return {
+      key: 'conflict',
+      eyebrow: '갈등 포인트',
+      title: '한쪽의 기준과 속도가 다른 쪽에 압박으로 느껴질 수 있습니다',
+      summary: `${elementInteraction.summary} 의도는 좋아도 말과 판단의 강도가 세지면 관계가 쉽게 피곤해질 수 있습니다.`,
+      practice: guide,
+      tone: 'coral',
+    };
+  }
+
+  if (stemInteraction.title.includes('일간이 같은')) {
+    return {
+      key: 'conflict',
+      eyebrow: '갈등 포인트',
+      title: '닮은 고집이 맞부딪힐 때 한 발도 안 물러날 수 있습니다',
+      summary: `${stemInteraction.body} 서로 이해는 빠르지만, “내가 아는 방식이 맞다”는 마음이 동시에 올라오면 오래 끌 수 있습니다.`,
+      practice: guide,
+      tone: 'coral',
+    };
+  }
+
+  return {
+    key: 'conflict',
+    eyebrow: '갈등 포인트',
+    title: '큰 충돌보다 생활 기준을 맞추는 과정이 더 중요합니다',
+    summary: `${stemInteraction.body} 크게 부딪히는 구조는 아니어도 기대치와 말의 순서를 맞추지 않으면 피로가 쌓일 수 있습니다.`,
+    practice: guide,
+    tone: 'coral',
+  };
+}
+
+function buildCommunicationCard(
+  relationship: CompatibilityRelationshipSlug,
+  self: CompatibilityPerson,
+  selfData: SajuDataV1,
+  selfConnectionReport: ReturnType<typeof buildSajuReport>,
+  partner: CompatibilityPerson,
+  partnerData: SajuDataV1,
+  partnerConnectionReport: ReturnType<typeof buildSajuReport>
+): CompatibilityPracticalCard {
+  const selfStyle = COMMUNICATION_STYLES[selfData.dayMaster.element];
+  const partnerStyle = COMMUNICATION_STYLES[partnerData.dayMaster.element];
+  const connectionKey = resolveConnectionTopic(relationship);
+  const selfScore = getReportScore(
+    selfConnectionReport,
+    connectionKey === 'career' ? 'career' : connectionKey === 'love' ? 'love' : 'relationship'
+  );
+  const partnerScore = getReportScore(
+    partnerConnectionReport,
+    connectionKey === 'career' ? 'career' : connectionKey === 'love' ? 'love' : 'relationship'
+  );
+  const scoreGap = Math.abs(selfScore - partnerScore);
+  const guide = RELATIONSHIP_PRACTICE_GUIDES[relationship].communication;
+
+  const title =
+    selfData.dayMaster.element === partnerData.dayMaster.element
+      ? '말이 통하는 리듬이 비교적 비슷한 편입니다'
+      : scoreGap >= 12
+        ? '대화의 속도 차이를 먼저 인정해야 오해가 줄어듭니다'
+        : '말의 출발점이 달라 중간 확인이 필요합니다';
+
+  const summary = `${self.name}님은 ${selfStyle.label}이라 ${selfStyle.summary} ${partner.name}님은 ${partnerStyle.label}이라 ${partnerStyle.summary} 그래서 한 번에 다 해결하려 하기보다 ${selfStyle.need} ${partnerStyle.need}`;
+
+  return {
+    key: 'communication',
+    eyebrow: '대화 방식',
+    title,
+    summary,
+    practice: `${guide} ${selfStyle.caution} ${partnerStyle.caution}`,
+    tone: 'sky',
+  };
+}
+
+function buildMoneyCard(
+  relationship: CompatibilityRelationshipSlug,
+  self: CompatibilityPerson,
+  selfData: SajuDataV1,
+  selfWealthReport: ReturnType<typeof buildSajuReport>,
+  partner: CompatibilityPerson,
+  partnerData: SajuDataV1,
+  partnerWealthReport: ReturnType<typeof buildSajuReport>
+): CompatibilityPracticalCard {
+  const selfStyle = MONEY_STYLES[selfData.fiveElements.dominant];
+  const partnerStyle = MONEY_STYLES[partnerData.fiveElements.dominant];
+  const selfScore = getReportScore(selfWealthReport, 'wealth');
+  const partnerScore = getReportScore(partnerWealthReport, 'wealth');
+  const scoreGap = Math.abs(selfScore - partnerScore);
+  const guide = RELATIONSHIP_PRACTICE_GUIDES[relationship].money;
+
+  const title =
+    selfData.fiveElements.dominant === partnerData.fiveElements.dominant || scoreGap <= 6
+      ? '돈을 보는 기본 기준은 비교적 비슷한 편입니다'
+      : scoreGap >= 14
+        ? '지출 허용선과 불안선이 꽤 다를 수 있습니다'
+        : '한쪽은 기회를 보고, 한쪽은 안전을 먼저 봅니다';
+
+  const summary = `${self.name}님은 ${selfStyle.label}이라 ${selfStyle.summary} ${partner.name}님은 ${partnerStyle.label}이라 ${partnerStyle.summary} 재물 감각 점수 차이가 ${scoreGap}점 수준이라, 돈 이야기는 감정이 좋을 때보다 기준이 맑을 때 하는 편이 낫습니다.`;
+
+  return {
+    key: 'money',
+    eyebrow: '돈 감각 차이',
+    title,
+    summary,
+    practice: `${guide} ${selfStyle.caution} ${partnerStyle.caution}`,
+    tone: 'gold',
+  };
+}
+
+function buildDistanceCard(
+  relationship: CompatibilityRelationshipSlug,
+  self: CompatibilityPerson,
+  selfData: SajuDataV1,
+  partner: CompatibilityPerson,
+  partnerData: SajuDataV1,
+  branchInteraction: ReturnType<typeof summarizeBranchInteraction>
+): CompatibilityPracticalCard {
+  const selfStyle = DISTANCE_STYLES[selfData.dayMaster.element];
+  const partnerStyle = DISTANCE_STYLES[partnerData.dayMaster.element];
+  const guide = RELATIONSHIP_PRACTICE_GUIDES[relationship].distance;
+  const fastElements: Element[] = ['목', '화'];
+  const slowElements: Element[] = ['금', '수'];
+
+  let title = '관계의 리듬을 맞추는 기준이 필요합니다';
+
+  if (selfData.dayMaster.element === partnerData.dayMaster.element) {
+    title = '가까워지는 리듬이 비슷해 맞춰가기 쉬운 편입니다';
+  } else if (
+    (fastElements.includes(selfData.dayMaster.element) &&
+      slowElements.includes(partnerData.dayMaster.element)) ||
+    (fastElements.includes(partnerData.dayMaster.element) &&
+      slowElements.includes(selfData.dayMaster.element))
+  ) {
+    title = '한쪽은 빠른 연결을, 다른 쪽은 여백을 더 원할 수 있습니다';
+  } else if (branchInteraction.supportive) {
+    title = '붙는 힘은 있는데 유지 방식의 차이를 맞추는 것이 중요합니다';
+  }
+
+  const supportiveLine = branchInteraction.supportive
+    ? `${branchInteraction.supportive.detail} 다만 붙는 힘이 있다고 늘 같은 속도로 편한 것은 아닙니다.`
+    : '';
+
+  return {
+    key: 'distance',
+    eyebrow: '거리감 조절',
+    title,
+    summary: `${self.name}님은 ${selfStyle.label}이라 ${selfStyle.summary} ${partner.name}님은 ${partnerStyle.label}이라 ${partnerStyle.summary} ${supportiveLine}`.trim(),
+    practice: `${guide} ${selfStyle.caution} ${partnerStyle.caution}`,
+    tone: 'jade',
+  };
+}
+
 function buildDataNote(selfInput: BirthInput, partnerInput: BirthInput) {
   const missing: string[] = [];
 
@@ -468,6 +811,11 @@ export function buildCompatibilityInterpretation(
     partnerData.pillars.day.branch
   );
   const balanceInteraction = summarizeElementBalance(selfData, partnerData);
+  const connectionTopic = resolveConnectionTopic(relationship);
+  const selfConnectionReport = buildSajuReport(self.birthInput, selfData, connectionTopic);
+  const partnerConnectionReport = buildSajuReport(partner.birthInput, partnerData, connectionTopic);
+  const selfWealthReport = buildSajuReport(self.birthInput, selfData, 'wealth');
+  const partnerWealthReport = buildSajuReport(partner.birthInput, partnerData, 'wealth');
 
   const score = clampScore(
     70 + stemInteraction.score + elementInteraction.score + branchInteraction.totalScore + balanceInteraction.score
@@ -512,6 +860,28 @@ export function buildCompatibilityInterpretation(
       partner.birthInput,
       partnerData
     ),
+    practicalCards: [
+      buildConflictCard(relationship, stemInteraction, elementInteraction, branchInteraction),
+      buildCommunicationCard(
+        relationship,
+        self,
+        selfData,
+        selfConnectionReport,
+        partner,
+        partnerData,
+        partnerConnectionReport
+      ),
+      buildMoneyCard(
+        relationship,
+        self,
+        selfData,
+        selfWealthReport,
+        partner,
+        partnerData,
+        partnerWealthReport
+      ),
+      buildDistanceCard(relationship, self, selfData, partner, partnerData, branchInteraction),
+    ],
     evidence: [
       {
         title: '일간의 기본 결',

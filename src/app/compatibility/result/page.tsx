@@ -23,6 +23,29 @@ interface Props {
   searchParams: Promise<{ relationship?: string; familyId?: string }>;
 }
 
+const PRACTICAL_CARD_STYLES = {
+  coral: {
+    border: 'border-[var(--app-coral)]/26',
+    glow: 'bg-[linear-gradient(180deg,rgba(223,136,115,0.12),rgba(10,18,36,0.96))]',
+    label: 'text-[var(--app-coral)]',
+  },
+  sky: {
+    border: 'border-[var(--app-sky)]/26',
+    glow: 'bg-[linear-gradient(180deg,rgba(108,162,224,0.12),rgba(10,18,36,0.96))]',
+    label: 'text-[var(--app-sky)]',
+  },
+  gold: {
+    border: 'border-[var(--app-gold)]/24',
+    glow: 'bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))]',
+    label: 'text-[var(--app-gold-soft)]',
+  },
+  jade: {
+    border: 'border-[var(--app-jade)]/26',
+    glow: 'bg-[linear-gradient(180deg,rgba(107,166,139,0.12),rgba(10,18,36,0.96))]',
+    label: 'text-[var(--app-jade)]',
+  },
+} as const;
+
 function formatBirthSummary(profile: BirthProfileFields) {
   if (!hasCoreBirthProfile(profile)) {
     return '생년월일이 아직 완성되지 않았습니다.';
@@ -231,6 +254,43 @@ export default async function CompatibilityResultPage({ searchParams }: Props) {
               </p>
             </div>
           </article>
+        </section>
+
+        <section className="mt-8">
+          <div className="px-1">
+            <div className="app-caption">실전 궁합 포인트</div>
+            <h2 className="mt-3 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
+              같이 지낼수록 바로 체감되는 네 가지
+            </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
+              단순히 잘 맞는지보다, 어디서 부딪히고 어떻게 풀어야 오래 편한지를 중심으로 정리했습니다.
+            </p>
+          </div>
+
+          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+            {compatibility.practicalCards.map((card) => {
+              const styles = PRACTICAL_CARD_STYLES[card.tone];
+
+              return (
+                <article
+                  key={card.key}
+                  className={`h-full rounded-[1.5rem] border p-6 ${styles.border} ${styles.glow}`}
+                >
+                  <div className={`text-xs tracking-[0.18em] ${styles.label}`}>{card.eyebrow}</div>
+                  <h3 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
+                    {card.title}
+                  </h3>
+                  <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{card.summary}</p>
+                  <div className="mt-5 rounded-[1rem] border border-white/8 bg-[rgba(255,255,255,0.03)] px-4 py-4">
+                    <div className="text-xs tracking-[0.18em] text-[var(--app-copy-soft)]">
+                      관계를 살리는 방식
+                    </div>
+                    <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{card.practice}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
         </section>
 
         <section className="mt-8 grid gap-4 lg:grid-cols-2">
