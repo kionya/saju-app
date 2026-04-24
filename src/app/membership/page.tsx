@@ -45,7 +45,7 @@ export default function MembershipPage() {
           {PLAN_BLUEPRINT.map((plan, index) => (
             <article
               key={plan.title}
-              className={`moon-plan-card p-6 ${index === 1 ? 'lg:-translate-y-3' : ''}`}
+              className={`moon-plan-card p-6 ${index === 1 ? 'lg:-translate-y-3 moon-glow-border' : ''}`}
               data-featured={index === 1 ? 'true' : 'false'}
             >
               <div className="flex items-center justify-between gap-3">
@@ -69,7 +69,7 @@ export default function MembershipPage() {
                 ))}
               </ul>
 
-              <div className="mt-5 rounded-[1.15rem] border border-[var(--app-gold)]/18 bg-[rgba(8,10,18,0.32)] px-4 py-4">
+              <div className="mt-5 rounded-[1.15rem] border border-[var(--app-gold)]/18 bg-[var(--app-surface-muted)] px-4 py-4">
                 <div className="app-caption">지금 열리는 것</div>
                 <div className="mt-3 space-y-2">
                   {plan.opens.map((item) => (

@@ -1374,6 +1374,116 @@
     opacity: 1;
   }
 
+  /* ─── PHASE 5: SHARED NEW CLASSES ─── */
+
+  /* Tarot card visual */
+  .moon-tarot-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 14rem;
+    width: 9.25rem;
+    margin-inline: auto;
+    border-radius: 1rem;
+    border: 2px solid rgba(212, 176, 106, 0.55);
+    background: linear-gradient(160deg, rgba(166, 124, 181, 0.92), rgba(55, 30, 72, 0.98));
+    padding: 1.25rem 1rem;
+    box-shadow:
+      0 0 28px rgba(166, 124, 181, 0.22),
+      0 16px 40px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  }
+
+  /* Compatibility relationship cards */
+  .moon-compat-card {
+    position: relative;
+    overflow: hidden;
+    display: block;
+    border: 1px solid var(--app-line);
+    background: linear-gradient(180deg, rgba(22, 26, 46, 0.9), rgba(15, 18, 32, 0.93));
+    border-radius: 1.35rem;
+    padding: 1.5rem;
+    transition:
+      transform 220ms ease,
+      border-color 220ms ease,
+      box-shadow 220ms ease;
+  }
+
+  .moon-compat-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(236, 201, 133, 0.06), transparent 28%);
+    opacity: 0;
+    transition: opacity 220ms ease;
+    pointer-events: none;
+  }
+
+  .moon-compat-card:hover { transform: translateY(-4px); box-shadow: 0 20px 44px rgba(0,0,0,0.38); }
+  .moon-compat-card:hover::before { opacity: 1; }
+  .moon-compat-card[data-type="lover"]:hover   { border-color: rgba(224, 131, 112, 0.42); }
+  .moon-compat-card[data-type="family"]:hover  { border-color: rgba(107, 166, 139, 0.42); }
+  .moon-compat-card[data-type="friend"]:hover  { border-color: rgba(123, 163, 204, 0.42); }
+  .moon-compat-card[data-type="partner"]:hover { border-color: rgba(212, 176, 106, 0.42); }
+
+  /* Zodiac grid items */
+  .moon-zodiac-item {
+    border: 1px solid var(--app-line);
+    border-radius: 1rem;
+    background: rgba(31, 37, 64, 0.35);
+    padding: 1rem 0.75rem;
+    text-align: center;
+    transition:
+      border-color 180ms ease,
+      background-color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .moon-zodiac-item:hover {
+    border-color: rgba(212, 176, 106, 0.26);
+    background: rgba(31, 37, 64, 0.7);
+    transform: translateY(-2px);
+  }
+
+  .moon-zodiac-item[data-active="true"] {
+    border-color: rgba(212, 176, 106, 0.42);
+    background: rgba(212, 176, 106, 0.12);
+  }
+
+  .moon-zodiac-item[data-year="true"] {
+    border-color: rgba(224, 131, 112, 0.44);
+    background: rgba(224, 131, 112, 0.1);
+  }
+
+  /* Membership featured card glow */
+  @keyframes moon-glow-border-pulse {
+    0%, 100% {
+      box-shadow:
+        0 0 0 1px rgba(212, 176, 106, 0.32),
+        0 0 28px rgba(212, 176, 106, 0.1),
+        0 24px 60px rgba(0, 0, 0, 0.3);
+    }
+    50% {
+      box-shadow:
+        0 0 0 1px rgba(212, 176, 106, 0.55),
+        0 0 48px rgba(212, 176, 106, 0.2),
+        0 24px 60px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .moon-glow-border {
+    animation: moon-glow-border-pulse 3.2s ease-in-out infinite;
+  }
+
+  /* Saju result hero */
+  .moon-result-hero {
+    overflow: hidden;
+    border-radius: 2rem;
+    border: 1px solid var(--app-line);
+    background: linear-gradient(145deg, rgba(18, 20, 35, 0.98), rgba(9, 12, 22, 0.98));
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.3);
+  }
+
   /* ─── WISDOM LINK CARD (interpretation page) ─── */
 
   .moon-wisdom-link-card {

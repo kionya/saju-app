@@ -41,7 +41,7 @@ export default function StarSignPage() {
             <div className="mt-2 text-sm tracking-[0.22em] text-[var(--app-copy-muted)]">
               {featured.dateRange}
             </div>
-            <div className="mt-6 rounded-[1.3rem] border border-[var(--app-plum)]/28 bg-[linear-gradient(135deg,rgba(166,124,181,0.14),rgba(10,18,36,0.92))] px-5 py-5">
+            <div className="moon-lunar-panel mt-6 rounded-[1.3rem] border-[var(--app-plum)]/22 px-5 py-5">
               <div className="app-caption">오늘의 별자리</div>
               <div className="mt-4 font-[var(--font-heading)] text-2xl leading-[1.5] text-[var(--app-ivory)]">
                 {featured.summary}
@@ -61,7 +61,7 @@ export default function StarSignPage() {
               </p>
             </div>
 
-            <div className="rounded-[1.45rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(166,124,181,0.08))] px-5 py-5">
+            <div className="moon-lunar-panel rounded-[1.45rem] border-[var(--app-gold)]/24 px-5 py-5">
               <div className="app-caption">별자리 × 사주 크로스</div>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
                 서양은 선생님을 {featured.label}의 직관과 감수성으로 읽고, 동양은 태어난 시각의
@@ -71,7 +71,7 @@ export default function StarSignPage() {
 
             <div className="flex flex-wrap gap-3">
               <Link href={`/star-sign/${featured.slug}`}>
-                <Button className="rounded-full bg-[var(--app-plum)] px-6 text-white hover:bg-[color:rgba(166,124,181,0.88)]">
+                <Button className="rounded-full bg-[var(--app-plum)] px-6 text-white hover:opacity-90">
                   내 별자리 흐름 자세히 보기
                 </Button>
               </Link>
@@ -108,7 +108,8 @@ export default function StarSignPage() {
                 <Link
                   key={item.slug}
                   href={`/star-sign/${item.slug}`}
-                  className="moon-wisdom-card block"
+                  className="moon-wisdom-link-card"
+                  data-tone="sky"
                 >
                   <div className="flex items-center gap-3">
                     <div className="text-3xl">{meta.symbol}</div>

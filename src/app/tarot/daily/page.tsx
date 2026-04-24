@@ -39,7 +39,7 @@ export default async function DailyTarotPage() {
                       pathname: '/tarot/daily/pick',
                       query: { question: question.label },
                     }}
-                    className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-left text-sm text-[var(--app-ivory)] transition-colors hover:border-[var(--app-plum)]/35 hover:bg-[var(--app-surface-strong)]"
+                    className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-left text-sm text-[var(--app-ivory)] transition-colors hover:border-[var(--app-plum)]/38 hover:bg-[var(--app-surface-strong)]"
                   >
                     <span className="mr-2">{question.emoji}</span>
                     {question.label}
@@ -62,17 +62,17 @@ export default async function DailyTarotPage() {
                   name="question"
                   rows={3}
                   placeholder="예: 지금 마음을 전해도 괜찮을까요"
-                  className="mt-3 w-full resize-none rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.02)] px-4 py-3 text-sm text-[var(--app-ivory)] outline-none placeholder:text-[var(--app-copy-soft)] focus:border-[var(--app-plum)]/45"
+                  className="mt-3 w-full resize-none rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm text-[var(--app-ivory)] outline-none placeholder:text-[var(--app-copy-soft)] focus:border-[var(--app-plum)]/45"
                 />
                 <button
                   type="submit"
-                  className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-plum)] px-6 text-sm font-semibold text-white transition-colors hover:bg-[color:rgba(166,124,181,0.88)]"
+                  className="mt-4 inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-plum)] px-6 text-sm font-semibold text-white transition-colors hover:opacity-90"
                 >
                   카드 뽑기로 이어가기
                 </button>
               </form>
 
-              <div className="mt-6 rounded-[1.35rem] border border-[var(--app-plum)]/35 bg-[linear-gradient(135deg,rgba(166,124,181,0.12),rgba(10,18,36,0.9))] p-5">
+              <div className="moon-lunar-panel mt-6 rounded-[1.35rem] border-[var(--app-plum)]/28 p-5">
                 <div className="text-xs tracking-[0.26em] text-[var(--app-plum)]">PREMIUM</div>
                 <div className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
                   사주 + 타로 3장 확장 리딩
@@ -112,7 +112,7 @@ export default async function DailyTarotPage() {
 
               <div className="mt-6 grid gap-5 sm:grid-cols-[0.78fr_1.22fr] sm:items-center">
                 <div className="text-center">
-                  <div className="mx-auto flex h-[14rem] w-[9.25rem] flex-col justify-between rounded-[1rem] border-2 border-[var(--app-gold)]/60 bg-[linear-gradient(160deg,rgba(166,124,181,0.95),rgba(82,55,101,0.98))] px-4 py-5">
+                  <div className="moon-tarot-card">
                     <div className="font-[var(--font-heading)] text-xs tracking-[0.22em] text-[var(--app-gold)]">
                       {featuredReading.shortName}
                     </div>

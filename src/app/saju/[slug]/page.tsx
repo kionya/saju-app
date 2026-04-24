@@ -326,7 +326,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
       <AppPage className="space-y-6">
         <SajuScreenNav slug={slug} current="result" />
 
-        <section className="overflow-hidden rounded-[32px] border border-[var(--app-line)] bg-[linear-gradient(145deg,rgba(18,20,35,0.98),rgba(9,12,22,0.98))] p-6 shadow-[0_24px_72px_rgba(0,0,0,0.24)] sm:p-7">
+        <section className="moon-result-hero p-6 sm:p-7">
           <div className="grid gap-8 lg:grid-cols-[1.18fr_0.82fr] lg:items-start">
             <div className="self-start">
               <div className="flex flex-wrap items-center gap-2">
@@ -410,7 +410,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                     <div className="text-xs uppercase tracking-[0.2em] text-[var(--app-copy-soft)]">좋은 날짜</div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {report.luckyDates.map((date) => (
-                        <span key={date} className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-sm text-emerald-200">
+                        <span key={date} className="rounded-full border border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 px-3 py-1 text-sm text-[var(--app-jade)]">
                           {date}
                         </span>
                       ))}
@@ -420,7 +420,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                     <div className="text-xs uppercase tracking-[0.2em] text-[var(--app-copy-soft)]">조심할 날짜</div>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {report.cautionDates.map((date) => (
-                        <span key={date} className="rounded-full border border-rose-400/20 bg-rose-400/10 px-3 py-1 text-sm text-rose-200">
+                        <span key={date} className="rounded-full border border-[var(--app-coral)]/25 bg-[var(--app-coral)]/10 px-3 py-1 text-sm text-[var(--app-coral)]">
                           {date}
                         </span>
                       ))}
@@ -505,7 +505,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             })}
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-[24px] border border-[var(--app-gold)]/22 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(24,27,44,0.94))]">
+          <div className="moon-lunar-panel mt-4 overflow-hidden rounded-[24px] border-[var(--app-gold)]/22">
             <div className="grid gap-0 lg:grid-cols-2">
               <div className="p-4 sm:p-5">
                 <div className="app-caption">{report.focusLabel} 실행 포인트</div>
@@ -585,7 +585,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                         {card.plainSummary || card.body}
                       </p>
 
-                      <details className="mt-4 rounded-2xl border border-[var(--app-line)] bg-[rgba(8,10,18,0.24)] px-4 py-3">
+                      <details className="mt-4 rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3">
                         <summary className="cursor-pointer list-none text-sm font-medium text-[var(--app-gold-text)]">
                           전문 근거 펼치기
                         </summary>

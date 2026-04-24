@@ -61,13 +61,9 @@ export default function ZodiacPage() {
                   <Link
                     key={item.slug}
                     href={`/zodiac/${item.slug}`}
-                    className={`rounded-[1rem] border px-3 py-4 text-center transition-colors ${
-                      active
-                        ? 'border-[var(--app-gold)]/38 bg-[var(--app-gold)]/14'
-                        : currentYear
-                          ? 'border-[var(--app-coral)]/45 bg-[var(--app-coral)]/10'
-                          : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] hover:bg-[var(--app-surface-strong)]'
-                    }`}
+                    className="moon-zodiac-item"
+                    data-active={active ? 'true' : undefined}
+                    data-year={currentYear ? 'true' : undefined}
                   >
                     <div className="text-3xl">{meta.symbol}</div>
                     <div className="mt-2 text-sm font-medium text-[var(--app-ivory)]">

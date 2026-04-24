@@ -1,11 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { ArrowRight, Lock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import {
-  SAJU_BASIC_SECTIONS,
-  SAJU_PREMIUM_SECTIONS,
-} from '@/content/moonlight';
+import { SAJU_BASIC_SECTIONS, SAJU_PREMIUM_SECTIONS } from '@/content/moonlight';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
 import {
   formatBirthSummary,
@@ -28,6 +26,13 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+const PILLAR_LABELS: Record<string, string> = {
+  '년': '년주 (年柱)',
+  '월': '월주 (月柱)',
+  '일': '일주 (日柱)',
+  '시': '시주 (時柱)',
+};
+
 export default async function SajuOverviewPage({ params }: Props) {
   const { slug } = await params;
   const reading = await resolveReading(slug);
@@ -42,23 +47,35 @@ export default async function SajuOverviewPage({ params }: Props) {
       <AppPage className="space-y-6">
         <SajuScreenNav slug={slug} current="overview" />
 
-        <section className="app-hero-card p-7 sm:p-8">
-          <div className="text-center">
-            <div className="text-[11px] tracking-[0.5em] text-[var(--app-gold)]/72">四 柱</div>
-            <h1 className="mt-4 font-[var(--font-heading)] text-4xl font-semibold text-[var(--app-gold-text)] sm:text-5xl">
-              사주
-            </h1>
-            <p className="mt-4 text-base leading-8 text-[var(--app-copy)]">
-              당신이 태어난 네 기둥, 하늘과 땅과 날과 시의 이야기입니다.
-            </p>
+        {/* ─── HERO ─── */}
+        <section className="moon-lunar-panel p-8 sm:p-10">
+          <div className="app-starfield" />
+          <div className="relative z-10 flex flex-col items-center gap-5 text-center lg:flex-row lg:text-left lg:items-end lg:justify-between">
+            <div>
+              <div className="text-[10px] tracking-[0.62em] text-[var(--app-gold)]/60">四 柱 命 理</div>
+              <h1 className="mt-4 font-[var(--font-heading)] text-5xl font-semibold text-[var(--app-gold-text)] sm:text-6xl">
+                사주
+              </h1>
+              <p className="mt-4 max-w-xl text-base leading-8 text-[var(--app-copy-muted)]">
+                태어난 년·월·일·시의 네 기둥에 깃든 하늘의 결을 읽어드립니다.
+              </p>
+              <p className="mt-2 text-sm text-[var(--app-copy-soft)]">{formatBirthSummary(input)}</p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div className="app-moon-orb h-16 w-16" />
+              <div className="font-[var(--font-heading)] text-xs tracking-[0.42em] text-[var(--app-gold-soft)]">
+                일간 {sajuData.dayMaster.stem}
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="app-panel p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* ─── 사주 원국 4기둥 ─── */}
+        <section className="app-panel p-6 sm:p-7">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="app-caption">{formatBirthSummary(input)}</div>
-              <h2 className="mt-3 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
+              <div className="app-caption">사주 원국</div>
+              <h2 className="mt-2 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
                 선생님의 四柱
               </h2>
             </div>
@@ -67,42 +84,68 @@ export default async function SajuOverviewPage({ params }: Props) {
             </Badge>
           </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-4">
-            {pillars.map(({ label, pillar }) => (
-              <article
-                key={label}
-                className={`rounded-[1.2rem] border px-4 py-4 text-center ${
-                  label === '일'
-                    ? 'border-[var(--app-gold)]/38 bg-[var(--app-gold)]/14'
-                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)]'
-                }`}
-              >
-                <div className="text-xs tracking-[0.22em] text-[var(--app-copy-soft)]">{label}</div>
-                <div className="mt-3 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-                  {pillar?.ganzi ?? '미상'}
-                </div>
-                <div className="mt-2 text-sm text-[var(--app-copy-muted)]">
-                  {formatHiddenStems(pillar) ?? '지장간 미표시'}
-                </div>
-              </article>
-            ))}
+          <div className="grid gap-3 sm:grid-cols-4">
+            {pillars.map(({ label, pillar }) => {
+              const isDay = label === '일';
+              return (
+                <article
+                  key={label}
+                  className={`rounded-[1.35rem] border px-4 py-5 text-center transition-colors ${
+                    isDay
+                      ? 'border-[var(--app-gold)]/42 bg-[linear-gradient(180deg,rgba(212,176,106,0.16),rgba(12,16,28,0.96))] shadow-[0_0_28px_rgba(212,176,106,0.1)]'
+                      : 'border-[var(--app-line)] bg-[var(--app-surface-muted)]'
+                  }`}
+                >
+                  <div className={`text-[10px] tracking-[0.28em] ${isDay ? 'text-[var(--app-gold)]' : 'text-[var(--app-copy-soft)]'}`}>
+                    {PILLAR_LABELS[label] ?? label}
+                  </div>
+                  {isDay && <div className="mt-1 text-[9px] tracking-[0.18em] text-[var(--app-gold)]/60">나의 본질</div>}
+
+                  {/* 천간 */}
+                  <div className={`mt-4 border-b pb-3 ${isDay ? 'border-[var(--app-gold)]/20' : 'border-[var(--app-line)]'}`}>
+                    <div className="text-[9px] tracking-[0.2em] text-[var(--app-copy-soft)]">천간</div>
+                    <div className={`mt-1 font-[var(--font-heading)] text-4xl font-semibold ${isDay ? 'text-[var(--app-gold-text)]' : 'text-[var(--app-ivory)]'}`}>
+                      {pillar?.stem ?? '?'}
+                    </div>
+                  </div>
+
+                  {/* 지지 */}
+                  <div className="mt-3">
+                    <div className="text-[9px] tracking-[0.2em] text-[var(--app-copy-soft)]">지지</div>
+                    <div className="mt-1 font-[var(--font-heading)] text-3xl font-semibold text-[var(--app-ivory)]">
+                      {pillar?.branch ?? '?'}
+                    </div>
+                    {pillar && (
+                      <div className="mt-2 text-[10px] text-[var(--app-copy-soft)]">
+                        {formatHiddenStems(pillar) ?? '—'}
+                      </div>
+                    )}
+                    {!pillar && (
+                      <div className="mt-2 text-[10px] text-[var(--app-copy-soft)]">미입력</div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
           </div>
 
-          <div className="mt-6 rounded-[1.3rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5 text-sm leading-8 text-[var(--app-copy)]">
-            일간 <span className="text-[var(--app-gold-soft)]">{sajuData.dayMaster.stem}</span>은{' '}
-            {sajuData.dayMaster.metaphor ?? '자연의 상징'}로 읽습니다. {sajuData.dayMaster.description}
+          <div className="mt-5 rounded-[1.2rem] border border-[var(--app-gold)]/16 bg-[var(--app-surface-muted)] px-5 py-4 text-sm leading-8 text-[var(--app-copy)]">
+            일간{' '}
+            <span className="font-[var(--font-heading)] text-base text-[var(--app-gold-text)]">
+              {sajuData.dayMaster.stem}
+            </span>
+            은 {sajuData.dayMaster.metaphor ?? '자연의 상징'}로 읽습니다.{' '}
+            {sajuData.dayMaster.description}
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-[1fr_0.96fr]">
-          <div className="space-y-4">
+        {/* ─── 기본 해석 + 심층 리포트 ─── */}
+        <section className="grid gap-5 lg:grid-cols-[1fr_0.96fr]">
+
+          <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-                기본 해석
-              </h2>
-              <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-                무료
-              </Badge>
+              <h2 className="font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">기본 해석</h2>
+              <Badge className="border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 text-[var(--app-jade)]">무료</Badge>
             </div>
 
             {SAJU_BASIC_SECTIONS.map((section, index) => (
@@ -115,54 +158,73 @@ export default async function SajuOverviewPage({ params }: Props) {
                       ? `/saju/${slug}/elements`
                       : `/saju/${slug}`
                 }
-                className="app-panel block p-6 transition-colors hover:bg-[var(--app-surface-strong)]"
+                className="moon-wisdom-link-card group flex items-start gap-4"
+                data-tone="gold"
               >
-                <div className="app-caption">{String(index + 1).padStart(2, '0')}</div>
-                <div className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
-                  {section.title}
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/8 font-[var(--font-heading)] text-sm text-[var(--app-gold-text)]">
+                  {String(index + 1).padStart(2, '0')}
                 </div>
-                <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                  {section.description}
-                </p>
+                <div className="min-w-0 flex-1">
+                  <div className="text-base font-semibold text-[var(--app-ivory)]">{section.title}</div>
+                  <p className="mt-1.5 text-sm leading-7 text-[var(--app-copy-muted)]">{section.description}</p>
+                </div>
+                <ArrowRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--app-copy-soft)] opacity-0 transition-opacity group-hover:opacity-100" />
               </Link>
             ))}
           </div>
 
-          <article className="rounded-[1.75rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] p-6">
-            <div className="flex items-center justify-between gap-3">
-              <div className="font-[var(--font-heading)] text-2xl text-[var(--app-gold-text)]">
+          {/* 심층 리포트 paywall */}
+          <article className="moon-lunar-panel p-6">
+            <div className="app-starfield" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between gap-3">
+                <div className="app-caption">심층 리포트</div>
+                <span className="rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 px-3 py-1 text-[10px] tracking-[0.18em] text-[var(--app-gold-text)]">
+                  PREMIUM
+                </span>
+              </div>
+              <div className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-gold-text)]">
                 심층 리포트
               </div>
-              <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-                PREMIUM
-              </Badge>
-            </div>
-            <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
-              7가지 항목을 평생 소장용 리포트로 정리합니다. 격국, 용신, 대운, 세운, 분야별
-              조망까지 한 번에 이어집니다.
-            </p>
+              <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+                7가지 항목을 평생 소장용 리포트로 정리합니다. 격국, 용신, 대운, 세운, 분야별 조망까지 한 번에 이어집니다.
+              </p>
 
-            <div className="mt-5 grid gap-2">
-              {SAJU_PREMIUM_SECTIONS.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-[1rem] border border-[var(--app-gold)]/14 bg-[rgba(255,255,255,0.02)] px-4 py-3 text-sm text-[var(--app-copy)]"
+              <div className="mt-5 space-y-2">
+                {SAJU_PREMIUM_SECTIONS.map((item, i) => (
+                  <div
+                    key={item}
+                    className={`flex items-center gap-3 rounded-[1rem] border px-4 py-3 text-sm ${
+                      i < 2
+                        ? 'border-[var(--app-gold)]/18 bg-[var(--app-gold)]/6 text-[var(--app-copy)]'
+                        : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]'
+                    }`}
+                  >
+                    {i >= 2 && <Lock className="h-3 w-3 shrink-0 text-[var(--app-copy-soft)]" />}
+                    {i < 2 && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--app-gold)]/70" />}
+                    {item}
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 flex flex-col gap-2.5">
+                <Link
+                  href={`/saju/${slug}/premium`}
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)]"
                 >
-                  {item}
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6">
-              <Link
-                href={`/saju/${slug}/premium`}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/16 px-5 text-sm font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/22"
-              >
-                자세히 보기
-              </Link>
+                  심층 리포트 열기 <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link
+                  href="/membership"
+                  className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/8 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/14"
+                >
+                  플랜 비교 보기
+                </Link>
+              </div>
             </div>
           </article>
         </section>
+
       </AppPage>
     </AppShell>
   );
