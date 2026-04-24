@@ -213,7 +213,13 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <main className="app-shell flex min-h-screen items-center justify-center px-4 py-10 text-white">
+    <main className="app-shell flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-10 text-white">
+      {/* Brand mark */}
+      <div className="flex flex-col items-center gap-2 text-center">
+        <div className="app-moon-orb h-12 w-12" />
+        <div className="font-[var(--font-heading)] text-lg tracking-[0.22em] text-[var(--app-ivory)]">달빛선생</div>
+        <div className="text-xs tracking-[0.46em] text-[var(--app-gold-soft)]">月 光 先 生</div>
+      </div>
       <Suspense fallback={<div className="text-white/50">로딩중...</div>}>
         <LoginContent />
       </Suspense>

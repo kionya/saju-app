@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { AppShell } from '@/shared/layout/app-shell';
 import { DIALOGUE_GUARDRAILS, DIALOGUE_PRESETS } from '@/content/moonlight';
@@ -8,107 +7,138 @@ import { DialogueChatPanel } from '@/components/dialogue/dialogue-chat-panel';
 export const metadata: Metadata = {
   title: '대화',
   description: '달빛선생께 자주 여쭙는 질문과 안전한 대화 원칙을 확인하세요.',
-  alternates: {
-    canonical: '/dialogue',
-  },
+  alternates: { canonical: '/dialogue' },
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  '재물':      'border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]',
+  '가족':      'border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 text-[var(--app-jade)]',
+  '이동':      'border-[var(--app-sky)]/25 bg-[var(--app-sky)]/10 text-[var(--app-sky)]',
+  '마음':      'border-[var(--app-plum)]/25 bg-[var(--app-plum)]/10 text-[var(--app-plum)]',
+  '건강·생활': 'border-[var(--app-coral)]/25 bg-[var(--app-coral)]/10 text-[var(--app-coral)]',
+  '생활':      'border-[var(--app-coral)]/25 bg-[var(--app-coral)]/10 text-[var(--app-coral)]',
 };
 
 export default function DialoguePage() {
-  const featuredPreset = DIALOGUE_PRESETS[0];
-
   return (
-    <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
+    <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-hero-card p-7 sm:p-8">
-          <div className="app-caption">대화</div>
-          <h1 className="mt-4 font-[var(--font-heading)] text-4xl leading-[1.3] tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-            달빛선생께 드리는 질문은 마음을 먼저 헤아리는 말에서 시작됩니다
-          </h1>
-          <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            처음부터 길게 적지 않으셔도 괜찮습니다. 많이들 여쭙는 질문을 먼저 고르셔도 되고, 편한 말로 한 줄만 남기셔도 됩니다.
-            처음 3회 대화는 무료로 이어지고, 그 뒤에는 3회 묶음마다 3코인으로 차분하게 이어집니다.
-            로그인 후 MY 프로필에 출생 정보가 저장돼 있으면 그 명식을 기본값으로 불러와 바로 답합니다.
-            더 조심스러운 문제는 무리하게 해석하지 않고 알맞은 도움으로 안내드립니다.
-          </p>
+
+        {/* ─── HERO ─── */}
+        <section className="app-hero-card p-7 sm:p-9">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <div className="app-caption mb-4">달빛선생과 대화</div>
+              <h1 className="font-[var(--font-heading)] text-3xl leading-[1.32] tracking-tight text-[var(--app-ivory)] sm:text-4xl">
+                말을 꺼내는 것만으로도<br className="hidden sm:block" />
+                이미 한 걸음 나선 것입니다
+              </h1>
+              <p className="mt-4 max-w-2xl text-sm leading-8 text-[var(--app-copy-muted)]">
+                처음 3회 대화는 무료로 이어집니다. 자주 여쭙는 질문을 먼저 고르셔도 되고,
+                편한 말로 한 줄만 남기셔도 됩니다. MY 프로필에 출생 정보가 있으면 명식을 바로 불러옵니다.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 lg:shrink-0">
+              {['재물', '가족', '이동', '마음', '생활'].map((cat) => (
+                <span
+                  key={cat}
+                  className={`rounded-full border px-3 py-1 text-xs ${CATEGORY_COLORS[cat] ?? 'border-[var(--app-line)] text-[var(--app-copy-muted)]'}`}
+                >
+                  {cat}
+                </span>
+              ))}
+            </div>
+          </div>
         </section>
 
-        <section className="mt-8">
+        {/* ─── CHAT PANEL ─── */}
+        <section className="mt-6">
           <DialogueChatPanel
-            presets={DIALOGUE_PRESETS.slice(0, 4).map((preset) => ({
-              category: preset.category,
-              question: preset.question,
+            presets={DIALOGUE_PRESETS.slice(0, 4).map((p) => ({
+              category: p.category,
+              question: p.question,
             }))}
           />
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        {/* ─── PRESETS + GUARDRAILS ─── */}
+        <section className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+
           <article className="app-panel p-6">
-            <div className="app-caption">자주 여쭙는 이야기</div>
-            <div className="mt-5 grid gap-3">
-              {DIALOGUE_PRESETS.map((preset, index) => (
-                <article
-                  key={preset.question}
-                  className="rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 transition-colors hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)]"
-                >
-                  <div className="flex items-start gap-3 text-left">
-                    <span className="font-[var(--font-heading)] text-sm text-[var(--app-gold)]">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-xs tracking-[0.2em] text-[var(--app-copy-soft)]">
-                        {preset.category}
+            <div className="app-caption mb-5">자주 여쭙는 이야기</div>
+            <div className="grid gap-2.5">
+              {DIALOGUE_PRESETS.map((preset, index) => {
+                const badgeCls = CATEGORY_COLORS[preset.category] ?? 'border-[var(--app-line)] text-[var(--app-copy-muted)]';
+                return (
+                  <article key={preset.question} className="moon-preset-row">
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 shrink-0 font-[var(--font-heading)] text-sm text-[var(--app-gold)]/50">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <span className={`rounded-full border px-2 py-0.5 text-[10px] tracking-[0.12em] ${badgeCls}`}>
+                            {preset.category}
+                          </span>
+                          <span className="text-sm font-medium text-[var(--app-ivory)]">
+                            {preset.question}
+                          </span>
+                        </div>
+                        <p className="text-sm leading-7 text-[var(--app-copy)]">{preset.previewAnswer}</p>
+                        <p className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">{preset.followUp}</p>
                       </div>
-                      <div className="mt-2 text-sm leading-7 text-[var(--app-ivory)]">
-                        {preset.question}
-                      </div>
-                      <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
-                        {preset.previewAnswer}
-                      </p>
-                      <p className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">
-                        {preset.followUp}
-                      </p>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
           </article>
 
-          <div className="grid gap-4">
-            <article className="rounded-[1.75rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] p-6">
-              <div className="app-caption">이런 결로 답해드립니다</div>
-              <div className="mt-4 text-xs tracking-[0.2em] text-[var(--app-gold-soft)]">
-                {featuredPreset.category}
+          <div className="flex flex-col gap-4">
+            <article className="moon-lunar-panel p-6">
+              <div className="app-starfield" />
+              <div className="relative z-10">
+                <div className="app-caption mb-4">이런 결로 답해드립니다</div>
+                <div className="space-y-3">
+                  {DIALOGUE_GUARDRAILS.map((rail) => (
+                    <div
+                      key={rail.title}
+                      className="rounded-[1.15rem] border border-[var(--app-gold)]/14 bg-[var(--app-surface-muted)] px-4 py-4"
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--app-gold)]/60" />
+                        <div>
+                          <div className="text-sm font-medium text-[var(--app-ivory)]">{rail.title}</div>
+                          <p className="mt-1.5 text-sm leading-7 text-[var(--app-copy-muted)]">{rail.body}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <h2 className="mt-3 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
-                {featuredPreset.question}
-              </h2>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                {featuredPreset.previewAnswer}
-              </p>
-              <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">
-                {featuredPreset.followUp}
-              </p>
             </article>
 
-            {DIALOGUE_GUARDRAILS.map((item) => (
-              <article key={item.title} className="app-panel p-6">
-                <div className="app-caption">{item.title}</div>
-                <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
-              </article>
-            ))}
-
-            <Link
-              href="/dialogue/safe-redirect"
-              className="app-panel block p-6 transition-colors hover:bg-[var(--app-surface-strong)]"
-            >
-              <div className="app-caption">SAFE_REDIRECT 예시</div>
-              <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
-                마음이 많이 아프거나 도움이 급한 순간에는 어떤 말로 공감하고 어디로 모시는지 살펴보실 수 있습니다.
-              </p>
-            </Link>
+            <article className="app-panel p-5">
+              <div className="app-caption mb-3">이용 방식</div>
+              <div className="space-y-2">
+                {[
+                  ['✦', '처음 3회', '무료'],
+                  ['○', '이후 3회 묶음', '코인 3개'],
+                  ['◎', 'MY 프로필 등록', '명식 자동 적용'],
+                ].map(([icon, label, value]) => (
+                  <div key={label} className="flex items-center justify-between rounded-[0.9rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-[var(--font-heading)] text-sm text-[var(--app-gold)]/60">{icon}</span>
+                      <span className="text-sm text-[var(--app-copy)]">{label}</span>
+                    </div>
+                    <span className="text-sm font-medium text-[var(--app-ivory)]">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </article>
           </div>
         </section>
+
       </div>
     </AppShell>
   );

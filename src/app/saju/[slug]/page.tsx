@@ -326,177 +326,195 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
       <AppPage className="space-y-6">
         <SajuScreenNav slug={slug} current="result" />
 
-        <div className="grid gap-6 lg:grid-cols-[1.18fr_0.82fr] lg:items-start">
-          <section className="app-hero-card self-start p-6 sm:p-7">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]">
-                {report.focusBadge}
-              </Badge>
-              <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-                개인 결과 페이지 · 검색 제외
-              </Badge>
-            </div>
-            <p className="app-caption mt-5">{formatBirthSummary(input)}</p>
-            <h1 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-[var(--app-ivory)] sm:text-4xl">
-              {report.headline}
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--app-copy-muted)] sm:text-base">
-              {report.dayMasterSummary}
-            </p>
-            <div className="mt-5 grid max-w-2xl gap-3">
-              {report.summaryHighlights.map((summary) => (
-                <p
-                  key={summary}
-                  className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-8 text-[var(--app-copy)] sm:text-base"
-                >
-                  {summary}
-                </p>
-              ))}
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-2" aria-label="해석 주제 선택">
-              {FOCUS_TOPIC_OPTIONS.map((option) => (
-                <Link
-                  key={option.key}
-                  href={`/saju/${slug}?topic=${option.key}`}
-                  className={cn(
-                    'rounded-full border px-4 py-2 text-sm transition-colors',
-                    report.focusTopic === option.key
-                      ? 'border-[var(--app-gold)]/55 bg-[var(--app-gold)]/14 text-[var(--app-gold-soft)]'
-                      : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
-                  )}
-                >
-                  {option.label}
-                </Link>
-              ))}
-            </div>
-
-            <div className="mt-4 overflow-hidden rounded-[24px] border border-[var(--app-gold)]/22 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(24,27,44,0.94))]">
-              <div className="grid gap-0 sm:grid-cols-2">
-                <div className="p-4 sm:p-5">
-                  <div className="app-caption">{report.focusLabel} 실행 포인트</div>
-                  <div className="mt-2 text-lg font-semibold leading-7 text-[var(--app-ivory)]">
-                    {report.primaryAction.title}
-                  </div>
-                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{report.primaryAction.description}</p>
-                </div>
-                <div className="border-t border-[var(--app-line)] p-4 sm:border-l sm:border-t-0 sm:p-5">
-                  <div className="app-caption">{report.focusLabel} 주의 포인트</div>
-                  <div className="mt-2 text-lg font-semibold leading-7 text-[var(--app-ivory)]">
-                    {report.cautionAction.title}
-                  </div>
-                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{report.cautionAction.description}</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="grid self-start gap-4">
-            <div className="moon-lunar-panel p-5">
-              <div className="app-caption">사주 원국</div>
-              <div className="mt-3 flex items-end justify-between gap-3">
-                <div>
-                  <div className="font-[var(--font-heading)] text-2xl font-semibold text-[var(--app-gold-text)]">
-                    {sajuData.dayMaster.stem} 일간
-                  </div>
-                  <p className="mt-1 text-sm text-[var(--app-copy-muted)]">
-                    네 기둥 중 일주를 중심으로 오늘의 해석을 엮습니다.
-                  </p>
-                </div>
-                <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-                  원국
+        <section className="overflow-hidden rounded-[32px] border border-[var(--app-line)] bg-[linear-gradient(145deg,rgba(18,20,35,0.98),rgba(9,12,22,0.98))] p-6 shadow-[0_24px_72px_rgba(0,0,0,0.24)] sm:p-7">
+          <div className="grid gap-8 lg:grid-cols-[1.18fr_0.82fr] lg:items-start">
+            <div className="self-start">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]">
+                  {report.focusBadge}
+                </Badge>
+                <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                  개인 결과 페이지 · 검색 제외
                 </Badge>
               </div>
-              <div className="moon-saju-grid mt-5">
-                {pillars.map(({ label, pillar }) => (
-                  <div key={label} className="moon-saju-pillar" data-day={label === '일주'}>
-                    <div className="text-xs text-[var(--app-copy-soft)]">{label.replace('주', '')}</div>
-                    {pillar ? (
-                      <>
-                        <div className="mt-2">
-                          <HanjaHint
-                            character={pillar.stem}
-                            hint={formatStemHint(pillar)}
-                            color={ELEMENT_INFO[pillar.stemElement].color}
-                            className="font-[var(--font-heading)] text-[2rem] font-semibold leading-none sm:text-[2.25rem]"
-                          />
-                        </div>
-                        <div className="mt-1">
-                          <HanjaHint
-                            character={pillar.branch}
-                            hint={formatBranchHint(pillar)}
-                            color={ELEMENT_INFO[pillar.branchElement].color}
-                            className="font-[var(--font-heading)] text-[1.8rem] font-semibold leading-none sm:text-[2rem]"
-                          />
-                        </div>
-                      </>
-                    ) : (
-                      <div className="mt-5 text-xs text-[var(--app-copy-soft)]">시간 미입력</div>
-                    )}
-                  </div>
+              <p className="app-caption mt-5">{formatBirthSummary(input)}</p>
+              <h1 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-[var(--app-ivory)] sm:text-4xl">
+                {report.headline}
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--app-copy-muted)] sm:text-base">
+                {report.dayMasterSummary}
+              </p>
+              <div className="mt-5 grid max-w-2xl gap-3">
+                {report.summaryHighlights.map((summary) => (
+                  <p
+                    key={summary}
+                    className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-8 text-[var(--app-copy)] sm:text-base"
+                  >
+                    {summary}
+                  </p>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 p-5">
-              <div className="text-sm text-[var(--app-gold-soft)]">날짜 포인트</div>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-                <div>
-                  <div className="text-xs uppercase tracking-[0.2em] text-[var(--app-copy-soft)]">좋은 날짜</div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {report.luckyDates.map((date) => (
-                      <span key={date} className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-sm text-emerald-200">
-                        {date}
-                      </span>
-                    ))}
+            <div className="grid self-start gap-4 lg:border-l lg:border-[var(--app-line)] lg:pl-6">
+              <div className="moon-lunar-panel p-5">
+                <div className="app-caption">사주 원국</div>
+                <div className="mt-3 flex items-end justify-between gap-3">
+                  <div>
+                    <div className="font-[var(--font-heading)] text-2xl font-semibold text-[var(--app-gold-text)]">
+                      {sajuData.dayMaster.stem} 일간
+                    </div>
+                    <p className="mt-1 text-sm text-[var(--app-copy-muted)]">
+                      네 기둥 중 일주를 중심으로 오늘의 해석을 엮습니다.
+                    </p>
                   </div>
+                  <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+                    원국
+                  </Badge>
                 </div>
-                <div>
-                  <div className="text-xs uppercase tracking-[0.2em] text-[var(--app-copy-soft)]">조심할 날짜</div>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {report.cautionDates.map((date) => (
-                      <span key={date} className="rounded-full border border-rose-400/20 bg-rose-400/10 px-3 py-1 text-sm text-rose-200">
-                        {date}
-                      </span>
-                    ))}
+                <div className="moon-saju-grid mt-5">
+                  {pillars.map(({ label, pillar }) => (
+                    <div key={label} className="moon-saju-pillar" data-day={label === '일주'}>
+                      <div className="text-xs text-[var(--app-copy-soft)]">{label.replace('주', '')}</div>
+                      {pillar ? (
+                        <>
+                          <div className="mt-2">
+                            <HanjaHint
+                              character={pillar.stem}
+                              hint={formatStemHint(pillar)}
+                              color={ELEMENT_INFO[pillar.stemElement].color}
+                              className="font-[var(--font-heading)] text-[2rem] font-semibold leading-none sm:text-[2.25rem]"
+                            />
+                          </div>
+                          <div className="mt-1">
+                            <HanjaHint
+                              character={pillar.branch}
+                              hint={formatBranchHint(pillar)}
+                              color={ELEMENT_INFO[pillar.branchElement].color}
+                              className="font-[var(--font-heading)] text-[1.8rem] font-semibold leading-none sm:text-[2rem]"
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="mt-5 text-xs text-[var(--app-copy-soft)]">시간 미입력</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[24px] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 p-5">
+                <div className="text-sm text-[var(--app-gold-soft)]">날짜 포인트</div>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-[var(--app-copy-soft)]">좋은 날짜</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {report.luckyDates.map((date) => (
+                        <span key={date} className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-sm text-emerald-200">
+                          {date}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs uppercase tracking-[0.2em] text-[var(--app-copy-soft)]">조심할 날짜</div>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {report.cautionDates.map((date) => (
+                        <span key={date} className="rounded-full border border-rose-400/20 bg-rose-400/10 px-3 py-1 text-sm text-rose-200">
+                          {date}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-          {report.scores.map((score) => {
-            const isFocusedScore = report.focusScoreKey === score.key;
-            const visual = SCORE_CARD_VISUALS[score.key];
+        <section className="app-panel p-6 sm:p-7">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <div className="app-caption">분야별 흐름</div>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--app-ivory)]">
+                오늘, 연애, 재물, 직장, 관계를 한 흐름 안에서 이어 봅니다.
+              </h2>
+            </div>
+            <p className="max-w-xl text-sm leading-7 text-[var(--app-copy-muted)]">
+              위에서는 오늘의 큰 결을 보고, 아래에서는 분야를 고르면 실행 포인트와 주의 포인트가 바로 바뀝니다.
+            </p>
+          </div>
 
-            return (
-              <article
-                key={score.key}
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            {report.scores.map((score) => {
+              const isFocusedScore = report.focusScoreKey === score.key;
+              const visual = SCORE_CARD_VISUALS[score.key];
+              const topicKey = score.key === 'overall' ? 'today' : score.key;
+
+              return (
+                <Link
+                  key={score.key}
+                  href={`/saju/${slug}?topic=${topicKey}`}
+                  className={cn(
+                    'relative overflow-hidden rounded-[24px] border p-5 shadow-[0_18px_48px_rgba(0,0,0,0.22)] transition-transform hover:-translate-y-0.5',
+                    visual.panel,
+                    isFocusedScore ? 'ring-1 ring-[var(--app-gold)]/45' : ''
+                  )}
+                >
+                  <div className={cn('pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full blur-3xl', visual.glow)} />
+                  <div className="relative">
+                    <div className={cn('text-xs font-semibold uppercase tracking-[0.2em]', visual.caption)}>
+                      {score.label}
+                    </div>
+                    <div className="mt-3 flex items-end gap-2">
+                      <span className={cn('text-4xl font-semibold', visual.score)}>{score.score}</span>
+                      <span className="pb-1 text-sm text-[var(--app-copy-soft)]">/ 100</span>
+                    </div>
+                    <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
+                      <div className={cn('h-full rounded-full', visual.bar)} style={{ width: `${score.score}%` }} />
+                    </div>
+                    <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">{score.summary}</p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-2" aria-label="해석 주제 선택">
+            {FOCUS_TOPIC_OPTIONS.map((option) => (
+              <Link
+                key={option.key}
+                href={`/saju/${slug}?topic=${option.key}`}
                 className={cn(
-                  'relative overflow-hidden rounded-[24px] border p-5 shadow-[0_18px_48px_rgba(0,0,0,0.22)]',
-                  visual.panel,
-                  isFocusedScore ? 'ring-1 ring-[var(--app-gold)]/45' : ''
+                  'rounded-full border px-4 py-2 text-sm transition-colors',
+                  report.focusTopic === option.key
+                    ? 'border-[var(--app-gold)]/55 bg-[var(--app-gold)]/14 text-[var(--app-gold-soft)]'
+                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
                 )}
               >
-                <div className={cn('pointer-events-none absolute -right-10 -top-12 h-28 w-28 rounded-full blur-3xl', visual.glow)} />
-                <div className="relative">
-                  <div className={cn('text-xs font-semibold uppercase tracking-[0.2em]', visual.caption)}>
-                    {score.label}
-                  </div>
-                  <div className="mt-3 flex items-end gap-2">
-                    <span className={cn('text-4xl font-semibold', visual.score)}>{score.score}</span>
-                    <span className="pb-1 text-sm text-[var(--app-copy-soft)]">/ 100</span>
-                  </div>
-                  <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/10">
-                    <div className={cn('h-full rounded-full', visual.bar)} style={{ width: `${score.score}%` }} />
-                  </div>
-                  <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">{score.summary}</p>
+                {option.label}
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-4 overflow-hidden rounded-[24px] border border-[var(--app-gold)]/22 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(24,27,44,0.94))]">
+            <div className="grid gap-0 lg:grid-cols-2">
+              <div className="p-4 sm:p-5">
+                <div className="app-caption">{report.focusLabel} 실행 포인트</div>
+                <div className="mt-2 text-lg font-semibold leading-7 text-[var(--app-ivory)]">
+                  {report.primaryAction.title}
                 </div>
-              </article>
-            );
-          })}
+                <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{report.primaryAction.description}</p>
+              </div>
+              <div className="border-t border-[var(--app-line)] p-4 sm:p-5 lg:border-l lg:border-t-0">
+                <div className="app-caption">{report.focusLabel} 주의 포인트</div>
+                <div className="mt-2 text-lg font-semibold leading-7 text-[var(--app-ivory)]">
+                  {report.cautionAction.title}
+                </div>
+                <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{report.cautionAction.description}</p>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="grid gap-4 lg:grid-cols-3">
