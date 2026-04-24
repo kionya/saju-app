@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { detectSafeRedirect } from '@/domain/safety/safe-redirect';
+import { normalizeToSajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
 import {
   FOCUS_TOPIC_META,
   buildSajuReport,
   normalizeFocusTopic,
 } from '@/domain/saju/report/build-report';
 import { getReportTopicRulesForTopic } from '@/domain/saju/report/topic-rule-table';
-import type { SajuReport } from '@/domain/saju/report/types';
+import type { FocusTopic, SajuReport } from '@/domain/saju/report/types';
 import {
   createAiChatBillingSummary,
   getAvailableCreditsTotal,
@@ -16,6 +17,12 @@ import {
   shouldChargeAiChat,
 } from '@/lib/credits/ai-chat-access';
 import { deductCreditsAmount, getCredits } from '@/lib/credits/deduct';
+import {
+  getUserProfileById,
+  hasCoreBirthProfile,
+  toBirthInputFromProfile,
+  type UserProfile,
+} from '@/lib/profile';
 import { resolveReading, type ReadingRecord } from '@/lib/saju/readings';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -42,6 +49,54 @@ interface SajuReportAiRequest {
 }
 
 type ParsedAiRequest = DialogueAiRequest | SajuReportAiRequest;
+
+interface DialogueProfileContext {
+  used: boolean;
+  summary: string | null;
+}
+
+interface DialogueProfileGrounding {
+  profileSummary: string;
+  focusTopic: FocusTopic;
+  focusLabel: string;
+  missing: {
+    birthTime: boolean;
+    birthLocation: boolean;
+    gender: boolean;
+  };
+  saju: {
+    pillars: {
+      year: string;
+      month: string;
+      day: string;
+      hour: string | null;
+    };
+    dayMaster: string;
+    dayMasterMeaning: string;
+    strength: string;
+    pattern: string;
+    yongsin: string;
+    currentLuck: string | null;
+  };
+  reports: {
+    today: {
+      headline: string;
+      summary: string;
+      action: string;
+      caution: string;
+    };
+    focus: {
+      headline: string;
+      summary: string;
+      action: string;
+      caution: string;
+      evidence: Array<{
+        label: string;
+        title: string;
+      }>;
+    };
+  };
+}
 
 function readString(payload: Record<string, unknown>, key: string) {
   const value = payload[key];
@@ -93,24 +148,173 @@ export function createSafetyResponse(message: string, includeAiChatBilling = tru
   });
 }
 
-export function buildDialogueFallback(message: string) {
-  return [
-    'AI 대화 연결이 아직 준비되지 않아 기본 안내로 답변드립니다.',
-    `남겨주신 질문: “${message}”`,
-    '지금은 사주 결과 페이지의 핵심 요약, 강약, 격국, 용신, 합충·공망·신살 근거를 먼저 확인해 주세요. OpenAI가 정상 연결되면 이 자리에 개인화된 대화 답변이 표시되고, fallback 응답은 횟수와 코인을 차감하지 않습니다.',
-  ].join('\n\n');
+export function inferDialogueFocusTopic(message: string): FocusTopic {
+  if (/(연애|애정|썸|고백|이별|결혼|소개팅|재회)/.test(message)) return 'love';
+  if (/(재물|돈|금전|수입|지출|투자|사업|매출|정산)/.test(message)) return 'wealth';
+  if (/(직장|회사|업무|이직|승진|취업|커리어|직업|면접)/.test(message)) return 'career';
+  if (/(관계|인간관계|가족|부모|형제|자매|친구|동료)/.test(message)) return 'relationship';
+  return 'today';
 }
 
-function createDialoguePrompt(message: string) {
+function formatStoredProfileSummary(profile: UserProfile) {
+  const birthLabel = `${profile.birthYear}년 ${profile.birthMonth}월 ${profile.birthDay}일 양력`;
+  const timeLabel =
+    profile.birthHour === null
+      ? '태어난 시간 미입력'
+      : `${profile.birthHour}시${
+          profile.birthMinute === null ? '' : ` ${String(profile.birthMinute).padStart(2, '0')}분`
+        }`;
+  const genderLabel =
+    profile.gender === 'female' ? '여성' : profile.gender === 'male' ? '남성' : '성별 미입력';
+  const locationLabel = profile.birthLocationLabel
+    ? `${profile.birthLocationLabel}${profile.solarTimeMode === 'longitude' ? ' 경도 보정' : ''}`
+    : '출생지 미입력';
+
+  return [birthLabel, genderLabel, timeLabel, locationLabel].join(' · ');
+}
+
+function createDialogueProfileGrounding(
+  profile: UserProfile,
+  message: string
+): DialogueProfileGrounding | null {
+  if (!hasCoreBirthProfile(profile)) return null;
+
+  const input = toBirthInputFromProfile(profile);
+  const sajuData = normalizeToSajuDataV1(input, null, {
+    location: input.birthLocation?.label ?? null,
+  });
+  const todayReport = buildSajuReport(input, sajuData, 'today');
+  const focusTopic = inferDialogueFocusTopic(message);
+  const focusReport = focusTopic === 'today' ? todayReport : buildSajuReport(input, sajuData, focusTopic);
+
+  return {
+    profileSummary: formatStoredProfileSummary(profile),
+    focusTopic,
+    focusLabel: FOCUS_TOPIC_META[focusTopic].label,
+    missing: {
+      birthTime: profile.birthHour === null,
+      birthLocation: !Boolean(profile.birthLocationLabel),
+      gender: profile.gender === null,
+    },
+    saju: {
+      pillars: {
+        year: sajuData.pillars.year.ganzi,
+        month: sajuData.pillars.month.ganzi,
+        day: sajuData.pillars.day.ganzi,
+        hour: sajuData.pillars.hour?.ganzi ?? null,
+      },
+      dayMaster: `${sajuData.dayMaster.stem} ${sajuData.dayMaster.element}`,
+      dayMasterMeaning: sajuData.dayMaster.description ?? sajuData.dayMaster.metaphor ?? '',
+      strength: sajuData.strength
+        ? `${sajuData.strength.level} · ${sajuData.strength.score}점`
+        : '강약 계산 준비 중',
+      pattern: sajuData.pattern?.name ?? '격국 계산 준비 중',
+      yongsin:
+        sajuData.yongsin?.candidates
+          ?.slice(0, 3)
+          .map((candidate) => candidate.primary.label)
+          .join(' · ') ||
+        sajuData.yongsin?.plainSummary ||
+        '보완 후보 정리 중',
+      currentLuck: sajuData.currentLuck?.currentMajorLuck?.ganzi ?? null,
+    },
+    reports: {
+      today: {
+        headline: todayReport.headline,
+        summary: todayReport.summary,
+        action: `${todayReport.primaryAction.title} - ${todayReport.primaryAction.description}`,
+        caution: `${todayReport.cautionAction.title} - ${todayReport.cautionAction.description}`,
+      },
+      focus: {
+        headline: focusReport.headline,
+        summary: focusReport.summary,
+        action: `${focusReport.primaryAction.title} - ${focusReport.primaryAction.description}`,
+        caution: `${focusReport.cautionAction.title} - ${focusReport.cautionAction.description}`,
+        evidence: focusReport.evidenceCards.slice(0, 4).map((card) => ({
+          label: card.label,
+          title: card.title,
+        })),
+      },
+    },
+  };
+}
+
+function createDialogueProfileContext(
+  profile: UserProfile,
+  grounding: DialogueProfileGrounding | null
+): DialogueProfileContext {
+  if (grounding) {
+    return {
+      used: true,
+      summary: grounding.profileSummary,
+    };
+  }
+
+  if (hasCoreBirthProfile(profile)) {
+    return {
+      used: false,
+      summary: '저장된 생년월일은 있지만 대화 기본 명식을 만드는 데 필요한 정보를 다시 확인하는 중입니다.',
+    };
+  }
+
+  return {
+    used: false,
+    summary: 'MY 프로필에 생년월일, 성별, 태어난 시간, 출생지를 저장하면 대화가 기본 명식 기준으로 바로 이어집니다.',
+  };
+}
+
+export function buildDialogueFallback(
+  message: string,
+  profileGrounding?: DialogueProfileGrounding | null
+) {
+  if (!profileGrounding) {
+    return [
+      '지금은 OpenAI 연결이 잠시 비어 있어 기본 풀이로 먼저 말씀드립니다.',
+      `남겨주신 질문: “${message}”`,
+      '아직 저장된 명식이 연결되지 않았다면 MY 프로필에 생년월일, 성별, 태어난 시간, 출생지를 먼저 저장해 주세요. 기본 명식이 잡혀 있으면 같은 질문도 훨씬 선명하게 풀립니다.',
+      'fallback 응답은 횟수와 코인을 차감하지 않습니다.',
+    ].join('\n\n');
+  }
+
+  const evidenceSummary = profileGrounding.reports.focus.evidence
+    .map((item) => `${item.label} ${item.title}`)
+    .join(' · ');
+
+  return [
+    `저장된 프로필 기준으로 먼저 말씀드리면, ${profileGrounding.reports.focus.headline}`,
+    profileGrounding.reports.focus.summary,
+    `기본 명식은 ${profileGrounding.saju.dayMaster}, ${profileGrounding.saju.strength}, ${profileGrounding.saju.pattern} 흐름으로 읽습니다. 용신 보완축은 ${profileGrounding.saju.yongsin} 쪽으로 먼저 봅니다.`,
+    evidenceSummary ? `핵심 근거는 ${evidenceSummary}입니다.` : null,
+    `질문하신 “${message}”은 ${profileGrounding.reports.focus.action} 쪽으로 정리해 움직이시는 편이 맞습니다.`,
+    '지금은 OpenAI 연결이 없어 기본 풀이로 답했지만 저장된 명식 기준은 반영했습니다. fallback 응답은 횟수와 코인을 차감하지 않습니다.',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+}
+
+export function createDialoguePrompt(
+  message: string,
+  profileGrounding?: DialogueProfileGrounding | null
+) {
   return {
     instructions: [
-      '당신은 한국어 사주 서비스 달빛선생의 AI 해석 보조자입니다.',
-      '사용자의 질문에 차분하고 현실적인 한국어로 답합니다.',
+      '당신은 한국어 사주 서비스 달빛선생에서 실제 상담을 맡은 숙련 사주명리 상담가입니다.',
+      '사용자의 질문에 상담실에서 바로 말하듯 명확하고 단정적인 존댓말로 답합니다.',
+      'AI 비서처럼 메타 설명하거나, 과하게 조심스러운 군더더기 표현을 반복하지 않습니다.',
+      '첫 문장에서 판단을 먼저 말하고, 다음 문장에서 근거와 이유를 붙인 뒤, 마지막에 생활 적용이나 주의점을 정리합니다.',
+      '확실한 근거가 있는 것은 분명하게 말하되, 태어난 시간이나 출생지처럼 빠진 정보 때문에 보류해야 하는 부분은 짧고 또렷하게 선을 그어 설명합니다.',
+      '명리 용어는 필요한 만큼만 쓰고, 처음 나올 때는 한자 또는 쉬운 풀이를 함께 덧붙입니다.',
+      '저장 프로필 명식이 제공되면 그 명식을 기본값으로 사용합니다. 다만 사용자가 다른 사람의 사주를 따로 묻는 문맥이면 저장 프로필을 섞지 말고 필요한 출생 정보를 먼저 확인합니다.',
       '자살, 자해, 응급 의료, 법률, 투자 판단은 절대 해석으로 대신하지 않습니다.',
-      '출생 정보나 명식 데이터가 없는 경우 확정적으로 말하지 말고, 필요한 정보와 다음 행동을 안내합니다.',
+      '출생 정보나 명식 데이터가 없는 경우 빈말로 얼버무리지 말고, 어떤 정보가 필요한지 짧게 요청합니다.',
       '고전 원문이나 출처는 제공된 근거가 없으면 인용하지 않습니다.',
     ].join('\n'),
-    input: `사용자 질문:\n${message}`,
+    input: [
+      profileGrounding
+        ? `기본 사용자 명식 JSON:\n${JSON.stringify(profileGrounding, null, 2)}`
+        : '기본 사용자 명식 없음. 저장 프로필이 비어 있으면 필요한 출생 정보를 짧게 요청합니다.',
+      `사용자 질문:\n${message}`,
+    ].join('\n\n'),
   };
 }
 
@@ -252,6 +456,9 @@ async function handleDialogue(request: DialogueAiRequest) {
   const availableCredits = getAvailableCreditsTotal(currentCredits);
   const successfulTurns = await getAiChatSuccessfulTurns(user.id);
   const turnPlan = getAiChatTurnPlan(successfulTurns);
+  const profile = await getUserProfileById(user.id);
+  const profileGrounding = createDialogueProfileGrounding(profile, request.message);
+  const profileContext = createDialogueProfileContext(profile, profileGrounding);
 
   if (configured && turnPlan.cost > 0 && availableCredits < turnPlan.cost) {
     return NextResponse.json(
@@ -265,8 +472,8 @@ async function handleDialogue(request: DialogueAiRequest) {
     );
   }
 
-  const prompt = createDialoguePrompt(request.message);
-  const fallbackText = buildDialogueFallback(request.message);
+  const prompt = createDialoguePrompt(request.message, profileGrounding);
+  const fallbackText = buildDialogueFallback(request.message, profileGrounding);
   const result = await generateAiText({
     ...prompt,
     fallbackText,
@@ -279,6 +486,7 @@ async function handleDialogue(request: DialogueAiRequest) {
       mode: request.mode,
       configured,
       billing: createAiChatBillingSummary('not_charged_fallback', availableCredits, turnPlan),
+      profileContext,
       ...result,
     });
   }
@@ -303,6 +511,7 @@ async function handleDialogue(request: DialogueAiRequest) {
       mode: request.mode,
       configured,
       billing: createAiChatBillingSummary('charged_bundle', deducted.remaining, turnPlan),
+      profileContext,
       ...result,
     });
   }
@@ -314,6 +523,7 @@ async function handleDialogue(request: DialogueAiRequest) {
     mode: request.mode,
     configured,
     billing: createAiChatBillingSummary(turnPlan.status, availableCredits, turnPlan),
+    profileContext,
     ...result,
   });
 }

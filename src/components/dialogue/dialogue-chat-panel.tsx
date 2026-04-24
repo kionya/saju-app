@@ -21,6 +21,10 @@ interface DialogueAiResponse {
   model?: string | null;
   configured?: boolean;
   billing?: AiChatBillingSummary;
+  profileContext?: {
+    used: boolean;
+    summary: string | null;
+  } | null;
   fallbackReason?: FallbackReason | null;
   errorMessage?: string | null;
   redirectPath?: string | null;
@@ -35,6 +39,10 @@ interface ChatMessage {
   model?: string | null;
   configured?: boolean;
   billing?: AiChatBillingSummary;
+  profileContext?: {
+    used: boolean;
+    summary: string | null;
+  } | null;
   fallbackReason?: FallbackReason | null;
   errorMessage?: string | null;
 }
@@ -51,7 +59,7 @@ const INITIAL_MESSAGE: ChatMessage = {
   model: null,
   errorMessage: null,
   text:
-    '편하게 한 줄로 남겨주세요. 처음 3회는 무료이고, 이후에는 3회 묶음마다 3코인으로 이어집니다. 먼저 안전 신호를 살피고, OpenAI가 연결되어 있으면 AI 답변을, 연결 전이면 기본 해석 fallback을 보여드립니다.',
+    '편하게 한 줄로 남겨주세요. 로그인되어 있고 MY 프로필에 생년월일, 성별, 태어난 시간, 출생지가 저장돼 있으면 그 정보를 기본 명식으로 불러와 답합니다. 처음 3회는 무료이고, 이후에는 3회 묶음마다 3코인으로 이어집니다.',
 };
 
 function createMessageId(prefix: string) {
@@ -117,11 +125,18 @@ function getConnectionSummary(
 
   if (latestAssistant.source === 'openai') {
     const billingLabel = getBillingLabel(latestAssistant.billing);
-    return `최근 답변은 OpenAI로 생성되었습니다.${billingLabel ? ` ${billingLabel}` : ''}`;
+    const profileLabel =
+      latestAssistant.profileContext?.used && latestAssistant.profileContext.summary
+        ? ` 저장 프로필 기준: ${latestAssistant.profileContext.summary}`
+        : '';
+    return `최근 답변은 OpenAI로 생성되었습니다.${billingLabel ? ` ${billingLabel}` : ''}${profileLabel}`;
   }
 
   if (latestAssistant.source === 'fallback') {
-    return `최근 답변은 fallback으로 내려왔습니다.${latestAssistant.configured === false ? ' OpenAI 키가 연결되지 않았거나 읽히지 않았습니다.' : ''}`;
+    const profileLabel = latestAssistant.profileContext?.summary
+      ? ` ${latestAssistant.profileContext.used ? '저장 프로필 기준으로' : ''} ${latestAssistant.profileContext.summary}`
+      : '';
+    return `최근 답변은 fallback으로 내려왔습니다.${latestAssistant.configured === false ? ' OpenAI 키가 연결되지 않았거나 읽히지 않았습니다.' : ''}${profileLabel}`;
   }
 
   return '안전 안내 기준으로 일반 대화를 중단했습니다.';
@@ -191,6 +206,7 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
         model: payload.model ?? null,
         configured: payload.configured,
         billing: payload.billing,
+        profileContext: payload.profileContext ?? null,
         fallbackReason: payload.fallbackReason ?? null,
         errorMessage: payload.errorMessage ?? null,
       };
@@ -274,6 +290,12 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
                           : getFallbackLabel(message.fallbackReason)}
                       </span>
                     )}
+                    {message.profileContext?.summary ? (
+                      <span>
+                        {message.profileContext.used ? '저장 프로필 기준' : '프로필 안내'} ·{' '}
+                        {message.profileContext.summary}
+                      </span>
+                    ) : null}
                     {getBillingLabel(message.billing) ? <span>{getBillingLabel(message.billing)}</span> : null}
                     {message.errorMessage ? <span>오류: {message.errorMessage}</span> : null}
                   </div>
@@ -308,7 +330,7 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
             }}
             rows={3}
             className="min-h-24 w-full resize-y rounded-[1.15rem] border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-4 py-3 text-sm leading-7 text-[var(--app-ivory)] outline-none transition-colors placeholder:text-[var(--app-copy-soft)] focus:border-[var(--app-gold)]/60"
-            placeholder="예: 이번 달 관계운을 차분하게 보고 싶어요."
+            placeholder="예: 내 사주 기준으로 올해 재물 흐름을 단도직입적으로 말해줘."
           />
           <button
             type="submit"
@@ -321,8 +343,9 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
         <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
           처음 3회는 무료입니다. 이후에는 OpenAI 응답 기준으로 3회 묶음마다
           3코인이 차감되고, fallback 응답과 안전 안내는 횟수와 코인을 차감하지
-          않습니다. 대화 저장은 아직 하지 않으며, 새로고침하면 현재 화면의
-          메시지는 사라집니다.
+          않습니다. 로그인 후 MY 프로필에 저장된 출생 정보가 있으면 대화에서도
+          기본 명식으로 자동 사용합니다. 대화 저장은 아직 하지 않으며, 새로고침하면
+          현재 화면의 메시지는 사라집니다.
         </p>
 
         {errorMessage ? (

@@ -27,6 +27,7 @@ export default function DialoguePage() {
           <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
             처음부터 길게 적지 않으셔도 괜찮습니다. 많이들 여쭙는 질문을 먼저 고르셔도 되고, 편한 말로 한 줄만 남기셔도 됩니다.
             처음 3회 대화는 무료로 이어지고, 그 뒤에는 3회 묶음마다 3코인으로 차분하게 이어집니다.
+            로그인 후 MY 프로필에 출생 정보가 저장돼 있으면 그 명식을 기본값으로 불러와 바로 답합니다.
             더 조심스러운 문제는 무리하게 해석하지 않고 알맞은 도움으로 안내드립니다.
           </p>
         </section>

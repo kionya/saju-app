@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import {
   buildDialogueFallback,
+  createDialoguePrompt,
   createSafetyResponse,
+  inferDialogueFocusTopic,
   parseAiRequest,
 } from './route';
 import {
@@ -19,8 +21,18 @@ declare const test: (name: string, fn: () => Promise<void> | void) => void;
 test('dialogue fallback copy explains that fallback answers do not charge coins', () => {
   const text = buildDialogueFallback('오늘 관계운을 짧게 알려줘');
 
-  assert.match(text, /기본 안내/);
+  assert.match(text, /기본 풀이/);
   assert.match(text, /횟수와 코인을 차감하지 않습니다/);
+});
+
+test('dialogue prompt keeps an expert counselor tone and infers focus topic from the question', () => {
+  const prompt = createDialoguePrompt('올해 재물운을 단도직입적으로 봐줘');
+
+  assert.match(prompt.instructions, /숙련 사주명리 상담가/);
+  assert.match(prompt.instructions, /첫 문장에서 판단을 먼저 말하고/);
+  assert.match(prompt.instructions, /AI 비서처럼 메타 설명/);
+  assert.equal(inferDialogueFocusTopic('올해 재물운을 단도직입적으로 봐줘'), 'wealth');
+  assert.equal(inferDialogueFocusTopic('요즘 부모님이랑 관계가 왜 이렇게 꼬일까'), 'relationship');
 });
 
 test('AI route blocks unsafe dialogue before fallback generation', async () => {

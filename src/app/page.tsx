@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import SiteHeader from '@/features/shared-navigation/site-header';
@@ -28,8 +28,7 @@ function formatTodayLabel() {
     day: 'numeric',
     weekday: 'long',
   }).formatToParts(now);
-
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const values = Object.fromEntries(parts.map((p) => [p.type, p.value]));
   return `${values.year}년 ${values.month} ${values.day} · ${values.weekday}`;
 }
 
@@ -37,11 +36,17 @@ export default function HomePage() {
   const [selectedSlug, setSelectedSlug] = useState(WISDOM_CARDS[0].slug);
   const [profilePreview, setProfilePreview] = useState<HomeProfilePreview | null>(null);
   const [profileLoadStatus, setProfileLoadStatus] = useState<HomeProfileLoadStatus>('loading');
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [metersVisible, setMetersVisible] = useState(false);
+
+  const heroRef = useRef<HTMLElement>(null);
+  const metersRef = useRef<HTMLDivElement>(null);
 
   const todayLine = useMemo(() => {
     const now = new Date();
     return HOME_DAILY_LINES[now.getDate() % HOME_DAILY_LINES.length];
   }, []);
+
   const personalizedTodaySummary = useMemo(
     () => buildPersonalizedTodaySummary(profilePreview),
     [profilePreview]
@@ -51,123 +56,153 @@ export default function HomePage() {
     [profileLoadStatus, profilePreview]
   );
 
-  const selectedWisdom =
-    WISDOM_CARDS.find((card) => card.slug === selectedSlug) ?? WISDOM_CARDS[0];
+  const selectedWisdom = WISDOM_CARDS.find((c) => c.slug === selectedSlug) ?? WISDOM_CARDS[0];
   const selectedTone = toneClasses(selectedWisdom.tone);
   const displayName = profilePreview?.profile?.displayName?.trim() || '방문자';
   const todayLabel = formatTodayLabel();
 
   useEffect(() => {
     let isActive = true;
-
-    async function loadProfilePreview() {
+    async function load() {
       try {
-        const response = await fetch('/api/profile', { cache: 'no-store' });
-        if (!response.ok) throw new Error('profile load failed');
-        const data = (await response.json()) as HomeProfilePreview;
+        const res = await fetch('/api/profile', { cache: 'no-store' });
+        if (!res.ok) throw new Error('failed');
+        const data = (await res.json()) as HomeProfilePreview;
         if (!isActive) return;
-
-        setProfilePreview({
-          authenticated: Boolean(data.authenticated),
-          profile: data.profile ?? null,
-        });
+        setProfilePreview({ authenticated: Boolean(data.authenticated), profile: data.profile ?? null });
         setProfileLoadStatus('ready');
       } catch {
         if (!isActive) return;
         setProfileLoadStatus('error');
       }
     }
-
-    void loadProfilePreview();
-
-    return () => {
-      isActive = false;
-    };
+    void load();
+    return () => { isActive = false; };
   }, []);
 
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!heroRef.current) return;
+    const rect = heroRef.current.getBoundingClientRect();
+    setMousePos({
+      x: (e.clientX - rect.left - rect.width / 2) / rect.width,
+      y: (e.clientY - rect.top - rect.height / 2) / rect.height,
+    });
+  }, []);
+
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) return;
+    hero.addEventListener('mousemove', handleMouseMove);
+    return () => hero.removeEventListener('mousemove', handleMouseMove);
+  }, [handleMouseMove]);
+
+  useEffect(() => {
+    const el = metersRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setMetersVisible(true); },
+      { threshold: 0.3 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.06 }
+    );
+    document.querySelectorAll('.reveal-on-scroll').forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  const STEPS = [
+    ['내 정보 저장', '출생 연월일과 시·분을 MY에 한 번만 저장합니다.'],
+    ['해석 자동 입력', '사주 보기에서 "내 정보 불러오기"로 바로 채웁니다.'],
+    ['가족 확장', '가족 프로필을 저장해 궁합과 가족 리포트로 이어갑니다.'],
+  ] as const;
+
   return (
-    <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="home-page mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="home-horizontal-intro mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="text-sm tracking-[0.12em] text-[var(--app-copy-soft)]">{todayLabel}</div>
-            <h1 className="mt-3 font-[var(--font-heading)] text-3xl font-medium tracking-tight text-[var(--app-ivory)] sm:text-4xl">
-              안녕하세요, {displayName} 선생님
-            </h1>
-            <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">
-              오늘의 지혜와 저장된 개인 흐름을 한 화면에서 이어볼 수 있게 준비했습니다.
-            </p>
+    <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
+
+      {/* ─── HERO ─── */}
+      <section ref={heroRef} className="moon-hero">
+        <div className="moon-particles" aria-hidden />
+
+        <div
+          className="moon-bg-orb moon-bg-orb-gold"
+          style={{ transform: `translate(${mousePos.x * -28}px, ${mousePos.y * -20}px)` }}
+          aria-hidden
+        />
+        <div
+          className="moon-bg-orb moon-bg-orb-jade"
+          style={{ transform: `translate(${mousePos.x * 18}px, ${mousePos.y * 14}px)` }}
+          aria-hidden
+        />
+        <div
+          className="moon-bg-orb moon-bg-orb-plum"
+          style={{ transform: `translate(${mousePos.x * -12}px, ${mousePos.y * 8}px)` }}
+          aria-hidden
+        />
+
+        <div className="relative z-10 flex flex-col items-center gap-7 text-center">
+          <div
+            className="moon-brand-mark"
+            style={{ transform: `translate(${mousePos.x * -10}px, ${mousePos.y * -8}px)` }}
+          >
+            <div className="moon-hero-orb app-moon-orb" />
+            <div className="moon-hero-brand-text">달빛선생</div>
+            <div className="moon-hero-brand-sub">月 光 先 生</div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/notifications"
-              className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-            >
-              알림 확인
-            </Link>
-            <Link
-              href="/today-fortune"
-              className="inline-flex h-10 items-center justify-center rounded-full bg-[var(--app-gold)] px-4 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)]"
-            >
-              오늘의 운세
-            </Link>
+
+          <div className="moon-date-badge">{todayLabel}</div>
+
+          <div className="moon-hero-headline-wrap">
+            <div className="app-caption mb-4">오늘의 한 줄</div>
+            <h1 className="moon-hero-h1">{todayLine.title}</h1>
+            <p className="moon-hero-sub">{todayLine.subtitle}</p>
           </div>
-        </section>
 
-        <section className="home-hero-layout grid gap-5 lg:grid-cols-[1fr_21rem] lg:items-stretch">
-          <article className="home-hero-card moon-lunar-panel p-7 sm:p-8 lg:p-9">
-            <div className="app-starfield" />
-            <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-              <div className="home-hero-copy max-w-3xl">
-                <div className="home-hero-date mb-4 hidden text-sm tracking-[0.28em] text-[var(--app-gold-soft)]">
-                  {todayLabel}
-                </div>
-                <div className="inline-flex items-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-[11px] tracking-[0.28em] text-[var(--app-gold)]/78">
-                  오늘의 한 줄
-                </div>
-                <p className="mt-5 max-w-2xl font-[var(--font-heading)] text-lg leading-8 text-[var(--app-copy)]">
-                  문득 마음이 머무는 날, 오늘의 결을 가장 먼저 조용히 펼쳐드립니다.
-                </p>
-                <h2 className="mt-5 max-w-3xl font-[var(--font-heading)] text-4xl leading-[1.24] tracking-tight text-[var(--app-ivory)] sm:text-[3.35rem]">
-                  {todayLine.title}
-                </h2>
-                <p className="mt-5 max-w-2xl text-base leading-8 text-[var(--app-copy)] sm:text-lg">
-                  {todayLine.subtitle}
-                </p>
-              </div>
-              <div className="hidden shrink-0 flex-col items-center gap-4 lg:flex">
-                <div className="app-moon-orb h-24 w-24" />
-                <div className="text-center font-[var(--font-heading)] text-xs tracking-[0.45em] text-[var(--app-gold-soft)]">
-                  月光
-                </div>
-              </div>
-            </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {HOME_HERO_TOKENS.map((token) => (
+              <span key={token.label} className="moon-pill text-sm">
+                {token.label} · {token.value}
+              </span>
+            ))}
+          </div>
 
-            <div className="mt-7 flex flex-wrap gap-2">
-              {HOME_HERO_TOKENS.map((token) => (
-                <span key={token.label} className="moon-pill text-sm">
-                  {token.label} · {token.value}
-                </span>
-              ))}
-            </div>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link href="/saju/new" className="moon-cta-primary">사주 시작하기</Link>
+            <Link href="/today-fortune" className="moon-cta-secondary">오늘의 운세</Link>
+          </div>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/saju/new"
-                className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)]"
-              >
-                사주 시작하기
-              </Link>
-              <Link
-                href="/interpretation"
-                className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-              >
-                여섯 가지 지혜 보기
-              </Link>
-            </div>
-          </article>
+          <p className="text-sm text-[var(--app-copy-soft)]">
+            안녕하세요,{' '}
+            <span className="text-[var(--app-gold-text)]">{displayName}</span> 선생님
+          </p>
+        </div>
 
-          <aside className="home-today-panel app-panel p-6">
+        <div className="moon-scroll-hint" aria-hidden>
+          <div className="moon-scroll-mouse">
+            <div className="moon-scroll-dot-inner" />
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CONTENT ─── */}
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+
+        {/* TODAY + SETUP */}
+        <section className="reveal-on-scroll mb-12 grid gap-5 lg:grid-cols-[1fr_22rem]">
+
+          <aside ref={metersRef} className="app-panel p-6 sm:p-8">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="app-caption">{personalizationCopy.eyebrow}</div>
@@ -175,22 +210,19 @@ export default function HomePage() {
                   내 오늘의 운
                 </h2>
               </div>
-              <span
-                className={cn(
-                  'rounded-full border px-3 py-1 text-xs',
-                  personalizationCopy.isPersonalized
-                    ? 'border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 text-[var(--app-jade)]'
-                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]'
-                )}
-              >
+              <span className={cn(
+                'rounded-full border px-3 py-1 text-xs',
+                personalizationCopy.isPersonalized
+                  ? 'border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 text-[var(--app-jade)]'
+                  : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]'
+              )}>
                 {personalizationCopy.isPersonalized ? '개인화' : '기본'}
               </span>
             </div>
 
-            <div className="mt-6 space-y-4">
-              {personalizedTodaySummary.map((item) => {
+            <div className="mt-6 space-y-5">
+              {personalizedTodaySummary.map((item, i) => {
                 const tone = toneClasses(item.tone);
-
                 return (
                   <div key={item.label}>
                     <div className="flex items-center justify-between gap-3 text-sm">
@@ -200,7 +232,13 @@ export default function HomePage() {
                       </span>
                     </div>
                     <div className="moon-meter mt-2">
-                      <span className={cn(tone.bg)} style={{ width: `${item.ratio}%` }} />
+                      <span
+                        className={cn(tone.bg)}
+                        style={{
+                          width: metersVisible ? `${item.ratio}%` : '0%',
+                          transitionDelay: `${i * 180}ms`,
+                        }}
+                      />
                     </div>
                     <p className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">{item.detail}</p>
                   </div>
@@ -218,47 +256,77 @@ export default function HomePage() {
               </Link>
             </div>
           </aside>
+
+          <article className="moon-lunar-panel p-6 sm:p-7">
+            <div className="app-starfield" />
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="app-caption">개인화 준비</div>
+                <h2 className="mt-3 font-[var(--font-heading)] text-xl font-semibold text-[var(--app-ivory)]">
+                  내 정보가 저장되면 더 깊어집니다
+                </h2>
+              </div>
+              <Link
+                href={personalizationCopy.ctaHref}
+                className="shrink-0 text-xs text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+              >
+                {personalizationCopy.ctaLabel}
+              </Link>
+            </div>
+            <div className="mt-5 space-y-3">
+              {STEPS.map(([title, body], idx) => (
+                <div key={title} className="moon-payment-row px-4 py-3.5">
+                  <div className="text-[10px] tracking-[0.24em] text-[var(--app-gold-text)]">STEP {idx + 1}</div>
+                  <div className="mt-1.5 font-medium text-[var(--app-ivory)]">{title}</div>
+                  <p className="mt-1 text-sm leading-6 text-[var(--app-copy-muted)]">{body}</p>
+                </div>
+              ))}
+            </div>
+          </article>
         </section>
 
-        <section className="home-wisdom-section mt-8 app-section-stack">
-          <div className="home-section-heading flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="app-caption">여섯 가지 지혜</div>
-              <h2 className="moon-section-title mt-3">문득 떠오르는 질문마다 다른 지혜가 기다리고 있습니다</h2>
-            </div>
-            <p className="max-w-xl text-sm leading-7 text-[var(--app-copy-muted)]">
-              궁금증마다 읽는 결이 다릅니다. 마음이 먼저 움직이는 곳을 누르시면, 달빛선생이 그 자리에서부터 차분히 이야기를 풀어드립니다.
+        {/* WISDOM GRID */}
+        <section className="reveal-on-scroll mb-12">
+          <div className="mb-8 text-center">
+            <div className="app-caption mb-3">여섯 가지 지혜</div>
+            <h2 className="moon-section-title mx-auto max-w-2xl">
+              문득 떠오르는 질문마다 다른 지혜가 기다리고 있습니다
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[var(--app-copy-muted)]">
+              마음이 먼저 움직이는 곳을 누르시면, 달빛선생이 그 자리에서부터 차분히 이야기를 풀어드립니다.
             </p>
           </div>
 
-          <div className="home-wisdom-grid grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {WISDOM_CARDS.map((card, index) => {
               const tone = toneClasses(card.tone);
               const active = selectedSlug === card.slug;
-
               return (
                 <button
                   key={card.slug}
                   type="button"
                   onClick={() => setSelectedSlug(card.slug)}
-                  className={cn(
-                    'moon-wisdom-card moon-design-reveal text-left',
-                    active && 'border-[var(--app-gold)]/30 bg-[linear-gradient(180deg,rgba(32,38,62,0.95),rgba(12,18,34,0.94))]'
-                  )}
-                  style={{ animationDelay: `${index * 60}ms` }}
+                  className={cn('moon-wisdom-card moon-wisdom-card-interactive text-left', active && 'moon-wisdom-card-active')}
+                  style={{ animationDelay: `${index * 70}ms` }}
                 >
                   <div className={cn('moon-wisdom-hanja', tone.text)}>{card.hanja}</div>
                   <div className={cn('mt-3 font-[var(--font-heading)] text-2xl font-semibold', tone.text)}>
                     {card.title}
                   </div>
-                  <p className="mt-3 text-base leading-7 text-[var(--app-ivory)]">“{card.hook}”</p>
+                  <p className="mt-3 text-base leading-7 text-[var(--app-ivory)]">"{card.hook}"</p>
                   <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">{card.description}</p>
+                  {active && (
+                    <div className={cn('mt-4 flex items-center gap-1.5 text-xs font-medium', tone.text)}>
+                      <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                      선택됨
+                    </div>
+                  )}
                 </button>
               );
             })}
           </div>
 
-          <article className="home-selected-wisdom app-panel p-6 sm:p-7">
+          <article className="mt-5 app-panel p-6 sm:p-8">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <div className={cn('app-caption', selectedTone.text)}>오늘 마음이 머무는 지혜</div>
@@ -272,7 +340,7 @@ export default function HomePage() {
               <Link
                 href={selectedWisdom.href}
                 className={cn(
-                  'inline-flex h-11 items-center justify-center gap-2 rounded-full border px-5 text-sm font-medium transition-colors',
+                  'inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border px-5 text-sm font-medium transition-colors',
                   selectedTone.border,
                   selectedTone.bg,
                   selectedTone.text
@@ -291,7 +359,7 @@ export default function HomePage() {
                   <ul className="mt-4 space-y-2 text-sm text-[var(--app-copy)]">
                     {layer.items.map((item) => (
                       <li key={item} className="flex gap-2">
-                        <span className="mt-[0.38rem] h-1.5 w-1.5 rounded-full bg-[var(--app-gold)]/70" />
+                        <span className="mt-[0.38rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--app-gold)]/70" />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -302,86 +370,32 @@ export default function HomePage() {
           </article>
         </section>
 
-        <section className="home-lower-grid mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <article className="moon-lunar-panel p-6 sm:p-7">
-            <div className="app-starfield" />
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <div className="app-caption">개인화 준비</div>
-                <h2 className="mt-3 font-[var(--font-heading)] text-2xl font-semibold text-[var(--app-ivory)]">
-                  내 정보가 저장되면 더 깊어집니다
-                </h2>
-              </div>
-              <Link
-                href={personalizationCopy.ctaHref}
-                className="text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-              >
-                {personalizationCopy.ctaLabel}
-              </Link>
-            </div>
-            <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">
-              {personalizationCopy.body} 저장된 생년월일과 출생 시각은 사주 입력, 오늘 흐름, 가족 리포트에서 반복 입력 없이 이어집니다.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <span
-                className={cn(
-                  'rounded-full border px-3 py-1 text-xs',
-                  personalizationCopy.isPersonalized
-                    ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200'
-                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]'
-                )}
-              >
-                {personalizationCopy.isPersonalized ? '개인화 적용' : '기본 흐름'}
-              </span>
-              {profileLoadStatus === 'loading' ? (
-                <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs text-[var(--app-copy-muted)]">
-                  불러오는 중
-                </span>
-              ) : null}
-            </div>
-
-            <div className="mt-6 space-y-3">
-              {[
-                ['내 정보 저장', '출생 연월일과 시·분을 MY에 한 번만 저장합니다.'],
-                ['해석 자동 입력', '사주 보기에서 “내 정보 불러오기”로 바로 채웁니다.'],
-                ['가족 확장', '가족 프로필을 저장해 궁합과 가족 리포트로 이어갑니다.'],
-              ].map(([title, body], index) => (
-                <div key={title} className="moon-payment-row px-4 py-4">
-                  <div className="text-xs tracking-[0.24em] text-[var(--app-gold-text)]">
-                    STEP {index + 1}
-                  </div>
-                  <div className="mt-2 font-medium text-[var(--app-ivory)]">{title}</div>
-                  <p className="mt-1 text-sm leading-7 text-[var(--app-copy-muted)]">{body}</p>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="app-panel p-6 sm:p-7">
+        {/* POPULAR PATHS */}
+        <section className="reveal-on-scroll">
+          <div className="mb-6">
             <div className="app-caption">오늘 가장 많이 찾는 길</div>
-            <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">오늘은 이 길로 이어가 보셔도 좋습니다</h2>
-
-            <div className="mt-6 space-y-4">
-              {WISDOM_CARDS.slice(0, 4).map((card) => {
-                const tone = toneClasses(card.tone);
-
-                return (
-                  <Link
-                    key={card.slug}
-                    href={card.href}
-                    className="flex items-start justify-between gap-3 rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 transition-colors hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)]"
-                  >
-                    <div>
-                      <div className={cn('text-[11px] tracking-[0.28em]', tone.text)}>{card.hanja}</div>
-                      <div className="mt-2 font-semibold text-[var(--app-ivory)]">{card.title}</div>
-                      <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">“{card.hook}”</p>
-                    </div>
-                    <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[var(--app-copy-soft)]" />
-                  </Link>
-                );
-              })}
-            </div>
-          </article>
+            <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
+              오늘은 이 길로 이어가 보셔도 좋습니다
+            </h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {WISDOM_CARDS.slice(0, 4).map((card) => {
+              const tone = toneClasses(card.tone);
+              return (
+                <Link key={card.slug} href={card.href} className="moon-path-card group">
+                  <div className={cn('text-[11px] tracking-[0.28em]', tone.text)}>{card.hanja}</div>
+                  <div className="mt-2 font-semibold text-[var(--app-ivory)]">{card.title}</div>
+                  <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">"{card.hook}"</p>
+                  <div className={cn(
+                    'mt-4 flex items-center gap-1 text-xs opacity-0 transition-opacity duration-200 group-hover:opacity-100',
+                    tone.text
+                  )}>
+                    자세히 보기 <ChevronRight className="h-3.5 w-3.5" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </section>
       </div>
     </AppShell>

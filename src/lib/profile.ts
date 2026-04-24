@@ -1,6 +1,6 @@
 import { createServiceClient, hasSupabaseServerEnv, hasSupabaseServiceEnv } from '@/lib/supabase/server';
 import { requireAccount } from '@/lib/account';
-import type { SolarTimeMode } from '@/lib/saju/types';
+import type { BirthInput, SolarTimeMode } from '@/lib/saju/types';
 
 export interface BirthProfileFields {
   birthYear: number | null;
@@ -246,6 +246,51 @@ function mapUserProfile(row: ProfileRow | null | undefined): UserProfile {
   };
 }
 
+export function createEmptyUserProfile(): UserProfile {
+  return mapUserProfile(null);
+}
+
+export function hasCoreBirthProfile(
+  profile: BirthProfileFields | null | undefined
+): profile is BirthProfileFields & {
+  birthYear: number;
+  birthMonth: number;
+  birthDay: number;
+} {
+  return Boolean(profile?.birthYear && profile.birthMonth && profile.birthDay);
+}
+
+export function toBirthInputFromProfile(
+  profile: BirthProfileFields & {
+    birthYear: number;
+    birthMonth: number;
+    birthDay: number;
+  }
+): BirthInput {
+  const hasBirthLocation =
+    Boolean(profile.birthLocationLabel) &&
+    profile.birthLatitude !== null &&
+    profile.birthLongitude !== null;
+
+  return {
+    year: profile.birthYear,
+    month: profile.birthMonth,
+    day: profile.birthDay,
+    hour: profile.birthHour ?? undefined,
+    minute: profile.birthMinute ?? undefined,
+    gender: profile.gender ?? undefined,
+    birthLocation: hasBirthLocation
+      ? {
+          code: profile.birthLocationCode ?? undefined,
+          label: profile.birthLocationLabel,
+          latitude: profile.birthLatitude!,
+          longitude: profile.birthLongitude!,
+        }
+      : null,
+    solarTimeMode: hasBirthLocation ? profile.solarTimeMode : 'standard',
+  };
+}
+
 function mapFamilyProfile(row: FamilyProfileRow): FamilyProfile {
   return {
     id: row.id,
@@ -348,6 +393,33 @@ export async function getProfileSettingsData(redirectPath: string) {
     profile,
     familyProfiles,
   };
+}
+
+export async function getUserProfileById(userId: string): Promise<UserProfile> {
+  if (!hasSupabaseServerEnv || !hasSupabaseServiceEnv) {
+    return createEmptyUserProfile();
+  }
+
+  const service = await createServiceClient();
+  const loadProfile = (columns: string) =>
+    service
+      .from('profiles')
+      .select(columns)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+  const profileResponse = await loadWithProfileSelectFallback(loadProfile, [
+    PROFILE_SELECT_FULL,
+    PROFILE_SELECT_WITH_LOCATION,
+    PROFILE_SELECT_WITH_MINUTE,
+    PROFILE_SELECT,
+  ]);
+
+  if (profileResponse.error) {
+    throw new Error(getErrorMessage(profileResponse.error));
+  }
+
+  return mapUserProfile(profileResponse.data as ProfileRow | null);
 }
 
 export async function upsertProfile(userId: string, profile: UserProfile) {
