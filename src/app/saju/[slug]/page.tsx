@@ -16,7 +16,7 @@ import SiteHeader from '@/features/shared-navigation/site-header';
 import { ELEMENT_INFO } from '@/lib/saju/elements';
 import type { Branch, Element, Stem } from '@/lib/saju/types';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
-import { buildSajuReport, FOCUS_TOPIC_META, FOCUS_TOPIC_OPTIONS } from '@/domain/saju/report';
+import { buildSajuReport, FOCUS_TOPIC_META } from '@/domain/saju/report';
 import type { ReportEvidenceCard, ReportScore, SajuReport } from '@/domain/saju/report';
 import { buildFallbackInterpretation } from '@/server/ai/saju-interpretation';
 import { cn } from '@/lib/utils';
@@ -455,8 +455,10 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 <Link
                   key={score.key}
                   href={`/saju/${slug}?topic=${topicKey}`}
+                  aria-current={isFocusedScore ? 'page' : undefined}
+                  data-selected={isFocusedScore ? 'true' : 'false'}
                   className={cn(
-                    'relative overflow-hidden rounded-[24px] border p-5 shadow-[0_18px_48px_rgba(0,0,0,0.22)] transition-transform hover:-translate-y-0.5',
+                    'moon-topic-score-card group relative overflow-hidden rounded-[24px] border p-5 shadow-[0_18px_48px_rgba(0,0,0,0.22)]',
                     visual.panel,
                     isFocusedScore ? 'ring-1 ring-[var(--app-gold)]/45' : ''
                   )}
@@ -474,27 +476,32 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                       <div className={cn('h-full rounded-full', visual.bar)} style={{ width: `${score.score}%` }} />
                     </div>
                     <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">{score.summary}</p>
+                    <div className="mt-5 flex items-center justify-between gap-3 text-xs">
+                      <span
+                        className={cn(
+                          'rounded-full border px-2.5 py-1 transition-colors',
+                          isFocusedScore
+                            ? 'border-[var(--app-gold)]/35 bg-[var(--app-gold)]/14 text-[var(--app-gold-text)]'
+                            : 'border-white/10 bg-white/5 text-[var(--app-copy-soft)] group-hover:border-white/20 group-hover:text-[var(--app-ivory)]'
+                        )}
+                      >
+                        {isFocusedScore ? '현재 해석' : '눌러서 보기'}
+                      </span>
+                      <span
+                        className={cn(
+                          'text-sm transition-all duration-200',
+                          isFocusedScore
+                            ? 'translate-x-0 text-[var(--app-gold-text)]'
+                            : 'text-[var(--app-copy-soft)] group-hover:translate-x-1 group-hover:text-[var(--app-ivory)]'
+                        )}
+                      >
+                        →
+                      </span>
+                    </div>
                   </div>
                 </Link>
               );
             })}
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-2" aria-label="해석 주제 선택">
-            {FOCUS_TOPIC_OPTIONS.map((option) => (
-              <Link
-                key={option.key}
-                href={`/saju/${slug}?topic=${option.key}`}
-                className={cn(
-                  'rounded-full border px-4 py-2 text-sm transition-colors',
-                  report.focusTopic === option.key
-                    ? 'border-[var(--app-gold)]/55 bg-[var(--app-gold)]/14 text-[var(--app-gold-soft)]'
-                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
-                )}
-              >
-                {option.label}
-              </Link>
-            ))}
           </div>
 
           <div className="mt-4 overflow-hidden rounded-[24px] border border-[var(--app-gold)]/22 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(24,27,44,0.94))]">
