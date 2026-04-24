@@ -455,6 +455,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 <Link
                   key={score.key}
                   href={`/saju/${slug}?topic=${topicKey}`}
+                  scroll={false}
                   aria-current={isFocusedScore ? 'page' : undefined}
                   data-selected={isFocusedScore ? 'true' : 'false'}
                   className={cn(
