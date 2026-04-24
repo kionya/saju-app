@@ -4,112 +4,263 @@ import { Badge } from '@/components/ui/badge';
 import {
   COMPATIBILITY_PREMIUM_EXPANSION,
   COMPATIBILITY_RELATIONSHIPS,
-  COMPATIBILITY_RESULT_LABELS,
 } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import {
+  buildCompatibilityInterpretation,
+  inferCompatibilityRelationshipSlug,
+  resolveProfileDisplayName,
+} from '@/lib/compatibility';
+import {
+  getProfileSettingsData,
+  hasCoreBirthProfile,
+  toBirthInputFromProfile,
+  type BirthProfileFields,
+} from '@/lib/profile';
 import { AppShell } from '@/shared/layout/app-shell';
 
 interface Props {
-  searchParams: Promise<{ relationship?: string }>;
+  searchParams: Promise<{ relationship?: string; familyId?: string }>;
+}
+
+function formatBirthSummary(profile: BirthProfileFields) {
+  if (!hasCoreBirthProfile(profile)) {
+    return '생년월일이 아직 완성되지 않았습니다.';
+  }
+
+  const timeLabel =
+    profile.birthHour === null
+      ? '시간 미입력'
+      : `${profile.birthHour}시${profile.birthMinute === null ? '' : ` ${String(profile.birthMinute).padStart(2, '0')}분`}`;
+  const genderLabel =
+    profile.gender === 'male' ? '남성' : profile.gender === 'female' ? '여성' : '성별 미입력';
+  const locationLabel = profile.birthLocationLabel
+    ? ` · ${profile.birthLocationLabel}${profile.solarTimeMode === 'longitude' ? ' 경도 보정' : ''}`
+    : '';
+
+  return `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay} · ${timeLabel} · ${genderLabel}${locationLabel}`;
+}
+
+function SetupState({
+  relationshipHref,
+  body,
+}: {
+  relationshipHref: string;
+  body: string;
+}) {
+  return (
+    <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
+      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <section className="app-panel p-7 sm:p-8">
+          <div className="app-caption">궁합 준비가 더 필요합니다</div>
+          <h1 className="mt-4 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)]">
+            먼저 두 사람의 정보를 갖춰 주세요
+          </h1>
+          <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{body}</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href={relationshipHref}
+              className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
+            >
+              입력 화면으로 돌아가기
+            </Link>
+            <Link
+              href="/my/profile"
+              className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+            >
+              MY 프로필 열기
+            </Link>
+          </div>
+        </section>
+      </div>
+    </AppShell>
+  );
 }
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: '궁합 결과',
-    description: '관계별 궁합 결과 화면입니다.',
+    description: '저장된 두 사람의 명식을 비교해 관계의 결을 읽는 궁합 결과 화면입니다.',
   };
 }
 
 export default async function CompatibilityResultPage({ searchParams }: Props) {
-  const { relationship } = await searchParams;
+  const { relationship, familyId } = await searchParams;
+  const selectedRelationship = relationship
+    ? COMPATIBILITY_RELATIONSHIPS.find((item) => item.slug === relationship)?.slug
+    : undefined;
+  const redirectPath = `/compatibility/result${relationship || familyId ? `?${new URLSearchParams({ ...(relationship ? { relationship } : {}), ...(familyId ? { familyId } : {}) }).toString()}` : ''}`;
+  const data = await getProfileSettingsData(redirectPath);
+  const displayName = resolveProfileDisplayName(data.profile.displayName, data.user.email);
+  const selectedFamily = data.familyProfiles.find((profile) => profile.id === familyId) ?? null;
+  const resolvedRelationship =
+    selectedRelationship ??
+    (selectedFamily ? inferCompatibilityRelationshipSlug(selectedFamily.relationship) : 'lover');
   const selected =
-    COMPATIBILITY_RELATIONSHIPS.find((item) => item.slug === relationship) ??
-    COMPATIBILITY_RELATIONSHIPS[1];
+    COMPATIBILITY_RELATIONSHIPS.find((item) => item.slug === resolvedRelationship) ??
+    COMPATIBILITY_RELATIONSHIPS[0];
 
-  const resultLabel = COMPATIBILITY_RESULT_LABELS[2];
+  if (!selectedFamily) {
+    return (
+      <SetupState
+        relationshipHref={`/compatibility/input?relationship=${selected.slug}`}
+        body="궁합을 볼 사람을 아직 고르지 않았습니다. 저장된 사람 중 한 분을 선택하면 실제 두 명식을 비교해서 읽어드립니다."
+      />
+    );
+  }
+
+  if (!hasCoreBirthProfile(data.profile)) {
+    return (
+      <SetupState
+        relationshipHref={`/compatibility/input?relationship=${selected.slug}`}
+        body="내 생년월일이 비어 있어 궁합 계산을 시작할 수 없습니다. MY 프로필에서 내 정보를 먼저 저장해 주세요."
+      />
+    );
+  }
+
+  if (!hasCoreBirthProfile(selectedFamily)) {
+    return (
+      <SetupState
+        relationshipHref={`/compatibility/input?relationship=${selected.slug}`}
+        body={`${selectedFamily.label}님의 생년월일이 아직 완성되지 않았습니다. 저장된 사람 정보에서 생년월일을 먼저 보완해 주세요.`}
+      />
+    );
+  }
+
   const premiumExpansion = COMPATIBILITY_PREMIUM_EXPANSION[selected.slug];
+  const compatibility = buildCompatibilityInterpretation(
+    selected.slug,
+    {
+      name: displayName,
+      birthInput: toBirthInputFromProfile(data.profile),
+    },
+    {
+      name: selectedFamily.label,
+      birthInput: toBirthInputFromProfile(selectedFamily),
+    }
+  );
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-hero-card p-7 text-center sm:p-8">
-          <div className="text-sm text-[var(--app-jade)]">김영희 선생님 & 큰아들</div>
-          <h1 className="mt-4 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
-            두 분의 인연
-          </h1>
-          <div className="mt-5 inline-flex rounded-full border border-[var(--app-jade)]/35 bg-[var(--app-jade)]/10 px-4 py-2 text-sm text-[var(--app-jade)]">
-            {resultLabel}
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+        <section className="moon-lunar-panel p-7 sm:p-8">
+          <div className="app-starfield" />
+          <div className="relative z-10 text-center">
+            <div className="text-sm text-[var(--app-jade)]">
+              {displayName} 선생님 & {selectedFamily.label}
+            </div>
+            <h1 className="mt-4 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
+              {compatibility.headline}
+            </h1>
+            <div className="mt-5 inline-flex rounded-full border border-[var(--app-jade)]/35 bg-[var(--app-jade)]/10 px-4 py-2 text-sm text-[var(--app-jade)]">
+              {compatibility.label}
+            </div>
+            <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">
+              {selected.title} 관계를 기준으로 두 사람의 일간, 일지, 오행 보완축을 함께 비교해 읽었습니다.
+            </p>
+            {compatibility.dataNote ? (
+              <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
+                {compatibility.dataNote}
+              </p>
+            ) : null}
           </div>
-          <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">
-            {selected.title} 관계를 기준으로, 오행의 흐름과 서로 주고받는 힘을 평어로 풀어냅니다.
-          </p>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+        <section className="mt-8 grid gap-6 lg:grid-cols-[0.94fr_1.06fr]">
           <article className="app-panel p-6">
-            <div className="app-caption">두 분의 기운</div>
-            <div className="mt-6 flex items-center justify-around">
+            <div className="app-caption">두 분의 기본 결</div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
               <div className="text-center">
-                <div className="font-[var(--font-heading)] text-5xl text-[var(--app-coral)]">火</div>
-                <div className="mt-2 text-sm text-[var(--app-copy)]">선생님</div>
-                <div className="text-xs text-[var(--app-copy-muted)]">한낮의 태양</div>
+                <div className="font-[var(--font-heading)] text-5xl text-[var(--app-coral)]">
+                  {compatibility.selfData.dayMaster.stem}
+                </div>
+                <div className="mt-2 text-sm text-[var(--app-copy)]">{displayName} 선생님</div>
+                <div className="text-xs text-[var(--app-copy-muted)]">
+                  {compatibility.selfData.dayMaster.metaphor ?? '일간 해석 준비 중'}
+                </div>
               </div>
-              <div className="text-3xl text-[var(--app-gold-soft)]">→</div>
+              <div className="text-center text-3xl text-[var(--app-gold-soft)]">↔</div>
               <div className="text-center">
-                <div className="font-[var(--font-heading)] text-5xl text-[var(--app-jade)]">木</div>
-                <div className="mt-2 text-sm text-[var(--app-copy)]">상대방</div>
-                <div className="text-xs text-[var(--app-copy-muted)]">큰 나무</div>
+                <div className="font-[var(--font-heading)] text-5xl text-[var(--app-jade)]">
+                  {compatibility.partnerData.dayMaster.stem}
+                </div>
+                <div className="mt-2 text-sm text-[var(--app-copy)]">{selectedFamily.label}</div>
+                <div className="text-xs text-[var(--app-copy-muted)]">
+                  {compatibility.partnerData.dayMaster.metaphor ?? '일간 해석 준비 중'}
+                </div>
               </div>
             </div>
-            <div className="mt-6 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5 text-center text-sm leading-7 text-[var(--app-copy)]">
-              <span className="text-[var(--app-jade)]">나무(木)가 불(火)을 지피는</span>
-              <br />
-              자연스러운 상생(相生) 관계입니다.
+            <div className="mt-6 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5 text-sm leading-7 text-[var(--app-copy)]">
+              {compatibility.summary}
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4">
+                <div className="text-xs tracking-[0.18em] text-[var(--app-copy-soft)]">내 정보</div>
+                <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">
+                  {formatBirthSummary(data.profile)}
+                </p>
+              </div>
+              <div className="rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4">
+                <div className="text-xs tracking-[0.18em] text-[var(--app-copy-soft)]">상대 정보</div>
+                <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">
+                  {formatBirthSummary(selectedFamily)}
+                </p>
+              </div>
             </div>
           </article>
 
           <article className="space-y-4">
             <div className="rounded-[1.35rem] border-l-[3px] border-[var(--app-jade)] bg-[var(--app-surface-muted)] px-5 py-5">
-              <div className="app-caption">서로에게 주는 힘</div>
+              <div className="app-caption">잘 맞는 지점</div>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                상대는 선생님의 따뜻함 속에서 힘을 얻고, 선생님은 상대의 성실함과 성장성을 통해
-                위안을 받으실 수 있는 관계입니다.
+                {compatibility.supportiveSummary}
               </p>
             </div>
 
             <div className="rounded-[1.35rem] border-l-[3px] border-[var(--app-coral)] bg-[var(--app-surface-muted)] px-5 py-5">
-              <div className="app-caption">서로 조심하실 점</div>
+              <div className="app-caption">조심하실 지점</div>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                선생님의 한 마디가 상대에게는 꽤 오래 남을 수 있습니다. 표현의 강약을 한 템포
-                줄이시면 관계의 온도가 한층 부드러워집니다.
+                {compatibility.cautionSummary}
               </p>
             </div>
 
             <div className="rounded-[1.35rem] border border-[var(--app-gold)]/24 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(10,18,36,0.92))] px-5 py-5">
-              <div className="app-caption">2026년 두 분의 흐름</div>
+              <div className="app-caption">지금 관계를 살리는 방식</div>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                올해는 상대가 한 걸음 더 나아가는 해입니다. 응원과 믿음을 말로 전해주시면, 두
-                분의 관계가 더 깊고 단단해지는 흐름으로 이어집니다.
+                {compatibility.currentFlowSummary}
               </p>
             </div>
           </article>
         </section>
 
-        <section className="mt-8 app-panel p-6">
-          <div className="flex flex-wrap gap-3">
-            {COMPATIBILITY_RESULT_LABELS.map((label) => (
-              <Badge
-                key={label}
-                className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
-              >
-                {label}
-              </Badge>
-            ))}
-          </div>
-          <p className="mt-5 text-sm leading-7 text-[var(--app-copy-muted)]">
-            숫자 점수 대신 평어를 쓰는 이유는, 가족과 배우자 관계에 상처가 남지 않도록 결과의
-            결을 부드럽게 읽기 위함입니다.
-          </p>
+        <section className="mt-8 grid gap-4 lg:grid-cols-2">
+          <article className="app-panel p-6">
+            <div className="app-caption">이 관계를 보는 렌즈</div>
+            <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
+              {compatibility.relationshipLensTitle}
+            </h2>
+            <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+              {compatibility.relationshipLensBody}
+            </p>
+            <p className="mt-4 text-sm leading-8 text-[var(--app-copy-muted)]">
+              {compatibility.practiceSummary}
+            </p>
+          </article>
+
+          <article className="app-panel p-6">
+            <div className="app-caption">왜 이렇게 읽었나</div>
+            <div className="mt-5 space-y-3">
+              {compatibility.evidence.map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
+                >
+                  <div className="text-sm font-semibold text-[var(--app-ivory)]">{item.title}</div>
+                  <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
+                </div>
+              ))}
+            </div>
+          </article>
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
@@ -146,28 +297,13 @@ export default async function CompatibilityResultPage({ searchParams }: Props) {
                 프리미엄으로 이 관계 이어보기
               </Link>
               <Link
-                href="/dialogue"
+                href={`/compatibility/input?relationship=${selected.slug}`}
                 className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
               >
-                달빛선생께 더 물어보기
+                다른 사람 선택하기
               </Link>
             </div>
           </article>
-        </section>
-
-        <section className="mt-8 flex flex-wrap gap-3">
-          <Link
-            href={`/compatibility/input?relationship=${selected.slug}`}
-            className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-          >
-            입력으로 돌아가기
-          </Link>
-          <Link
-            href="/membership/checkout?plan=premium"
-            className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
-          >
-            프리미엄으로 더 깊게 보기
-          </Link>
         </section>
       </div>
     </AppShell>
