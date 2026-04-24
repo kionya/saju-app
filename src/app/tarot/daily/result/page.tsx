@@ -95,6 +95,29 @@ export default async function TarotResultPage({ searchParams }: Props) {
           </article>
 
           <article className="space-y-4">
+            <div className="rounded-[1.45rem] border border-[var(--app-plum)]/28 bg-[linear-gradient(135deg,rgba(166,124,181,0.14),rgba(10,18,36,0.94))] px-5 py-5">
+              <div className="app-caption">질문에 대한 한마디</div>
+              <p className="mt-4 font-[var(--font-heading)] text-2xl leading-9 text-[var(--app-ivory)]">
+                {reading.answer}
+              </p>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
+                <div className="app-caption">질문의 속뜻</div>
+                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+                  {reading.questionInsight}
+                </p>
+              </div>
+
+              <div className="rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
+                <div className="app-caption">{reading.psychologyLabel}</div>
+                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+                  {reading.psychology}
+                </p>
+              </div>
+            </div>
+
             <div className="app-panel p-6">
               <div className="app-caption">카드가 건네는 말</div>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{reading.guidance}</p>
@@ -163,11 +186,11 @@ export default async function TarotResultPage({ searchParams }: Props) {
             </Badge>
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-3">
-            {premiumSpread.map(({ position, reading: spreadReading }) => (
-              <article
-                key={position}
-                className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
-              >
+                {premiumSpread.map(({ position, reading: spreadReading }) => (
+                  <article
+                    key={position}
+                    className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
+                  >
                 <div className="text-xs tracking-[0.22em] text-[var(--app-copy-soft)]">
                   {position}
                 </div>
@@ -185,7 +208,7 @@ export default async function TarotResultPage({ searchParams }: Props) {
                   </div>
                 </div>
                 <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                  {spreadReading.action}
+                  {spreadReading.answer}
                 </p>
               </article>
             ))}

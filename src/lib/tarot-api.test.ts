@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import {
   getTarotDeck,
   getTarotPickerDeck,
   getTarotReadingForQuestion,
+  getTarotSpreadForQuestion,
   type TarotApiCard,
 } from './tarot-api';
 import { getTarotCardImagePath, getTarotCardVisualTone } from './tarot-card-assets';
@@ -137,6 +139,49 @@ test('tarot reading stays stable for the same question on the same day', async (
   }
 });
 
+test('tarot reading adapts the answer and psychology to the asked question', async () => {
+  mockFetch(
+    (async () => {
+      throw new Error('network unavailable');
+    }) as typeof fetch
+  );
+
+  try {
+    const reading = await getTarotReadingForQuestion({
+      question: '그 사람 마음이 아직 남아 있을까요?',
+      cardId: 'cu02',
+      orientation: 'upright',
+    });
+
+    assert.equal(reading.tone, 'relationship');
+    assert.match(reading.answer, /마음|감정|상태/);
+    assert.match(reading.questionInsight, /질문/);
+    assert.match(reading.psychologyLabel, /심리/);
+    assert.match(reading.psychology, /상대/);
+  } finally {
+    restoreFetch();
+  }
+});
+
+test('tarot spread positions change to match the relationship question intent', async () => {
+  mockFetch(
+    (async () => {
+      throw new Error('network unavailable');
+    }) as typeof fetch
+  );
+
+  try {
+    const spread = await getTarotSpreadForQuestion('그 사람 마음이 아직 남아 있을까요?');
+
+    assert.deepEqual(
+      spread.map(({ position }) => position),
+      ['겉으로 보이는 마음', '속으로 남은 감정', '관계를 움직일 한 수']
+    );
+  } finally {
+    restoreFetch();
+  }
+});
+
 test('tarot picker exposes a stable full deck for direct card selection', async () => {
   mockFetch(
     (async () => {
@@ -194,10 +239,33 @@ test('tarot random draw picks one card from the visible deck', () => {
 });
 
 test('tarot card asset helpers map card IDs to public image paths and tones', () => {
-  assert.equal(getTarotCardImagePath('SW07'), '/images/tarot/cards/sw07.webp');
+  assert.equal(getTarotCardImagePath('ar00'), '/images/tarot/cards/01_the_fool.png');
+  assert.equal(getTarotCardImagePath('SW07'), '/images/tarot/cards/57_seven_of_swords.png');
   assert.equal(getTarotCardVisualTone('ar00').family, 'major');
   assert.equal(getTarotCardVisualTone('cu09').family, 'cups');
   assert.equal(getTarotCardVisualTone('pe10').family, 'pentacles');
   assert.equal(getTarotCardVisualTone('sw07').family, 'swords');
   assert.equal(getTarotCardVisualTone('wa04').family, 'wands');
+});
+
+test('local tarot deck cards all resolve to an existing image file', async () => {
+  mockFetch(
+    (async () => {
+      throw new Error('network unavailable');
+    }) as typeof fetch
+  );
+
+  try {
+    const deck = await getTarotDeck();
+
+    assert.equal(deck.cards.length, 78);
+    assert.ok(
+      deck.cards.every((card) => {
+        const publicPath = getTarotCardImagePath(card.name_short);
+        return existsSync(`/Users/kionya/saju-app/public${publicPath}`);
+      })
+    );
+  } finally {
+    restoreFetch();
+  }
 });

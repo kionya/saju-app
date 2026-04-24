@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { TarotCardArtwork } from '@/components/tarot/tarot-card-artwork';
 import { Badge } from '@/components/ui/badge';
 import { TAROT_CARD_KEYWORDS, TAROT_QUESTION_OPTIONS } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
@@ -112,28 +113,30 @@ export default async function DailyTarotPage() {
 
               <div className="mt-6 grid gap-5 sm:grid-cols-[0.78fr_1.22fr] sm:items-center">
                 <div className="text-center">
-                  <div className="moon-tarot-card">
-                    <div className="font-[var(--font-heading)] text-xs tracking-[0.22em] text-[var(--app-gold)]">
-                      {featuredReading.shortName}
-                    </div>
-                    <div className="font-[var(--font-heading)] text-5xl text-[var(--app-gold)]">
-                      {featuredReading.cardMarker}
-                    </div>
-                    <div className="font-[var(--font-heading)] text-[11px] tracking-[0.28em] text-[var(--app-gold)]">
-                      {featuredReading.orientationLabel}
-                    </div>
-                  </div>
+                  <TarotCardArtwork
+                    cardId={featuredReading.card.name_short}
+                    shortName={featuredReading.shortName}
+                    displayName={featuredReading.displayName}
+                    cardMarker={featuredReading.cardMarker}
+                    orientation={featuredReading.orientation}
+                    orientationLabel={featuredReading.orientationLabel}
+                    arcanaLabel={featuredReading.arcanaLabel}
+                    className="w-[min(14rem,72vw)]"
+                  />
                   <div className="mt-4 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
                     {featuredReading.displayName}
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-sm leading-8 text-[var(--app-copy)]">
+                  <p className="font-[var(--font-heading)] text-2xl leading-9 text-[var(--app-ivory)]">
+                    {featuredReading.answer}
+                  </p>
+                  <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
                     {featuredReading.guidance}
                   </p>
                   <div className="mt-4 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-sm leading-7 text-[var(--app-copy-muted)]">
-                    {featuredReading.keyword}
+                    {featuredReading.questionInsight}
                   </div>
                   <div className="mt-5">
                     <Link

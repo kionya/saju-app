@@ -4,6 +4,16 @@ export type TarotOrientation = 'upright' | 'reversed';
 export type TarotQuestionTone = 'daily' | 'relationship' | 'choice' | 'direction';
 export type TarotDeckSource = 'api' | 'local';
 export type TarotSuit = 'cups' | 'pentacles' | 'swords' | 'wands';
+export type TarotQuestionDomain = 'daily' | 'relationship' | 'career' | 'money';
+export type TarotQuestionSubject = 'self' | 'other' | 'relationship' | 'situation';
+export type TarotQuestionIntent =
+  | 'general'
+  | 'feelings'
+  | 'contact'
+  | 'reconciliation'
+  | 'decision'
+  | 'timing';
+export type TarotQuestionMood = 'steady' | 'anxious' | 'hopeful' | 'tired' | 'urgent';
 
 export interface TarotApiCard {
   type: 'major' | 'minor';
@@ -30,6 +40,10 @@ export interface TarotReading {
   theme: string;
   subtitle: string;
   keyword: string;
+  questionInsight: string;
+  answer: string;
+  psychologyLabel: string;
+  psychology: string;
   guidance: string;
   sajuBlend: string;
   action: string;
@@ -53,6 +67,15 @@ export interface TarotPickerDeck {
   source: TarotDeckSource;
   tone: TarotQuestionTone;
   toneLabel: string;
+}
+
+interface TarotQuestionContext {
+  normalizedQuestion: string;
+  tone: TarotQuestionTone;
+  domain: TarotQuestionDomain;
+  subject: TarotQuestionSubject;
+  intent: TarotQuestionIntent;
+  mood: TarotQuestionMood;
 }
 
 const TAROT_API_CARDS_URL = 'https://tarotapi.dev/api/v1/cards';
@@ -362,6 +385,296 @@ const TONE_FOCUS: Record<TarotQuestionTone, (theme: string, focus: string) => st
   direction: (theme, focus) => `앞으로의 방향은 ${theme}에서 실마리가 보입니다. 멀리 보려 하기보다 ${focus}부터 정리해보세요.`,
 };
 
+const OPEN_MAJOR_CARDS = new Set([
+  'The Fool',
+  'The Magician',
+  'The Lovers',
+  'The Star',
+  'The Sun',
+  'The Last Judgment',
+  'The World',
+]);
+
+const INWARD_MAJOR_CARDS = new Set([
+  'The High Priestess',
+  'The Hermit',
+  'The Hanged Man',
+  'The Moon',
+]);
+
+const CONTROL_MAJOR_CARDS = new Set([
+  'The Emperor',
+  'The Hierophant',
+  'The Chariot',
+  'Justice',
+  'Temperance',
+]);
+
+function analyzeQuestion(question: string): TarotQuestionContext {
+  const normalizedQuestion = normalizeQuestion(question);
+  const tone = detectQuestionTone(normalizedQuestion);
+  const subject: TarotQuestionSubject = /(상대|그 사람|그사람|그분|그의|그녀|저 사람)/.test(normalizedQuestion)
+    ? 'other'
+    : /(우리|관계|사이|연애|썸|인연|재회)/.test(normalizedQuestion)
+      ? 'relationship'
+      : /(직장|회사|사업|진로|돈|금전|매출|투자|계약|방향|흐름)/.test(normalizedQuestion)
+        ? 'situation'
+        : 'self';
+  const domain: TarotQuestionDomain = /(직장|회사|커리어|진로|이직|일)/.test(normalizedQuestion)
+    ? 'career'
+    : /(돈|금전|재물|투자|매출|정산|계약비|지출)/.test(normalizedQuestion)
+      ? 'money'
+      : tone === 'relationship'
+        ? 'relationship'
+        : 'daily';
+  const intent: TarotQuestionIntent = /(마음|심리|생각|속마음|진심)/.test(normalizedQuestion)
+    ? 'feelings'
+    : /(연락|카톡|전화|답장|dm|문자)/i.test(normalizedQuestion)
+      ? 'contact'
+      : /(재회|다시 이어|다시 만|돌아오)/.test(normalizedQuestion)
+        ? 'reconciliation'
+        : /(언제|시기|타이밍|몇 월|몇주|가능성 언제)/.test(normalizedQuestion)
+          ? 'timing'
+          : tone === 'choice' || /(선택|결정|해야|말아|괜찮을까|갈까|할까)/.test(normalizedQuestion)
+            ? 'decision'
+            : 'general';
+  const mood: TarotQuestionMood = /(불안|걱정|두렵|무섭|답답|초조|흔들)/.test(normalizedQuestion)
+    ? 'anxious'
+    : /(기대|바라|원하|좋아|보고 싶|희망)/.test(normalizedQuestion)
+      ? 'hopeful'
+      : /(지쳤|지치|피곤|힘들|소모)/.test(normalizedQuestion)
+        ? 'tired'
+        : /(당장|빨리|지금 바로|오늘 꼭)/.test(normalizedQuestion)
+          ? 'urgent'
+          : 'steady';
+
+  return {
+    normalizedQuestion,
+    tone,
+    domain,
+    subject,
+    intent,
+    mood,
+  };
+}
+
+function getCardFlowState(card: TarotApiCard, orientation: TarotOrientation) {
+  if (orientation === 'reversed') return 'blocked' as const;
+
+  if (card.type === 'major') {
+    if (OPEN_MAJOR_CARDS.has(card.name)) return 'open' as const;
+    if (INWARD_MAJOR_CARDS.has(card.name)) return 'inward' as const;
+    if (CONTROL_MAJOR_CARDS.has(card.name)) return 'steady' as const;
+    return 'turning' as const;
+  }
+
+  if (card.suit === 'cups' || card.suit === 'wands') return 'open' as const;
+  if (card.suit === 'pentacles') return 'steady' as const;
+  if (card.suit === 'swords') return 'guarded' as const;
+
+  return 'turning' as const;
+}
+
+function getSubjectLabel(context: TarotQuestionContext) {
+  switch (context.subject) {
+    case 'other':
+      return '상대';
+    case 'relationship':
+      return '두 사람 사이';
+    case 'situation':
+      return '지금 상황';
+    case 'self':
+    default:
+      return '선생님 마음';
+  }
+}
+
+function buildQuestionInsight(context: TarotQuestionContext) {
+  const moodLine =
+    context.mood === 'anxious'
+      ? '답을 빨리 알아 마음을 진정시키고 싶은 마음이 깔려 있습니다.'
+      : context.mood === 'hopeful'
+        ? '좋은 가능성이 아직 살아 있는지 확인하고 싶은 기대가 섞여 있습니다.'
+        : context.mood === 'tired'
+          ? '더 상처받거나 소모되지 않는 쪽을 찾고 싶은 피로가 느껴집니다.'
+          : context.mood === 'urgent'
+            ? '시간을 더 끌기보다 지금 움직여도 되는지 확인하고 싶은 조급함이 보입니다.'
+            : '겉질문보다 실제 마음의 방향을 분명히 하고 싶은 상태에 가깝습니다.';
+
+  switch (context.intent) {
+    case 'feelings':
+      return `이 질문은 단순히 결과를 묻는 것이 아니라, ${getSubjectLabel(context)}이 아직 열려 있는지 확인하고 싶은 질문입니다. ${moodLine}`;
+    case 'contact':
+      return `겉으로는 연락해도 되는지를 묻고 있지만, 실제로는 지금 말을 건넸을 때 상처가 덜한 타이밍인지 확인하고 싶은 질문입니다. ${moodLine}`;
+    case 'reconciliation':
+      return `이 질문은 다시 이어질 수 있는지만이 아니라, 예전의 상처와 방식이 얼마나 정리되었는지를 함께 묻는 질문입니다. ${moodLine}`;
+    case 'decision':
+      return `이 질문은 무엇이 맞는지보다, 지금 밀어도 되는지 아니면 한 번 더 보고 가야 하는지를 확인하려는 질문입니다. ${moodLine}`;
+    case 'timing':
+      return `이 질문은 결과보다 흐름의 타이밍을 보려는 질문입니다. ${moodLine}`;
+    case 'general':
+    default:
+      return `지금 질문에는 단순한 궁금증보다, 현재 흐름을 오해 없이 읽고 싶다는 마음이 들어 있습니다. ${moodLine}`;
+  }
+}
+
+function buildPsychologyCopy(
+  card: TarotApiCard,
+  orientation: TarotOrientation,
+  context: TarotQuestionContext
+) {
+  const flow = getCardFlowState(card, orientation);
+  const subjectLabel = getSubjectLabel(context);
+  const label =
+    context.subject === 'other'
+      ? '상대 심리'
+      : context.subject === 'relationship'
+        ? '관계 심리'
+        : '지금 마음';
+
+  let summary = '';
+
+  if (context.subject === 'other' && context.intent === 'feelings') {
+    if (flow === 'open') {
+      summary = `${subjectLabel}는 완전히 닫힌 쪽보다 감정이 아직 살아 있는 쪽에 가깝습니다. 다만 마음이 있어도 바로 크게 표현하기보다 반응을 살피며 움직일 가능성이 큽니다.`;
+    } else if (flow === 'steady') {
+      summary = `${subjectLabel}는 감정이 없어서라기보다 현실 가능성과 안정성을 먼저 보려는 심리가 강합니다. 마음보다 상황 정리가 먼저여야 움직이기 쉬운 타입으로 읽힙니다.`;
+    } else if (flow === 'guarded') {
+      summary = `${subjectLabel}는 지금 감정보다 생각과 경계가 앞서 있습니다. 상처를 되풀이하지 않으려는 마음이 있어, 쉽게 속마음을 드러내지 않을 수 있습니다.`;
+    } else if (flow === 'blocked') {
+      summary = `${subjectLabel}는 마음이 아예 없는 것보다, 지금은 감정과 상황이 뒤엉켜 표현이 막혀 있는 상태에 가깝습니다. 당장 확답을 기대하면 더 움츠러들 수 있습니다.`;
+    } else {
+      summary = `${subjectLabel}는 마음의 방향이 완전히 정해졌다기보다 큰 전환점 위에 서 있는 모습입니다. 지금은 한 번에 단정하기보다 흐름을 더 지켜보는 편이 맞습니다.`;
+    }
+  } else if (context.subject === 'other' && context.intent === 'contact') {
+    if (flow === 'open') {
+      summary = `${subjectLabel}는 말을 끊고 싶은 상태보다는, 부담이 크지 않은 접점이라면 받아볼 여지가 있는 쪽으로 읽힙니다.`;
+    } else if (flow === 'blocked') {
+      summary = `${subjectLabel}는 지금 연락 자체보다 마음의 정리와 여유가 먼저 필요한 상태에 가깝습니다. 바로 깊은 대화를 열면 방어가 올라올 수 있습니다.`;
+    } else {
+      summary = `${subjectLabel}는 반응을 아예 끊고 싶은 것보다, 지금은 속도와 수위를 조절하고 싶은 심리가 더 크게 보입니다.`;
+    }
+  } else {
+    if (flow === 'open') {
+      summary = `${subjectLabel}은 답을 알고 싶다는 마음과 함께 직접 움직여 보고 싶은 기운도 함께 올라와 있습니다. 다만 조급함보다 자연스러운 흐름을 타는 편이 더 좋습니다.`;
+    } else if (flow === 'steady') {
+      summary = `${subjectLabel}은 감정만으로 결정하기보다 기준과 안전선을 먼저 확인하고 싶어 합니다. 그래서 느려 보여도 생각이 없는 상태는 아닙니다.`;
+    } else if (flow === 'guarded') {
+      summary = `${subjectLabel}은 감정이 없는 것이 아니라, 먼저 판단하고 상처를 피하려는 방어가 앞서 있습니다. 말보다 속뜻을 정리하는 시간이 필요합니다.`;
+    } else if (flow === 'blocked') {
+      summary = `${subjectLabel}은 지금 결과를 내기보다 불안과 피로를 먼저 가라앉혀야 하는 상태에 가깝습니다. 서두르면 마음이 더 꼬일 수 있습니다.`;
+    } else {
+      summary = `${subjectLabel}은 지금 하나의 결론보다 큰 흐름의 전환점을 지나고 있습니다. 그래서 평소보다 작은 신호도 크게 느껴질 수 있습니다.`;
+    }
+  }
+
+  return { label, summary };
+}
+
+function buildDirectAnswer(
+  card: TarotApiCard,
+  orientation: TarotOrientation,
+  context: TarotQuestionContext
+) {
+  const flow = getCardFlowState(card, orientation);
+
+  if (context.intent === 'feelings') {
+    if (flow === 'open') {
+      return '지금 이 카드만 보면 마음이 완전히 식었다기보다, 아직 반응할 여지와 감정의 온도가 남아 있는 쪽에 가깝습니다.';
+    }
+
+    if (flow === 'steady') {
+      return '마음이 없다고 단정하기보다, 감정보다 현실과 안정성을 먼저 따지는 흐름이 더 강하게 보입니다.';
+    }
+
+    if (flow === 'guarded') {
+      return '관심의 유무보다 경계와 판단이 먼저 올라와 있는 상태라, 속마음이 있어도 쉽게 드러나지 않을 수 있습니다.';
+    }
+
+    return '지금은 마음의 유무를 단정하기보다, 감정과 상황이 정리되지 않아 표현이 막혀 있는 흐름으로 보는 편이 더 맞습니다.';
+  }
+
+  if (context.intent === 'contact') {
+    if (flow === 'open') {
+      return '지금은 큰 확인보다 가벼운 안부 정도는 닿을 수 있는 흐름입니다. 다만 무거운 결론을 바로 꺼내는 방식은 피하는 편이 좋습니다.';
+    }
+
+    if (flow === 'blocked') {
+      return '지금 바로 답을 받으려는 연락은 부담이 될 수 있습니다. 짧고 가벼운 접점부터 열거나, 한 템포 두는 쪽이 더 낫습니다.';
+    }
+
+    return '연락 자체가 문제라기보다 수위와 타이밍이 중요합니다. 확인받으려는 말보다 부담 없는 말이 더 잘 맞습니다.';
+  }
+
+  if (context.intent === 'reconciliation') {
+    if (flow === 'open' || flow === 'turning') {
+      return '다시 이어질 여지는 남아 있지만, 예전 방식 그대로 돌아가기보다 관계의 방식이 달라져야 길이 열립니다.';
+    }
+
+    return '재회 가능성을 단정히 닫을 단계는 아니지만, 지금은 감정보다 정리되지 않은 문제를 먼저 보는 흐름입니다.';
+  }
+
+  if (context.intent === 'decision' || context.tone === 'choice') {
+    if (flow === 'open') {
+      return '밀어도 됩니다. 다만 감정만 믿고 크게 가기보다, 작게 시험해 보며 반응을 확인하는 방식이 가장 좋습니다.';
+    }
+
+    if (flow === 'steady') {
+      return '진행은 가능하지만 조건 점검이 먼저입니다. 기준과 현실선을 확인한 뒤 움직이면 후회가 줄어듭니다.';
+    }
+
+    if (flow === 'guarded' || flow === 'blocked') {
+      return '지금은 바로 결론을 내리기보다 한 박자 보류가 더 맞습니다. 섣불리 밀면 마음보다 피로가 커질 수 있습니다.';
+    }
+
+    return '방향은 열려 있지만 서두를 때보다 관점을 한 번 바꿔 본 뒤 움직일 때 더 잘 맞는 흐름입니다.';
+  }
+
+  if (context.domain === 'career') {
+    return flow === 'blocked'
+      ? '일과 방향은 아직 무리하게 키우기보다 정리와 재정비가 먼저입니다.'
+      : '일의 흐름은 열려 있습니다. 다만 속도보다 기준을 세운 전진이 더 오래 갑니다.';
+  }
+
+  if (context.domain === 'money') {
+    return flow === 'open'
+      ? '돈은 움직일 수 있지만, 지금은 큰 승부보다 작고 확실한 선택이 더 맞습니다.'
+      : '재물 흐름은 공격보다 점검이 먼저입니다. 새 지출보다 기존 구조를 정리하는 편이 안전합니다.';
+  }
+
+  return flow === 'blocked'
+    ? '지금은 억지로 답을 만들기보다 마음과 상황을 한 번 정리하고 보는 흐름입니다.'
+    : '흐름은 나쁘지 않습니다. 오늘은 작게 움직이며 반응을 보는 쪽이 가장 맞습니다.';
+}
+
+function buildSpreadPositions(context: TarotQuestionContext) {
+  if (context.intent === 'feelings') {
+    return ['겉으로 보이는 마음', '속으로 남은 감정', '관계를 움직일 한 수'];
+  }
+
+  if (context.intent === 'contact') {
+    return ['지금 거리감', '연락했을 때의 반응', '가장 나은 접근'];
+  }
+
+  if (context.intent === 'reconciliation') {
+    return ['끊어진 이유', '아직 남은 인연', '다시 이어질 조건'];
+  }
+
+  if (context.intent === 'decision') {
+    return ['지금 기준', '밀면 얻는 것', '지금 피할 점'];
+  }
+
+  if (context.domain === 'career' || context.tone === 'direction') {
+    return ['현재 위치', '막히는 이유', '다음 한 걸음'];
+  }
+
+  if (context.domain === 'money') {
+    return ['지금 돈 흐름', '새는 지점', '지켜야 할 기준'];
+  }
+
+  return ['현재 흐름', '숨은 원인', '오늘의 조언'];
+}
+
 export async function getTarotDeck(): Promise<{ cards: TarotApiCard[]; source: TarotDeckSource }> {
   try {
     const signal =
@@ -452,7 +765,7 @@ export async function getTarotSpreadForQuestion(question?: string): Promise<Taro
   const normalizedQuestion = normalizeQuestion(question);
   const seed = buildQuestionSeed(normalizedQuestion);
   const usedCards = new Set<string>();
-  const positions = ['현재 흐름', '숨은 원인', '오늘의 조언'];
+  const positions = buildSpreadPositions(analyzeQuestion(normalizedQuestion));
 
   return positions.map((position, index) => {
     const card = pickCard(deck.cards, `${seed}:spread:${index}`, usedCards);
@@ -485,13 +798,17 @@ function buildTarotReading({
   question: string;
   source: TarotDeckSource;
 }): TarotReading {
-  const tone = detectQuestionTone(question);
+  const context = analyzeQuestion(question);
+  const tone = context.tone;
   const theme = getCardTheme(card);
   const meaning = orientation === 'upright' ? card.meaning_up : card.meaning_rev;
   const orientationAdvice =
     orientation === 'upright'
       ? '이 힘은 비교적 바깥으로 드러나 있으니 작은 행동으로 흐름을 살릴 수 있습니다.'
       : '다만 지금은 이 힘이 안쪽으로 접혀 있으니 서두르기보다 조절과 확인이 먼저입니다.';
+  const psychology = buildPsychologyCopy(card, orientation, context);
+  const directAnswer = buildDirectAnswer(card, orientation, context);
+  const questionInsight = buildQuestionInsight(context);
 
   return {
     card,
@@ -506,6 +823,10 @@ function buildTarotReading({
     theme: theme.theme,
     subtitle: `${ORIENTATION_LABELS[orientation]} · ${theme.focus}`,
     keyword: getKeyword(card, theme),
+    questionInsight,
+    answer: directAnswer,
+    psychologyLabel: psychology.label,
+    psychology: psychology.summary,
     guidance: `${getDisplayName(card)}은 ${theme.theme}을 말합니다. ${TONE_FOCUS[tone](theme.theme, theme.focus)} ${orientationAdvice}`,
     sajuBlend: `사주 흐름과 겹쳐 보면, 이 카드는 ${theme.sajuElement}을 통해 지금 질문의 반복되는 이유를 살피게 합니다. 타로가 오늘의 장면을 보여준다면 사주는 그 장면이 왜 익숙하게 느껴지는지를 설명해줍니다.`,
     action: theme.action,
@@ -583,7 +904,7 @@ function detectQuestionTone(question: string): TarotQuestionTone {
     return 'choice';
   }
 
-  if (/(앞으로|방향|미래|진로|흐름|계획)/.test(question)) {
+  if (/(앞으로|방향|미래|진로|흐름|계획|직장|회사|이직|돈|금전|재물|투자|사업)/.test(question)) {
     return 'direction';
   }
 
