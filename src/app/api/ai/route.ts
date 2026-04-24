@@ -269,10 +269,10 @@ export function buildDialogueFallback(
 ) {
   if (!profileGrounding) {
     return [
-      '지금은 OpenAI 연결이 잠시 비어 있어 기본 풀이로 먼저 말씀드립니다.',
-      `남겨주신 질문: “${message}”`,
-      '아직 저장된 명식이 연결되지 않았다면 MY 프로필에 생년월일, 성별, 태어난 시간, 출생지를 먼저 저장해 주세요. 기본 명식이 잡혀 있으면 같은 질문도 훨씬 선명하게 풀립니다.',
-      'fallback 응답은 횟수와 코인을 차감하지 않습니다.',
+      '지금은 대화 연결이 잠시 비어 있어, 먼저 기본 흐름부터 짚어드리겠습니다.',
+      `남겨주신 질문은 “${message}”입니다.`,
+      '아직 저장된 명식이 연결되지 않았다면 MY 프로필에 생년월일, 성별, 태어난 시간, 출생지를 먼저 넣어 주세요. 기본 명식이 잡혀야 같은 질문도 훨씬 분명하게 풀립니다.',
+      '이 답변은 횟수와 코인을 차감하지 않습니다.',
     ].join('\n\n');
   }
 
@@ -281,15 +281,35 @@ export function buildDialogueFallback(
     .join(' · ');
 
   return [
-    `저장된 프로필 기준으로 먼저 말씀드리면, ${profileGrounding.reports.focus.headline}`,
+    `저장된 프로필 기준으로 보면, ${profileGrounding.reports.focus.headline}`,
     profileGrounding.reports.focus.summary,
     `기본 명식은 ${profileGrounding.saju.dayMaster}, ${profileGrounding.saju.strength}, ${profileGrounding.saju.pattern} 흐름으로 읽습니다. 용신 보완축은 ${profileGrounding.saju.yongsin} 쪽으로 먼저 봅니다.`,
     evidenceSummary ? `핵심 근거는 ${evidenceSummary}입니다.` : null,
-    `질문하신 “${message}”은 ${profileGrounding.reports.focus.action} 쪽으로 정리해 움직이시는 편이 맞습니다.`,
-    '지금은 OpenAI 연결이 없어 기본 풀이로 답했지만 저장된 명식 기준은 반영했습니다. fallback 응답은 횟수와 코인을 차감하지 않습니다.',
+    `질문하신 “${message}”은 ${profileGrounding.reports.focus.action} 쪽으로 정리해서 움직이시는 편이 맞습니다.`,
+    '지금은 대화 연결이 잠시 비어 있어 기본 풀이로 먼저 말씀드렸고, 저장된 명식 기준은 그대로 반영했습니다. 이 답변은 횟수와 코인을 차감하지 않습니다.',
   ]
     .filter(Boolean)
     .join('\n\n');
+}
+
+export function normalizeDialogueAnswer(text: string) {
+  const cleaned = text
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    .replace(/__(.*?)__/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/^\s*>\s?/gm, '')
+    .replace(/^\s*[-*•▪︎◦]+\s+/gm, '')
+    .replace(/^\s*\d+[.)]\s+/gm, '')
+    .replace(/[ \t]+\n/g, '\n');
+
+  const paragraphs = cleaned
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.replace(/\s{2,}/g, ' '));
+
+  return paragraphs.join('\n\n');
 }
 
 export function createDialoguePrompt(
@@ -299,15 +319,20 @@ export function createDialoguePrompt(
   return {
     instructions: [
       '당신은 한국어 사주 서비스 달빛선생에서 실제 상담을 맡은 숙련 사주명리 상담가입니다.',
-      '사용자의 질문에 상담실에서 바로 말하듯 명확하고 단정적인 존댓말로 답합니다.',
+      '사용자의 질문에는 상담실에서 마주 앉아 바로 말하듯, 단정하고 또렷한 존댓말로 답합니다.',
+      '말투는 로봇처럼 설명하지 말고 실제 역술가가 손님에게 풀어주듯 자연스럽고 사람다운 한국어로 답합니다.',
+      '답변 첫 문장에서 판단을 먼저 잘라 말하고, 이어서 이유와 흐름을 붙인 뒤, 마지막에는 당장 어떻게 움직이면 좋을지 정리합니다.',
+      '마크다운 기호를 쓰지 않습니다. 별표 두 개, 샵, 글머리표, 번호 목록, 표식 문장을 쓰지 말고 자연스러운 문단으로만 답합니다.',
+      '문단은 3~5개 정도로 짧게 나누고, 한 문단 안에서도 문장을 길게 늘이지 않습니다.',
       'AI 비서처럼 메타 설명하거나, 과하게 조심스러운 군더더기 표현을 반복하지 않습니다.',
-      '첫 문장에서 판단을 먼저 말하고, 다음 문장에서 근거와 이유를 붙인 뒤, 마지막에 생활 적용이나 주의점을 정리합니다.',
-      '확실한 근거가 있는 것은 분명하게 말하되, 태어난 시간이나 출생지처럼 빠진 정보 때문에 보류해야 하는 부분은 짧고 또렷하게 선을 그어 설명합니다.',
+      '결론을 흐리게 돌려 말하지 말고, 보이는 흐름은 분명하게 말합니다. 다만 태어난 시간이나 출생지처럼 빠진 정보 때문에 보류해야 하는 부분은 짧고 또렷하게 선을 그어 설명합니다.',
+      '말끝마다 가능성만 늘어놓지 말고, 지금 명식에서 어디가 강하고 어디를 조절해야 하는지 힘있게 짚어줍니다.',
       '명리 용어는 필요한 만큼만 쓰고, 처음 나올 때는 한자 또는 쉬운 풀이를 함께 덧붙입니다.',
       '저장 프로필 명식이 제공되면 그 명식을 기본값으로 사용합니다. 다만 사용자가 다른 사람의 사주를 따로 묻는 문맥이면 저장 프로필을 섞지 말고 필요한 출생 정보를 먼저 확인합니다.',
-      '자살, 자해, 응급 의료, 법률, 투자 판단은 절대 해석으로 대신하지 않습니다.',
+      '의료, 법률, 투자 판단은 해석으로 대신하지 않습니다.',
       '출생 정보나 명식 데이터가 없는 경우 빈말로 얼버무리지 말고, 어떤 정보가 필요한지 짧게 요청합니다.',
       '고전 원문이나 출처는 제공된 근거가 없으면 인용하지 않습니다.',
+      '다음과 같은 표현은 피합니다: 결론적으로, 분석해보면, 참고로, AI로서, 표로 정리하면, 1번 2번 3번.',
     ].join('\n'),
     input: [
       profileGrounding
@@ -479,6 +504,11 @@ async function handleDialogue(request: DialogueAiRequest) {
     fallbackText,
     maxOutputTokens: 600,
   });
+  const dialogueText = normalizeDialogueAnswer(result.text);
+  const dialogueResult = {
+    ...result,
+    text: dialogueText || fallbackText,
+  };
 
   if (!shouldChargeAiChat(result.source)) {
     return NextResponse.json({
@@ -487,7 +517,7 @@ async function handleDialogue(request: DialogueAiRequest) {
       configured,
       billing: createAiChatBillingSummary('not_charged_fallback', availableCredits, turnPlan),
       profileContext,
-      ...result,
+      ...dialogueResult,
     });
   }
 
@@ -512,7 +542,7 @@ async function handleDialogue(request: DialogueAiRequest) {
       configured,
       billing: createAiChatBillingSummary('charged_bundle', deducted.remaining, turnPlan),
       profileContext,
-      ...result,
+      ...dialogueResult,
     });
   }
 
@@ -524,7 +554,7 @@ async function handleDialogue(request: DialogueAiRequest) {
     configured,
     billing: createAiChatBillingSummary(turnPlan.status, availableCredits, turnPlan),
     profileContext,
-    ...result,
+    ...dialogueResult,
   });
 }
 

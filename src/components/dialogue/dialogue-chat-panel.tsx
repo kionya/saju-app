@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, startTransition, useState } from 'react';
+import { FormEvent, startTransition, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AiSourceBadge } from '@/components/ai/ai-source-badge';
 import type { AiChatBillingSummary } from '@/lib/credits/ai-chat-access';
@@ -59,7 +59,7 @@ const INITIAL_MESSAGE: ChatMessage = {
   model: null,
   errorMessage: null,
   text:
-    '편하게 한 줄로 남겨주세요. 로그인되어 있고 MY 프로필에 생년월일, 성별, 태어난 시간, 출생지가 저장돼 있으면 그 정보를 기본 명식으로 불러와 답합니다. 처음 3회는 무료이고, 이후에는 3회 묶음마다 3코인으로 이어집니다.',
+    '편하게 물으세요. 로그인되어 있고 MY 프로필에 생년월일, 성별, 태어난 시간, 출생지가 저장돼 있으면 그 명식을 먼저 놓고 바로 풀어드립니다. 처음 3회는 무료이고, 이후에는 3회 묶음마다 3코인으로 이어집니다.',
 };
 
 function createMessageId(prefix: string) {
@@ -144,6 +144,7 @@ function getConnectionSummary(
 
 export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
   const router = useRouter();
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<ChatStatus>('idle');
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
@@ -152,6 +153,18 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
   const latestAssistant = messages.findLast((message) => message.role === 'assistant');
   const badgeState = getBadgeState(status, latestAssistant);
   const connectionSummary = getConnectionSummary(latestAssistant, status);
+
+  function applyPreset(question: string) {
+    setInput(question);
+    setErrorMessage(null);
+    if (status === 'error') setStatus('idle');
+
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      const length = question.length;
+      textareaRef.current?.setSelectionRange(length, length);
+    });
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -243,23 +256,6 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
           </div>
           <AiSourceBadge state={badgeState} />
         </div>
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          {presets.map((preset) => (
-            <button
-              key={preset.question}
-              type="button"
-              onClick={() => {
-                setInput(preset.question);
-                setErrorMessage(null);
-                if (status === 'error') setStatus('idle');
-              }}
-              className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1.5 text-xs text-[var(--app-copy)] transition-colors hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-            >
-              {preset.category} · {preset.question}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="max-h-[32rem] space-y-4 overflow-y-auto px-5 py-5 sm:px-6">
@@ -320,6 +316,7 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
         </label>
         <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
           <textarea
+            ref={textareaRef}
             value={input}
             onChange={(event) => {
               setInput(event.target.value);
@@ -339,6 +336,32 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
           >
             {status === 'loading' ? '답변 확인 중' : '보내기'}
           </button>
+        </div>
+        <div className="mt-4">
+          <div className="mb-2 text-xs font-medium tracking-[0.08em] text-[var(--app-gold-text)]">
+            자주 여쭙는 이야기
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {presets.map((preset) => {
+              const active = input.trim() === preset.question;
+              return (
+                <button
+                  key={preset.question}
+                  type="button"
+                  onClick={() => applyPreset(preset.question)}
+                  className={`rounded-full border px-3 py-1.5 text-xs transition-all duration-200 ${
+                    active
+                      ? 'border-[var(--app-gold)]/50 bg-[var(--app-gold)]/14 text-[var(--app-ivory)] shadow-[0_0_0_1px_rgba(210,176,114,0.12)]'
+                      : 'border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-copy)] hover:-translate-y-0.5 hover:border-[var(--app-gold)]/32 hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]'
+                  }`}
+                >
+                  <span className="text-[var(--app-gold-text)]">{preset.category}</span>
+                  <span className="mx-1.5 text-[var(--app-copy-soft)]">·</span>
+                  <span>{preset.question}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
         <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
           처음 3회는 무료입니다. 이후에는 OpenAI 응답 기준으로 3회 묶음마다

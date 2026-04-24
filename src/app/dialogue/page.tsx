@@ -54,7 +54,7 @@ export default function DialoguePage() {
         {/* ─── CHAT PANEL ─── */}
         <section className="mt-6">
           <DialogueChatPanel
-            presets={DIALOGUE_PRESETS.slice(0, 4).map((p) => ({
+            presets={DIALOGUE_PRESETS.map((p) => ({
               category: p.category,
               question: p.question,
             }))}
