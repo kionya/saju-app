@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import {
   getTarotCardImagePath,
@@ -16,6 +17,7 @@ interface TarotCardArtworkProps {
   orientationLabel: string;
   arcanaLabel: string;
   className?: string;
+  priority?: boolean;
 }
 
 export function TarotCardArtwork({
@@ -27,13 +29,14 @@ export function TarotCardArtwork({
   orientationLabel,
   arcanaLabel,
   className,
+  priority = false,
 }: TarotCardArtworkProps) {
-  const [imageState, setImageState] = useState<'loading' | 'loaded' | 'failed'>('loading');
+  const [imageFailed, setImageFailed] = useState(false);
   const imagePath = getTarotCardImagePath(cardId);
   const tone = getTarotCardVisualTone(cardId);
 
   useEffect(() => {
-    setImageState('loading');
+    setImageFailed(false);
   }, [imagePath]);
 
   return (
@@ -45,10 +48,27 @@ export function TarotCardArtwork({
         className
       )}
     >
-      <div className="absolute inset-0 p-5">
+      {!imageFailed ? (
+        <Image
+          src={imagePath}
+          alt={displayName}
+          fill
+          sizes="(max-width: 640px) 76vw, 14rem"
+          priority={priority}
+          quality={82}
+          onError={() => setImageFailed(true)}
+          className="object-cover"
+        />
+      ) : null}
+
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,18,0.26),rgba(8,10,18,0.08)_34%,rgba(8,10,18,0.58))]" />
+
+      <div className="absolute inset-0 z-10 p-5">
         <div className="flex h-full flex-col justify-between">
           <div className="flex items-center justify-between gap-3">
-            <span className={cn('font-[var(--font-heading)] text-xs tracking-[0.22em]', tone.accentClassName)}>
+            <span
+              className={cn('font-[var(--font-heading)] text-xs tracking-[0.22em]', tone.accentClassName)}
+            >
               {shortName}
             </span>
             <span className="text-[10px] tracking-[0.18em] text-[var(--app-copy-soft)]">
@@ -56,21 +76,37 @@ export function TarotCardArtwork({
             </span>
           </div>
 
-          <div className="grid place-items-center">
-            <div
-              className={cn(
-                'grid h-28 w-28 place-items-center rounded-full border',
-                tone.motifClassName
-              )}
-            >
-              <div className={cn('font-[var(--font-heading)] text-6xl', tone.accentClassName)}>
-                {cardMarker || tone.marker}
+          {imageFailed ? (
+            <div className="grid place-items-center">
+              <div
+                className={cn(
+                  'grid h-28 w-28 place-items-center rounded-full border backdrop-blur-sm',
+                  tone.motifClassName
+                )}
+              >
+                <div className={cn('font-[var(--font-heading)] text-6xl', tone.accentClassName)}>
+                  {cardMarker || tone.marker}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex justify-center">
+              <span
+                className={cn(
+                  'inline-flex rounded-full border px-3 py-1 text-[10px] tracking-[0.22em] backdrop-blur-sm',
+                  tone.borderClassName,
+                  tone.accentClassName
+                )}
+              >
+                {orientationLabel}
+              </span>
+            </div>
+          )}
 
           <div>
-            <div className={cn('font-[var(--font-heading)] text-[11px] tracking-[0.26em]', tone.accentClassName)}>
+            <div
+              className={cn('font-[var(--font-heading)] text-[11px] tracking-[0.26em]', tone.accentClassName)}
+            >
               {orientationLabel}
             </div>
             <figcaption className="mt-2 line-clamp-2 font-[var(--font-heading)] text-xl leading-tight text-[var(--app-ivory)]">
@@ -81,21 +117,9 @@ export function TarotCardArtwork({
         </div>
       </div>
 
-      <img
-        src={imagePath}
-        alt={displayName}
-        onLoad={() => setImageState('loaded')}
-        onError={() => setImageState('failed')}
-        className={cn(
-          'absolute inset-0 h-full w-full object-cover transition-opacity duration-300',
-          imageState === 'loaded' ? 'opacity-100' : 'opacity-0',
-          orientation === 'reversed' && 'rotate-180'
-        )}
-      />
-
-      {imageState === 'failed' ? (
-        <div className="absolute inset-x-4 bottom-4 rounded-full border border-[var(--app-line)] bg-[rgba(8,10,18,0.7)] px-3 py-2 text-center text-[10px] tracking-[0.16em] text-[var(--app-copy-soft)] backdrop-blur">
-          이미지 추가 시 자동 표시
+      {imageFailed ? (
+        <div className="absolute inset-x-4 bottom-4 z-20 rounded-full border border-[var(--app-line)] bg-[rgba(8,10,18,0.7)] px-3 py-2 text-center text-[10px] tracking-[0.16em] text-[var(--app-copy-soft)] backdrop-blur">
+          이미지 로드 실패
         </div>
       ) : null}
     </figure>

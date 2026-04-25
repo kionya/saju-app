@@ -1,10 +1,15 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Shuffle, Sparkles } from 'lucide-react';
 import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useState, useTransition } from 'react';
+import {
+  getTarotCardImagePath,
+  getTarotCardVisualTone,
+} from '@/lib/tarot-card-assets';
 import {
   createRandomTarotDrawDeck,
   pickRandomTarotCard,
@@ -158,8 +163,18 @@ export function TarotCardPicker({ cards, question, sourceLabel }: TarotCardPicke
                   selected && 'brightness-110'
                 )}
               >
+                <Image
+                  src={getTarotCardImagePath(card.cardId)}
+                  alt={`${card.slot}번째 타로 카드`}
+                  fill
+                  sizes="(max-width: 640px) 22vw, (max-width: 1024px) 12vw, 9vw"
+                  quality={58}
+                  priority={card.slot <= 12}
+                  className="object-cover"
+                />
+                <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,18,0.08),rgba(8,10,18,0.02)_26%,rgba(8,10,18,0.56))]" />
                 <span
-                  className="absolute inset-0 opacity-35"
+                  className="absolute inset-0 opacity-18"
                   style={{
                     backgroundImage:
                       'linear-gradient(135deg,transparent 0 42%,rgba(255,255,255,0.08) 43% 44%,transparent 45% 100%)',
@@ -167,10 +182,10 @@ export function TarotCardPicker({ cards, question, sourceLabel }: TarotCardPicke
                 />
                 <span
                   className="absolute left-1/2 top-[18%] h-14 w-14 -translate-x-1/2 rounded-full blur-2xl"
-                  style={{ backgroundColor: tone.light, opacity: 0.35 + card.backGlow * 0.08 }}
+                  style={{ backgroundColor: tone.light, opacity: 0.22 + card.backGlow * 0.06 }}
                 />
                 <span
-                  className="relative text-[10px] font-semibold tracking-[0.18em]"
+                  className="relative z-10 text-[10px] font-semibold tracking-[0.18em]"
                   style={{ color: tone.accent }}
                 >
                   {card.slot.toString().padStart(2, '0')}
@@ -180,16 +195,20 @@ export function TarotCardPicker({ cards, question, sourceLabel }: TarotCardPicke
                   style={{ backgroundColor: tone.light }}
                 />
                 <span
-                  className="absolute left-1/2 top-1/2 flex h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border bg-[rgba(8,10,18,0.18)] font-[var(--font-heading)] text-xl transition-colors group-hover:bg-[rgba(255,255,255,0.08)]"
-                  style={{ borderColor: tone.border, color: tone.accent }}
+                  className="absolute right-2 top-2 z-10 inline-flex rounded-full border px-2 py-1 text-[9px] tracking-[0.16em] backdrop-blur-sm"
+                  style={{
+                    borderColor: tone.border,
+                    color: tone.accent,
+                    backgroundColor: 'rgba(8,10,18,0.35)',
+                  }}
                 >
-                  月
+                  {card.orientation === 'reversed' ? '역' : '정'}
                 </span>
                 <span
-                  className="relative self-end font-[var(--font-heading)] text-[10px] tracking-[0.2em]"
+                  className="relative z-10 self-end font-[var(--font-heading)] text-[10px] tracking-[0.2em]"
                   style={{ color: tone.accent }}
                 >
-                  DRAW
+                  {getTarotCardVisualTone(card.cardId).marker}
                 </span>
               </Link>
             );

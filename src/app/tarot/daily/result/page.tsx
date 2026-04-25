@@ -79,6 +79,7 @@ export default async function TarotResultPage({ searchParams }: Props) {
               orientation={reading.orientation}
               orientationLabel={reading.orientationLabel}
               arcanaLabel={reading.arcanaLabel}
+              priority
             />
             <div className="mt-5 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
               {reading.displayName}

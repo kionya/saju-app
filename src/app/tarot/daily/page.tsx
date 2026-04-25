@@ -122,6 +122,7 @@ export default async function DailyTarotPage() {
                     orientationLabel={featuredReading.orientationLabel}
                     arcanaLabel={featuredReading.arcanaLabel}
                     className="w-[min(14rem,72vw)]"
+                    priority
                   />
                   <div className="mt-4 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
                     {featuredReading.displayName}
