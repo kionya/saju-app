@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/badge';
+import YearlyReportPanel from '@/components/ai/yearly-report-panel';
 import {
   SAJU_PREMIUM_SECTIONS,
   SAJU_PREMIUM_PREVIEW,
@@ -323,6 +324,7 @@ export default async function SajuPremiumPage({ params }: Props) {
   }
 
   const unlockedSections = accessLabel ? buildUnlockedReportSections(reading) : [];
+  const targetYear = new Date().getFullYear();
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -346,8 +348,11 @@ export default async function SajuPremiumPage({ params }: Props) {
         </section>
 
         {accessLabel ? (
-          <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-            <article className="app-panel p-6">
+          <>
+            <YearlyReportPanel slug={slug} targetYear={targetYear} />
+
+            <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+              <article className="app-panel p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="app-caption">심층 리포트 전체 열람</div>
@@ -429,9 +434,9 @@ export default async function SajuPremiumPage({ params }: Props) {
                   </article>
                 ))}
               </div>
-            </article>
+              </article>
 
-            <aside className="moon-lunar-panel p-6">
+              <aside className="moon-lunar-panel p-6">
               <div className="app-starfield" />
               <div className="app-caption">저장형 리포트</div>
               <h2 className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
@@ -465,8 +470,9 @@ export default async function SajuPremiumPage({ params }: Props) {
                   보관함 보기
                 </Link>
               </div>
-            </aside>
-          </section>
+              </aside>
+            </section>
+          </>
         ) : (
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <article className="moon-lunar-panel p-6">
