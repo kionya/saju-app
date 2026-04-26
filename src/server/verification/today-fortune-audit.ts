@@ -50,8 +50,15 @@ function hasForbiddenGuarantee(text: string) {
   return /(무조건|반드시|절대|100%)/.test(text);
 }
 
-function hasDiagnosticMedicalTone(text: string) {
-  return /(질병 진단|병명을|의학적 진단|처방전|응급실에 가야|치료를 받아야)/.test(text);
+function hasUnsafeMedicalDirective(text: string) {
+  const normalized = text
+    .replace(/질병\s*진단이\s*아니라/g, '')
+    .replace(/의학적\s*진단이\s*아니라/g, '')
+    .replace(/병명을\s*판단하는\s*것이\s*아니라/g, '');
+
+  return /(병명을\s*(?:알려|말해|단정)|의학적\s*진단|처방전|응급실에\s*가야|치료를\s*받아야|진단명이\s|질병이다)/.test(
+    normalized
+  );
 }
 
 function hasDirectInvestmentDirective(text: string) {
@@ -226,7 +233,7 @@ export async function getTodayFortuneVerificationAudit({
         label: '건강운 안전 문구',
         ok:
           Boolean(healthText) &&
-          !hasDiagnosticMedicalTone(
+          !hasUnsafeMedicalDirective(
             `${healthText?.free.oneLine.body ?? ''} ${healthText?.premium.safetyNote ?? ''}`
           ) &&
           (healthText?.premium.safetyNote.includes('질병 진단이 아니라') ?? false),
