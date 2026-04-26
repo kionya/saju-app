@@ -9,6 +9,7 @@ import {
 } from '@/lib/counselors';
 import { detectSafeRedirect } from '@/domain/safety/safe-redirect';
 import { normalizeToSajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
+import { buildYearlyReport } from '@/domain/saju/report';
 import {
   FOCUS_TOPIC_META,
   buildSajuReport,
@@ -31,6 +32,7 @@ import {
   toBirthInputFromProfile,
   type UserProfile,
 } from '@/lib/profile';
+import { toSlug } from '@/lib/saju/pillars';
 import { resolveReading, type ReadingRecord } from '@/lib/saju/readings';
 import { createClient } from '@/lib/supabase/server';
 import {
@@ -63,6 +65,11 @@ type ParsedAiRequest = DialogueAiRequest | SajuReportAiRequest;
 interface DialogueProfileContext {
   used: boolean;
   summary: string | null;
+}
+
+interface DialogueCallToAction {
+  label: string;
+  href: string;
 }
 
 interface DialogueProfileGrounding {
@@ -108,9 +115,29 @@ interface DialogueProfileGrounding {
   };
 }
 
+interface DialogueYearlyBridge {
+  targetYear: number;
+  cta: DialogueCallToAction;
+  prompt: {
+    instructions: string;
+    input: string;
+  };
+  fallbackText: string;
+}
+
 function readString(payload: Record<string, unknown>, key: string) {
   const value = payload[key];
   return typeof value === 'string' ? value.trim() : '';
+}
+
+function getCurrentKoreaYear() {
+  const formatted = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+  }).format(new Date());
+  const parsed = Number.parseInt(formatted, 10);
+
+  return Number.isInteger(parsed) ? parsed : new Date().getFullYear();
 }
 
 export function parseAiRequest(payload: unknown): ParsedAiRequest | null {
@@ -166,6 +193,33 @@ export function inferDialogueFocusTopic(message: string): FocusTopic {
   if (/(직장|회사|업무|이직|승진|취업|커리어|직업|면접)/.test(message)) return 'career';
   if (/(관계|인간관계|가족|부모|형제|자매|친구|동료)/.test(message)) return 'relationship';
   return 'today';
+}
+
+export function inferYearlyTargetYear(message: string) {
+  const explicitYear = message.match(/(20\d{2})\s*년?/);
+  if (explicitYear?.[1]) {
+    const parsed = Number.parseInt(explicitYear[1], 10);
+    if (Number.isInteger(parsed) && parsed >= 1900 && parsed <= 2100) {
+      return parsed;
+    }
+  }
+
+  if (/(신년|올해|금년|연간|한 해)/.test(message)) {
+    return getCurrentKoreaYear();
+  }
+
+  return null;
+}
+
+export function isYearlyDialogueIntent(message: string) {
+  const hasYearSignal = /(신년\s*운세|신년운세|연간\s*운세|올해\s*운세|올해\s*전체|한\s*해|월별\s*흐름|월별\s*운세|리포트|총론|202\d\s*년)/.test(
+    message
+  );
+  const hasBroadAsk =
+    /(자세히|깊게|전체|월별|정리|리포트|총평|총론|한번에|제대로)/.test(message) ||
+    /(운세|흐름|운을)\s*(봐|읽|알)/.test(message);
+
+  return hasYearSignal && hasBroadAsk;
 }
 
 function formatStoredProfileSummary(profile: UserProfile) {
@@ -309,6 +363,129 @@ export function buildDialogueFallback(
   ]
     .filter(Boolean)
     .join('\n\n');
+}
+
+function createYearlyDialogueFallback(
+  message: string,
+  profileSummary: string,
+  targetYear: number,
+  counselorId: MoonlightCounselorId,
+  summary: {
+    overview: string;
+    firstHalf: string;
+    secondHalf: string;
+    goodPeriod: string;
+    cautionPeriod: string;
+  }
+) {
+  const intro =
+    counselorId === 'male'
+      ? `${targetYear}년 흐름부터 바로 잘라 말씀드리면, ${summary.overview}`
+      : `${targetYear}년 흐름을 먼저 차분히 잡아보면, ${summary.overview}`;
+
+  return [
+    intro,
+    `${summary.firstHalf} ${summary.secondHalf}`,
+    `좋게 쓰기 좋은 시기는 ${summary.goodPeriod} 쪽이고, 속도를 낮춰야 할 구간은 ${summary.cautionPeriod} 쪽입니다.`,
+    `지금 질문하신 “${message}”은 저장된 프로필 기준 ${profileSummary} 명식 위에서 읽었고, 자세한 12개월 흐름과 분야별 해설은 연간 리포트에서 이어서 확인하시면 됩니다.`,
+  ].join('\n\n');
+}
+
+function createYearlyDialoguePrompt(input: {
+  message: string;
+  targetYear: number;
+  counselorId: MoonlightCounselorId;
+  profileSummary: string;
+  yearlyEvidence: ReturnType<typeof buildYearlyReport>;
+}) {
+  const report = input.yearlyEvidence;
+
+  return {
+    instructions: [
+      '당신은 달빛선생의 숙련 사주명리 상담가입니다.',
+      '이번 답변은 채팅용 짧은 브리지 답변입니다. 연간 리포트 전체를 길게 쓰지 말고 3~5문단으로만 답합니다.',
+      '첫 문장에서 해당 연도의 전체 결론을 먼저 말합니다.',
+      '이어서 상반기와 하반기의 차이, 잘 쓰기 좋은 시기와 조심할 시기를 짧고 또렷하게 짚습니다.',
+      '마크다운 기호, 번호 목록, 별표는 쓰지 않습니다.',
+      '결론은 실제 역술가처럼 단정한 존댓말로 말하되, 과장하거나 운명을 단정하지 않습니다.',
+      '질문에 대한 답은 요약까지만 하고, 더 자세한 12개월 흐름과 분야별 해설은 연간 리포트에서 본다는 느낌으로 마무리합니다.',
+      ...buildDialogueCounselorInstructions(input.counselorId),
+    ].join('\n'),
+    input: JSON.stringify(
+      {
+        question: input.message,
+        targetYear: input.targetYear,
+        profileSummary: input.profileSummary,
+        yearlyEvidence: {
+          overview: report.overview,
+          coreKeywords: report.coreKeywords.slice(0, 4),
+          firstHalf: report.firstHalf,
+          secondHalf: report.secondHalf,
+          categories: {
+            work: report.categories.work,
+            wealth: report.categories.wealth,
+            love: report.categories.love,
+            relationship: report.categories.relationship,
+          },
+          goodPeriods: report.goodPeriods,
+          cautionPeriods: report.cautionPeriods,
+          oneLineSummary: report.oneLineSummary,
+        },
+      },
+      null,
+      2
+    ),
+  };
+}
+
+function createYearlyDialogueBridge(
+  profile: UserProfile,
+  message: string,
+  counselorId: MoonlightCounselorId
+): DialogueYearlyBridge | null {
+  if (!hasCoreBirthProfile(profile) || !isYearlyDialogueIntent(message)) {
+    return null;
+  }
+
+  const targetYear = inferYearlyTargetYear(message);
+  if (!targetYear) return null;
+
+  const input = toBirthInputFromProfile(profile);
+  const sajuData = normalizeToSajuDataV1(input, null, {
+    location: input.birthLocation?.label ?? null,
+  });
+  const yearlyReport = buildYearlyReport(input, sajuData, targetYear);
+  const profileSummary = formatStoredProfileSummary(profile);
+  const goodPeriod =
+    yearlyReport.goodPeriods[0]
+      ? `${yearlyReport.goodPeriods[0].months.join(', ')}월`
+      : '상반기 초반';
+  const cautionPeriod =
+    yearlyReport.cautionPeriods[0]
+      ? `${yearlyReport.cautionPeriods[0].months.join(', ')}월`
+      : '하반기 후반';
+
+  return {
+    targetYear,
+    cta: {
+      label: `${targetYear} 신년 리포트 보기`,
+      href: `/saju/${toSlug(input)}/premium#yearly-report`,
+    },
+    prompt: createYearlyDialoguePrompt({
+      message,
+      targetYear,
+      counselorId,
+      profileSummary,
+      yearlyEvidence: yearlyReport,
+    }),
+    fallbackText: createYearlyDialogueFallback(message, profileSummary, targetYear, counselorId, {
+      overview: yearlyReport.overview.summary,
+      firstHalf: yearlyReport.firstHalf.summary,
+      secondHalf: yearlyReport.secondHalf.summary,
+      goodPeriod,
+      cautionPeriod,
+    }),
+  };
 }
 
 export function normalizeDialogueAnswer(text: string) {
@@ -511,6 +688,7 @@ async function handleDialogue(request: DialogueAiRequest) {
     request.counselorId,
     profile.preferredCounselor
   );
+  const yearlyBridge = createYearlyDialogueBridge(profile, request.message, counselorId);
 
   if (configured && turnPlan.cost > 0 && availableCredits < turnPlan.cost) {
     return NextResponse.json(
@@ -524,17 +702,23 @@ async function handleDialogue(request: DialogueAiRequest) {
     );
   }
 
-  const prompt = createDialoguePrompt(request.message, profileGrounding, counselorId);
-  const fallbackText = buildDialogueFallback(request.message, profileGrounding, counselorId);
+  const prompt = yearlyBridge
+    ? yearlyBridge.prompt
+    : createDialoguePrompt(request.message, profileGrounding, counselorId);
+  const fallbackText = yearlyBridge
+    ? yearlyBridge.fallbackText
+    : buildDialogueFallback(request.message, profileGrounding, counselorId);
   const result = await generateAiText({
     ...prompt,
     fallbackText,
-    maxOutputTokens: 600,
+    maxOutputTokens: yearlyBridge ? 420 : 600,
+    timeoutMs: yearlyBridge ? 12_000 : undefined,
   });
   const dialogueText = normalizeDialogueAnswer(result.text);
   const dialogueResult = {
     ...result,
     text: dialogueText || fallbackText,
+    cta: yearlyBridge?.cta ?? null,
   };
 
   if (!shouldChargeAiChat(result.source)) {

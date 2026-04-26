@@ -4,6 +4,8 @@ import {
   createDialoguePrompt,
   createSafetyResponse,
   inferDialogueFocusTopic,
+  inferYearlyTargetYear,
+  isYearlyDialogueIntent,
   normalizeDialogueAnswer,
   parseAiRequest,
 } from './route';
@@ -38,6 +40,13 @@ test('dialogue prompt keeps an expert counselor tone and infers focus topic from
   assert.match(alternatePrompt.instructions, /달빛 여선생/);
   assert.equal(inferDialogueFocusTopic('올해 재물운을 단도직입적으로 봐줘'), 'wealth');
   assert.equal(inferDialogueFocusTopic('요즘 부모님이랑 관계가 왜 이렇게 꼬일까'), 'relationship');
+});
+
+test('annual dialogue intent detects yearly-report style questions without catching every short topical ask', () => {
+  assert.equal(isYearlyDialogueIntent('2026년 신년운세 자세히 봐줘'), true);
+  assert.equal(isYearlyDialogueIntent('올해 전체 흐름을 월별로 정리해줘'), true);
+  assert.equal(isYearlyDialogueIntent('올해 재물운만 짧게 알려줘'), false);
+  assert.equal(inferYearlyTargetYear('2027년 연간 운세 리포트로 보고 싶어'), 2027);
 });
 
 test('dialogue answer normalization removes markdown-like markers', () => {

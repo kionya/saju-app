@@ -4,6 +4,7 @@ import { FormEvent, startTransition, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AiSourceBadge } from '@/components/ai/ai-source-badge';
 import { CounselorSelector } from '@/components/counselor/counselor-selector';
+import { Button } from '@/components/ui/button';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import type { AiChatBillingSummary } from '@/lib/credits/ai-chat-access';
 import type { MoonlightCounselorId } from '@/lib/counselors';
@@ -32,6 +33,10 @@ interface DialogueAiResponse {
   errorMessage?: string | null;
   redirectPath?: string | null;
   counselorId?: MoonlightCounselorId | null;
+  cta?: {
+    label: string;
+    href: string;
+  } | null;
   error?: string;
 }
 
@@ -50,6 +55,10 @@ interface ChatMessage {
   fallbackReason?: FallbackReason | null;
   errorMessage?: string | null;
   counselorId?: MoonlightCounselorId | null;
+  cta?: {
+    label: string;
+    href: string;
+  } | null;
 }
 
 interface DialogueChatPanelProps {
@@ -229,6 +238,7 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
         fallbackReason: payload.fallbackReason ?? null,
         errorMessage: payload.errorMessage ?? null,
         counselorId: payload.counselorId ?? counselorId,
+        cta: payload.cta ?? null,
       };
 
       startTransition(() => {
@@ -291,6 +301,17 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
                 }`}
               >
                 <p className="whitespace-pre-line text-sm leading-8">{message.text}</p>
+                {!isUser && message.cta ? (
+                  <div className="mt-4">
+                    <Button
+                      type="button"
+                      onClick={() => router.push(message.cta!.href)}
+                      className="rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/14 px-4 py-2 text-sm font-semibold text-[var(--app-gold-text)] hover:bg-[var(--app-gold)]/20"
+                    >
+                      {message.cta.label}
+                    </Button>
+                  </div>
+                ) : null}
                 {!isUser && (message.source || message.errorMessage || message.billing) ? (
                   <div className="mt-3 flex flex-wrap gap-2 text-xs leading-6 text-[var(--app-copy-soft)]">
                     {message.source === 'openai' ? (

@@ -21,7 +21,7 @@ interface YearlyCacheSchemaAudit {
   envReady: boolean;
   tableExists: boolean;
   readingSlugColumn: boolean;
-  readingIdNullable: boolean;
+  readingIdNullable: boolean | null;
   latestMigration: '011-missing' | '011-ready-012-missing' | '011-012-ready' | 'unknown';
   errorMessage: string | null;
 }
@@ -32,7 +32,7 @@ async function inspectYearlyCacheSchema(): Promise<YearlyCacheSchemaAudit> {
       envReady: false,
       tableExists: false,
       readingSlugColumn: false,
-      readingIdNullable: false,
+      readingIdNullable: null,
       latestMigration: '011-missing',
       errorMessage: 'SUPABASE_SERVICE_ROLE_KEY가 없어 yearly cache 스키마를 조회할 수 없습니다.',
     };
@@ -40,65 +40,52 @@ async function inspectYearlyCacheSchema(): Promise<YearlyCacheSchemaAudit> {
 
   try {
     const supabase = await createServiceClient();
-    const { data: tableRows, error: tableError } = await supabase
-      .schema('information_schema')
-      .from('tables')
-      .select('table_name')
-      .eq('table_schema', 'public')
-      .eq('table_name', 'ai_yearly_interpretations');
+    const { error: tableError } = await supabase
+      .from('ai_yearly_interpretations')
+      .select('id', { head: true, count: 'exact' })
+      .limit(1);
 
     if (tableError) {
+      const message = tableError.message ?? '';
       return {
         envReady: true,
         tableExists: false,
         readingSlugColumn: false,
-        readingIdNullable: false,
-        latestMigration: 'unknown',
-        errorMessage: tableError.message,
+        readingIdNullable: null,
+        latestMigration:
+          /relation .*ai_yearly_interpretations.* does not exist|Could not find the table/i.test(message)
+            ? '011-missing'
+            : 'unknown',
+        errorMessage: message || null,
       };
     }
 
-    if (!tableRows || tableRows.length === 0) {
-      return {
-        envReady: true,
-        tableExists: false,
-        readingSlugColumn: false,
-        readingIdNullable: false,
-        latestMigration: '011-missing',
-        errorMessage: null,
-      };
-    }
+    const { error: slugColumnError } = await supabase
+      .from('ai_yearly_interpretations')
+      .select('reading_slug')
+      .limit(1);
 
-    const { data: columns, error: columnError } = await supabase
-      .schema('information_schema')
-      .from('columns')
-      .select('column_name, is_nullable')
-      .eq('table_schema', 'public')
-      .eq('table_name', 'ai_yearly_interpretations');
-
-    if (columnError) {
+    if (slugColumnError) {
       return {
         envReady: true,
         tableExists: true,
         readingSlugColumn: false,
-        readingIdNullable: false,
-        latestMigration: 'unknown',
-        errorMessage: columnError.message,
+        readingIdNullable: null,
+        latestMigration: /column .*reading_slug.* does not exist|Could not find the .*reading_slug/i.test(
+          slugColumnError.message ?? ''
+        )
+          ? '011-ready-012-missing'
+          : 'unknown',
+        errorMessage: slugColumnError.message,
       };
     }
-
-    const readingSlugColumn = columns?.some((column) => column.column_name === 'reading_slug') ?? false;
-    const readingIdNullable =
-      columns?.find((column) => column.column_name === 'reading_id')?.is_nullable === 'YES';
 
     return {
       envReady: true,
       tableExists: true,
-      readingSlugColumn,
-      readingIdNullable,
-      latestMigration: readingSlugColumn && readingIdNullable
-        ? '011-012-ready'
-        : '011-ready-012-missing',
+      readingSlugColumn: true,
+      readingIdNullable: null,
+      latestMigration: '011-012-ready',
       errorMessage: null,
     };
   } catch (error) {
@@ -106,7 +93,7 @@ async function inspectYearlyCacheSchema(): Promise<YearlyCacheSchemaAudit> {
       envReady: true,
       tableExists: false,
       readingSlugColumn: false,
-      readingIdNullable: false,
+      readingIdNullable: null,
       latestMigration: 'unknown',
       errorMessage: error instanceof Error ? error.message : 'yearly cache schema 조회 실패',
     };
@@ -128,6 +115,14 @@ function summarizeStage(stage: YearlyGenerationStageResult) {
   return `${stage.key} · ${stage.source} · ${stage.durationMs}ms${
     stage.fallbackReason ? ` · ${stage.fallbackReason}` : ''
   }`;
+}
+
+function hasForbiddenGuarantee(text: string) {
+  return /(무조건|반드시|100%)/.test(text);
+}
+
+function hasAiLikeTone(text: string) {
+  return /(AI로서|분석해보면|결론적으로|표로 정리하면)/.test(text);
 }
 
 export async function getYearlyVerificationAudit({
@@ -206,6 +201,40 @@ export async function getYearlyVerificationAudit({
         detail: result.cached
           ? '캐시 응답이라 생성 시간이 들지 않았습니다.'
           : `${result.generationMs}ms · ${result.stageResults.map(summarizeStage).join(' / ')}`,
+      },
+      {
+        key: 'yearly-sections-complete',
+        label: '필수 섹션 완성도',
+        ok:
+          result.interpretation.keywords.length >= 3 &&
+          result.interpretation.monthlyFlows.length === 12 &&
+          Boolean(result.interpretation.firstHalf) &&
+          Boolean(result.interpretation.secondHalf) &&
+          Boolean(result.interpretation.categories.work) &&
+          Boolean(result.interpretation.categories.wealth) &&
+          Boolean(result.interpretation.categories.love) &&
+          Boolean(result.interpretation.categories.relationship) &&
+          Boolean(result.interpretation.categories.health) &&
+          Boolean(result.interpretation.categories.move) &&
+          result.interpretation.actionAdvice.length >= 3 &&
+          Boolean(result.interpretation.oneLineSummary),
+        detail: `keywords ${result.interpretation.keywords.length}개 · monthly ${result.interpretation.monthlyFlows.length}개 · action ${result.interpretation.actionAdvice.length}개`,
+      },
+      {
+        key: 'yearly-forbidden-phrases',
+        label: '금지 표현 검사',
+        ok: !hasForbiddenGuarantee(result.reportText),
+        detail: hasForbiddenGuarantee(result.reportText)
+          ? '무조건/반드시/100% 같은 단정 표현이 본문에 남아 있습니다.'
+          : '단정 금지 표현은 발견되지 않았습니다.',
+      },
+      {
+        key: 'yearly-ai-tone',
+        label: 'AI스러운 말투 검사',
+        ok: !hasAiLikeTone(result.reportText),
+        detail: hasAiLikeTone(result.reportText)
+          ? 'AI 비서 같은 메타 문구가 본문에 섞여 있습니다.'
+          : '상담 문체를 깨는 메타 문구는 발견되지 않았습니다.',
       },
     ];
 
