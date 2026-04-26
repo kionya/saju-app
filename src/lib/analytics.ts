@@ -1,22 +1,11 @@
 'use client';
 
-export type MoonlightAnalyticsEvent =
-  | 'home_view'
-  | 'today_concern_selected'
-  | 'birth_form_started'
-  | 'birth_form_completed'
-  | 'today_free_result_viewed'
-  | 'premium_teaser_viewed'
-  | 'unlock_clicked'
-  | 'payment_started'
-  | 'payment_completed'
-  | 'premium_result_viewed'
-  | 'followup_question_clicked'
-  | 'dialogue_started_from_result'
-  | 'feedback_submitted'
-  | 'hit_memo_response_correct'
-  | 'hit_memo_response_partial'
-  | 'hit_memo_response_miss';
+import {
+  MOONLIGHT_ANALYTICS_EVENTS,
+  type MoonlightAnalyticsEvent,
+} from '@/lib/analytics-events';
+
+export { MOONLIGHT_ANALYTICS_EVENTS };
 
 declare global {
   interface Window {

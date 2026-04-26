@@ -15,6 +15,8 @@ import {
 import { getSajuVerificationAudit, type SajuVerificationCheck } from '@/server/verification/saju-audit';
 import { getLifetimeVerificationAudit } from '@/server/verification/lifetime-audit';
 import { getYearlyVerificationAudit } from '@/server/verification/yearly-audit';
+import { getTodayFortuneVerificationAudit } from '@/server/verification/today-fortune-audit';
+import { normalizeConcernId } from '@/lib/today-fortune/concerns';
 import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -24,6 +26,7 @@ interface VerificationPageProps {
     concept?: string;
     slug?: string;
     topic?: string;
+    concern?: string;
     targetYear?: string;
     counselor?: string;
   }>;
@@ -241,17 +244,20 @@ export default async function VerificationPage({ searchParams }: VerificationPag
   const concept = params.concept?.trim() || DEFAULT_CLASSICS_AUDIT_CONCEPT;
   const slug = params.slug?.trim() || '1982-1-29-8-male';
   const topic = params.topic?.trim() || 'today';
+  const concern = normalizeConcernId(params.concern?.trim());
   const targetYear = Number.parseInt(params.targetYear?.trim() || '2026', 10);
   const normalizedTargetYear =
     Number.isInteger(targetYear) && targetYear >= 1900 && targetYear <= 2100 ? targetYear : 2026;
   const counselor = params.counselor === 'male' ? 'male' : 'female';
-  const [classicsAudit, sajuAudit, lifetimeAudit, yearlyAudit] = await Promise.all([
+  const [classicsAudit, todayFortuneAudit, sajuAudit, lifetimeAudit, yearlyAudit] = await Promise.all([
     getClassicsVerificationAudit({ concept, limit: 5 }),
+    getTodayFortuneVerificationAudit({ slug, concernId: concern, counselorId: counselor }),
     getSajuVerificationAudit({ slug, topic }),
     getLifetimeVerificationAudit({ slug, targetYear: normalizedTargetYear, counselorId: counselor }),
     getYearlyVerificationAudit({ slug, targetYear: normalizedTargetYear, counselorId: counselor }),
   ]);
   const classicsApiHref = `/api/verification/classics?concept=${encodeURIComponent(concept)}&limit=5`;
+  const todayFortuneApiHref = `/api/verification/today-fortune?slug=${encodeURIComponent(slug)}&concern=${encodeURIComponent(concern)}&counselor=${counselor}`;
   const sajuApiHref = `/api/verification/saju?slug=${encodeURIComponent(slug)}&topic=${encodeURIComponent(topic)}`;
   const lifetimeApiHref = `/api/verification/lifetime?slug=${encodeURIComponent(slug)}&targetYear=${normalizedTargetYear}&counselor=${counselor}`;
   const yearlyApiHref = `/api/verification/yearly?slug=${encodeURIComponent(slug)}&targetYear=${normalizedTargetYear}&counselor=${counselor}`;
@@ -262,6 +268,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
         <section className="app-hero-card p-6 sm:p-7">
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge ok={classicsAudit.status === 'ready'}>고전 {classicsAudit.status}</StatusBadge>
+            <StatusBadge ok={todayFortuneAudit.status === 'ready'}>오늘운세 {todayFortuneAudit.status}</StatusBadge>
             <StatusBadge ok={sajuAudit.status === 'ready'}>사주 {sajuAudit.status}</StatusBadge>
             <StatusBadge ok={lifetimeAudit.status === 'ready'}>평생 {lifetimeAudit.status}</StatusBadge>
             <StatusBadge ok={yearlyAudit.status === 'ready'}>연간 {yearlyAudit.status}</StatusBadge>
@@ -277,7 +284,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
             “실제 데이터가 들어왔는지”와 “해석 문장이 어떤 계산값에서 나왔는지”를 추적하기 위한 내부 점검용입니다.
           </p>
 
-          <form action="/verification" className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_1fr_0.8fr_0.8fr_auto]">
+          <form action="/verification" className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_0.9fr_0.9fr_0.8fr_0.8fr_auto]">
             <label className="grid gap-2 text-sm text-[var(--app-copy)]">
               고전 개념
               <input
@@ -306,6 +313,21 @@ export default async function VerificationPage({ searchParams }: VerificationPag
                 <option value="wealth">wealth</option>
                 <option value="career">career</option>
                 <option value="relationship">relationship</option>
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm text-[var(--app-copy)]">
+              concern
+              <select
+                name="concern"
+                defaultValue={concern}
+                className="rounded-xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-[var(--app-ivory)] outline-none focus:border-[var(--app-gold)]/45"
+              >
+                <option value="general">general</option>
+                <option value="love_contact">love_contact</option>
+                <option value="money_spend">money_spend</option>
+                <option value="work_meeting">work_meeting</option>
+                <option value="relationship_conflict">relationship_conflict</option>
+                <option value="energy_health">energy_health</option>
               </select>
             </label>
             <label className="grid gap-2 text-sm text-[var(--app-copy)]">
@@ -383,6 +405,165 @@ export default async function VerificationPage({ searchParams }: VerificationPag
           ) : null}
           <ClassicWorkRows works={classicsAudit.works} />
           <GateChecks checks={classicsAudit.gateChecks} />
+        </section>
+
+        <section className="app-panel p-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="app-caption">오늘운세 운영 검증</div>
+              <h2 className="mt-2 text-2xl font-semibold text-[var(--app-ivory)]">
+                무료 결과 / 1코인 심화 / safety / analytics 준비 상태
+              </h2>
+            </div>
+            <JsonLink href={todayFortuneApiHref} />
+          </div>
+
+          {todayFortuneAudit.status === 'ready' ? (
+            <>
+              <div className="mt-5 grid gap-3 lg:grid-cols-5">
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">concern</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {todayFortuneAudit.concernLabel} · {todayFortuneAudit.concernHanja}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                    {todayFortuneAudit.concernId}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">reading</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {todayFortuneAudit.readingSource}
+                  </div>
+                  <p className="mt-1 break-all text-xs text-[var(--app-copy-soft)]">
+                    {todayFortuneAudit.readingId}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">free result</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    score {todayFortuneAudit.freeResultSummary.scoreCount}개
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                    follow-up {todayFortuneAudit.freeResultSummary.followUpQuestions.length}개
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">premium result</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {todayFortuneAudit.premiumResultSummary.productCode}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                    {todayFortuneAudit.premiumResultSummary.coinCost}코인 · scenario {todayFortuneAudit.premiumResultSummary.scenarioCount}개
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">analytics</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {todayFortuneAudit.analytics.registeredEvents.length}개 등록
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                    missing {todayFortuneAudit.analytics.missingEvents.length}개
+                  </p>
+                </div>
+              </div>
+
+              <YearlyChecks checks={todayFortuneAudit.checks} />
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">free result preview</div>
+                  <div className="mt-3 text-sm font-semibold text-[var(--app-ivory)]">
+                    {todayFortuneAudit.freeResultSummary.headline}
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+                    {todayFortuneAudit.freeResultSummary.bodyPreview}
+                  </p>
+                  <div className="mt-3 text-xs text-[var(--app-copy-soft)]">
+                    근거: {todayFortuneAudit.freeResultSummary.reasonSnippet}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">premium structure</div>
+                  <div className="mt-3 grid gap-2 text-sm text-[var(--app-copy)]">
+                    <div className="flex justify-between gap-3">
+                      <span>favorable</span>
+                      <span>{todayFortuneAudit.premiumResultSummary.favorableWindowCount}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span>caution</span>
+                      <span>{todayFortuneAudit.premiumResultSummary.cautionWindowCount}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span>avoid / recommended</span>
+                      <span>
+                        {todayFortuneAudit.premiumResultSummary.avoidActionCount} / {todayFortuneAudit.premiumResultSummary.recommendedActionCount}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span>evidence lines</span>
+                      <span>{todayFortuneAudit.premiumResultSummary.evidenceLineCount}</span>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
+                    {todayFortuneAudit.premiumResultSummary.safetyNote}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">analytics dimension</div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {todayFortuneAudit.analytics.dimensions.map((dimension) => (
+                      <Badge
+                        key={dimension}
+                        className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy)]"
+                      >
+                        {dimension}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
+                    free result → unlock → payment → follow-up dialogue까지 같은 세션 축으로 넘겨집니다.
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4 lg:col-span-2">
+                  <div className="app-caption">registered events</div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {todayFortuneAudit.analytics.registeredEvents.map((eventName) => (
+                      <Badge
+                        key={eventName}
+                        className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy)]"
+                      >
+                        {eventName}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">unknown time preview</div>
+                  <div className="mt-3 text-sm font-semibold text-[var(--app-ivory)]">
+                    {todayFortuneAudit.unknownBirthTimePreview?.headline ?? '없음'}
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+                    {todayFortuneAudit.unknownBirthTimePreview?.reasonSnippet ?? 'unknownBirthTime 샘플 없음'}
+                  </p>
+                </div>
+              </div>
+
+              {todayFortuneAudit.warnings.length > 0 ? (
+                <div className="mt-5 rounded-2xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
+                  {todayFortuneAudit.warnings.join(' ')}
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <div className="mt-5 rounded-2xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
+              {todayFortuneAudit.errors.join(' ')}
+            </div>
+          )}
         </section>
 
         <section className="app-panel p-6">
