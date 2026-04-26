@@ -13,6 +13,7 @@ import {
   type ClassicWorkAudit,
 } from '@/server/verification/classics-audit';
 import { getSajuVerificationAudit, type SajuVerificationCheck } from '@/server/verification/saju-audit';
+import { getYearlyVerificationAudit } from '@/server/verification/yearly-audit';
 import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,8 @@ interface VerificationPageProps {
     concept?: string;
     slug?: string;
     topic?: string;
+    targetYear?: string;
+    counselor?: string;
   }>;
 }
 
@@ -212,17 +215,43 @@ function SajuChecks({ checks }: { checks?: SajuVerificationCheck[] }) {
   );
 }
 
+function YearlyChecks({
+  checks,
+}: {
+  checks?: Array<{ key: string; label: string; ok: boolean; detail: string }>;
+}) {
+  if (!checks) return null;
+
+  return (
+    <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {checks.map((check) => (
+        <div key={check.key} className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+          <StatusBadge ok={check.ok}>{check.ok ? '통과' : '확인 필요'}</StatusBadge>
+          <div className="mt-3 font-semibold text-[var(--app-ivory)]">{check.label}</div>
+          <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">{check.detail}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default async function VerificationPage({ searchParams }: VerificationPageProps) {
   const params = await searchParams;
   const concept = params.concept?.trim() || DEFAULT_CLASSICS_AUDIT_CONCEPT;
   const slug = params.slug?.trim() || '1982-1-29-8-male';
   const topic = params.topic?.trim() || 'today';
-  const [classicsAudit, sajuAudit] = await Promise.all([
+  const targetYear = Number.parseInt(params.targetYear?.trim() || '2026', 10);
+  const normalizedTargetYear =
+    Number.isInteger(targetYear) && targetYear >= 1900 && targetYear <= 2100 ? targetYear : 2026;
+  const counselor = params.counselor === 'male' ? 'male' : 'female';
+  const [classicsAudit, sajuAudit, yearlyAudit] = await Promise.all([
     getClassicsVerificationAudit({ concept, limit: 5 }),
     getSajuVerificationAudit({ slug, topic }),
+    getYearlyVerificationAudit({ slug, targetYear: normalizedTargetYear, counselorId: counselor }),
   ]);
   const classicsApiHref = `/api/verification/classics?concept=${encodeURIComponent(concept)}&limit=5`;
   const sajuApiHref = `/api/verification/saju?slug=${encodeURIComponent(slug)}&topic=${encodeURIComponent(topic)}`;
+  const yearlyApiHref = `/api/verification/yearly?slug=${encodeURIComponent(slug)}&targetYear=${normalizedTargetYear}&counselor=${counselor}`;
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -231,6 +260,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge ok={classicsAudit.status === 'ready'}>고전 {classicsAudit.status}</StatusBadge>
             <StatusBadge ok={sajuAudit.status === 'ready'}>사주 {sajuAudit.status}</StatusBadge>
+            <StatusBadge ok={yearlyAudit.status === 'ready'}>연간 {yearlyAudit.status}</StatusBadge>
             <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
               검색 제외
             </Badge>
@@ -243,7 +273,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
             “실제 데이터가 들어왔는지”와 “해석 문장이 어떤 계산값에서 나왔는지”를 추적하기 위한 내부 점검용입니다.
           </p>
 
-          <form action="/verification" className="mt-6 grid gap-3 md:grid-cols-[1fr_1.5fr_1fr_auto]">
+          <form action="/verification" className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_1fr_0.8fr_0.8fr_auto]">
             <label className="grid gap-2 text-sm text-[var(--app-copy)]">
               고전 개념
               <input
@@ -272,6 +302,25 @@ export default async function VerificationPage({ searchParams }: VerificationPag
                 <option value="wealth">wealth</option>
                 <option value="career">career</option>
                 <option value="relationship">relationship</option>
+              </select>
+            </label>
+            <label className="grid gap-2 text-sm text-[var(--app-copy)]">
+              연도
+              <input
+                name="targetYear"
+                defaultValue={normalizedTargetYear}
+                className="rounded-xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-[var(--app-ivory)] outline-none focus:border-[var(--app-gold)]/45"
+              />
+            </label>
+            <label className="grid gap-2 text-sm text-[var(--app-copy)]">
+              counselor
+              <select
+                name="counselor"
+                defaultValue={counselor}
+                className="rounded-xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-[var(--app-ivory)] outline-none focus:border-[var(--app-gold)]/45"
+              >
+                <option value="female">female</option>
+                <option value="male">male</option>
               </select>
             </label>
             <button
@@ -480,6 +529,160 @@ export default async function VerificationPage({ searchParams }: VerificationPag
           ) : (
             <div className="mt-5 rounded-2xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
               {sajuAudit.errors.join(' ')}
+            </div>
+          )}
+        </section>
+
+        <section className="app-panel p-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="app-caption">연간 리포트 운영 검증</div>
+              <h2 className="mt-2 text-2xl font-semibold text-[var(--app-ivory)]">
+                {normalizedTargetYear} 신년 리포트 API / 캐시 / 생성 상태
+              </h2>
+            </div>
+            <JsonLink href={yearlyApiHref} />
+          </div>
+
+          {yearlyAudit.status === 'ready' ? (
+            <>
+              <div className="mt-5 grid gap-3 lg:grid-cols-5">
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">source</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {yearlyAudit.generation.source}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                    {yearlyAudit.generation.fallbackReason ?? 'fallback 없음'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">cache</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {yearlyAudit.cache.cached ? 'hit' : 'miss'}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                    {yearlyAudit.cache.cacheKeyType} · {yearlyAudit.cache.cacheable ? 'server cache on' : 'server cache off'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">generation</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {yearlyAudit.generation.generationMs}ms
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                    {yearlyAudit.generation.model ?? '모델 없음'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">target</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {yearlyAudit.targetYear} · {yearlyAudit.counselorId}
+                  </div>
+                  <p className="mt-1 break-all text-xs text-[var(--app-copy-soft)]">
+                    readingId {yearlyAudit.readingId}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">schema</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {yearlyAudit.schema.latestMigration}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                    slug column {yearlyAudit.schema.readingSlugColumn ? 'yes' : 'no'}
+                  </p>
+                </div>
+              </div>
+
+              <YearlyChecks checks={yearlyAudit.checks} />
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">yearly API</div>
+                  <div className="mt-3 grid gap-2 text-sm text-[var(--app-copy)]">
+                    <div className="flex justify-between gap-3">
+                      <span>resolvedReadingId</span>
+                      <span className="break-all text-right">{yearlyAudit.resolvedReadingId}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span>readingSource</span>
+                      <span>{yearlyAudit.readingSource}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span>promptVersion</span>
+                      <span>{yearlyAudit.promptVersion}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span>updatedAt</span>
+                      <span>{formatMaybeDate(yearlyAudit.cache.updatedAt)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">cache detail</div>
+                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+                    {yearlyAudit.cache.cacheKeyDetail}
+                  </p>
+                  <div className="mt-3 text-xs text-[var(--app-copy-soft)]">
+                    cache hit 여부, slug 지원 여부, migration 반영 상태를 함께 봅니다.
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">interpretation summary</div>
+                  <div className="mt-3 grid gap-2 text-sm text-[var(--app-copy)]">
+                    <div className="flex justify-between gap-3">
+                      <span>keywords</span>
+                      <span>{yearlyAudit.interpretationSummary.keywordCount}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span>monthlyFlows</span>
+                      <span>{yearlyAudit.interpretationSummary.monthlyCount}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span>reportLength</span>
+                      <span>{yearlyAudit.interpretationSummary.reportLength}</span>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+                    {yearlyAudit.interpretationSummary.openingPreview}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4 lg:col-span-3">
+                  <div className="app-caption">stage results</div>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    {yearlyAudit.generation.stageResults.map((stage) => (
+                      <div key={stage.key} className="rounded-2xl border border-[var(--app-line)] bg-[rgba(8,10,18,0.28)] p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="font-semibold text-[var(--app-ivory)]">{stage.key}</div>
+                          <StatusBadge ok={stage.source === 'openai'}>
+                            {stage.source}
+                          </StatusBadge>
+                        </div>
+                        <div className="mt-3 grid gap-2 text-sm text-[var(--app-copy)]">
+                          <div>duration: {stage.durationMs}ms</div>
+                          <div>fallback: {stage.fallbackReason ?? '없음'}</div>
+                          <div className="break-words text-[var(--app-copy-soft)]">
+                            {stage.errorMessage ?? '오류 없음'}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {yearlyAudit.warnings.length > 0 ? (
+                <div className="mt-5 rounded-2xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
+                  {yearlyAudit.warnings.join(' ')}
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <div className="mt-5 rounded-2xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
+              {yearlyAudit.errors.join(' ')}
             </div>
           )}
         </section>

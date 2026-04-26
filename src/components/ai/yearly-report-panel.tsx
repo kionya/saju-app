@@ -18,17 +18,30 @@ interface Props {
 
 interface YearlyInterpretationResponse {
   ok: boolean;
+  readingId: string;
+  resolvedReadingId: string;
+  readingSource: 'database-reading-id' | 'deterministic-slug';
   targetYear: number;
   counselorId: MoonlightCounselorId;
+  promptVersion: string;
   cached: boolean;
   cacheable: boolean;
+  cacheKeyType: 'reading_id' | 'reading_slug' | 'unavailable';
   source: AiGenerationSource;
   model: string | null;
   fallbackReason: AiFallbackReason | null;
   errorMessage: string | null;
+  generationMs: number;
   updatedAt?: string;
   interpretation: SajuYearlyAiInterpretation;
   reportText: string;
+  stageResults: Array<{
+    key: 'narrative' | 'monthly';
+    source: AiGenerationSource;
+    fallbackReason: AiFallbackReason | null;
+    errorMessage: string | null;
+    durationMs: number;
+  }>;
 }
 
 const CATEGORY_ORDER = [
@@ -176,7 +189,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
   const interpretation = data.interpretation;
 
   return (
-    <section className="moon-lunar-panel p-6 sm:p-7">
+    <section id="yearly-report" className="moon-lunar-panel p-6 sm:p-7">
       <div className="app-starfield" />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -203,6 +216,8 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
       <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-[var(--app-copy-soft)]">
         {updatedAtLabel ? <span>최근 생성: {updatedAtLabel}</span> : null}
         {data.model ? <span>모델: {data.model}</span> : null}
+        {!data.cached ? <span>생성 시간: {data.generationMs}ms</span> : null}
+        <span>cache key: {data.cacheKeyType}</span>
         <Button
           onClick={() => setReloadToken((value) => value + 1)}
           variant="outline"

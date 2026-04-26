@@ -525,6 +525,33 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           </div>
         </section>
 
+        <section className="moon-lunar-panel p-6 sm:p-7">
+          <div className="app-starfield" />
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="app-caption">연간 리포트 진입</div>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--app-ivory)]">
+                2026 신년 리포트를 월별 흐름까지 길게 읽고 싶다면 여기서 이어집니다.
+              </h2>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
+                총론, 상반기·하반기, 일·재물·연애·관계·건강·이동 흐름, 12개월 요약까지 한 번에 정리한
+                프리미엄 리포트를 심층 리포트 안에서 확인할 수 있습니다.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                href={`/saju/${slug}/premium#yearly-report`}
+                className="rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/14 px-5 py-3 text-sm font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/20"
+              >
+                2026 신년 리포트 보기
+              </Link>
+              <span className="text-xs text-[var(--app-copy-soft)]">
+                심층 리포트 탭에서 열립니다
+              </span>
+            </div>
+          </div>
+        </section>
+
         <section className="grid gap-4 lg:grid-cols-3">
           {report.timeline.map((item) => (
             <article key={item.label} className="app-panel p-6">

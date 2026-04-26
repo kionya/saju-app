@@ -11,6 +11,7 @@ export interface AiTextRequest {
   fallbackText: string;
   model?: string;
   maxOutputTokens?: number;
+  timeoutMs?: number;
 }
 
 export interface AiTextResult {
@@ -69,7 +70,7 @@ export async function generateAiText(
     const model = request.model?.trim() || getOpenAIModel();
     const client = new OpenAI({
       apiKey,
-      timeout: OPENAI_TIMEOUT_MS,
+      timeout: request.timeoutMs ?? OPENAI_TIMEOUT_MS,
       maxRetries: 0,
     });
 

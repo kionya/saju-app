@@ -5,8 +5,12 @@ import type { ReadingRecord } from '@/lib/saju/readings';
 import type { BirthInput } from '@/lib/saju/types';
 import {
   buildFallbackYearlyInterpretation,
+  buildFallbackYearlyNarrativeInterpretation,
   createYearlyInterpretationPrompt,
   getYearlyInterpretationPromptVersion,
+  mergeYearlyInterpretationSections,
+  parseYearlyMonthlyFlowsText,
+  parseYearlyNarrativeInterpretationText,
   parseYearlyInterpretationText,
   renderYearlyInterpretationReport,
   type SajuYearlyAiInterpretation,
@@ -98,18 +102,52 @@ test('buildFallbackYearlyInterpretation renders a premium-length yearly report f
   assert.ok(rendered.length >= 3000);
 });
 
-test('createYearlyInterpretationPrompt grounds the long-form report on yearly evidence and counselor voice', () => {
+test('yearly narrative and monthly parsers can be merged back into one report', () => {
   const record = createReadingRecord();
   const yearlyReport = buildYearlyReport(record.input, record.sajuData, 2026);
-  const prompt = createYearlyInterpretationPrompt(record, yearlyReport, 'male');
-  const grounding = JSON.parse(prompt.input) as Record<string, unknown>;
+  const fallback = buildFallbackYearlyInterpretation(yearlyReport, 'female');
+  const narrative = buildFallbackYearlyNarrativeInterpretation(fallback);
+  const parsedNarrative = parseYearlyNarrativeInterpretationText(
+    JSON.stringify(narrative),
+    narrative
+  );
+  const parsedMonthly = parseYearlyMonthlyFlowsText(
+    JSON.stringify({ monthlyFlows: fallback.monthlyFlows }),
+    fallback.monthlyFlows
+  );
 
-  assert.equal(getYearlyInterpretationPromptVersion('male'), 'saju-yearly-interpret-v1-male');
-  assert.match(prompt.instructions, /신년 운세 전문 해석가/);
-  assert.match(prompt.instructions, /달빛 남선생/);
-  assert.equal(grounding.targetYear, 2026);
+  assert.equal(parsedNarrative.ok, true);
+  assert.equal(parsedMonthly.ok, true);
+  assert.equal(parsedMonthly.monthlyFlows.length, 12);
+
+  const merged = mergeYearlyInterpretationSections(
+    parsedNarrative.interpretation,
+    parsedMonthly.monthlyFlows
+  );
+
+  assert.equal(merged.keywords.length >= 3, true);
+  assert.equal(merged.monthlyFlows[11]?.month, 12);
+});
+
+test('createYearlyInterpretationPrompt grounds narrative and monthly passes on yearly evidence and counselor voice', () => {
+  const record = createReadingRecord();
+  const yearlyReport = buildYearlyReport(record.input, record.sajuData, 2026);
+  const narrativePrompt = createYearlyInterpretationPrompt(record, yearlyReport, 'male', 'narrative');
+  const monthlyPrompt = createYearlyInterpretationPrompt(record, yearlyReport, 'male', 'monthly');
+  const narrativeGrounding = JSON.parse(narrativePrompt.input) as Record<string, unknown>;
+  const monthlyGrounding = JSON.parse(monthlyPrompt.input) as Record<string, unknown>;
+
+  assert.equal(getYearlyInterpretationPromptVersion('male'), 'saju-yearly-interpret-v2-male');
+  assert.match(narrativePrompt.instructions, /신년 운세 전문 해석가/);
+  assert.match(narrativePrompt.instructions, /달빛 남선생/);
+  assert.match(monthlyPrompt.instructions, /monthlyFlows만 작성/);
+  assert.equal(narrativeGrounding.targetYear, 2026);
   assert.equal(
-    (grounding.yearlyEvidence as { monthlyFlows: unknown[] }).monthlyFlows.length,
+    (monthlyGrounding.yearlyEvidence as { monthlyFlows: unknown[] }).monthlyFlows.length,
     12
+  );
+  assert.equal(
+    'monthlyFlows' in (narrativeGrounding.yearlyEvidence as Record<string, unknown>),
+    false
   );
 });
