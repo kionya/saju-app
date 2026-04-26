@@ -22,7 +22,9 @@ import {
   getAvailableCreditsTotal,
   getAiChatSuccessfulTurns,
   getAiChatTurnPlan,
+  hasTodayResultFollowupFreeTurn,
   recordAiChatIncludedTurn,
+  recordTodayResultFollowupFreeTurn,
   shouldChargeAiChat,
 } from '@/lib/credits/ai-chat-access';
 import { deductCreditsAmount, getCredits } from '@/lib/credits/deduct';
@@ -32,6 +34,7 @@ import {
   toBirthInputFromProfile,
   type UserProfile,
 } from '@/lib/profile';
+import { getRecentFortuneFeedbackSummary } from '@/lib/fortune-feedback';
 import { toSlug } from '@/lib/saju/pillars';
 import { resolveReading, type ReadingRecord } from '@/lib/saju/readings';
 import { createClient } from '@/lib/supabase/server';
@@ -50,6 +53,9 @@ interface DialogueAiRequest {
   mode: 'dialogue';
   message: string;
   counselorId?: MoonlightCounselorId;
+  sourceSessionId?: string;
+  concernId?: string;
+  from?: string;
 }
 
 interface SajuReportAiRequest {
@@ -149,7 +155,16 @@ export function parseAiRequest(payload: unknown): ParsedAiRequest | null {
   if (mode === 'dialogue') {
     const message = readString(data, 'message');
     const counselorId = normalizeMoonlightCounselor(data.counselorId);
-    return message ? { mode, message, counselorId: counselorId ?? undefined } : null;
+    return message
+      ? {
+          mode,
+          message,
+          counselorId: counselorId ?? undefined,
+          sourceSessionId: readString(data, 'sourceSessionId') || undefined,
+          concernId: readString(data, 'concernId') || undefined,
+          from: readString(data, 'from') || undefined,
+        }
+      : null;
   }
 
   if (mode === 'saju-report') {
@@ -397,6 +412,7 @@ function createYearlyDialoguePrompt(input: {
   counselorId: MoonlightCounselorId;
   profileSummary: string;
   yearlyEvidence: ReturnType<typeof buildYearlyReport>;
+  recentFeedbackSummary?: string | null;
 }) {
   const report = input.yearlyEvidence;
 
@@ -431,6 +447,7 @@ function createYearlyDialoguePrompt(input: {
           cautionPeriods: report.cautionPeriods,
           oneLineSummary: report.oneLineSummary,
         },
+        recentFeedbackSummary: input.recentFeedbackSummary ?? null,
       },
       null,
       2
@@ -441,7 +458,8 @@ function createYearlyDialoguePrompt(input: {
 function createYearlyDialogueBridge(
   profile: UserProfile,
   message: string,
-  counselorId: MoonlightCounselorId
+  counselorId: MoonlightCounselorId,
+  recentFeedbackSummary?: string | null
 ): DialogueYearlyBridge | null {
   if (!hasCoreBirthProfile(profile) || !isYearlyDialogueIntent(message)) {
     return null;
@@ -477,6 +495,7 @@ function createYearlyDialogueBridge(
       counselorId,
       profileSummary,
       yearlyEvidence: yearlyReport,
+      recentFeedbackSummary,
     }),
     fallbackText: createYearlyDialogueFallback(message, profileSummary, targetYear, counselorId, {
       overview: yearlyReport.overview.summary,
@@ -511,7 +530,8 @@ export function normalizeDialogueAnswer(text: string) {
 export function createDialoguePrompt(
   message: string,
   profileGrounding?: DialogueProfileGrounding | null,
-  counselorId: MoonlightCounselorId = 'female'
+  counselorId: MoonlightCounselorId = 'female',
+  recentFeedbackSummary?: string | null
 ) {
   return {
     instructions: [
@@ -526,6 +546,7 @@ export function createDialoguePrompt(
       '말끝마다 가능성만 늘어놓지 말고, 지금 명식에서 어디가 강하고 어디를 조절해야 하는지 힘있게 짚어줍니다.',
       '명리 용어는 필요한 만큼만 쓰고, 처음 나올 때는 한자 또는 쉬운 풀이를 함께 덧붙입니다.',
       '저장 프로필 명식이 제공되면 그 명식을 기본값으로 사용합니다. 다만 사용자가 다른 사람의 사주를 따로 묻는 문맥이면 저장 프로필을 섞지 말고 필요한 출생 정보를 먼저 확인합니다.',
+      'recentFeedbackSummary가 있으면 최근 반응을 참고해 단정 표현 강도만 조절하고, 계산 근거보다 앞세우지 않습니다.',
       '의료, 법률, 투자 판단은 해석으로 대신하지 않습니다.',
       '출생 정보나 명식 데이터가 없는 경우 빈말로 얼버무리지 말고, 어떤 정보가 필요한지 짧게 요청합니다.',
       '고전 원문이나 출처는 제공된 근거가 없으면 인용하지 않습니다.',
@@ -536,8 +557,13 @@ export function createDialoguePrompt(
       profileGrounding
         ? `기본 사용자 명식 JSON:\n${JSON.stringify(profileGrounding, null, 2)}`
         : '기본 사용자 명식 없음. 저장 프로필이 비어 있으면 필요한 출생 정보를 짧게 요청합니다.',
+      recentFeedbackSummary
+        ? `최근 사용자 피드백 요약:\n${recentFeedbackSummary}`
+        : null,
       `사용자 질문:\n${message}`,
-    ].join('\n\n'),
+    ]
+      .filter(Boolean)
+      .join('\n\n'),
   };
 }
 
@@ -681,16 +707,31 @@ async function handleDialogue(request: DialogueAiRequest) {
   const availableCredits = getAvailableCreditsTotal(currentCredits);
   const successfulTurns = await getAiChatSuccessfulTurns(user.id);
   const turnPlan = getAiChatTurnPlan(successfulTurns);
+  const resultFollowupFreeAvailable =
+    request.from === 'today-fortune' && request.sourceSessionId
+      ? !(await hasTodayResultFollowupFreeTurn(user.id, request.sourceSessionId))
+      : false;
   const profile = await getUserProfileById(user.id);
   const profileGrounding = createDialogueProfileGrounding(profile, request.message);
   const profileContext = createDialogueProfileContext(profile, profileGrounding);
+  const recentFeedbackSummary = await getRecentFortuneFeedbackSummary(user.id);
   const counselorId = resolveMoonlightCounselor(
     request.counselorId,
     profile.preferredCounselor
   );
-  const yearlyBridge = createYearlyDialogueBridge(profile, request.message, counselorId);
+  const yearlyBridge = createYearlyDialogueBridge(
+    profile,
+    request.message,
+    counselorId,
+    recentFeedbackSummary
+  );
 
-  if (configured && turnPlan.cost > 0 && availableCredits < turnPlan.cost) {
+  if (
+    configured &&
+    !resultFollowupFreeAvailable &&
+    turnPlan.cost > 0 &&
+    availableCredits < turnPlan.cost
+  ) {
     return NextResponse.json(
       {
         ok: false,
@@ -704,7 +745,12 @@ async function handleDialogue(request: DialogueAiRequest) {
 
   const prompt = yearlyBridge
     ? yearlyBridge.prompt
-    : createDialoguePrompt(request.message, profileGrounding, counselorId);
+    : createDialoguePrompt(
+        request.message,
+        profileGrounding,
+        counselorId,
+        recentFeedbackSummary
+      );
   const fallbackText = yearlyBridge
     ? yearlyBridge.fallbackText
     : buildDialogueFallback(request.message, profileGrounding, counselorId);
@@ -728,6 +774,24 @@ async function handleDialogue(request: DialogueAiRequest) {
       configured,
       counselorId,
       billing: createAiChatBillingSummary('not_charged_fallback', availableCredits, turnPlan),
+      profileContext,
+      ...dialogueResult,
+    });
+  }
+
+  if (resultFollowupFreeAvailable && request.sourceSessionId) {
+    await recordTodayResultFollowupFreeTurn(
+      user.id,
+      request.sourceSessionId,
+      request.concernId
+    );
+
+    return NextResponse.json({
+      ok: true,
+      mode: request.mode,
+      configured,
+      counselorId,
+      billing: createAiChatBillingSummary('result_intro_free', availableCredits, turnPlan),
       profileContext,
       ...dialogueResult,
     });

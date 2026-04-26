@@ -7,6 +7,7 @@ export const AI_CHAT_BUNDLE_COST = 3;
 
 export type AiChatBillingStatus =
   | 'free_intro'
+  | 'result_intro_free'
   | 'charged_bundle'
   | 'bundle_included'
   | 'not_charged_fallback'
@@ -123,4 +124,51 @@ export function createAiChatBillingSummary(
     bundleTurnsRemaining: plan?.bundleTurnsRemaining ?? null,
     bundleSize: AI_CHAT_BUNDLE_SIZE,
   };
+}
+
+export async function hasTodayResultFollowupFreeTurn(
+  userId: string,
+  sourceSessionId: string
+) {
+  const service = await createServiceClient();
+  const { data, error } = await service
+    .from('credit_transactions')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('type', 'use')
+    .eq('feature', 'detail_report')
+    .contains('metadata', {
+      kind: 'today_result_followup',
+      sourceSessionId,
+    })
+    .limit(1);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return Boolean(data && data.length > 0);
+}
+
+export async function recordTodayResultFollowupFreeTurn(
+  userId: string,
+  sourceSessionId: string,
+  concernId?: string | null
+) {
+  const service = await createServiceClient();
+  const { error } = await service.from('credit_transactions').insert({
+    user_id: userId,
+    amount: 0,
+    type: 'use',
+    feature: 'detail_report',
+    metadata: {
+      kind: 'today_result_followup',
+      sourceSessionId,
+      concernId: concernId ?? null,
+    },
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }

@@ -135,7 +135,8 @@ function serializePillar(pillar: ReadingRecord['sajuData']['pillars']['year'] | 
 export function createInterpretationPrompt(
   record: ReadingRecord,
   report: SajuReport,
-  counselorId: MoonlightCounselorId = 'female'
+  counselorId: MoonlightCounselorId = 'female',
+  recentFeedbackSummary?: string | null
 ) {
   const data = record.sajuData;
   const grounding = {
@@ -169,6 +170,7 @@ export function createInterpretationPrompt(
     pattern: data.pattern,
     yongsin: data.yongsin,
     currentLuck: data.currentLuck,
+    recentFeedbackSummary: recentFeedbackSummary ?? null,
     reportFallback: {
       headline: report.headline,
       summary: report.summary,
@@ -197,6 +199,7 @@ export function createInterpretationPrompt(
       '사용자가 바로 이해할 수 있도록 결론을 먼저 말하고, 근거와 생활 적용을 자연스럽게 이어 설명합니다.',
       '명리 용어는 필요한 경우에만 쓰고, 처음 등장할 때는 쉬운 한국어 풀이를 함께 붙입니다.',
       '점수나 계산값을 그대로 반복 나열하지 말고, 지금 어떤 흐름이 강한지와 왜 그렇게 읽는지를 풀어 씁니다.',
+      'recentFeedbackSummary가 있으면 최근 사용자 반응을 참고해 단정 표현의 강도만 조절하되, 계산 근거보다 앞세우지 않습니다.',
       '문장은 부드럽고 단정한 한국어로 쓰되, 과장하거나 운명을 단정하는 표현은 피합니다.',
       '의학, 법률, 투자, 생명·안전 문제는 단정하지 말고 생활 조언 수준으로 제한합니다.',
       '응답은 반드시 JSON 객체 하나만 반환합니다. Markdown, 설명 문장, 코드블록을 붙이지 않습니다.',

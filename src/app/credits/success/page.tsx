@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Suspense } from 'react';
+import { trackMoonlightEvent } from '@/lib/analytics';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -17,6 +18,7 @@ function SuccessContent() {
     const orderId = searchParams.get('orderId');
     const amount = searchParams.get('amount');
     const packageId = searchParams.get('packageId');
+    const entrySource = searchParams.get('from') ?? 'credits';
 
     if (!paymentKey || !orderId || !amount || !packageId) {
       setStatus('error');
@@ -38,6 +40,12 @@ function SuccessContent() {
       .then(data => {
         if (data.success) {
           setCoins(data.credits);
+          trackMoonlightEvent('payment_completed', {
+            from: entrySource,
+            packageId,
+            amount: Number(amount),
+            credits: data.credits,
+          });
           if (typeof data.totalCredits === 'number') {
             window.dispatchEvent(
               new CustomEvent('moonlight:credits-updated', {

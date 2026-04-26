@@ -569,7 +569,8 @@ export function createYearlyInterpretationPrompt(
   record: ReadingRecord,
   report: SajuYearlyReport,
   counselorId: MoonlightCounselorId = 'female',
-  section: SajuYearlyInterpretationPromptSection = 'full'
+  section: SajuYearlyInterpretationPromptSection = 'full',
+  recentFeedbackSummary?: string | null
 ) {
   const grounding =
     section === 'monthly'
@@ -595,6 +596,11 @@ export function createYearlyInterpretationPrompt(
               evidenceCards: mapEvidenceCards(report),
             },
           };
+
+  const groundedInput = {
+    ...grounding,
+    recentFeedbackSummary: recentFeedbackSummary ?? null,
+  };
 
   const schemaLine =
     section === 'monthly'
@@ -628,6 +634,7 @@ export function createYearlyInterpretationPrompt(
       '명리 용어를 쓰더라도 바로 쉬운 한국어 풀이를 붙이고, 추상적인 표현만 반복하지 말고 실제 상황이 떠오르게 설명합니다.',
       '과장, 희망고문, 공포 조장, 운명을 단정하는 표현은 피합니다.',
       '무조건, 반드시, 100% 같은 단정 표현은 쓰지 않습니다.',
+      'recentFeedbackSummary가 있으면 최근 실제 반응을 참고해 표현 강도만 미세 조정하고, 세운·월운·원국 근거보다 앞세우지 않습니다.',
       '연애, 일, 재물, 관계, 건강, 이동의 현실 주제를 우선하고, 왜 이런 흐름이 오는지 세운·월운·강약·용신 근거를 자연스럽게 녹여냅니다.',
       '총 글자 수는 렌더 시 3,000자 이상이 되도록 충분히 밀도 있게 작성합니다.',
       '응답은 반드시 JSON 객체 하나만 반환합니다. Markdown, 설명 문장, 코드블록을 붙이지 않습니다.',
@@ -644,6 +651,6 @@ export function createYearlyInterpretationPrompt(
       ...sectionSpecificInstructions,
       ...buildReportCounselorInstructions(counselorId),
     ].join('\n'),
-    input: JSON.stringify(grounding, null, 2),
+    input: JSON.stringify(groundedInput, null, 2),
   };
 }

@@ -9,6 +9,7 @@ import {
   getTossPaymentMethodOption,
   type TossPaymentMethodCode,
 } from '@/lib/payments/methods';
+import { trackMoonlightEvent } from '@/lib/analytics';
 import { savePendingLifetimeReportSlug } from '@/lib/payments/lifetime-report';
 import { createClient } from '@/lib/supabase/client';
 
@@ -22,6 +23,7 @@ interface Props {
   amount: number;
   orderName: string;
   slug?: string;
+  entrySource?: string;
 }
 
 export default function TossMembershipCheckout({
@@ -30,6 +32,7 @@ export default function TossMembershipCheckout({
   amount,
   orderName,
   slug,
+  entrySource = 'membership',
 }: Props) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,8 +44,9 @@ export default function TossMembershipCheckout({
   const checkoutPath = useMemo(() => {
     const params = new URLSearchParams({ plan });
     if (slug) params.set('slug', slug);
+    if (entrySource) params.set('from', entrySource);
     return `/membership/checkout?${params.toString()}`;
-  }, [plan, slug]);
+  }, [entrySource, plan, slug]);
 
   useEffect(() => {
     if (!hasSupabaseBrowserEnv) {
@@ -82,10 +86,12 @@ export default function TossMembershipCheckout({
       const successParams = new URLSearchParams({
         packageId,
         plan,
+        from: entrySource,
       });
       const failParams = new URLSearchParams({
         plan,
         error: 'payment',
+        from: entrySource,
       });
 
       if (slug) {
@@ -96,6 +102,14 @@ export default function TossMembershipCheckout({
       if (packageId === 'lifetime_report' && slug) {
         savePendingLifetimeReportSlug(slug);
       }
+
+      trackMoonlightEvent('payment_started', {
+        from: entrySource,
+        packageId,
+        paymentMethod,
+        amount,
+        plan,
+      });
 
       const paymentRequest = {
         amount: { currency: 'KRW', value: amount },

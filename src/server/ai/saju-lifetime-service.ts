@@ -5,6 +5,7 @@ import {
   type MoonlightCounselorId,
 } from '@/lib/counselors';
 import { getUserProfileById } from '@/lib/profile';
+import { getRecentFortuneFeedbackSummary } from '@/lib/fortune-feedback';
 import { isReadingId, resolveReading, type ReadingRecord } from '@/lib/saju/readings';
 import {
   buildFallbackLifetimeInterpretation,
@@ -82,7 +83,15 @@ export async function generateLifetimeInterpretation(
   const report = buildLifetimeReport(reading.input, reading.sajuData, request.targetYear);
   const fallback = buildFallbackLifetimeInterpretation(report, counselorId);
   const model = getOpenAIInterpretationModel();
-  const prompt = createLifetimeInterpretationPrompt(reading, report, counselorId);
+  const recentFeedbackSummary = reading.userId
+    ? await getRecentFortuneFeedbackSummary(reading.userId)
+    : null;
+  const prompt = createLifetimeInterpretationPrompt(
+    reading,
+    report,
+    counselorId,
+    recentFeedbackSummary
+  );
 
   const stageStartedAt = Date.now();
   const aiResult = await generateAiText({

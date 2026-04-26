@@ -608,7 +608,7 @@ export const MY_MENU_BLUEPRINT = [
 export const PLAN_BLUEPRINT = [
   {
     slug: 'basic' as const,
-    title: 'Plus',
+    title: '라이트',
     price: '월 4,900원',
     badge: '부담 없는 시작',
     summary: '가끔씩 마음이 궁금할 때, 큰 부담 없이 달빛선생의 해석을 곁에 두는 가장 가벼운 달빛 플랜입니다.',
@@ -618,7 +618,7 @@ export const PLAN_BLUEPRINT = [
   },
   {
     slug: 'premium' as const,
-    title: '프리미엄',
+    title: 'Premium',
     price: '월 9,900원',
     badge: '가장 많이 고르세요',
     summary: '사주, 궁합, 가족 이야기, 대화까지 생활 가까운 질문을 가장 넉넉하게 이어보실 수 있는 중심 플랜입니다.',
@@ -814,7 +814,7 @@ export const CHECKOUT_PLAN_GUIDE: Record<
   }
 > = {
   basic: {
-    title: 'Plus',
+    title: '라이트',
     price: '월 4,900원',
     nextRange: '첫 결제 후 30일 이용',
     reassurance: '가볍게 시작해도 핵심 해석 흐름은 충분히 경험하실 수 있습니다.',
@@ -822,7 +822,7 @@ export const CHECKOUT_PLAN_GUIDE: Record<
     notices: ['첫 결제 후 30일 이용권으로 반영', '마이페이지에서 상태 확인 가능', '열람 전 환불 기준 함께 안내'],
   },
   premium: {
-    title: '프리미엄',
+    title: 'Premium',
     price: '월 9,900원',
     nextRange: '첫 결제 후 30일 이용',
     reassurance: '가족 사주, 궁합, 대화까지 가장 넓게 쓰실 수 있는 메인 플랜입니다.',
@@ -1075,7 +1075,7 @@ export const SETTINGS_BLUEPRINT = [
 ] as const;
 
 export const FAMILY_PLAN_LIMITS = [
-  '무료·Plus: 본인만 저장',
+  '무료·라이트: 본인만 저장',
   '프리미엄: 본인 + 가족 5명',
   '평생 심층: 본인 + 가족 10명',
 ] as const;

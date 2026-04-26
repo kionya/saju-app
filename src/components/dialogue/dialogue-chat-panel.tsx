@@ -1,11 +1,12 @@
 'use client';
 
-import { FormEvent, startTransition, useRef, useState } from 'react';
+import { FormEvent, startTransition, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AiSourceBadge } from '@/components/ai/ai-source-badge';
 import { CounselorSelector } from '@/components/counselor/counselor-selector';
 import { Button } from '@/components/ui/button';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
+import { trackMoonlightEvent } from '@/lib/analytics';
 import type { AiChatBillingSummary } from '@/lib/credits/ai-chat-access';
 import type { MoonlightCounselorId } from '@/lib/counselors';
 
@@ -63,6 +64,11 @@ interface ChatMessage {
 
 interface DialogueChatPanelProps {
   presets: DialoguePresetOption[];
+  initialQuestion?: string;
+  sourceSessionId?: string;
+  concernId?: string;
+  entrySource?: string;
+  autoStart?: boolean;
 }
 
 const INITIAL_MESSAGE: ChatMessage = {
@@ -108,6 +114,8 @@ function getBillingLabel(billing: AiChatBillingSummary | null | undefined) {
   switch (billing.status) {
     case 'free_intro':
       return `첫 3회 무료 · ${billing.freeTurnsRemaining ?? 0}회 남음`;
+    case 'result_intro_free':
+      return '오늘 결과 기반 첫 질문 무료 · 코인 차감 없음';
     case 'charged_bundle':
       return `${billing.bundleSize}회 묶음 시작 · ${billing.cost}코인 차감 · 이번 묶음 ${billing.bundleTurnsRemaining ?? 0}회 남음 · 잔여 ${billing.remaining ?? 0}개`;
     case 'bundle_included':
@@ -134,7 +142,7 @@ function getConnectionSummary(
   }
 
   if (!latestAssistant || latestAssistant.id === INITIAL_MESSAGE.id) {
-    return '처음 3회는 무료입니다. 이후에는 OpenAI 응답 기준으로 3회 묶음마다 3코인이 차감되고, fallback 응답과 안전 안내는 횟수에도 포함되지 않습니다.';
+    return '처음 3회는 무료입니다. 이후에는 OpenAI 응답 기준으로 3회 묶음마다 3코인이 차감되고, fallback 응답과 안전 안내는 횟수에도 포함되지 않습니다. 오늘 결과에서 이어진 첫 질문은 코인 차감 없이 먼저 답합니다.';
   }
 
   if (latestAssistant.source === 'openai') {
@@ -156,9 +164,17 @@ function getConnectionSummary(
   return '안전 안내 기준으로 일반 대화를 중단했습니다.';
 }
 
-export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
+export function DialogueChatPanel({
+  presets,
+  initialQuestion,
+  sourceSessionId,
+  concernId,
+  entrySource,
+  autoStart = false,
+}: DialogueChatPanelProps) {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const autoStartedRef = useRef(false);
   const { counselorId, selectCounselor } = usePreferredCounselor();
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<ChatStatus>('idle');
@@ -181,10 +197,13 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
     });
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  useEffect(() => {
+    if (!initialQuestion || input.trim()) return;
+    setInput(initialQuestion);
+  }, [initialQuestion, input]);
 
-    const trimmedInput = input.trim();
+  async function submitDialogueMessage(rawInput: string, via: 'manual' | 'auto') {
+    const trimmedInput = rawInput.trim();
     if (!trimmedInput) {
       setStatus('error');
       setErrorMessage('확인할 질문을 한 줄 이상 적어 주세요.');
@@ -208,7 +227,14 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'dialogue', message: trimmedInput, counselorId }),
+        body: JSON.stringify({
+          mode: 'dialogue',
+          message: trimmedInput,
+          counselorId,
+          sourceSessionId,
+          concernId,
+          from: entrySource,
+        }),
       });
       const payload = (await response.json()) as DialogueAiResponse;
 
@@ -245,12 +271,32 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
         setMessages((current) => [...current, assistantMessage]);
       });
       setStatus('idle');
+
+      if (sourceSessionId && entrySource === 'today-fortune') {
+        trackMoonlightEvent('dialogue_started_from_result', {
+          from: entrySource,
+          concern: concernId,
+          sourceSessionId,
+          mode: via,
+        });
+      }
     } catch (error) {
       setStatus('error');
       setErrorMessage(
         error instanceof Error ? error.message : '잠시 후 다시 확인해 주세요.'
       );
     }
+  }
+
+  useEffect(() => {
+    if (!autoStart || !initialQuestion || autoStartedRef.current || status !== 'idle') return;
+    autoStartedRef.current = true;
+    void submitDialogueMessage(initialQuestion, 'auto');
+  }, [autoStart, initialQuestion, status]);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await submitDialogueMessage(input, 'manual');
   }
 
   return (
@@ -267,6 +313,11 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
               답변 생성 전에 SAFE_REDIRECT로 전환하고, OpenAI 연결 전에는 기본
               해석 fallback으로 안전하게 내려갑니다.
             </p>
+            {sourceSessionId && concernId ? (
+              <p className="mt-3 max-w-3xl text-xs leading-6 text-[var(--app-gold-text)]">
+                오늘 결과에서 이어진 질문입니다. 첫 결과 기반 질문은 코인 차감 없이 먼저 답해드립니다.
+              </p>
+            ) : null}
             <div className="mt-4 max-w-4xl">
               <CounselorSelector
                 value={counselorId}
@@ -406,7 +457,8 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
         <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
           처음 3회는 무료입니다. 이후에는 OpenAI 응답 기준으로 3회 묶음마다
           3코인이 차감되고, fallback 응답과 안전 안내는 횟수와 코인을 차감하지
-          않습니다. 로그인 후 MY 프로필에 저장된 출생 정보가 있으면 대화에서도
+          않습니다. 오늘 결과에서 이어진 첫 질문은 코인 차감 없이 먼저 답해드립니다.
+          로그인 후 MY 프로필에 저장된 출생 정보가 있으면 대화에서도
           기본 명식으로 자동 사용합니다. 대화 저장은 아직 하지 않으며, 새로고침하면
           현재 화면의 메시지는 사라집니다.
         </p>

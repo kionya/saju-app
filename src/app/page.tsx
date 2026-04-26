@@ -5,8 +5,11 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import { CounselorSelector } from '@/components/counselor/counselor-selector';
+import { TodayConcernSelector } from '@/components/today-fortune/today-concern-selector';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
+import { trackMoonlightEvent } from '@/lib/analytics';
+import type { ConcernId } from '@/lib/today-fortune/types';
 import { AppShell } from '@/shared/layout/app-shell';
 import {
   HOME_DAILY_LINES,
@@ -37,6 +40,8 @@ function formatTodayLabel() {
 
 export default function HomePage() {
   const [selectedSlug, setSelectedSlug] = useState(WISDOM_CARDS[0].slug);
+  const [selectedConcern, setSelectedConcern] = useState<ConcernId>('general');
+  const [concernExpanded, setConcernExpanded] = useState(false);
   const [profilePreview, setProfilePreview] = useState<HomeProfilePreview | null>(null);
   const [profileLoadStatus, setProfileLoadStatus] = useState<HomeProfileLoadStatus>('loading');
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -118,6 +123,10 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    trackMoonlightEvent('home_view', { from: 'home' });
+  }, []);
+
+  useEffect(() => {
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -186,9 +195,9 @@ export default function HomePage() {
           <div className="moon-date-badge">{todayLabel}</div>
 
           <div className="moon-hero-headline-wrap">
-            <div className="app-caption mb-4">오늘의 한 줄</div>
-            <h1 className="moon-hero-h1">{todayLine.title}</h1>
-            <p className="moon-hero-sub">{todayLine.subtitle}</p>
+            <div className="app-caption mb-4">Today Concern</div>
+            <h1 className="moon-hero-h1">오늘, 무엇을 먼저 확인하시겠습니까?</h1>
+            <p className="moon-hero-sub">{todayLine.title} {todayLine.subtitle}</p>
           </div>
 
           <div className="flex flex-wrap justify-center gap-2">
@@ -200,8 +209,29 @@ export default function HomePage() {
           </div>
 
           <div className="flex flex-wrap justify-center gap-3">
-            <Link href="/saju/new" className="moon-cta-primary">사주 시작하기</Link>
-            <Link href="/today-fortune" className="moon-cta-secondary">오늘의 운세</Link>
+            <Link href={`/today-fortune?concern=${selectedConcern}`} className="moon-cta-primary">
+              오늘 고민 먼저 보기
+            </Link>
+            <Link href="/saju/new" className="moon-cta-secondary">사주 시작하기</Link>
+          </div>
+
+          <div className="w-full max-w-5xl rounded-[1.8rem] border border-[var(--app-line)] bg-[rgba(7,13,28,0.62)] px-5 py-5 backdrop-blur">
+            <div className="text-xs tracking-[0.22em] text-[var(--app-gold)]/72">오늘 고민 빠른 선택</div>
+            <div className="mt-3">
+              <TodayConcernSelector
+                value={selectedConcern}
+                onChange={(next) => {
+                  setSelectedConcern(next);
+                  trackMoonlightEvent('today_concern_selected', {
+                    from: 'home',
+                    concern: next,
+                  });
+                }}
+                expanded={concernExpanded}
+                onToggleExpanded={() => setConcernExpanded((current) => !current)}
+                compact
+              />
+            </div>
           </div>
 
           <div className="moon-counselor-selector-wrap w-full max-w-5xl">

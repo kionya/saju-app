@@ -6,6 +6,7 @@ import {
   type MoonlightCounselorId,
 } from '@/lib/counselors';
 import { getUserProfileById } from '@/lib/profile';
+import { getRecentFortuneFeedbackSummary } from '@/lib/fortune-feedback';
 import { createServiceClient, hasSupabaseServiceEnv } from '@/lib/supabase/server';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
 import {
@@ -147,6 +148,10 @@ export async function POST(req: NextRequest) {
       ? (await getUserProfileById(reading.userId)).preferredCounselor
       : null;
   const counselorId = resolveMoonlightCounselor(parsed.counselorId, storedCounselor);
+  const recentFeedbackSummary =
+    reading.userId && hasSupabaseServiceEnv
+      ? await getRecentFortuneFeedbackSummary(reading.userId)
+      : null;
 
   if (cacheable && !parsed.regenerate) {
     const cached = await readCachedInterpretation(parsed.readingId, topic, counselorId);
@@ -170,7 +175,12 @@ export async function POST(req: NextRequest) {
 
   const report = buildSajuReport(reading.input, reading.sajuData, topic);
   const fallback = buildFallbackInterpretation(report, counselorId);
-  const prompt = createInterpretationPrompt(reading, report, counselorId);
+  const prompt = createInterpretationPrompt(
+    reading,
+    report,
+    counselorId,
+    recentFeedbackSummary
+  );
   const model = getOpenAIInterpretationModel();
   const aiResult = await generateAiText({
     ...prompt,

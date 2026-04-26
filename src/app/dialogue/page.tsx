@@ -19,7 +19,19 @@ const CATEGORY_COLORS: Record<string, string> = {
   '생활':      'border-[var(--app-coral)]/25 bg-[var(--app-coral)]/10 text-[var(--app-coral)]',
 };
 
-export default function DialoguePage() {
+export default async function DialoguePage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    question?: string;
+    sourceSessionId?: string;
+    concern?: string;
+    from?: string;
+    autoStart?: string;
+  }>;
+}) {
+  const params = await searchParams;
+
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
@@ -58,6 +70,11 @@ export default function DialoguePage() {
               category: p.category,
               question: p.question,
             }))}
+            initialQuestion={params.question}
+            sourceSessionId={params.sourceSessionId}
+            concernId={params.concern}
+            entrySource={params.from}
+            autoStart={params.autoStart === '1'}
           />
         </section>
 

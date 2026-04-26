@@ -363,7 +363,8 @@ function createGrounding(
 export function createLifetimeInterpretationPrompt(
   record: ReadingRecord,
   report: SajuLifetimeReport,
-  counselorId: MoonlightCounselorId
+  counselorId: MoonlightCounselorId,
+  recentFeedbackSummary?: string | null
 ) {
   const counselorInstructions = buildReportCounselorInstructions(counselorId).join('\n');
 
@@ -396,10 +397,14 @@ export function createLifetimeInterpretationPrompt(
       '- 명리 용어를 쓰더라도 바로 쉬운 말로 풀어준다.',
       '- 올해 운세처럼 쓰지 말고, 평생 반복해서 참고할 기준서처럼 쓴다.',
       '- 과장, 공포 조장, 무조건/반드시/100% 같은 단정 표현은 금지한다.',
+      '- recentFeedbackSummary가 있으면 최근 사용자 반응을 참고해 문장의 단정 강도만 조정한다.',
       '- 각 section 문자열은 짧은 문장 여러 개로 이어진 밀도 높은 문단이어야 한다.',
       '- opening은 첫 문단부터 흡입력 있게 쓰되 상담실 톤을 유지한다.',
       '- rememberRules는 실제 생활에 바로 적용 가능한 기준 5개로 쓴다.',
     ].join('\n'),
-    input: JSON.stringify(createGrounding(record, report, counselorId)),
+    input: JSON.stringify({
+      ...createGrounding(record, report, counselorId),
+      recentFeedbackSummary: recentFeedbackSummary ?? null,
+    }),
   };
 }

@@ -36,6 +36,8 @@ interface InterpretationState {
   fromApi: boolean;
 }
 
+type ComparisonState = Partial<Record<MoonlightCounselorId, InterpretationState>>;
+
 interface SajuAiInterpretationPanelProps {
   readingId: string;
   topic: FocusTopic;
@@ -69,6 +71,22 @@ function getFallbackReasonLabel(reason: FallbackReason | null, fromApi: boolean)
   }
 }
 
+function createFallbackState(
+  counselorId: MoonlightCounselorId,
+  interpretation: SajuAiInterpretation
+): InterpretationState {
+  return {
+    source: 'fallback',
+    model: null,
+    cached: false,
+    fallbackReason: null,
+    errorMessage: null,
+    counselorId,
+    interpretation,
+    fromApi: false,
+  };
+}
+
 export function SajuAiInterpretationPanel({
   readingId,
   topic,
@@ -83,14 +101,11 @@ export function SajuAiInterpretationPanel({
   );
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<InterpretationState>({
-    source: 'fallback',
-    model: null,
-    cached: false,
-    fallbackReason: null,
-    errorMessage: null,
-    counselorId,
-    interpretation: fallbackInterpretation,
-    fromApi: false,
+    ...createFallbackState(counselorId, fallbackInterpretation),
+  });
+  const [comparison, setComparison] = useState<ComparisonState>({
+    female: createFallbackState('female', fallbackInterpretation),
+    male: createFallbackState('male', fallbackInterpretation),
   });
 
   const loadInterpretation = useCallback(async (requestedCounselorId?: MoonlightCounselorId) => {
@@ -99,27 +114,67 @@ export function SajuAiInterpretationPanel({
     setError(null);
 
     try {
-      const response = await fetch('/api/interpret', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ readingId, topic, counselorId: activeCounselorId }),
-      });
-      const payload = (await response.json()) as InterpretResponse;
+      const counselorTargets = Array.from(
+        new Set<MoonlightCounselorId>([activeCounselorId, 'female', 'male'])
+      );
 
-      if (!response.ok || !payload.ok || !payload.interpretation) {
-        throw new Error(payload.error ?? 'AI 해석을 불러오지 못했습니다.');
+      const responses = await Promise.allSettled(
+        counselorTargets.map(async (targetCounselorId) => {
+          const response = await fetch('/api/interpret', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              readingId,
+              topic,
+              counselorId: targetCounselorId,
+            }),
+          });
+          const payload = (await response.json()) as InterpretResponse;
+
+          if (!response.ok || !payload.ok || !payload.interpretation) {
+            throw new Error(
+              payload.error ??
+                `${targetCounselorId === 'male' ? '남선생' : '여선생'} 해석을 불러오지 못했습니다.`
+            );
+          }
+
+          return {
+            targetCounselorId,
+            state: {
+              source: payload.source ?? 'fallback',
+              model: payload.model ?? null,
+              cached: payload.cached === true,
+              fallbackReason: payload.fallbackReason ?? null,
+              errorMessage: payload.errorMessage ?? null,
+              counselorId: payload.counselorId ?? targetCounselorId,
+              interpretation: payload.interpretation,
+              fromApi: true,
+            } satisfies InterpretationState,
+          };
+        })
+      );
+
+      const nextComparison: ComparisonState = {
+        female: createFallbackState('female', fallbackInterpretation),
+        male: createFallbackState('male', fallbackInterpretation),
+      };
+      let activeResult: InterpretationState | null = null;
+
+      for (const item of responses) {
+        if (item.status !== 'fulfilled') {
+          continue;
+        }
+
+        nextComparison[item.value.targetCounselorId] = item.value.state;
+        if (item.value.targetCounselorId === activeCounselorId) {
+          activeResult = item.value.state;
+        }
       }
 
-      setResult({
-        source: payload.source ?? 'fallback',
-        model: payload.model ?? null,
-        cached: payload.cached === true,
-        fallbackReason: payload.fallbackReason ?? null,
-        errorMessage: payload.errorMessage ?? null,
-        counselorId: payload.counselorId ?? activeCounselorId,
-        interpretation: payload.interpretation,
-        fromApi: true,
-      });
+      setComparison(nextComparison);
+      setResult(
+        activeResult ?? createFallbackState(activeCounselorId, fallbackInterpretation)
+      );
       setStatus('answered');
     } catch (requestError) {
       setStatus('error');
@@ -129,7 +184,18 @@ export function SajuAiInterpretationPanel({
           : '잠시 후 다시 시도해 주세요.'
       );
     }
-  }, [counselorId, readingId, topic]);
+  }, [counselorId, fallbackInterpretation, readingId, topic]);
+
+  useEffect(() => {
+    autoLoadedRef.current = false;
+    setResult(createFallbackState(counselorId, fallbackInterpretation));
+    setComparison({
+      female: createFallbackState('female', fallbackInterpretation),
+      male: createFallbackState('male', fallbackInterpretation),
+    });
+    setStatus(cacheEnabled ? 'loading' : 'ready');
+    setError(null);
+  }, [cacheEnabled, counselorId, fallbackInterpretation, readingId, topic]);
 
   useEffect(() => {
     if (!cacheEnabled || autoLoadedRef.current || !counselorReady) return;
@@ -148,6 +214,8 @@ export function SajuAiInterpretationPanel({
           : 'fallback';
   const interpretation =
     status === 'loading' && !result.fromApi ? fallbackInterpretation : result.interpretation;
+  const comparisonOrder: MoonlightCounselorId[] =
+    counselorId === 'male' ? ['male', 'female'] : ['female', 'male'];
 
   return (
     <section className="rounded-[1.75rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(135deg,rgba(210,176,114,0.13),rgba(10,18,36,0.96)_45%,rgba(7,19,39,0.94))] p-6 sm:p-7">
@@ -193,6 +261,70 @@ export function SajuAiInterpretationPanel({
             <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{insight}</p>
           </div>
         ))}
+      </div>
+
+      <div className="mt-6">
+        <div className="app-caption">두 선생 비교 리딩</div>
+        <p className="mt-2 text-sm leading-7 text-[var(--app-copy-soft)]">
+          같은 명식 근거를 두 선생의 말결로 나란히 읽습니다. 계산 기준은 같고, 설명의 결만 다르게 정리됩니다.
+        </p>
+        <div className="mt-4 grid gap-4 xl:grid-cols-2">
+          {comparisonOrder.map((compareCounselorId) => {
+            const compareState =
+              comparison[compareCounselorId] ??
+              createFallbackState(compareCounselorId, fallbackInterpretation);
+            const isActive = compareState.counselorId === result.counselorId;
+
+            return (
+              <article
+                key={compareCounselorId}
+                className={cn(
+                  'rounded-[1.3rem] border bg-[rgba(255,255,255,0.03)] px-5 py-5',
+                  isActive
+                    ? 'border-[var(--app-gold)]/30 shadow-[0_18px_48px_rgba(0,0,0,0.16)]'
+                    : 'border-[var(--app-line)]'
+                )}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="text-sm font-semibold text-[var(--app-ivory)]">
+                      {compareCounselorId === 'male' ? '달빛 남선생' : '달빛 여선생'}
+                    </div>
+                    <div className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                      {isActive ? '현재 선택된 기준' : '비교용 톤'}
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      'rounded-full border px-2.5 py-1 text-[11px]',
+                      compareState.source === 'openai'
+                        ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-100'
+                        : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-soft)]'
+                    )}
+                  >
+                    {compareState.source === 'openai' ? 'OpenAI' : 'Fallback'}
+                  </span>
+                </div>
+                <div className="mt-4 text-lg font-semibold leading-8 text-[var(--app-ivory)]">
+                  {compareState.interpretation.headline}
+                </div>
+                <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+                  {compareState.interpretation.summary}
+                </p>
+                <div className="mt-4 grid gap-2">
+                  {compareState.interpretation.insights.slice(0, 2).map((insight, index) => (
+                    <div
+                      key={`${compareCounselorId}-${index}-${insight}`}
+                      className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(8,10,18,0.28)] px-3 py-3 text-sm leading-7 text-[var(--app-copy)]"
+                    >
+                      {insight}
+                    </div>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs leading-6 text-[var(--app-copy-soft)]">

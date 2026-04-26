@@ -13,7 +13,7 @@ import { getMembershipPackage } from '@/lib/payments/catalog';
 import { AppShell } from '@/shared/layout/app-shell';
 
 interface Props {
-  searchParams: Promise<{ plan?: string; slug?: string; error?: string }>;
+  searchParams: Promise<{ plan?: string; slug?: string; error?: string; from?: string }>;
 }
 
 function normalizePlanSlug(value?: string): PlanSlug {
@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function MembershipCheckoutPage({ searchParams }: Props) {
-  const { plan, slug, error } = await searchParams;
+  const { plan, slug, error, from } = await searchParams;
   const selectedPlan = normalizePlanSlug(plan);
   const selected = CHECKOUT_PLAN_GUIDE[selectedPlan] ?? CHECKOUT_PLAN_GUIDE.premium;
   const paymentPackage = getMembershipPackage(selectedPlan);
@@ -157,6 +157,7 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
                   amount={paymentPackage.price}
                   orderName={paymentPackage.name}
                   slug={slug}
+                  entrySource={from ?? 'membership'}
                 />
               ) : (
                 <div className="rounded-[1.2rem] border border-rose-400/25 bg-rose-400/10 px-5 py-4 text-sm leading-7 text-rose-100">

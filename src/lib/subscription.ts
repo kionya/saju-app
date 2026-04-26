@@ -136,7 +136,7 @@ export async function activateMembershipSubscription(
     .single();
 
   if (error || !data) {
-    throw new Error(error?.message ?? 'Plus 상태를 시작하지 못했습니다.');
+    throw new Error(error?.message ?? '라이트 멤버십 상태를 시작하지 못했습니다.');
   }
 
   return mapSubscription(data as SubscriptionRow);
@@ -154,7 +154,7 @@ export async function updateSubscriptionStatus(
 
   const normalized = await expireIfNeeded(userId, current);
   if (normalized.status === 'expired') {
-    throw new Error('이미 만료된 Plus입니다. 다시 시작해 주세요.');
+    throw new Error('이미 만료된 라이트 멤버십입니다. 다시 시작해 주세요.');
   }
 
   const service = await createServiceClient();
@@ -190,11 +190,11 @@ export function getSubscriptionStatusLabel(status: SubscriptionStatus) {
 
 export function getSubscriptionPlanLabel(plan: string) {
   if (plan === 'plus_monthly') {
-    return 'Plus 월간 멤버십';
+    return '라이트 월간 멤버십';
   }
 
   if (plan === 'premium_monthly') {
-    return '프리미엄 월간 멤버십';
+    return 'Premium 월간 멤버십';
   }
 
   return plan;

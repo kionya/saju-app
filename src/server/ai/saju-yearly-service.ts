@@ -5,6 +5,7 @@ import {
   type MoonlightCounselorId,
 } from '@/lib/counselors';
 import { getUserProfileById } from '@/lib/profile';
+import { getRecentFortuneFeedbackSummary } from '@/lib/fortune-feedback';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
 import { createServiceClient, hasSupabaseServiceEnv } from '@/lib/supabase/server';
 import {
@@ -213,6 +214,10 @@ export async function generateYearlyInterpretation(
   );
   const promptVersion = getYearlyInterpretationPromptVersion(counselorId);
   const cacheable = hasSupabaseServiceEnv && cacheKey.cacheKeyType !== 'unavailable';
+  const recentFeedbackSummary =
+    reading.userId && hasSupabaseServiceEnv
+      ? await getRecentFortuneFeedbackSummary(reading.userId)
+      : null;
 
   if (cacheable && !request.regenerate) {
     const cached = await readCachedInterpretation(cacheKey, request.targetYear, counselorId);
@@ -251,13 +256,15 @@ export async function generateYearlyInterpretation(
     reading,
     yearlyReport,
     counselorId,
-    'narrative'
+    'narrative',
+    recentFeedbackSummary
   );
   const monthlyPrompt = createYearlyInterpretationPrompt(
     reading,
     yearlyReport,
     counselorId,
-    'monthly'
+    'monthly',
+    recentFeedbackSummary
   );
 
   const [narrativeStage, monthlyStage] = await Promise.all([

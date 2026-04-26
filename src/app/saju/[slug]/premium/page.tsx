@@ -321,7 +321,7 @@ export default async function SajuPremiumPage({ params }: Props) {
         hasLifetimeAccess = true;
         yearlyAccessLabel = '평생 소장 권한';
       } else if (subscription && canUseSubscriptionForPremiumReport(subscription)) {
-        yearlyAccessLabel = subscription.plan === 'premium_monthly' ? '프리미엄 이용권' : 'Plus 이용권';
+        yearlyAccessLabel = subscription.plan === 'premium_monthly' ? 'Premium 이용권' : '라이트 이용권';
       }
     }
   }
@@ -418,7 +418,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                   </p>
                   <div className="mt-5 flex flex-wrap justify-center gap-3">
                     <Link
-                      href={`/membership/checkout?plan=lifetime&slug=${encodedSlug}`}
+                      href={`/membership/checkout?plan=lifetime&slug=${encodedSlug}&from=saju-premium`}
                       className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
                     >
                       평생 리포트 열기
@@ -509,16 +509,16 @@ export default async function SajuPremiumPage({ params }: Props) {
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-3">
                 <Link
-                  href={`/membership/checkout?plan=lifetime&slug=${encodedSlug}`}
+                  href={`/membership/checkout?plan=lifetime&slug=${encodedSlug}&from=saju-premium`}
                   className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
                 >
                   완성형 리포트 열기
                 </Link>
                 <Link
-                  href={`/membership/checkout?plan=premium&slug=${encodedSlug}`}
+                  href={`/membership/checkout?plan=premium&slug=${encodedSlug}&from=saju-premium`}
                   className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
                 >
-                  월 구독으로 먼저 보기
+                  Premium으로 먼저 보기
                 </Link>
               </div>
             </div>

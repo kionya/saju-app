@@ -10,6 +10,7 @@ import {
   clearPendingLifetimeReportSlug,
   readPendingLifetimeReportSlug,
 } from '@/lib/payments/lifetime-report';
+import { trackMoonlightEvent } from '@/lib/analytics';
 import { AppShell } from '@/shared/layout/app-shell';
 
 type ConfirmStatus = 'loading' | 'success' | 'error';
@@ -47,6 +48,7 @@ function SuccessContent() {
     const amount = searchParams.get('amount');
     const packageId = searchParams.get('packageId');
     const plan = searchParams.get('plan') ?? 'premium';
+    const entrySource = searchParams.get('from') ?? 'membership';
     const storedLifetimeSlug =
       packageId === 'lifetime_report' ? readPendingLifetimeReportSlug() : null;
     const slug = (querySlug ?? storedLifetimeSlug)?.trim() || null;
@@ -89,6 +91,12 @@ function SuccessContent() {
           );
         }
         setConfirmedPlan(nextPlan);
+        trackMoonlightEvent('payment_completed', {
+          from: entrySource,
+          packageId,
+          amount: Number(amount),
+          plan: nextPlan,
+        });
 
         if (premiumResultHref) {
           if (packageId === 'lifetime_report') {

@@ -10,7 +10,7 @@ import {
 
 export const metadata: Metadata = {
   title: '멤버십',
-  description: 'Plus, 프리미엄, 평생 심층 리포트 세 가지 선택지로 달빛선생의 멤버십을 살펴보세요.',
+  description: '라이트, Premium, Lifetime 세 가지 선택지로 달빛선생의 멤버십을 살펴보세요.',
   alternates: {
     canonical: '/membership',
   },
@@ -35,7 +35,7 @@ export default function MembershipPage() {
             <div className="hidden justify-self-end lg:block">
               <div className="app-moon-orb h-28 w-28" />
               <div className="mt-4 rounded-full border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-4 py-2 text-center text-xs text-[var(--app-gold-text)]">
-                Plus · Premium · Lifetime
+                라이트 · Premium · Lifetime
               </div>
             </div>
           </div>
@@ -84,9 +84,9 @@ export default function MembershipPage() {
                 <Link
                   href={
                     plan.slug === 'basic'
-                      ? '/membership/checkout?plan=basic'
+                      ? '/membership/checkout?plan=basic&from=membership'
                       : plan.slug === 'premium'
-                        ? '/membership/checkout?plan=premium'
+                        ? '/membership/checkout?plan=premium&from=membership'
                         : '/saju/new'
                   }
                   className={
@@ -95,7 +95,7 @@ export default function MembershipPage() {
                       : 'inline-flex h-11 w-full items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
                   }
                 >
-                  {index === 0 ? 'Plus 시작하기' : index === 1 ? '프리미엄 시작하기' : '평생 리포트 열기'}
+                  {index === 0 ? '라이트 시작하기' : index === 1 ? 'Premium 시작하기' : '평생 리포트 열기'}
                 </Link>
               </div>
             </article>
@@ -139,10 +139,10 @@ export default function MembershipPage() {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
-                href="/membership/checkout?plan=premium"
+                href="/membership/checkout?plan=premium&from=membership"
                 className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
               >
-                프리미엄 시작하기
+                Premium 시작하기
               </Link>
               <Link
                 href="/saju/new"

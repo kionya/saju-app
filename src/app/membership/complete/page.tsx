@@ -11,8 +11,8 @@ interface Props {
 }
 
 const PLAN_LABELS = {
-  basic: 'Plus',
-  premium: '프리미엄',
+  basic: '라이트',
+  premium: 'Premium',
   lifetime: '평생 심층 리포트',
 } as const;
 
