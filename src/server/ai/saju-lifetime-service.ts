@@ -1,0 +1,134 @@
+import { buildLifetimeReport } from '@/domain/saju/report';
+import {
+  normalizeMoonlightCounselor,
+  resolveMoonlightCounselor,
+  type MoonlightCounselorId,
+} from '@/lib/counselors';
+import { getUserProfileById } from '@/lib/profile';
+import { isReadingId, resolveReading, type ReadingRecord } from '@/lib/saju/readings';
+import {
+  buildFallbackLifetimeInterpretation,
+  createLifetimeInterpretationPrompt,
+  getLifetimeInterpretationPromptVersion,
+  parseLifetimeInterpretationText,
+  renderLifetimeInterpretationReport,
+  type SajuLifetimeAiInterpretation,
+} from '@/server/ai/saju-lifetime-interpretation';
+import {
+  generateAiText,
+  getOpenAIInterpretationModel,
+  type AiFallbackReason,
+  type AiGenerationSource,
+} from '@/server/ai/openai-text';
+
+export interface GenerateLifetimeInterpretationRequest {
+  readingIdentifier: string;
+  targetYear: number;
+  counselorId?: MoonlightCounselorId | null;
+  regenerate?: boolean;
+  readingRecord?: ReadingRecord | null;
+}
+
+export interface LifetimeGenerationStageResult {
+  key: 'full';
+  source: AiGenerationSource;
+  fallbackReason: AiFallbackReason | null;
+  errorMessage: string | null;
+  durationMs: number;
+}
+
+export interface LifetimeInterpretationResponsePayload {
+  ok: true;
+  readingId: string;
+  resolvedReadingId: string;
+  readingSource: 'database-reading-id' | 'deterministic-slug';
+  targetYear: number;
+  counselorId: MoonlightCounselorId;
+  promptVersion: string;
+  cached: false;
+  cacheable: false;
+  source: AiGenerationSource;
+  model: string | null;
+  fallbackReason: AiFallbackReason | null;
+  errorMessage: string | null;
+  generationMs: number;
+  interpretation: SajuLifetimeAiInterpretation;
+  report: ReturnType<typeof buildLifetimeReport>;
+  reportText: string;
+  stageResults: LifetimeGenerationStageResult[];
+}
+
+const LIFETIME_TIMEOUT_MS = 38_000;
+const LIFETIME_OUTPUT_TOKENS = 2600;
+
+export async function generateLifetimeInterpretation(
+  request: GenerateLifetimeInterpretationRequest
+): Promise<LifetimeInterpretationResponsePayload | null> {
+  const reading = request.readingRecord ?? (await resolveReading(request.readingIdentifier));
+  if (!reading) return null;
+
+  const startedAt = Date.now();
+  const readingSource = isReadingId(request.readingIdentifier)
+    ? 'database-reading-id'
+    : 'deterministic-slug';
+  const storedCounselor = reading.userId
+    ? (await getUserProfileById(reading.userId)).preferredCounselor
+    : null;
+  const counselorId = resolveMoonlightCounselor(
+    normalizeMoonlightCounselor(request.counselorId) ?? undefined,
+    storedCounselor
+  );
+  const promptVersion = getLifetimeInterpretationPromptVersion(counselorId);
+  const report = buildLifetimeReport(reading.input, reading.sajuData, request.targetYear);
+  const fallback = buildFallbackLifetimeInterpretation(report, counselorId);
+  const model = getOpenAIInterpretationModel();
+  const prompt = createLifetimeInterpretationPrompt(reading, report, counselorId);
+
+  const stageStartedAt = Date.now();
+  const aiResult = await generateAiText({
+    ...prompt,
+    fallbackText: JSON.stringify(fallback),
+    model,
+    maxOutputTokens: LIFETIME_OUTPUT_TOKENS,
+    timeoutMs: LIFETIME_TIMEOUT_MS,
+  });
+  const parsed = parseLifetimeInterpretationText(aiResult.text, fallback);
+  const interpretation =
+    aiResult.source === 'openai' && parsed.ok ? parsed.interpretation : fallback;
+  const source: AiGenerationSource =
+    aiResult.source === 'openai' && parsed.ok ? 'openai' : 'fallback';
+  const fallbackReason =
+    source === 'openai' ? null : aiResult.fallbackReason ?? 'empty_ai_response';
+  const errorMessage =
+    source === 'openai' ? null : aiResult.errorMessage ?? parsed.errorMessage;
+  const reportText = renderLifetimeInterpretationReport(interpretation, report);
+
+  return {
+    ok: true,
+    readingId: request.readingIdentifier,
+    resolvedReadingId: reading.id,
+    readingSource,
+    targetYear: request.targetYear,
+    counselorId,
+    promptVersion,
+    cached: false,
+    cacheable: false,
+    source,
+    model: aiResult.model,
+    fallbackReason,
+    errorMessage,
+    generationMs: Date.now() - startedAt,
+    interpretation,
+    report,
+    reportText,
+    stageResults: [
+      {
+        key: 'full',
+        source,
+        fallbackReason,
+        errorMessage,
+        durationMs: Date.now() - stageStartedAt,
+      },
+    ],
+  };
+}

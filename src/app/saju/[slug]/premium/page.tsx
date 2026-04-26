@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/badge';
+import LifetimeReportPanel from '@/components/ai/lifetime-report-panel';
 import YearlyReportPanel from '@/components/ai/yearly-report-panel';
 import {
   SAJU_PREMIUM_SECTIONS,
@@ -301,7 +302,8 @@ export default async function SajuPremiumPage({ params }: Props) {
 
   const { sajuData } = reading;
   const encodedSlug = encodeURIComponent(slug);
-  let accessLabel: string | null = null;
+  let hasLifetimeAccess = false;
+  let yearlyAccessLabel: string | null = null;
 
   if (hasSupabaseServerEnv && hasSupabaseServiceEnv) {
     const supabase = await createClient();
@@ -316,14 +318,14 @@ export default async function SajuPremiumPage({ params }: Props) {
       ]);
 
       if (entitlement) {
-        accessLabel = '평생 소장 권한';
+        hasLifetimeAccess = true;
+        yearlyAccessLabel = '평생 소장 권한';
       } else if (subscription && canUseSubscriptionForPremiumReport(subscription)) {
-        accessLabel = subscription.plan === 'premium_monthly' ? '프리미엄 이용권' : 'Plus 이용권';
+        yearlyAccessLabel = subscription.plan === 'premium_monthly' ? '프리미엄 이용권' : 'Plus 이용권';
       }
     }
   }
 
-  const unlockedSections = accessLabel ? buildUnlockedReportSections(reading) : [];
   const targetYear = new Date().getFullYear();
 
   return (
@@ -335,142 +337,101 @@ export default async function SajuPremiumPage({ params }: Props) {
           <div className="app-starfield" />
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-              {accessLabel ? '심층 리포트 · 전체 열람' : '심층 리포트 · 미리보기'}
+              {hasLifetimeAccess
+                ? '평생 리포트 · 전체 열람'
+                : yearlyAccessLabel
+                  ? '연간 리포트 · 전체 열람'
+                  : '심층 리포트 · 미리보기'}
             </Badge>
           </div>
           <h1 className="mt-5 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
-            {accessLabel ? '평생 리포트 전체 해석' : '나머지 6개 섹션, 전체 해석 보기'}
+            {hasLifetimeAccess
+              ? '평생 리포트 본문과 올해 부록이 모두 열렸습니다'
+              : yearlyAccessLabel
+                ? `${targetYear} 연간 리포트와 평생 리포트 미리보기가 열렸습니다`
+                : '나머지 6개 섹션, 전체 해석 보기'}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            격국, 용신, 대운, 세운을 포함한 일생의 큰 그림을 한 번에 열고, 평생 소장용 리포트로
-            간직하실 수 있습니다.
+            평생 리포트는 원국 중심 기준서이고, 올해 리포트는 해당 연도의 흐름 부록입니다. 두 리포트를
+            섞지 않고 “평생 기준에서 올해 적용으로” 이어지는 순서로 읽는 구조를 기준으로 정리했습니다.
           </p>
         </section>
 
-        {accessLabel ? (
+        {hasLifetimeAccess ? (
+          <>
+            <LifetimeReportPanel slug={slug} targetYear={targetYear} />
+            <YearlyReportPanel slug={slug} targetYear={targetYear} />
+          </>
+        ) : yearlyAccessLabel ? (
           <>
             <YearlyReportPanel slug={slug} targetYear={targetYear} />
-
-            <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
-              <article className="app-panel p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="app-caption">심층 리포트 전체 열람</div>
-                  <h2 className="mt-3 font-[var(--font-heading)] text-2xl font-semibold text-[var(--app-ivory)]">
-                    7개 섹션이 열렸습니다
-                  </h2>
+            <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+              <article className="moon-lunar-panel p-6">
+                <div className="app-starfield" />
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="border-emerald-400/20 bg-emerald-400/10 text-emerald-200">
+                    {yearlyAccessLabel}
+                  </Badge>
+                  <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] text-[var(--app-copy-soft)]">
+                    평생 본문은 별도 권한
+                  </Badge>
                 </div>
-                <Badge className="border-emerald-400/20 bg-emerald-400/10 text-emerald-200">
-                  {accessLabel}
-                </Badge>
-              </div>
-              <div className="mt-6 grid gap-4">
-                {unlockedSections.map((section) => (
-                  <article
-                    key={section.title}
-                    className="moon-orbit-card px-5 py-5"
-                  >
-                    <div className="app-caption">{section.eyebrow}</div>
-                    <h3 className="mt-3 font-[var(--font-heading)] text-xl font-semibold leading-8 text-[var(--app-ivory)]">
-                      {section.title}
-                    </h3>
-                    <div className="mt-4 rounded-[1rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-4">
-                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
-                        핵심 판단
-                      </div>
-                      <p className="mt-2 text-base font-semibold leading-8 text-[var(--app-ivory)]">
-                        {section.decision || section.lead}
-                      </p>
+                <h2 className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
+                  연간 리포트는 열려 있고, 평생 기준서는 별도로 보관합니다
+                </h2>
+                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+                  지금 권한으로는 올해 흐름과 월별 타이밍을 모두 읽을 수 있습니다. 다만 평생 소장권은 원국의
+                  본질, 강약, 격국, 용신, 관계 패턴, 재물 체질, 직업 방향, 건강 리듬, 대운 10년 지도를
+                  장기 기준서로 보관하는 별도 상품입니다.
+                </p>
+                <div className="mt-6 grid gap-3">
+                  {SAJU_PREMIUM_SECTIONS.map((item) => (
+                    <div key={item} className="moon-payment-row px-4 py-3 text-sm leading-7 text-[var(--app-copy)]">
+                      {item}
                     </div>
-                    {section.keyPoints && section.keyPoints.length > 0 ? (
-                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                        {section.keyPoints.map((point) => (
-                          <div
-                            key={`${section.title}-${point}`}
-                            className="rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]"
-                          >
-                            {point}
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-                    <div className="mt-4 space-y-3">
-                      <p className="text-sm font-semibold text-[var(--app-ivory)]">{section.lead}</p>
-                      {section.paragraphs.map((paragraph) => (
-                        <p key={paragraph} className="text-sm leading-8 text-[var(--app-copy)]">
-                          {paragraph}
-                        </p>
-                      ))}
-                    </div>
-                    {section.actionItems && section.actionItems.length > 0 ? (
-                      <div className="mt-5 border-t border-[var(--app-line)] pt-4">
-                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
-                          실행 / 주의
-                        </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {section.actionItems.map((item) => (
-                            <span
-                              key={`${section.title}-${item}`}
-                              className="rounded-full border border-[var(--app-line)] bg-[rgba(8,10,18,0.28)] px-3 py-1 text-xs leading-5 text-[var(--app-copy)]"
-                            >
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                    {section.highlights && section.highlights.length > 0 ? (
-                      <div className="mt-5 grid gap-2">
-                        {section.highlights.map((highlight) => (
-                          <div
-                            key={highlight}
-                            className="moon-payment-row px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]"
-                          >
-                            {highlight}
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-                  </article>
-                ))}
-              </div>
+                  ))}
+                </div>
               </article>
-
-              <aside className="moon-lunar-panel p-6">
-              <div className="app-starfield" />
-              <div className="app-caption">저장형 리포트</div>
-              <h2 className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
-                이 명식의 핵심 근거를 다시 펼쳐볼 수 있습니다
-              </h2>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                현재 화면은 결제 또는 멤버십 권한을 확인한 뒤 보여주는 심층 본문입니다. 평생 소장 결제는
-                같은 명식으로 다시 들어와도 계속 열람할 수 있습니다.
-              </p>
-              <div className="mt-6 grid gap-3">
-                {SAJU_PREMIUM_VALUE_POINTS.map((item) => (
-                  <div
-                    key={item}
-                    className="moon-payment-row px-4 py-3 text-sm leading-7 text-[var(--app-copy)]"
-                  >
-                    {item}
+              <article className="moon-plan-card p-6" data-featured="true">
+                <div className="font-[var(--font-heading)] text-2xl text-[var(--app-gold-text)]">
+                  평생 소장 리포트로 확장하기
+                </div>
+                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+                  연간 리포트가 “올해의 흐름”이라면, 평생 소장 리포트는 “내 사주의 원본 해설서”입니다.
+                  같은 근거를 쓰더라도 역할이 다르기 때문에, 원국 중심 기준서는 별도의 보관형 본문으로
+                  나뉘어야 합니다.
+                </p>
+                <div className="mt-5 grid gap-3">
+                  {SAJU_PREMIUM_VALUE_POINTS.map((item) => (
+                    <div key={item} className="moon-payment-row px-4 py-3 text-sm leading-7 text-[var(--app-copy)]">
+                      {item}
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-6 rounded-[1.2rem] border border-[var(--app-gold)]/18 bg-[rgba(255,255,255,0.02)] px-5 py-5 text-center">
+                  <div className="font-[var(--font-heading)] text-2xl text-[var(--app-gold-text)]">
+                    평생 소장하기 · 49,000원
                   </div>
-                ))}
-              </div>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  href={`/saju/${slug}`}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
-                >
-                  기본 결과로 돌아가기
-                </Link>
-                <Link
-                  href="/my/results"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
-                >
-                  보관함 보기
-                </Link>
-              </div>
-              </aside>
+                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+                    평생 리포트 본문과 올해 부록을 한 화면에서 열고, 같은 명식으로 다시 들어와도 계속
+                    열람할 수 있습니다.
+                  </p>
+                  <div className="mt-5 flex flex-wrap justify-center gap-3">
+                    <Link
+                      href={`/membership/checkout?plan=lifetime&slug=${encodedSlug}`}
+                      className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                    >
+                      평생 리포트 열기
+                    </Link>
+                    <Link
+                      href={`/saju/${slug}`}
+                      className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                    >
+                      기본 결과로 돌아가기
+                    </Link>
+                  </div>
+                </div>
+              </article>
             </section>
           </>
         ) : (

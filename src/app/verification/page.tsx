@@ -13,6 +13,7 @@ import {
   type ClassicWorkAudit,
 } from '@/server/verification/classics-audit';
 import { getSajuVerificationAudit, type SajuVerificationCheck } from '@/server/verification/saju-audit';
+import { getLifetimeVerificationAudit } from '@/server/verification/lifetime-audit';
 import { getYearlyVerificationAudit } from '@/server/verification/yearly-audit';
 import { cn } from '@/lib/utils';
 
@@ -244,13 +245,15 @@ export default async function VerificationPage({ searchParams }: VerificationPag
   const normalizedTargetYear =
     Number.isInteger(targetYear) && targetYear >= 1900 && targetYear <= 2100 ? targetYear : 2026;
   const counselor = params.counselor === 'male' ? 'male' : 'female';
-  const [classicsAudit, sajuAudit, yearlyAudit] = await Promise.all([
+  const [classicsAudit, sajuAudit, lifetimeAudit, yearlyAudit] = await Promise.all([
     getClassicsVerificationAudit({ concept, limit: 5 }),
     getSajuVerificationAudit({ slug, topic }),
+    getLifetimeVerificationAudit({ slug, targetYear: normalizedTargetYear, counselorId: counselor }),
     getYearlyVerificationAudit({ slug, targetYear: normalizedTargetYear, counselorId: counselor }),
   ]);
   const classicsApiHref = `/api/verification/classics?concept=${encodeURIComponent(concept)}&limit=5`;
   const sajuApiHref = `/api/verification/saju?slug=${encodeURIComponent(slug)}&topic=${encodeURIComponent(topic)}`;
+  const lifetimeApiHref = `/api/verification/lifetime?slug=${encodeURIComponent(slug)}&targetYear=${normalizedTargetYear}&counselor=${counselor}`;
   const yearlyApiHref = `/api/verification/yearly?slug=${encodeURIComponent(slug)}&targetYear=${normalizedTargetYear}&counselor=${counselor}`;
 
   return (
@@ -260,6 +263,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
           <div className="flex flex-wrap items-center gap-2">
             <StatusBadge ok={classicsAudit.status === 'ready'}>고전 {classicsAudit.status}</StatusBadge>
             <StatusBadge ok={sajuAudit.status === 'ready'}>사주 {sajuAudit.status}</StatusBadge>
+            <StatusBadge ok={lifetimeAudit.status === 'ready'}>평생 {lifetimeAudit.status}</StatusBadge>
             <StatusBadge ok={yearlyAudit.status === 'ready'}>연간 {yearlyAudit.status}</StatusBadge>
             <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
               검색 제외
@@ -529,6 +533,136 @@ export default async function VerificationPage({ searchParams }: VerificationPag
           ) : (
             <div className="mt-5 rounded-2xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
               {sajuAudit.errors.join(' ')}
+            </div>
+          )}
+        </section>
+
+        <section className="app-panel p-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="app-caption">평생 리포트 운영 검증</div>
+              <h2 className="mt-2 text-2xl font-semibold text-[var(--app-ivory)]">
+                평생 리포트 본문 / 올해 부록 / 말투 분리 상태
+              </h2>
+            </div>
+            <JsonLink href={lifetimeApiHref} />
+          </div>
+
+          {lifetimeAudit.status === 'ready' ? (
+            <>
+              <div className="mt-5 grid gap-3 lg:grid-cols-5">
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">source</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {lifetimeAudit.generation.source}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                    {lifetimeAudit.generation.fallbackReason ?? 'fallback 없음'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">generation</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {lifetimeAudit.generation.generationMs}ms
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                    {lifetimeAudit.generation.model ?? '모델 없음'}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">target</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {lifetimeAudit.targetYear} · {lifetimeAudit.counselorId}
+                  </div>
+                  <p className="mt-1 break-all text-xs text-[var(--app-copy-soft)]">
+                    readingId {lifetimeAudit.readingId}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">keywords</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {lifetimeAudit.interpretationSummary.keywordCount}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
+                    remember rules {lifetimeAudit.interpretationSummary.rememberRuleCount}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">appendix</div>
+                  <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                    {lifetimeAudit.interpretationSummary.yearlyAppendixYear}
+                  </div>
+                  <p className="mt-1 text-xs text-[var(--app-copy-soft)]">yearly appendix attached</p>
+                </div>
+              </div>
+
+              <YearlyChecks checks={lifetimeAudit.checks} />
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">lifetime API</div>
+                  <div className="mt-3 grid gap-2 text-sm text-[var(--app-copy)]">
+                    <div className="flex justify-between gap-3">
+                      <span>resolvedReadingId</span>
+                      <span className="break-all text-right">{lifetimeAudit.resolvedReadingId}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span>readingSource</span>
+                      <span>{lifetimeAudit.readingSource}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span>promptVersion</span>
+                      <span>{lifetimeAudit.promptVersion}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">interpretation summary</div>
+                  <div className="mt-3 grid gap-2 text-sm text-[var(--app-copy)]">
+                    <div className="flex justify-between gap-3">
+                      <span>reportLength</span>
+                      <span>{lifetimeAudit.interpretationSummary.reportLength}</span>
+                    </div>
+                    <div className="flex justify-between gap-3">
+                      <span>appendix year</span>
+                      <span>{lifetimeAudit.interpretationSummary.yearlyAppendixYear}</span>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+                    {lifetimeAudit.interpretationSummary.openingPreview}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+                  <div className="app-caption">stage result</div>
+                  <div className="mt-4 grid gap-3">
+                    {lifetimeAudit.generation.stageResults.map((stage) => (
+                      <div key={stage.key} className="rounded-2xl border border-[var(--app-line)] bg-[rgba(8,10,18,0.28)] p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="font-semibold text-[var(--app-ivory)]">{stage.key}</div>
+                          <StatusBadge ok={stage.source === 'openai'}>{stage.source}</StatusBadge>
+                        </div>
+                        <div className="mt-3 grid gap-2 text-sm text-[var(--app-copy)]">
+                          <div>duration: {stage.durationMs}ms</div>
+                          <div>fallback: {stage.fallbackReason ?? '없음'}</div>
+                          <div className="break-words text-[var(--app-copy-soft)]">
+                            {stage.errorMessage ?? '오류 없음'}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {lifetimeAudit.warnings.length > 0 ? (
+                <div className="mt-5 rounded-2xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
+                  {lifetimeAudit.warnings.join(' ')}
+                </div>
+              ) : null}
+            </>
+          ) : (
+            <div className="mt-5 rounded-2xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
+              {lifetimeAudit.errors.join(' ')}
             </div>
           )}
         </section>
