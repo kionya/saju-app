@@ -2,13 +2,13 @@ import type { Metadata } from 'next';
 import SajuIntakePage from '@/features/saju-intake/saju-intake-page';
 
 export const metadata: Metadata = {
-  title: '달빛선생',
-  description: '달빛선생의 사주 여정을 시작하기 전, 달빛과 한 줄의 약속으로 맞이하는 스플래시 화면입니다.',
+  title: '사주 시작하기',
+  description: '양력·음력, 태어난 시간, 출생지를 입력하고 바로 내 사주 기본 해석으로 이어지는 시작 화면입니다.',
   alternates: {
     canonical: '/saju/new',
   },
 };
 
 export default function Page() {
-  return <SajuIntakePage step="splash" />;
+  return <SajuIntakePage step="birth" />;
 }

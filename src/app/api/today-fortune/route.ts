@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Lunar } from 'lunar-typescript';
-import { parseBirthInputDraft } from '@/domain/saju/validators/birth-input';
 import { calculateSajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
 import { createClient } from '@/lib/supabase/server';
 import { createReading } from '@/lib/saju/readings';
 import { toSlug } from '@/lib/saju/pillars';
 import { normalizeMoonlightCounselor } from '@/lib/counselors';
-import { buildBirthInputFromTodayPayload, buildTodayFortuneFreeResult } from '@/server/today-fortune/build-today-fortune';
+import { buildTodayFortuneFreeResult } from '@/server/today-fortune/build-today-fortune';
 import type { TodayFortuneBirthPayload } from '@/lib/today-fortune/types';
+import { resolveUnifiedBirthInput } from '@/lib/saju/unified-birth-entry';
 
 export const runtime = 'nodejs';
 
@@ -39,27 +38,6 @@ function parseTodayPayload(payload: unknown): TodayFortuneBirthPayload | null {
   };
 }
 
-function convertLunarBirthDate(payload: TodayFortuneBirthPayload) {
-  if (payload.calendarType !== 'lunar') return payload;
-
-  const year = Number.parseInt(payload.year, 10);
-  const month = Number.parseInt(payload.month, 10);
-  const day = Number.parseInt(payload.day, 10);
-
-  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
-    return payload;
-  }
-
-  const solar = Lunar.fromYmd(year, month, day).getSolar();
-
-  return {
-    ...payload,
-    year: String(solar.getYear()),
-    month: String(solar.getMonth()),
-    day: String(solar.getDay()),
-  };
-}
-
 export async function POST(req: NextRequest) {
   const rawPayload = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const payload = parseTodayPayload(rawPayload);
@@ -68,9 +46,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '오늘 운세 요청 정보가 올바르지 않습니다.' }, { status: 400 });
   }
 
-  const normalizedPayload = convertLunarBirthDate(payload);
-  const buildPayload = buildBirthInputFromTodayPayload(normalizedPayload);
-  const parsed = parseBirthInputDraft(buildPayload.birthDraft, {
+  const parsed = resolveUnifiedBirthInput(payload, {
     requireGender: false,
   });
 
@@ -100,10 +76,10 @@ export async function POST(req: NextRequest) {
   }
 
   const result = buildTodayFortuneFreeResult(parsed.input, sajuData, {
-    concernId: buildPayload.concernId,
+    concernId: payload.concernId,
     sourceSessionId,
     calendarType: payload.calendarType,
-    timeRule: buildPayload.timeRule,
+    timeRule: payload.timeRule,
     counselorId,
   });
 

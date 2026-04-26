@@ -1,22 +1,23 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  UnifiedBirthInfoFields,
+  type BirthLocationSearchResultLike,
+} from '@/components/saju/shared/unified-birth-info-fields';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
-import { HOUR_OPTIONS } from '@/features/home/content';
 import {
   ONBOARDING_CONSENTS,
   ONBOARDING_THOUGHTS,
   ONBOARDING_TONE_OPTIONS,
 } from '@/content/moonlight';
-import { parseBirthInputDraft } from '@/domain/saju/validators/birth-input';
 import { BIRTH_LOCATION_PRESETS } from '@/lib/saju/birth-location';
 import { toSlug } from '@/lib/saju/pillars';
 import { cn } from '@/lib/utils';
@@ -31,22 +32,24 @@ import {
   type OnboardingSpeechTone,
   type SajuOnboardingDraft,
 } from './onboarding-storage';
+import { resolveUnifiedBirthInput, type UnifiedBirthEntryDraft } from '@/lib/saju/unified-birth-entry';
+import { trackMoonlightEvent } from '@/lib/analytics';
 
 export type OnboardingStep = 'splash' | 'empathy' | 'birth' | 'nickname' | 'consent';
 
 const STEP_META: Record<
   Exclude<OnboardingStep, 'splash' | 'empathy'>,
-  { count: string; active: 1 | 2 | 3 }
+  { count: string; active: 1 | 2 | 3; tone: 'single' | 'multi' }
 > = {
-  birth: { count: '1 / 3', active: 1 },
-  nickname: { count: '2 / 3', active: 2 },
-  consent: { count: '3 / 3', active: 3 },
+  birth: { count: '1 / 1', active: 1, tone: 'single' },
+  nickname: { count: '2 / 3', active: 2, tone: 'multi' },
+  consent: { count: '3 / 3', active: 3, tone: 'multi' },
 };
 
 const STEP_PATHS: Record<OnboardingStep, string> = {
   splash: '/saju/new',
   empathy: '/saju/new/empathy',
-  birth: '/saju/new/birth',
+  birth: '/saju/new',
   nickname: '/saju/new/nickname',
   consent: '/saju/new/consent',
 };
@@ -105,16 +108,11 @@ interface SavedBirthProfile {
 type ProfileLoadStatus = 'idle' | 'loading' | 'ready' | 'anonymous' | 'empty' | 'error';
 type LocationSearchStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
 
-interface BirthLocationSearchResult {
-  id: string;
-  label: string;
-  displayName: string;
-  latitude: number;
-  longitude: number;
+type BirthLocationSearchResult = BirthLocationSearchResultLike & {
   source: string;
   sourceRef: string;
   license: string;
-}
+};
 
 interface BirthLocationSearchResponse {
   ok: boolean;
@@ -152,26 +150,58 @@ function getNextPath(step: OnboardingStep) {
   }
 }
 
-function buildBirthPayload(form: SajuOnboardingDraft) {
+function buildUnifiedBirthDraft(form: SajuOnboardingDraft): UnifiedBirthEntryDraft {
   return {
+    calendarType: form.calendarType,
+    timeRule: form.timeRule,
     year: form.year,
     month: form.month,
     day: form.day,
     hour: form.hour,
     minute: form.minute,
-    unknownTime: form.hour === '',
-    jasiMethod: form.jasiMethod,
+    unknownBirthTime: form.hour === '',
     gender: form.gender,
     birthLocationCode: form.birthLocationCode,
     birthLocationLabel: form.birthLocationLabel,
     birthLatitude: form.birthLatitude,
     birthLongitude: form.birthLongitude,
-    solarTimeMode: form.birthLocationCode ? form.solarTimeMode : 'standard',
   };
 }
 
+function applyUnifiedBirthPatch(
+  current: SajuOnboardingDraft,
+  patch: Partial<UnifiedBirthEntryDraft>
+): SajuOnboardingDraft {
+  const next: SajuOnboardingDraft = {
+    ...current,
+    calendarType: patch.calendarType ?? current.calendarType,
+    timeRule: patch.timeRule ?? current.timeRule,
+    year: patch.year ?? current.year,
+    month: patch.month ?? current.month,
+    day: patch.day ?? current.day,
+    hour: patch.hour ?? current.hour,
+    minute: patch.minute ?? current.minute,
+    gender: patch.gender ?? current.gender,
+    birthLocationCode: patch.birthLocationCode ?? current.birthLocationCode,
+    birthLocationLabel: patch.birthLocationLabel ?? current.birthLocationLabel,
+    birthLatitude: patch.birthLatitude ?? current.birthLatitude,
+    birthLongitude: patch.birthLongitude ?? current.birthLongitude,
+  };
+
+  if (patch.unknownBirthTime === true || next.hour === '') {
+    next.hour = '';
+    next.minute = '';
+  }
+
+  next.jasiMethod = next.timeRule === 'earlyZi' ? 'split' : 'unified';
+  next.solarTimeMode =
+    next.timeRule === 'trueSolarTime' && next.birthLocationCode ? 'longitude' : 'standard';
+
+  return next;
+}
+
 function hasValidBirth(form: SajuOnboardingDraft) {
-  return parseBirthInputDraft(buildBirthPayload(form), {
+  return resolveUnifiedBirthInput(buildUnifiedBirthDraft(form), {
     requireGender: false,
   }).ok;
 }
@@ -267,7 +297,6 @@ function StepIndicator({ active }: { active: 1 | 2 | 3 }) {
 
 export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
   const router = useRouter();
-  const maxYear = new Date().getFullYear();
   const [form, setForm] = useState<SajuOnboardingDraft>(createInitialOnboardingDraft());
   const [isHydrated, setIsHydrated] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -278,7 +307,14 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
   const [locationSearchStatus, setLocationSearchStatus] = useState<LocationSearchStatus>('idle');
   const [locationSearchMessage, setLocationSearchMessage] = useState('');
   const [locationSearchResults, setLocationSearchResults] = useState<BirthLocationSearchResult[]>([]);
+  const [showOptionalDetails, setShowOptionalDetails] = useState(false);
+  const hasTrackedStartRef = useRef(false);
+  const hasTrackedBirthStartRef = useRef(false);
   const honorific = useMemo(() => getHonorificLabel(form.nickname), [form.nickname]);
+  const selectedToneLabel = useMemo(
+    () => ONBOARDING_TONE_OPTIONS.find((option) => option.value === form.tone)?.label ?? '정중하게',
+    [form.tone]
+  );
   const tonePreview = useMemo(
     () => buildTonePreview(form.tone, form.nickname),
     [form.nickname, form.tone]
@@ -341,6 +377,13 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
   useEffect(() => {
     if (!isHydrated) return;
 
+    if (step === 'birth' && !hasTrackedStartRef.current) {
+      trackMoonlightEvent('saju_start_viewed', {
+        from: 'saju-new',
+      });
+      hasTrackedStartRef.current = true;
+    }
+
     if (step === 'splash') {
       const timer = window.setTimeout(() => {
         router.replace(STEP_PATHS.empathy);
@@ -359,35 +402,46 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
     }
   }, [form, isHydrated, router, step]);
 
+  function markBirthStarted(source: 'manual' | 'profile') {
+    if (hasTrackedBirthStartRef.current) return;
+    trackMoonlightEvent('birth_form_started', {
+      from: 'saju-new',
+      source,
+    });
+    hasTrackedBirthStartRef.current = true;
+  }
+
   function updateField<K extends Exclude<keyof SajuOnboardingDraft, 'consents'>>(
     field: K,
     value: SajuOnboardingDraft[K]
   ) {
+    if (step === 'birth') {
+      markBirthStarted('manual');
+    }
     setForm((current) => ({ ...current, [field]: value }));
   }
 
   function updateBirthLocation(code: string) {
-    setForm((current) => ({
-      ...current,
-      birthLocationCode: code,
-      solarTimeMode: code ? 'longitude' : 'standard',
-      birthLocationLabel: code === 'custom' ? current.birthLocationLabel : '',
-      birthLatitude: code === 'custom' ? current.birthLatitude : '',
-      birthLongitude: code === 'custom' ? current.birthLongitude : '',
-    }));
-    setLocationSearchStatus('idle');
-    setLocationSearchMessage('');
-    setLocationSearchResults([]);
-  }
-
-  function updateCustomBirthLocationLabel(value: string) {
-    setForm((current) => ({ ...current, birthLocationLabel: value }));
+    markBirthStarted('manual');
+    const preset = BIRTH_LOCATION_PRESETS.find((item) => item.code === code);
+    setForm((current) =>
+      applyUnifiedBirthPatch(current, {
+        birthLocationCode: code,
+        birthLocationLabel:
+          code === 'custom' ? current.birthLocationLabel : preset?.label ?? '',
+        birthLatitude:
+          code === 'custom' ? current.birthLatitude : preset ? String(preset.latitude) : '',
+        birthLongitude:
+          code === 'custom' ? current.birthLongitude : preset ? String(preset.longitude) : '',
+      })
+    );
     setLocationSearchStatus('idle');
     setLocationSearchMessage('');
     setLocationSearchResults([]);
   }
 
   async function searchBirthLocationCoordinates() {
+    markBirthStarted('manual');
     const query = form.birthLocationLabel.trim();
     if (query.length < 2) {
       setLocationSearchStatus('error');
@@ -426,23 +480,27 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
     }
   }
 
-  function applyBirthLocationSearchResult(result: BirthLocationSearchResult) {
-    setForm((current) => ({
-      ...current,
-      birthLocationCode: 'custom',
-      birthLocationLabel: result.label,
-      birthLatitude: String(result.latitude),
-      birthLongitude: String(result.longitude),
-      solarTimeMode: 'longitude',
-    }));
+  function applyBirthLocationSearchResult(result: BirthLocationSearchResultLike) {
+    markBirthStarted('manual');
+    setForm((current) =>
+      applyUnifiedBirthPatch(current, {
+        birthLocationCode: 'custom',
+        birthLocationLabel: result.label,
+        birthLatitude: String(result.latitude),
+        birthLongitude: String(result.longitude),
+      })
+    );
     setLocationSearchStatus('ready');
     setLocationSearchMessage(`${result.label} 좌표를 적용했습니다.`);
     setLocationSearchResults([]);
   }
 
   function applySavedProfile(profile: SavedBirthProfile) {
+    markBirthStarted('profile');
     setForm((current) => ({
       ...current,
+      calendarType: 'solar',
+      timeRule: profile.solarTimeMode === 'longitude' ? 'trueSolarTime' : 'standard',
       year: String(profile.birthYear),
       month: String(profile.birthMonth),
       day: String(profile.birthDay),
@@ -456,6 +514,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
       birthLatitude: profile.birthLatitude === null ? '' : String(profile.birthLatitude),
       birthLongitude: profile.birthLongitude === null ? '' : String(profile.birthLongitude),
       solarTimeMode: profile.birthLocationCode ? profile.solarTimeMode : 'standard',
+      jasiMethod: 'unified',
       gender: profile.gender ?? '',
       nickname: profile.nickname || current.nickname,
       loadedProfileSource: profile.source,
@@ -469,7 +528,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
   }
 
   function validateBirthStep() {
-    const parsed = parseBirthInputDraft(buildBirthPayload(form), {
+    const parsed = resolveUnifiedBirthInput(buildUnifiedBirthDraft(form), {
       requireGender: false,
     });
 
@@ -502,7 +561,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
       return;
     }
 
-    const parsed = parseBirthInputDraft(buildBirthPayload(form), {
+    const parsed = resolveUnifiedBirthInput(buildUnifiedBirthDraft(form), {
       requireGender: false,
     });
 
@@ -527,6 +586,14 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
         return;
       }
 
+      trackMoonlightEvent('birth_form_completed', {
+        from: 'saju-new',
+        sourceSessionId: data.id,
+        calendarType: form.calendarType,
+        timeRule: form.timeRule,
+        unknownBirthTime: parsed.input.unknownTime,
+      });
+
       clearOnboardingDraft();
       if (shouldAutoSavePersonalProfile(form.loadedProfileSource)) {
         void fetch('/api/profile', {
@@ -549,9 +616,17 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
         }).catch(() => undefined);
       }
 
-      router.push(`/saju/${data.id}`);
+      router.push(`/saju/${data.id}?from=saju-new`);
     } catch {
-      router.push(`/saju/${toSlug(parsed.input)}`);
+      const fallbackId = toSlug(parsed.input);
+      trackMoonlightEvent('birth_form_completed', {
+        from: 'saju-new',
+        sourceSessionId: fallbackId,
+        calendarType: form.calendarType,
+        timeRule: form.timeRule,
+        unknownBirthTime: parsed.input.unknownTime,
+      });
+      router.push(`/saju/${fallbackId}?from=saju-new`);
     } finally {
       setIsSubmitting(false);
     }
@@ -635,7 +710,13 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
         {stepMeta ? (
           <section className="mx-auto max-w-3xl app-hero-card p-7 sm:p-8">
             <div className="flex items-center justify-between gap-3">
-              <StepIndicator active={stepMeta.active} />
+              {stepMeta.tone === 'single' ? (
+                <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+                  바로 시작
+                </Badge>
+              ) : (
+                <StepIndicator active={stepMeta.active} />
+              )}
               <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
                 {stepMeta.count}
               </Badge>
@@ -644,10 +725,10 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
             {step === 'birth' ? (
               <>
                 <h1 className="mt-6 font-[var(--font-heading)] text-3xl leading-[1.35] text-[var(--app-ivory)] sm:text-4xl">
-                  선생님의 생시(生時)를 여쭙겠습니다
+                  내 사주를 보려면 출생 정보를 알려주세요
                 </h1>
                 <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
-                  하늘의 기운이 땅에 내려오는 순간, 그 찰나가 사주입니다. 생년월일만 먼저 입력하셔도 시작하실 수 있고, 시간은 모름으로 남겨두셔도 괜찮습니다.
+                  오늘운세처럼 바로 시작합니다. 양력·음력, 태어난 시간, 출생지를 입력하시면 먼저 기본 해석으로 이어지고, 필요하실 때만 심층 리포트로 넓혀보실 수 있습니다.
                 </p>
 
                 <div className="mt-6 rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
@@ -680,7 +761,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                       <div className="flex flex-col gap-3 rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-6 text-[var(--app-copy-muted)] sm:flex-row sm:items-center sm:justify-between">
                         <span>로그인하면 저장해 둔 내 정보와 가족 정보를 바로 불러올 수 있습니다.</span>
                         <Link
-                          href="/login?next=/saju/new/birth"
+                          href="/login?next=/saju/new"
                           className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-4 text-sm text-[var(--app-gold-text)]"
                         >
                           로그인
@@ -722,309 +803,171 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                   </div>
                 </div>
 
-                <div className="mt-8 grid gap-4 sm:grid-cols-3">
-                  <div>
-                    <Label htmlFor="birth-year" className="mb-2 block text-sm text-[var(--app-copy)]">
-                      태어난 해
-                    </Label>
-                    <Input
-                      id="birth-year"
-                      inputMode="numeric"
-                      value={form.year}
-                      onChange={(event) => updateField('year', event.target.value)}
-                      placeholder={`예: ${maxYear - 35}`}
-                      className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="birth-month" className="mb-2 block text-sm text-[var(--app-copy)]">
-                      월
-                    </Label>
-                    <Input
-                      id="birth-month"
-                      inputMode="numeric"
-                      value={form.month}
-                      onChange={(event) => updateField('month', event.target.value)}
-                      placeholder="예: 3"
-                      className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="birth-day" className="mb-2 block text-sm text-[var(--app-copy)]">
-                      일
-                    </Label>
-                    <Input
-                      id="birth-day"
-                      inputMode="numeric"
-                      value={form.day}
-                      onChange={(event) => updateField('day', event.target.value)}
-                      placeholder="예: 20"
-                      className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
-                    />
-                  </div>
+                <div className="mt-8">
+                  <UnifiedBirthInfoFields
+                    draft={buildUnifiedBirthDraft(form)}
+                    onChange={(patch) => setForm((current) => applyUnifiedBirthPatch(current, patch))}
+                    onStarted={() => markBirthStarted('manual')}
+                    locationLoading={locationSearchStatus === 'loading'}
+                    locationMessage={locationSearchMessage}
+                    locationResults={locationSearchResults}
+                    onLocationSearch={searchBirthLocationCoordinates}
+                    onPresetSelect={updateBirthLocation}
+                    onLocationResultSelect={applyBirthLocationSearchResult}
+                  />
                 </div>
 
-                <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                  <div>
-                    <Label htmlFor="birth-hour" className="mb-2 block text-sm text-[var(--app-copy)]">
-                      태어난 시간
-                    </Label>
-                    <select
-                      id="birth-hour"
-                      value={form.hour}
-                      onChange={(event) => updateField('hour', event.target.value)}
-                      className="h-12 w-full rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-ivory)]"
-                    >
-                      {HOUR_OPTIONS.map((option) => (
-                        <option key={option.label} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    <label className="mt-3 flex items-start gap-3 rounded-[1.15rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm text-[var(--app-copy-muted)]">
-                      <input
-                        type="checkbox"
-                        checked={form.hour === ''}
-                        onChange={(event) => {
-                          if (event.target.checked) {
-                            updateField('hour', '');
-                          }
-                        }}
-                        className="mt-1 h-4 w-4 rounded border-[var(--app-line)] bg-transparent accent-[var(--app-gold)]"
-                      />
-                      <span>
-                        출생 시각을 모릅니다
-                        <span className="mt-1 block text-xs leading-6 text-[var(--app-copy-soft)]">
-                          괜찮습니다. 그래도 많은 흐름을 읽어드릴 수 있습니다.
-                        </span>
-                      </span>
-                    </label>
-                    {form.hour === '23' ? (
-                      <div className="mt-3">
-                        <Label htmlFor="birth-jasi-method" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
-                          자시 기준
-                        </Label>
-                        <select
-                          id="birth-jasi-method"
-                          value={form.jasiMethod}
-                          onChange={(event) => updateField('jasiMethod', event.target.value as SajuOnboardingDraft['jasiMethod'])}
-                          className="h-11 w-full rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-ivory)]"
-                        >
-                          <option value="unified">통자시 기준으로 보기</option>
-                          <option value="split">야자시 기준으로 보기</option>
-                        </select>
-                        <p className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">
-                          밤 11시 전후 출생은 일주가 갈릴 수 있어요. 우선 통자시를 기본값으로 두었습니다.
-                        </p>
-                      </div>
-                    ) : null}
-                  </div>
-                  <div>
-                    <Label htmlFor="birth-minute" className="mb-2 block text-sm text-[var(--app-copy)]">
-                      태어난 분
-                    </Label>
-                    <Input
-                      id="birth-minute"
-                      inputMode="numeric"
-                      value={form.minute}
-                      onChange={(event) => updateField('minute', event.target.value)}
-                      placeholder="예: 30"
-                      disabled={form.hour === ''}
-                      className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] disabled:cursor-not-allowed disabled:opacity-55"
-                    />
-                    <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
-                      분까지 아시면 더 정확해집니다. 모르시면 비워두셔도 괜찮습니다.
-                    </p>
-                  </div>
-                  <div>
-                    <Label htmlFor="birth-gender" className="mb-2 block text-sm text-[var(--app-copy)]">
-                      성별
-                    </Label>
-                    <select
-                      id="birth-gender"
-                      value={form.gender}
-                      onChange={(event) => updateField('gender', event.target.value)}
-                      className="h-12 w-full rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-ivory)]"
-                    >
-                      <option value="">선택 안 함</option>
-                      <option value="male">남성</option>
-                      <option value="female">여성</option>
-                    </select>
-                  </div>
+                <div className="mt-4 rounded-[1.15rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-sm leading-7 text-[var(--app-copy-muted)]">
+                  시주가 필요한 세부 해석은 태어난 시간이 있을수록 정밀해지고, 출생지를 넣으면 진태양시 판단까지 더 정확해집니다. 시간이 없더라도 일간, 월령, 현재 운을 중심으로 기본 해석은 계속 이어집니다.
                 </div>
 
-                <div className="mt-4 rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
-                  <div className="grid gap-4 sm:grid-cols-[1.15fr_0.85fr]">
-                    <div>
-                      <Label htmlFor="birth-location" className="mb-2 block text-sm text-[var(--app-copy)]">
-                        출생 지역
-                      </Label>
-                      <select
-                        id="birth-location"
-                        value={form.birthLocationCode}
-                        onChange={(event) => updateBirthLocation(event.target.value)}
-                        className="h-12 w-full rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-ivory)]"
-                      >
-                        <option value="">지역 미입력</option>
-                        {BIRTH_LOCATION_PRESETS.map((location) => (
-                          <option key={location.code} value={location.code}>
-                            {location.label}
-                          </option>
-                        ))}
-                        <option value="custom">직접 입력</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="solar-time-mode" className="mb-2 block text-sm text-[var(--app-copy)]">
-                        시간 보정
-                      </Label>
-                      <select
-                        id="solar-time-mode"
-                        value={form.birthLocationCode ? form.solarTimeMode : 'standard'}
-                        onChange={(event) =>
-                          updateField(
-                            'solarTimeMode',
-                            event.target.value as SajuOnboardingDraft['solarTimeMode']
-                          )
-                        }
-                        disabled={!form.birthLocationCode || form.hour === ''}
-                        className="h-12 w-full rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-ivory)] disabled:cursor-not-allowed disabled:opacity-55"
-                      >
-                        <option value="standard">표준시 그대로</option>
-                        <option value="longitude">경도 보정</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {form.birthLocationCode === 'custom' ? (
-                    <div className="mt-4">
-                      <div className="grid gap-4 sm:grid-cols-[1.2fr_0.8fr_0.8fr]">
-                        <div>
-                          <Label htmlFor="birth-location-label" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
-                            지역명
-                          </Label>
-                          <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-                            <Input
-                              id="birth-location-label"
-                              value={form.birthLocationLabel}
-                              onChange={(event) => updateCustomBirthLocationLabel(event.target.value)}
-                              placeholder="예: 목포, 강릉, Osaka"
-                              className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="lg"
-                              onClick={searchBirthLocationCoordinates}
-                              disabled={locationSearchStatus === 'loading'}
-                              className="h-11 rounded-2xl border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-3 text-xs font-semibold text-[var(--app-gold-text)] hover:bg-[var(--app-gold)]/16"
-                            >
-                              <Search className="h-3.5 w-3.5" aria-hidden="true" />
-                              {locationSearchStatus === 'loading' ? '검색 중' : '좌표 찾기'}
-                            </Button>
-                          </div>
-                        </div>
-                        <div>
-                          <Label htmlFor="birth-latitude" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
-                            위도
-                          </Label>
-                          <Input
-                            id="birth-latitude"
-                            inputMode="decimal"
-                            value={form.birthLatitude}
-                            onChange={(event) => updateField('birthLatitude', event.target.value)}
-                            placeholder="예: 34.8118"
-                            className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="birth-longitude" className="mb-2 block text-xs text-[var(--app-copy-muted)]">
-                            경도
-                          </Label>
-                          <Input
-                            id="birth-longitude"
-                            inputMode="decimal"
-                            value={form.birthLongitude}
-                            onChange={(event) => updateField('birthLongitude', event.target.value)}
-                            placeholder="예: 126.3922"
-                            className="h-11 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
-                          />
-                        </div>
-                      </div>
-
-                      {locationSearchMessage ? (
-                        <p
-                          className={cn(
-                            'mt-3 text-xs leading-6',
-                            locationSearchStatus === 'error'
-                              ? 'text-red-200'
-                              : 'text-[var(--app-copy-soft)]'
-                          )}
-                        >
-                          {locationSearchMessage}
+                <div className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+                  <div className="rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
+                    <div className="app-caption">선택 사항</div>
+                    <div className="mt-2 flex items-start justify-between gap-4">
+                      <div>
+                        <h2 className="text-lg font-semibold text-[var(--app-ivory)]">
+                          호칭과 말투는 지금 건너뛰셔도 됩니다
+                        </h2>
+                        <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
+                          기본 해석을 먼저 보고, 마음에 드시면 MY나 대화에서 더 자연스럽게 이어갈 수 있게 저장해둘 수 있습니다.
                         </p>
-                      ) : null}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowOptionalDetails((current) => !current)}
+                        className="inline-flex shrink-0 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface)] px-4 py-2 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                      >
+                        {showOptionalDetails ? '접기' : '선택 설정 열기'}
+                      </button>
+                    </div>
 
-                      {locationSearchResults.length > 0 ? (
-                        <div className="mt-3 space-y-2">
-                          {locationSearchResults.map((result) => (
-                            <button
-                              key={result.id}
-                              type="button"
-                              onClick={() => applyBirthLocationSearchResult(result)}
-                              className="flex w-full items-center justify-between gap-3 rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-4 py-3 text-left transition-colors hover:border-[var(--app-gold)]/40 hover:bg-[var(--app-surface)]"
-                            >
-                              <span className="min-w-0">
-                                <span className="block text-sm font-semibold text-[var(--app-ivory)]">
-                                  {result.label}
-                                </span>
-                                <span className="mt-1 block truncate text-xs text-[var(--app-copy-soft)]">
-                                  {result.displayName}
-                                </span>
-                                <span className="mt-1 block text-xs text-[var(--app-copy-muted)]">
-                                  위도 {result.latitude} · 경도 {result.longitude}
-                                </span>
-                              </span>
-                              <span className="shrink-0 rounded-full border border-[var(--app-gold)]/30 px-3 py-1 text-xs font-semibold text-[var(--app-gold-text)]">
-                                적용
-                              </span>
-                            </button>
-                          ))}
-                          <p className="text-xs leading-6 text-[var(--app-copy-soft)]">
-                            좌표 데이터: OpenStreetMap contributors, ODbL 1.0
+                    {showOptionalDetails ? (
+                      <div className="mt-5">
+                        <div>
+                          <Label htmlFor="nickname" className="mb-2 block text-sm text-[var(--app-copy)]">
+                            호칭
+                          </Label>
+                          <Input
+                            id="nickname"
+                            value={form.nickname}
+                            onChange={(event) => updateField('nickname', event.target.value)}
+                            placeholder="예: 김영희 선생님"
+                            className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                          />
+                          <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
+                            이렇게 불러드릴게요: <span className="text-[var(--app-gold-text)]">{honorific}</span>
                           </p>
                         </div>
-                      ) : null}
+
+                        <div className="mt-5">
+                          <Label className="mb-2 block text-sm text-[var(--app-copy)]">말투 선택</Label>
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            {ONBOARDING_TONE_OPTIONS.map((option) => (
+                              <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => updateField('tone', option.value as OnboardingSpeechTone)}
+                                className={cn(
+                                  'rounded-[1.15rem] border px-4 py-4 text-left transition-colors',
+                                  form.tone === option.value
+                                    ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
+                                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
+                                )}
+                              >
+                                <div className="text-sm font-medium">{option.label}</div>
+                                <div className="mt-2 text-xs leading-6">{option.description}</div>
+                              </button>
+                            ))}
+                          </div>
+                          <div className="mt-4 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface)] px-4 py-4 text-sm leading-7 text-[var(--app-copy)]">
+                            “{tonePreview}”
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-5 rounded-[1.15rem] border border-[var(--app-line)] bg-[var(--app-surface)] px-4 py-4 text-sm leading-7 text-[var(--app-copy-muted)]">
+                        {form.nickname.trim()
+                          ? `${honorific} 기준으로 ${selectedToneLabel} 말투가 준비돼 있습니다. 지금은 기본 해석을 먼저 열고, 필요하실 때 다시 다듬으셔도 됩니다.`
+                          : '지금은 기본 해석을 먼저 여는 데 집중하고, 나중에 필요하실 때 호칭과 말투를 편하게 정하셔도 됩니다.'}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
+                    <div className="app-caption">필수 확인</div>
+                    <h2 className="mt-2 text-lg font-semibold text-[var(--app-ivory)]">
+                      결과를 만들기 전 필요한 안내만 짧게 확인합니다
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
+                      기본 해석을 먼저 확인하고, 더 필요한 부분만 심층 리포트로 이어지는 구조입니다.
+                    </p>
+                    <div className="mt-5 space-y-3">
+                      {ONBOARDING_CONSENTS.map((item) => (
+                        <label
+                          key={item.title}
+                          className="flex items-start gap-3 rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface)] px-4 py-4"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={form.consents[item.title]}
+                            onChange={(event) =>
+                              setForm((current) => ({
+                                ...current,
+                                consents: {
+                                  ...current.consents,
+                                  [item.title]: event.target.checked,
+                                },
+                              }))
+                            }
+                            className="mt-1 h-4 w-4 rounded border-[var(--app-line)] bg-transparent accent-[var(--app-gold)]"
+                          />
+                          <span className="min-w-0">
+                            <span className="flex items-center gap-2 text-sm font-medium text-[var(--app-ivory)]">
+                              {item.title}
+                              <span
+                                className={cn(
+                                  'rounded-full border px-2 py-0.5 text-[10px]',
+                                  item.required
+                                    ? 'border-[var(--app-coral)]/28 bg-[var(--app-coral)]/10 text-[var(--app-coral)]'
+                                    : 'border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]'
+                                )}
+                              >
+                                {item.required ? '필수' : '선택'}
+                              </span>
+                            </span>
+                            <span className="mt-2 block text-xs leading-6 text-[var(--app-copy-muted)]">
+                              {item.detail}
+                            </span>
+                          </span>
+                        </label>
+                      ))}
                     </div>
-                  ) : null}
 
-                  <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
-                    출생 지역을 넣으면 동경 135도 한국 표준시 기준과의 차이를 계산해 시주 경계 판단에 반영합니다.
-                  </p>
+                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                      <Link
+                        href="/today-fortune"
+                        className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                      >
+                        오늘운세 먼저 보기
+                      </Link>
+                      <Button
+                        onClick={() => {
+                          if (validateBirthStep()) {
+                            void submit();
+                          }
+                        }}
+                        disabled={isSubmitting}
+                        className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+                      >
+                        {isSubmitting ? '기본 해석 준비 중...' : '내 사주 기본 해석 보기'}
+                      </Button>
+                    </div>
+                    <p className="mt-4 text-xs leading-6 text-[var(--app-copy-soft)]">
+                      입력하신 정보는 암호화 저장되며, 외부에 공유되지 않습니다.
+                    </p>
+                  </div>
                 </div>
-
-                <div className="mt-8 flex gap-3">
-                  {prevPath ? (
-                    <Link
-                      href={prevPath}
-                      className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-                    >
-                      이전
-                    </Link>
-                  ) : null}
-                  <Button
-                    onClick={() => {
-                      if (validateBirthStep() && nextPath) router.push(nextPath);
-                    }}
-                    className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
-                  >
-                    다음
-                  </Button>
-                </div>
-                <p className="mt-4 text-center text-xs leading-6 text-[var(--app-copy-soft)]">
-                  입력하신 정보는 암호화 저장되며, 외부에 공유되지 않습니다.
-                </p>
               </>
             ) : null}
 

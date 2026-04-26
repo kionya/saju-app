@@ -11,6 +11,7 @@ import { SajuAiInterpretationPanel } from '@/components/ai/saju-ai-interpretatio
 import { ClassicEvidencePanel } from '@/components/classics/classic-evidence-panel';
 import { Badge } from '@/components/ui/badge';
 import DetailUnlock from '@/components/detail-unlock';
+import { SajuResultViewTracker } from '@/features/saju-detail/saju-result-view-tracker';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { ELEMENT_INFO } from '@/lib/saju/elements';
@@ -324,6 +325,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
   return (
     <AppShell header={<SiteHeader />}>
       <AppPage className="space-y-6">
+        <SajuResultViewTracker slug={slug} />
         <SajuScreenNav slug={slug} current="result" />
 
         <section className="moon-result-hero p-6 sm:p-7">

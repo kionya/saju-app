@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import SajuIntakePage from '@/features/saju-intake/saju-intake-page';
+import { redirect } from 'next/navigation';
 
 export const metadata: Metadata = {
   title: '호칭 설정',
@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 };
 
 export default function SajuNicknamePage() {
-  return <SajuIntakePage step="nickname" />;
+  redirect('/saju/new');
 }

@@ -1,4 +1,8 @@
 import type { FocusTopic } from '@/domain/saju/report';
+import type {
+  UnifiedCalendarType,
+  UnifiedTimeRule,
+} from '@/lib/saju/unified-birth-entry';
 
 export type ConcernId =
   | 'love_contact'
@@ -8,8 +12,8 @@ export type ConcernId =
   | 'energy_health'
   | 'general';
 
-export type TodayCalendarType = 'solar' | 'lunar';
-export type TodayTimeRule = 'standard' | 'trueSolarTime' | 'nightZi' | 'earlyZi';
+export type TodayCalendarType = UnifiedCalendarType;
+export type TodayTimeRule = UnifiedTimeRule;
 
 export interface TodayConcernDefinition {
   id: ConcernId;

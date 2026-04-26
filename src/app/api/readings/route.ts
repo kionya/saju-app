@@ -3,9 +3,16 @@ import { createClient } from '@/lib/supabase/server';
 import { parseBirthInputDraft } from '@/domain/saju/validators/birth-input';
 import { toSlug } from '@/lib/saju/pillars';
 import { createReading, deleteReadingForUser } from '@/lib/saju/readings';
+import {
+  isUnifiedBirthEntryDraft,
+  resolveUnifiedBirthInput,
+} from '@/lib/saju/unified-birth-entry';
 
 export async function POST(req: NextRequest) {
-  const parsed = parseBirthInputDraft(await req.json().catch(() => null));
+  const payload = await req.json().catch(() => null);
+  const parsed = isUnifiedBirthEntryDraft(payload)
+    ? resolveUnifiedBirthInput(payload)
+    : parseBirthInputDraft(payload);
 
   if (!parsed.ok) {
     return NextResponse.json(

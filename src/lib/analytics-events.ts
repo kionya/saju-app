@@ -1,5 +1,6 @@
 export const MOONLIGHT_ANALYTICS_EVENTS = [
   'home_view',
+  'saju_start_viewed',
   'today_concern_selected',
   'birth_form_started',
   'birth_form_completed',
@@ -9,6 +10,7 @@ export const MOONLIGHT_ANALYTICS_EVENTS = [
   'payment_started',
   'payment_completed',
   'premium_result_viewed',
+  'saju_result_viewed',
   'followup_question_clicked',
   'dialogue_started_from_result',
   'feedback_submitted',

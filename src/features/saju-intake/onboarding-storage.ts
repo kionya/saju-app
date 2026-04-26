@@ -6,6 +6,8 @@ export type OnboardingSpeechTone = 'friendly' | 'polite' | 'standard';
 export type OnboardingProfileSource = 'manual' | 'self' | 'family';
 
 export interface SajuOnboardingDraft {
+  calendarType: 'solar' | 'lunar';
+  timeRule: 'standard' | 'trueSolarTime' | 'nightZi' | 'earlyZi';
   year: string;
   month: string;
   day: string;
@@ -34,6 +36,8 @@ function createConsentState() {
 
 export function createInitialOnboardingDraft(): SajuOnboardingDraft {
   return {
+    calendarType: 'solar',
+    timeRule: 'standard',
     year: '',
     month: '',
     day: '',
@@ -74,6 +78,13 @@ export function loadOnboardingDraft(): SajuOnboardingDraft {
 
     const parsed = JSON.parse(raw) as Partial<SajuOnboardingDraft>;
     return {
+      calendarType: parsed.calendarType === 'lunar' ? 'lunar' : 'solar',
+      timeRule:
+        parsed.timeRule === 'trueSolarTime' ||
+        parsed.timeRule === 'nightZi' ||
+        parsed.timeRule === 'earlyZi'
+          ? parsed.timeRule
+          : 'standard',
       year: typeof parsed.year === 'string' ? parsed.year : '',
       month: typeof parsed.month === 'string' ? parsed.month : '',
       day: typeof parsed.day === 'string' ? parsed.day : '',
