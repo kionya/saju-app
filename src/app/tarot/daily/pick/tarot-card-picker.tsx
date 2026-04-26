@@ -5,10 +5,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Shuffle, Sparkles } from 'lucide-react';
 import type { CSSProperties } from 'react';
-import { useCallback, useEffect, useState, useTransition } from 'react';
+import { useCallback, useState, useTransition } from 'react';
 import {
-  getTarotCardImagePath,
-  getTarotCardVisualTone,
+  getTarotCardBackImagePath,
 } from '@/lib/tarot-card-assets';
 import {
   createRandomTarotDrawDeck,
@@ -74,17 +73,15 @@ const CARD_BACK_TONES: Record<
 export function TarotCardPicker({ cards, question, sourceLabel }: TarotCardPickerProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [drawDeck, setDrawDeck] = useState<TarotPickerCardDraw[] | null>(null);
+  const [drawDeck, setDrawDeck] = useState<TarotPickerCardDraw[]>(() =>
+    createRandomTarotDrawDeck(cards)
+  );
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
   const reshuffleDeck = useCallback(() => {
     setSelectedCardId(null);
     setDrawDeck(createRandomTarotDrawDeck(cards));
   }, [cards]);
-
-  useEffect(() => {
-    reshuffleDeck();
-  }, [reshuffleDeck]);
 
   const moveToResult = useCallback(
     (card: TarotPickerCardDraw) => {
@@ -98,12 +95,8 @@ export function TarotCardPicker({ cards, question, sourceLabel }: TarotCardPicke
   );
 
   const handleRandomDraw = () => {
-    const deck = drawDeck ?? createRandomTarotDrawDeck(cards);
+    const deck = drawDeck;
     const card = pickRandomTarotCard(deck);
-
-    if (!drawDeck) {
-      setDrawDeck(deck);
-    }
 
     if (card) {
       moveToResult(card);
@@ -145,85 +138,64 @@ export function TarotCardPicker({ cards, question, sourceLabel }: TarotCardPicke
         </button>
       </div>
 
-      {drawDeck ? (
-        <div className="mt-6 grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 xl:grid-cols-10">
-          {drawDeck.map((card) => {
-            const selected = selectedCardId === card.cardId;
-            const tone = CARD_BACK_TONES[card.backTone];
+      <div className="mt-6 grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 xl:grid-cols-10">
+        {drawDeck.map((card) => {
+          const selected = selectedCardId === card.cardId;
+          const tone = CARD_BACK_TONES[card.backTone];
 
-            return (
-              <Link
-                key={`${card.slot}-${card.cardId}-${card.orientation}`}
-                href={buildResultHref(question, card)}
-                aria-label={`${card.slot}번째 카드 뽑기`}
-                onClick={() => setSelectedCardId(card.cardId)}
-                style={getCardBackStyle(card, selected)}
-                className={cn(
-                  'group relative flex aspect-[7/10] min-h-[5.75rem] flex-col justify-between overflow-hidden rounded-[0.85rem] border p-2 text-left transition-[filter,transform,border-color] duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-gold)]/75',
-                  selected && 'brightness-110'
-                )}
+          return (
+            <Link
+              key={`${card.slot}-${card.cardId}-${card.orientation}`}
+              href={buildResultHref(question, card)}
+              aria-label={`${card.slot}번째 카드 뽑기`}
+              onClick={() => setSelectedCardId(card.cardId)}
+              style={getCardBackStyle(card, selected)}
+              className={cn(
+                'group relative flex aspect-[7/10] min-h-[5.75rem] flex-col justify-between overflow-hidden rounded-[0.85rem] border p-2 text-left transition-[filter,transform,border-color] duration-200 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-gold)]/75',
+                selected && 'brightness-110'
+              )}
+            >
+              <Image
+                src={getTarotCardBackImagePath()}
+                alt={`${card.slot}번째 타로 카드 뒷면`}
+                fill
+                sizes="(max-width: 640px) 22vw, (max-width: 1024px) 12vw, 9vw"
+                quality={70}
+                priority={card.slot <= 20}
+                className="object-cover"
+              />
+              <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,18,0.04),rgba(8,10,18,0.02)_24%,rgba(8,10,18,0.38))]" />
+              <span
+                className="absolute inset-0 opacity-12"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(135deg,transparent 0 42%,rgba(255,255,255,0.08) 43% 44%,transparent 45% 100%)',
+                }}
+              />
+              <span
+                className="absolute left-1/2 top-[18%] h-14 w-14 -translate-x-1/2 rounded-full blur-2xl"
+                style={{ backgroundColor: tone.light, opacity: 0.22 + card.backGlow * 0.06 }}
+              />
+              <span
+                className="relative z-10 text-[10px] font-semibold tracking-[0.18em]"
+                style={{ color: tone.accent }}
               >
-                <Image
-                  src={getTarotCardImagePath(card.cardId)}
-                  alt={`${card.slot}번째 타로 카드`}
-                  fill
-                  sizes="(max-width: 640px) 22vw, (max-width: 1024px) 12vw, 9vw"
-                  quality={58}
-                  priority={card.slot <= 12}
-                  className="object-cover"
-                />
-                <span className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,10,18,0.08),rgba(8,10,18,0.02)_26%,rgba(8,10,18,0.56))]" />
-                <span
-                  className="absolute inset-0 opacity-18"
-                  style={{
-                    backgroundImage:
-                      'linear-gradient(135deg,transparent 0 42%,rgba(255,255,255,0.08) 43% 44%,transparent 45% 100%)',
-                  }}
-                />
-                <span
-                  className="absolute left-1/2 top-[18%] h-14 w-14 -translate-x-1/2 rounded-full blur-2xl"
-                  style={{ backgroundColor: tone.light, opacity: 0.22 + card.backGlow * 0.06 }}
-                />
-                <span
-                  className="relative z-10 text-[10px] font-semibold tracking-[0.18em]"
-                  style={{ color: tone.accent }}
-                >
-                  {card.slot.toString().padStart(2, '0')}
-                </span>
-                <span
-                  className="absolute inset-x-2 top-1/2 h-px -translate-y-1/2"
-                  style={{ backgroundColor: tone.light }}
-                />
-                <span
-                  className="absolute right-2 top-2 z-10 inline-flex rounded-full border px-2 py-1 text-[9px] tracking-[0.16em] backdrop-blur-sm"
-                  style={{
-                    borderColor: tone.border,
-                    color: tone.accent,
-                    backgroundColor: 'rgba(8,10,18,0.35)',
-                  }}
-                >
-                  {card.orientation === 'reversed' ? '역' : '정'}
-                </span>
-                <span
-                  className="relative z-10 self-end font-[var(--font-heading)] text-[10px] tracking-[0.2em]"
-                  style={{ color: tone.accent }}
-                >
-                  {getTarotCardVisualTone(card.cardId).marker}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="mt-6 grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 xl:grid-cols-10">
-          {Array.from({ length: 20 }, (_, index) => (
-            <div
-              key={index}
-              className="aspect-[7/10] min-h-[5.75rem] animate-pulse rounded-[0.85rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)]"
-            />
-          ))}
-        </div>
-      )}
+                {card.slot.toString().padStart(2, '0')}
+              </span>
+              <span
+                className="absolute inset-x-2 top-1/2 h-px -translate-y-1/2"
+                style={{ backgroundColor: tone.light }}
+              />
+              <span
+                className="relative z-10 self-end font-[var(--font-heading)] text-[10px] tracking-[0.2em]"
+                style={{ color: tone.accent }}
+              >
+                CARD
+              </span>
+            </Link>
+          );
+        })}
+      </div>
 
       <p className="mt-5 text-center text-xs tracking-[0.22em] text-[var(--app-gold)]/72">
         직접 고르거나 랜덤 버튼으로 한 장을 뽑으세요

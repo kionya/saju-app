@@ -76,8 +76,6 @@ export default async function TarotResultPage({ searchParams }: Props) {
               shortName={reading.shortName}
               displayName={reading.displayName}
               cardMarker={reading.cardMarker}
-              orientation={reading.orientation}
-              orientationLabel={reading.orientationLabel}
               arcanaLabel={reading.arcanaLabel}
               priority
             />
@@ -203,9 +201,6 @@ export default async function TarotResultPage({ searchParams }: Props) {
                     <div className="truncate font-[var(--font-heading)] text-lg text-[var(--app-ivory)]">
                       {spreadReading.displayName}
                     </div>
-                    <p className="mt-1 text-xs text-[var(--app-copy-soft)]">
-                      {spreadReading.orientationLabel}
-                    </p>
                   </div>
                 </div>
                 <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">

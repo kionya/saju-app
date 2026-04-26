@@ -118,8 +118,6 @@ export default async function DailyTarotPage() {
                     shortName={featuredReading.shortName}
                     displayName={featuredReading.displayName}
                     cardMarker={featuredReading.cardMarker}
-                    orientation={featuredReading.orientation}
-                    orientationLabel={featuredReading.orientationLabel}
                     arcanaLabel={featuredReading.arcanaLabel}
                     className="w-[min(14rem,72vw)]"
                     priority

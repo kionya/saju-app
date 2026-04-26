@@ -34,7 +34,6 @@ export interface TarotReading {
   arcanaLabel: string;
   cardMarker: string;
   orientation: TarotOrientation;
-  orientationLabel: string;
   tone: TarotQuestionTone;
   toneLabel: string;
   theme: string;
@@ -90,11 +89,6 @@ const TONE_LABELS: Record<TarotQuestionTone, string> = {
   relationship: '관계 질문',
   choice: '선택 질문',
   direction: '방향 질문',
-};
-
-const ORIENTATION_LABELS: Record<TarotOrientation, string> = {
-  upright: '정방향',
-  reversed: '역방향',
 };
 
 const MAJOR_CARD_NAMES: Record<string, string> = {
@@ -817,11 +811,10 @@ function buildTarotReading({
     arcanaLabel: getArcanaLabel(card),
     cardMarker: getCardMarker(card),
     orientation,
-    orientationLabel: ORIENTATION_LABELS[orientation],
     tone,
     toneLabel: TONE_LABELS[tone],
     theme: theme.theme,
-    subtitle: `${ORIENTATION_LABELS[orientation]} · ${theme.focus}`,
+    subtitle: theme.focus,
     keyword: getKeyword(card, theme),
     questionInsight,
     answer: directAnswer,

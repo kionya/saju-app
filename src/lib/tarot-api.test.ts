@@ -7,7 +7,11 @@ import {
   getTarotSpreadForQuestion,
   type TarotApiCard,
 } from './tarot-api';
-import { getTarotCardImagePath, getTarotCardVisualTone } from './tarot-card-assets';
+import {
+  getTarotCardBackImagePath,
+  getTarotCardImagePath,
+  getTarotCardVisualTone,
+} from './tarot-card-assets';
 import { createRandomTarotDrawDeck, pickRandomTarotCard } from './tarot-picker-random';
 
 declare const test: (name: string, fn: () => void | Promise<void>) => void;
@@ -239,6 +243,7 @@ test('tarot random draw picks one card from the visible deck', () => {
 });
 
 test('tarot card asset helpers map card IDs to public image paths and tones', () => {
+  assert.equal(getTarotCardBackImagePath(), '/images/tarot/cards/00_back.png');
   assert.equal(getTarotCardImagePath('ar00'), '/images/tarot/cards/01_the_fool.png');
   assert.equal(getTarotCardImagePath('SW07'), '/images/tarot/cards/57_seven_of_swords.png');
   assert.equal(getTarotCardVisualTone('ar00').family, 'major');

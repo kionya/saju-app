@@ -1,5 +1,6 @@
 export const TAROT_CARD_IMAGE_DIRECTORY = '/images/tarot/cards';
 export const TAROT_CARD_IMAGE_EXTENSION = 'png';
+export const TAROT_CARD_BACK_IMAGE_FILE = '00_back.png';
 
 export type TarotCardVisualFamily = 'major' | 'cups' | 'pentacles' | 'swords' | 'wands';
 
@@ -156,6 +157,10 @@ export function getTarotCardImagePath(cardId: string) {
   }
 
   return `${TAROT_CARD_IMAGE_DIRECTORY}/${safeCardId}.${TAROT_CARD_IMAGE_EXTENSION}`;
+}
+
+export function getTarotCardBackImagePath() {
+  return `${TAROT_CARD_IMAGE_DIRECTORY}/${TAROT_CARD_BACK_IMAGE_FILE}`;
 }
 
 export function getTarotCardVisualTone(cardId: string) {

@@ -13,8 +13,6 @@ interface TarotCardArtworkProps {
   shortName: string;
   displayName: string;
   cardMarker: string;
-  orientation: 'upright' | 'reversed';
-  orientationLabel: string;
   arcanaLabel: string;
   className?: string;
   priority?: boolean;
@@ -25,8 +23,6 @@ export function TarotCardArtwork({
   shortName,
   displayName,
   cardMarker,
-  orientation,
-  orientationLabel,
   arcanaLabel,
   className,
   priority = false,
@@ -98,17 +94,12 @@ export function TarotCardArtwork({
                   tone.accentClassName
                 )}
               >
-                {orientationLabel}
+                {tone.label}
               </span>
             </div>
           )}
 
           <div>
-            <div
-              className={cn('font-[var(--font-heading)] text-[11px] tracking-[0.26em]', tone.accentClassName)}
-            >
-              {orientationLabel}
-            </div>
             <figcaption className="mt-2 line-clamp-2 font-[var(--font-heading)] text-xl leading-tight text-[var(--app-ivory)]">
               {displayName}
             </figcaption>
