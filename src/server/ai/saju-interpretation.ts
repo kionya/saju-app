@@ -1,7 +1,11 @@
 import type { SajuReport } from '@/domain/saju/report/types';
+import {
+  buildReportCounselorInstructions,
+  type MoonlightCounselorId,
+} from '@/lib/counselors';
 import type { ReadingRecord } from '@/lib/saju/readings';
 
-export const SAJU_INTERPRETATION_PROMPT_VERSION = 'saju-interpret-v2';
+export const SAJU_INTERPRETATION_PROMPT_VERSION = 'saju-interpret-v3';
 
 export interface SajuAiInterpretation {
   headline: string;
@@ -34,15 +38,25 @@ function normalizeInsights(value: unknown) {
     .slice(0, MAX_INSIGHTS);
 }
 
-export function buildFallbackInterpretation(report: SajuReport): SajuAiInterpretation {
+export function getInterpretationPromptVersion(counselorId: MoonlightCounselorId) {
+  return `${SAJU_INTERPRETATION_PROMPT_VERSION}-${counselorId}`;
+}
+
+export function buildFallbackInterpretation(
+  report: SajuReport,
+  counselorId: MoonlightCounselorId = 'female'
+): SajuAiInterpretation {
   const insights = report.insights
     .map((insight) => cleanText(`${insight.title}: ${insight.body}`, MAX_INSIGHT_LENGTH))
     .filter(Boolean)
     .slice(0, 3);
 
+  const summaryPrefix =
+    counselorId === 'male' ? '핵심부터 보면, ' : '흐름을 차분히 읽어보면, ';
+
   return {
     headline: cleanText(report.headline, MAX_HEADLINE_LENGTH),
-    summary: cleanText(report.summary, MAX_SUMMARY_LENGTH),
+    summary: cleanText(`${summaryPrefix}${report.summary}`, MAX_SUMMARY_LENGTH),
     insights:
       insights.length > 0
         ? insights
@@ -118,9 +132,16 @@ function serializePillar(pillar: ReadingRecord['sajuData']['pillars']['year'] | 
   };
 }
 
-export function createInterpretationPrompt(record: ReadingRecord, report: SajuReport) {
+export function createInterpretationPrompt(
+  record: ReadingRecord,
+  report: SajuReport,
+  counselorId: MoonlightCounselorId = 'female'
+) {
   const data = record.sajuData;
   const grounding = {
+    counselor: {
+      id: counselorId,
+    },
     birth: {
       year: record.input.year,
       month: record.input.month,
@@ -183,6 +204,7 @@ export function createInterpretationPrompt(record: ReadingRecord, report: SajuRe
       'headline은 38자 안팎으로, 사용자가 지금 가장 먼저 알아야 할 흐름을 바로 드러냅니다.',
       'summary는 2~3문장으로 쓰고, 첫 문장에는 현재 흐름의 핵심 해석을 넣습니다.',
       'insights는 3~4개로 작성하며, 각 항목은 서로 겹치지 않게 강점/주의점/행동 제안/관계 또는 일의 포인트를 나눠 담습니다.',
+      ...buildReportCounselorInstructions(counselorId),
     ].join('\n'),
     input: JSON.stringify(grounding, null, 2),
   };

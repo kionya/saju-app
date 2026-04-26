@@ -1059,6 +1059,22 @@
       linear-gradient(180deg, rgba(4, 5, 10, 1) 0%, rgba(8, 10, 18, 1) 100%);
   }
 
+  .moon-hero-media {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .moon-hero-media-overlay {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgba(4, 5, 10, 0.44) 0%, rgba(7, 10, 18, 0.72) 46%, rgba(6, 8, 16, 0.92) 100%),
+      radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.18), transparent 18%),
+      radial-gradient(circle at 50% 52%, rgba(166, 124, 181, 0.14), transparent 36%);
+  }
+
   /* Star particle field */
   .moon-particles {
     position: absolute;
@@ -1215,6 +1231,10 @@
     color: var(--app-copy-muted);
     text-wrap: balance;
     animation: app-fade-up 640ms ease both 360ms;
+  }
+
+  .moon-counselor-selector-wrap {
+    animation: app-fade-up 720ms ease both 440ms;
   }
 
   /* CTA buttons */

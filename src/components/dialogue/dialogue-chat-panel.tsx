@@ -3,7 +3,10 @@
 import { FormEvent, startTransition, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AiSourceBadge } from '@/components/ai/ai-source-badge';
+import { CounselorSelector } from '@/components/counselor/counselor-selector';
+import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import type { AiChatBillingSummary } from '@/lib/credits/ai-chat-access';
+import type { MoonlightCounselorId } from '@/lib/counselors';
 
 type AiSource = 'openai' | 'fallback' | 'safe_redirect';
 type FallbackReason = 'ai_not_configured' | 'empty_ai_response' | 'openai_error';
@@ -28,6 +31,7 @@ interface DialogueAiResponse {
   fallbackReason?: FallbackReason | null;
   errorMessage?: string | null;
   redirectPath?: string | null;
+  counselorId?: MoonlightCounselorId | null;
   error?: string;
 }
 
@@ -45,6 +49,7 @@ interface ChatMessage {
   } | null;
   fallbackReason?: FallbackReason | null;
   errorMessage?: string | null;
+  counselorId?: MoonlightCounselorId | null;
 }
 
 interface DialogueChatPanelProps {
@@ -145,6 +150,7 @@ function getConnectionSummary(
 export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const { counselorId, selectCounselor } = usePreferredCounselor();
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<ChatStatus>('idle');
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
@@ -193,7 +199,7 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: 'dialogue', message: trimmedInput }),
+        body: JSON.stringify({ mode: 'dialogue', message: trimmedInput, counselorId }),
       });
       const payload = (await response.json()) as DialogueAiResponse;
 
@@ -222,6 +228,7 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
         profileContext: payload.profileContext ?? null,
         fallbackReason: payload.fallbackReason ?? null,
         errorMessage: payload.errorMessage ?? null,
+        counselorId: payload.counselorId ?? counselorId,
       };
 
       startTransition(() => {
@@ -250,6 +257,15 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
               답변 생성 전에 SAFE_REDIRECT로 전환하고, OpenAI 연결 전에는 기본
               해석 fallback으로 안전하게 내려갑니다.
             </p>
+            <div className="mt-4 max-w-4xl">
+              <CounselorSelector
+                value={counselorId}
+                onChange={(nextCounselor) => void selectCounselor(nextCounselor)}
+                variant="compact"
+                title="대화를 맡을 선생"
+                description="고르신 선생의 말투로 질문을 받아드립니다. 명식 계산 기준은 그대로 유지됩니다."
+              />
+            </div>
             <p className="mt-3 max-w-3xl text-xs leading-6 text-[var(--app-copy-soft)]">
               {connectionSummary}
             </p>
@@ -278,9 +294,12 @@ export function DialogueChatPanel({ presets }: DialogueChatPanelProps) {
                 {!isUser && (message.source || message.errorMessage || message.billing) ? (
                   <div className="mt-3 flex flex-wrap gap-2 text-xs leading-6 text-[var(--app-copy-soft)]">
                     {message.source === 'openai' ? (
-                      <span>OpenAI 응답 · 모델 {message.model ?? 'OpenAI'}</span>
+                      <span>
+                        {message.counselorId === 'male' ? '달빛 남선생' : '달빛 여선생'} · OpenAI 응답 · 모델 {message.model ?? 'OpenAI'}
+                      </span>
                     ) : (
                       <span>
+                        {message.counselorId === 'male' ? '달빛 남선생' : '달빛 여선생'} ·{' '}
                         {message.configured === false
                           ? 'Fallback 응답 · OpenAI 키 미연결'
                           : getFallbackLabel(message.fallbackReason)}

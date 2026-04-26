@@ -45,10 +45,12 @@ test('buildFallbackInterpretation derives compact insight copy from report', () 
     ],
   } as SajuReport;
 
-  const interpretation = buildFallbackInterpretation(report);
+  const interpretation = buildFallbackInterpretation(report, 'male');
+  const alternate = buildFallbackInterpretation(report, 'female');
 
   assert.equal(interpretation.headline, report.headline);
-  assert.equal(interpretation.summary, report.summary);
+  assert.equal(interpretation.summary, `핵심부터 보면, ${report.summary}`);
+  assert.equal(alternate.summary, `흐름을 차분히 읽어보면, ${report.summary}`);
   assert.deepEqual(interpretation.insights, [
     '강점: 목 기운을 먼저 활용합니다.',
     '주의: 급한 결정은 줄입니다.',

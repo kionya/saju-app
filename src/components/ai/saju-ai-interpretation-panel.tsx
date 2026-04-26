@@ -1,7 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { CounselorSelector } from '@/components/counselor/counselor-selector';
 import type { FocusTopic } from '@/domain/saju/report';
+import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
+import type { MoonlightCounselorId } from '@/lib/counselors';
 import type { SajuAiInterpretation } from '@/server/ai/saju-interpretation';
 import { cn } from '@/lib/utils';
 import { AiSourceBadge } from './ai-source-badge';
@@ -17,6 +20,7 @@ interface InterpretResponse {
   cacheable?: boolean;
   fallbackReason?: FallbackReason | null;
   errorMessage?: string | null;
+  counselorId?: MoonlightCounselorId | null;
   interpretation?: SajuAiInterpretation;
   error?: string;
 }
@@ -27,6 +31,7 @@ interface InterpretationState {
   cached: boolean;
   fallbackReason: FallbackReason | null;
   errorMessage: string | null;
+  counselorId: MoonlightCounselorId;
   interpretation: SajuAiInterpretation;
   fromApi: boolean;
 }
@@ -72,6 +77,7 @@ export function SajuAiInterpretationPanel({
   cacheEnabled,
 }: SajuAiInterpretationPanelProps) {
   const autoLoadedRef = useRef(false);
+  const { counselorId, hydrated: counselorReady, selectCounselor } = usePreferredCounselor();
   const [status, setStatus] = useState<'ready' | 'loading' | 'answered' | 'error'>(
     cacheEnabled ? 'loading' : 'ready'
   );
@@ -82,11 +88,13 @@ export function SajuAiInterpretationPanel({
     cached: false,
     fallbackReason: null,
     errorMessage: null,
+    counselorId,
     interpretation: fallbackInterpretation,
     fromApi: false,
   });
 
-  const loadInterpretation = useCallback(async () => {
+  const loadInterpretation = useCallback(async (requestedCounselorId?: MoonlightCounselorId) => {
+    const activeCounselorId = requestedCounselorId ?? counselorId;
     setStatus('loading');
     setError(null);
 
@@ -94,7 +102,7 @@ export function SajuAiInterpretationPanel({
       const response = await fetch('/api/interpret', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ readingId, topic }),
+        body: JSON.stringify({ readingId, topic, counselorId: activeCounselorId }),
       });
       const payload = (await response.json()) as InterpretResponse;
 
@@ -108,6 +116,7 @@ export function SajuAiInterpretationPanel({
         cached: payload.cached === true,
         fallbackReason: payload.fallbackReason ?? null,
         errorMessage: payload.errorMessage ?? null,
+        counselorId: payload.counselorId ?? activeCounselorId,
         interpretation: payload.interpretation,
         fromApi: true,
       });
@@ -120,14 +129,14 @@ export function SajuAiInterpretationPanel({
           : '잠시 후 다시 시도해 주세요.'
       );
     }
-  }, [readingId, topic]);
+  }, [counselorId, readingId, topic]);
 
   useEffect(() => {
-    if (!cacheEnabled || autoLoadedRef.current) return;
+    if (!cacheEnabled || autoLoadedRef.current || !counselorReady) return;
 
     autoLoadedRef.current = true;
     void loadInterpretation();
-  }, [cacheEnabled, loadInterpretation]);
+  }, [cacheEnabled, counselorReady, loadInterpretation]);
 
   const badgeState =
     status === 'loading'
@@ -153,6 +162,18 @@ export function SajuAiInterpretationPanel({
               ? '계산 근거를 바탕으로 해석 문장을 정리하는 중입니다.'
               : interpretation.summary}
           </p>
+          <div className="mt-4 max-w-4xl">
+            <CounselorSelector
+              value={counselorId}
+              onChange={(nextCounselor) => {
+                void selectCounselor(nextCounselor);
+                void loadInterpretation(nextCounselor);
+              }}
+              variant="compact"
+              title="사주를 읽는 선생"
+              description="같은 명식을 어떤 말결로 듣고 싶은지 골라보세요. 선택한 선생 기준으로 AI 해석이 다시 정리됩니다."
+            />
+          </div>
         </div>
         <AiSourceBadge state={badgeState} />
       </div>
@@ -175,6 +196,7 @@ export function SajuAiInterpretationPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs leading-6 text-[var(--app-copy-soft)]">
+        <span>{result.counselorId === 'male' ? '달빛 남선생 기준' : '달빛 여선생 기준'}</span>
         {result.source === 'openai' ? (
           <span>
             모델: {result.model ?? 'OpenAI'}{result.cached ? ' · 캐시됨' : ' · 새로 생성됨'}

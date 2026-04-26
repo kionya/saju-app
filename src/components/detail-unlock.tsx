@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 
 type DetailSectionKey = 'wealth' | 'love' | 'career' | 'health';
 
@@ -292,6 +293,7 @@ function getTopicContent(
 }
 
 export default function DetailUnlock({ slug, children, referenceChildren }: Props) {
+  const { counselorId } = usePreferredCounselor();
   const [state, setState] = useState<'locked' | 'loading' | 'unlocked' | 'error'>('locked');
   const [content, setContent] = useState<DetailContent | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
@@ -304,7 +306,7 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
       const res = await fetch('/api/credits/use', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ feature: 'detail_report', slug }),
+        body: JSON.stringify({ feature: 'detail_report', slug, counselorId }),
       });
 
       const data = await res.json();
@@ -351,6 +353,9 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
           <div className="flex items-center gap-2">
             <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
               {access === 'daily_reuse' ? '오늘 재열람' : '해금 완료'}
+            </Badge>
+            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-copy-muted)]">
+              {counselorId === 'male' ? '달빛 남선생 기준' : '달빛 여선생 기준'}
             </Badge>
             {remaining !== null ? (
               <span className="text-xs text-[var(--app-copy-soft)]">잔여 코인 {remaining}개</span>
@@ -453,6 +458,10 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
 
         <p className="app-body-copy mt-4 max-w-2xl text-sm">
           재물, 애정, 직업, 건강 흐름을 현재 대운·세운 문맥과 함께 더 구체적으로 풀이합니다.
+          {' '}
+          {counselorId === 'male'
+            ? '선택한 달빛 남선생 기준으로 결론과 기준을 먼저 잡아드립니다.'
+            : '선택한 달빛 여선생 기준으로 흐름의 맥락과 관계 온도까지 섬세하게 풀어드립니다.'}
         </p>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-3">

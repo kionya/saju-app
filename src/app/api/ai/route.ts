@@ -1,4 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  buildDialogueCounselorInstructions,
+  buildReportCounselorInstructions,
+  getMoonlightCounselorMeta,
+  normalizeMoonlightCounselor,
+  resolveMoonlightCounselor,
+  type MoonlightCounselorId,
+} from '@/lib/counselors';
 import { detectSafeRedirect } from '@/domain/safety/safe-redirect';
 import { normalizeToSajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
 import {
@@ -39,6 +47,7 @@ type AiMode = 'dialogue' | 'saju-report';
 interface DialogueAiRequest {
   mode: 'dialogue';
   message: string;
+  counselorId?: MoonlightCounselorId;
 }
 
 interface SajuReportAiRequest {
@@ -46,6 +55,7 @@ interface SajuReportAiRequest {
   readingId: string;
   topic?: string;
   question?: string;
+  counselorId?: MoonlightCounselorId;
 }
 
 type ParsedAiRequest = DialogueAiRequest | SajuReportAiRequest;
@@ -111,7 +121,8 @@ export function parseAiRequest(payload: unknown): ParsedAiRequest | null {
 
   if (mode === 'dialogue') {
     const message = readString(data, 'message');
-    return message ? { mode, message } : null;
+    const counselorId = normalizeMoonlightCounselor(data.counselorId);
+    return message ? { mode, message, counselorId: counselorId ?? undefined } : null;
   }
 
   if (mode === 'saju-report') {
@@ -123,6 +134,7 @@ export function parseAiRequest(payload: unknown): ParsedAiRequest | null {
       readingId,
       topic: readString(data, 'topic') || undefined,
       question: readString(data, 'question') || undefined,
+      counselorId: normalizeMoonlightCounselor(data.counselorId) ?? undefined,
     };
   }
 
@@ -265,14 +277,19 @@ function createDialogueProfileContext(
 
 export function buildDialogueFallback(
   message: string,
-  profileGrounding?: DialogueProfileGrounding | null
+  profileGrounding?: DialogueProfileGrounding | null,
+  counselorId: MoonlightCounselorId = 'female'
 ) {
+  const counselor = getMoonlightCounselorMeta(counselorId);
+
   if (!profileGrounding) {
     return [
-      '지금은 대화 연결이 잠시 비어 있어, 먼저 기본 흐름부터 짚어드리겠습니다.',
+      counselorId === 'male'
+        ? '지금은 대화 연결이 잠시 비어 있어, 먼저 흐름의 골자부터 바로 짚겠습니다.'
+        : '지금은 대화 연결이 잠시 비어 있어, 먼저 흐름의 결부터 차분히 짚어드릴게요.',
       `남겨주신 질문은 “${message}”입니다.`,
       '아직 저장된 명식이 연결되지 않았다면 MY 프로필에 생년월일, 성별, 태어난 시간, 출생지를 먼저 넣어 주세요. 기본 명식이 잡혀야 같은 질문도 훨씬 분명하게 풀립니다.',
-      '이 답변은 횟수와 코인을 차감하지 않습니다.',
+      `${counselor.label} 기준의 기본 답변이며, 이 답변은 횟수와 코인을 차감하지 않습니다.`,
     ].join('\n\n');
   }
 
@@ -281,12 +298,14 @@ export function buildDialogueFallback(
     .join(' · ');
 
   return [
-    `저장된 프로필 기준으로 보면, ${profileGrounding.reports.focus.headline}`,
+    counselorId === 'male'
+      ? `저장된 프로필 기준으로 보면, ${profileGrounding.reports.focus.headline}`
+      : `저장된 프로필 기준으로 읽어보면, ${profileGrounding.reports.focus.headline}`,
     profileGrounding.reports.focus.summary,
     `기본 명식은 ${profileGrounding.saju.dayMaster}, ${profileGrounding.saju.strength}, ${profileGrounding.saju.pattern} 흐름으로 읽습니다. 용신 보완축은 ${profileGrounding.saju.yongsin} 쪽으로 먼저 봅니다.`,
     evidenceSummary ? `핵심 근거는 ${evidenceSummary}입니다.` : null,
     `질문하신 “${message}”은 ${profileGrounding.reports.focus.action} 쪽으로 정리해서 움직이시는 편이 맞습니다.`,
-    '지금은 대화 연결이 잠시 비어 있어 기본 풀이로 먼저 말씀드렸고, 저장된 명식 기준은 그대로 반영했습니다. 이 답변은 횟수와 코인을 차감하지 않습니다.',
+    `${counselor.label} 기준의 기본 풀이로 먼저 말씀드렸고, 저장된 명식 기준은 그대로 반영했습니다. 이 답변은 횟수와 코인을 차감하지 않습니다.`,
   ]
     .filter(Boolean)
     .join('\n\n');
@@ -314,7 +333,8 @@ export function normalizeDialogueAnswer(text: string) {
 
 export function createDialoguePrompt(
   message: string,
-  profileGrounding?: DialogueProfileGrounding | null
+  profileGrounding?: DialogueProfileGrounding | null,
+  counselorId: MoonlightCounselorId = 'female'
 ) {
   return {
     instructions: [
@@ -333,6 +353,7 @@ export function createDialoguePrompt(
       '출생 정보나 명식 데이터가 없는 경우 빈말로 얼버무리지 말고, 어떤 정보가 필요한지 짧게 요청합니다.',
       '고전 원문이나 출처는 제공된 근거가 없으면 인용하지 않습니다.',
       '다음과 같은 표현은 피합니다: 결론적으로, 분석해보면, 참고로, AI로서, 표로 정리하면, 1번 2번 3번.',
+      ...buildDialogueCounselorInstructions(counselorId),
     ].join('\n'),
     input: [
       profileGrounding
@@ -433,7 +454,8 @@ function createReportGrounding(record: ReadingRecord, report: SajuReport) {
 function createReportPrompt(
   record: ReadingRecord,
   report: SajuReport,
-  question?: string
+  question?: string,
+  counselorId: MoonlightCounselorId = 'female'
 ) {
   return {
     instructions: [
@@ -445,6 +467,7 @@ function createReportPrompt(
       '점수나 계산값을 복붙하듯 나열하지 말고, 현재 흐름의 핵심과 생활 적용으로 자연스럽게 풀어 설명합니다.',
       '강약, 격국, 용신, 합충/공망/신살 중 제공된 근거가 있으면 자연스럽게 반영합니다.',
       '의료·법률·투자 결론은 피하고, 필요한 경우 전문가 확인을 권합니다.',
+      ...buildReportCounselorInstructions(counselorId),
     ].join('\n'),
     input: [
       question ? `사용자 추가 질문:\n${question}` : null,
@@ -484,6 +507,10 @@ async function handleDialogue(request: DialogueAiRequest) {
   const profile = await getUserProfileById(user.id);
   const profileGrounding = createDialogueProfileGrounding(profile, request.message);
   const profileContext = createDialogueProfileContext(profile, profileGrounding);
+  const counselorId = resolveMoonlightCounselor(
+    request.counselorId,
+    profile.preferredCounselor
+  );
 
   if (configured && turnPlan.cost > 0 && availableCredits < turnPlan.cost) {
     return NextResponse.json(
@@ -497,8 +524,8 @@ async function handleDialogue(request: DialogueAiRequest) {
     );
   }
 
-  const prompt = createDialoguePrompt(request.message, profileGrounding);
-  const fallbackText = buildDialogueFallback(request.message, profileGrounding);
+  const prompt = createDialoguePrompt(request.message, profileGrounding, counselorId);
+  const fallbackText = buildDialogueFallback(request.message, profileGrounding, counselorId);
   const result = await generateAiText({
     ...prompt,
     fallbackText,
@@ -515,6 +542,7 @@ async function handleDialogue(request: DialogueAiRequest) {
       ok: true,
       mode: request.mode,
       configured,
+      counselorId,
       billing: createAiChatBillingSummary('not_charged_fallback', availableCredits, turnPlan),
       profileContext,
       ...dialogueResult,
@@ -530,6 +558,7 @@ async function handleDialogue(request: DialogueAiRequest) {
           ok: false,
           error: '코인이 부족합니다.',
           configured,
+          counselorId,
           billing: createAiChatBillingSummary('insufficient_credits', deducted.remaining, turnPlan),
         },
         { status: 402 }
@@ -540,6 +569,7 @@ async function handleDialogue(request: DialogueAiRequest) {
       ok: true,
       mode: request.mode,
       configured,
+      counselorId,
       billing: createAiChatBillingSummary('charged_bundle', deducted.remaining, turnPlan),
       profileContext,
       ...dialogueResult,
@@ -552,6 +582,7 @@ async function handleDialogue(request: DialogueAiRequest) {
     ok: true,
     mode: request.mode,
     configured,
+    counselorId,
     billing: createAiChatBillingSummary(turnPlan.status, availableCredits, turnPlan),
     profileContext,
     ...dialogueResult,
@@ -575,7 +606,13 @@ async function handleSajuReport(request: SajuReportAiRequest) {
 
   const topic = normalizeFocusTopic(request.topic);
   const report = buildSajuReport(reading.input, reading.sajuData, topic);
-  const prompt = createReportPrompt(reading, report, request.question);
+  const storedCounselor =
+    reading.userId ? (await getUserProfileById(reading.userId)).preferredCounselor : null;
+  const counselorId = resolveMoonlightCounselor(
+    request.counselorId,
+    storedCounselor
+  );
+  const prompt = createReportPrompt(reading, report, request.question, counselorId);
   const model = getOpenAIInterpretationModel();
   const result = await generateAiText({
     ...prompt,
@@ -589,6 +626,7 @@ async function handleSajuReport(request: SajuReportAiRequest) {
     mode: request.mode,
     readingId: request.readingId,
     topic,
+    counselorId,
     report: {
       headline: report.headline,
       summaryHighlights: report.summaryHighlights,

@@ -34,6 +34,9 @@
   "exclude": [
     "node_modules",
     "external",
+    "public/**/*.ts",
+    "public/**/*.tsx",
+    "public/**/*.mts",
     ".next/types/**/* *.ts",
     ".next/dev/types/**/* *.ts"
   ]

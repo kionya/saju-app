@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { SajuCurrentLuck, SajuSymbolRef } from '@/domain/saju/engine/saju-data-v1';
+import {
+  resolveMoonlightCounselor,
+  type MoonlightCounselorId,
+} from '@/lib/counselors';
 import { createClient } from '@/lib/supabase/server';
 import { deductCredits } from '@/lib/credits/deduct';
 import {
   unlockDailyDetailReport,
   validateCreditUsePayload,
 } from '@/lib/credits/detail-report-access';
+import { getUserProfileById } from '@/lib/profile';
 import { resolveReading } from '@/lib/saju/readings';
 import {
   ELEMENT_INFO,
@@ -31,19 +36,25 @@ interface DetailTopicReportContent {
 }
 
 export async function POST(req: NextRequest) {
+  const requestBody = await req.json().catch(() => null);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 });
   }
 
-  const validation = validateCreditUsePayload(await req.json().catch(() => null));
+  const validation = validateCreditUsePayload(requestBody);
 
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
   }
 
   const { feature, slug } = validation.payload;
+  const profile = await getUserProfileById(user.id);
+  const counselorId = resolveMoonlightCounselor(
+    requestBody && typeof requestBody === 'object' ? (requestBody as Record<string, unknown>).counselorId : null,
+    profile.preferredCounselor
+  );
 
   // feature에 따라 콘텐츠 생성
   let content = null;
@@ -63,12 +74,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '코인이 부족합니다.', remaining: result.remaining }, { status: 402 });
     }
 
-    content = buildDetailReportContent(reading);
+    content = buildDetailReportContent(reading, counselorId);
 
     return NextResponse.json({
       success: true,
       remaining: result.remaining,
       content,
+      counselorId,
       access: result.reused ? 'daily_reuse' : 'charged',
     });
   }
@@ -78,10 +90,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '코인이 부족합니다.', remaining: result.remaining }, { status: 402 });
   }
 
-  return NextResponse.json({ success: true, remaining: result.remaining, content, access: 'charged' });
+  return NextResponse.json({ success: true, remaining: result.remaining, content, counselorId, access: 'charged' });
 }
 
-function buildDetailReportContent(reading: NonNullable<Awaited<ReturnType<typeof resolveReading>>>) {
+function buildDetailReportContent(
+  reading: NonNullable<Awaited<ReturnType<typeof resolveReading>>>,
+  counselorId: MoonlightCounselorId
+) {
   const saju = reading.sajuData;
   const lucky = getLuckyElementsFromSajuData(saju);
   const todayReport = buildSajuReport(reading.input, saju, 'today');
@@ -107,15 +122,18 @@ function buildDetailReportContent(reading: NonNullable<Awaited<ReturnType<typeof
   const wealthScore = getReportScore(wealthReport, 'wealth');
   const loveScore = getReportScore(loveReport, 'love');
   const careerScore = getReportScore(careerReport, 'career');
+  const isMaleCounselor = counselorId === 'male';
   const wealthDetail: DetailTopicReportContent = {
-    lead: `${wealthReport.headline} 재물운은 ${wealthScore}점으로, 큰돈이 들어온다는 예언이 아니라 돈을 다루는 판단력과 흐름의 안정도를 보는 점수입니다.`,
+    lead: isMaleCounselor
+      ? `${wealthReport.headline} 재물운은 ${wealthScore}점입니다. 큰돈이 들어온다는 예언으로 볼 일이 아니라, 지금 돈을 다루는 판단력과 흐름의 안정도를 먼저 보셔야 합니다.`
+      : `${wealthReport.headline} 재물운은 ${wealthScore}점으로, 무조건 돈이 들어온다는 약속이 아니라 지금 내 판단력과 금전 흐름의 결을 살피는 점수입니다.`,
     scoreLabel: `${wealthScore}점`,
     highlights: ['재물운', `${wealthScore}점`, '지출 구조', '정산', '보류'],
     blocks: [
       {
         tone: 'basis' as const,
         title: '명식 근거',
-        body: `${dominant.name} 기운이 강하게 드러나고 ${weakest.name} 보완이 필요한 명식입니다. ${formatEvidencePoint(wealthReport, 'yongsin')} 그래서 오늘의 재물 판단은 수입 확대보다 지출 구조와 약속된 금액을 먼저 점검할 때 정확해집니다.`,
+        body: `${dominant.name} 기운이 강하게 드러나고 ${weakest.name} 보완이 필요한 명식입니다. ${formatEvidencePoint(wealthReport, 'yongsin')} ${isMaleCounselor ? '그래서 오늘 재물 판단은 수입 확대보다 지출 구조와 약속된 금액부터 점검하는 쪽이 맞습니다.' : '그래서 오늘의 재물 판단은 수입 확대보다 지출 구조와 약속된 금액을 먼저 살피는 편이 훨씬 안정적입니다.'}`,
         keywords: [dominant.name, weakest.name, '용신', '보완', '지출 구조'],
       },
       {
@@ -127,7 +145,7 @@ function buildDetailReportContent(reading: NonNullable<Awaited<ReturnType<typeof
       {
         tone: 'caution' as const,
         title: '피해야 할 선택',
-        body: `${wealthReport.cautionAction.description} 가격 비교 없이 결제하거나 지인 제안만 믿고 움직이는 선택은 오늘 한 번 더 보류하는 편이 좋습니다.`,
+        body: `${wealthReport.cautionAction.description} ${isMaleCounselor ? '가격 비교 없이 결제하거나 지인 제안만 믿고 움직이면 흐름이 흐트러집니다. 오늘은 한 번 더 보류하십시오.' : '가격 비교 없이 결제하거나 지인 제안만 믿고 움직이는 선택은 만족보다 피로를 남길 수 있어요. 오늘은 한 번 더 보류하는 편이 좋습니다.'}`,
         keywords: ['가격 비교', '지인 제안', '보류'],
       },
       {
@@ -141,14 +159,16 @@ function buildDetailReportContent(reading: NonNullable<Awaited<ReturnType<typeof
     ],
   };
   const loveDetail: DetailTopicReportContent = {
-    lead: `${loveReport.headline} 연애운은 ${loveScore}점으로, 상대의 행동을 단정하는 예측이 아니라 내가 관계에서 쓰기 쉬운 표현 방식과 조율 포인트를 보는 값입니다.`,
+    lead: isMaleCounselor
+      ? `${loveReport.headline} 연애운은 ${loveScore}점입니다. 상대 행동을 단정하는 예측이 아니라, 지금 관계에서 내가 어떤 표현과 속도를 써야 하는지 보는 값입니다.`
+      : `${loveReport.headline} 연애운은 ${loveScore}점으로, 상대를 단정하는 예언이 아니라 내가 관계 안에서 어떤 표현과 온도를 쓰기 쉬운지 읽는 값입니다.`,
     scoreLabel: `${loveScore}점`,
     highlights: ['연애운', `${loveScore}점`, '표현 방식', '속도 조절', '안부'],
     blocks: [
       {
         tone: 'core' as const,
         title: '관계의 핵심',
-        body: `${personality} 연애에서는 마음이 커질수록 표현의 폭도 커질 수 있습니다. 오늘은 감정을 증명하려 하기보다 상대가 받아들이기 쉬운 속도로 말하는 것이 좋습니다.`,
+        body: `${personality} ${isMaleCounselor ? '연애에서는 마음이 커질수록 표현도 커지기 쉽습니다. 오늘은 감정을 증명하려 들기보다 상대가 받아들일 수 있는 속도로 말하는 편이 맞습니다.' : '연애에서는 마음이 커질수록 표현의 폭도 함께 넓어질 수 있어요. 오늘은 감정을 증명하려 하기보다 상대가 받아들이기 쉬운 속도로 말하는 것이 좋습니다.'}`,
         keywords: ['표현', '속도', '상대'],
       },
       {
@@ -166,13 +186,15 @@ function buildDetailReportContent(reading: NonNullable<Awaited<ReturnType<typeof
       {
         tone: 'caution' as const,
         title: '오해를 줄이는 선',
-        body: `${loveReport.cautionAction.description} ${strengthLabel ? `현재 저장본 기준으로는 ${strengthLabel} 흐름이라 관계 속도 조절이 중요합니다.` : ''} ${saewoonLabel ? `특히 ${saewoonLabel} 세운에서는 감정 표현의 강약을 세심하게 맞추는 편이 유리합니다.` : ''}`,
+        body: `${loveReport.cautionAction.description} ${strengthLabel ? `현재 저장본 기준으로는 ${strengthLabel} 흐름이라 관계 속도 조절이 중요합니다.` : ''} ${saewoonLabel ? isMaleCounselor ? `특히 ${saewoonLabel} 세운에서는 감정 표현의 강약을 분명히 조절하는 편이 좋습니다.` : `특히 ${saewoonLabel} 세운에서는 감정 표현의 강약을 세심하게 맞추는 편이 유리합니다.` : ''}`,
         keywords: compactText(['확인 압박', '속도 조절', '감정 표현', strengthLabel, saewoonLabel]),
       },
     ],
   };
   const careerDetail: DetailTopicReportContent = {
-    lead: `${careerReport.headline} 직업운은 ${careerScore}점으로, 합격이나 승진을 단정하는 값이 아니라 현재 명식에서 일의 추진력, 정리력, 평가 흐름을 함께 본 참고 점수입니다.`,
+    lead: isMaleCounselor
+      ? `${careerReport.headline} 직업운은 ${careerScore}점입니다. 합격이나 승진을 단정할 값이 아니라, 지금 명식에서 일의 추진력과 평가 흐름을 어떻게 써야 하는지 보는 참고 점수입니다.`
+      : `${careerReport.headline} 직업운은 ${careerScore}점으로, 합격이나 승진을 단정하는 값이 아니라 현재 명식에서 일의 추진력, 정리력, 평가 흐름을 함께 읽는 참고 점수입니다.`,
     scoreLabel: `${careerScore}점`,
     highlights: ['직업운', `${careerScore}점`, '역할', '마감선', '평가'],
     blocks: [
@@ -197,13 +219,15 @@ function buildDetailReportContent(reading: NonNullable<Awaited<ReturnType<typeof
       {
         tone: 'caution' as const,
         title: '업무에서 조심할 점',
-        body: `${careerReport.cautionAction.description} ${currentMajorLabel ? `지금은 ${currentMajorLabel} 대운권이라 단기 성과보다 방향성과 포지션을 길게 잡는 해석이 잘 맞습니다.` : ''}`,
+        body: `${careerReport.cautionAction.description} ${currentMajorLabel ? isMaleCounselor ? `지금은 ${currentMajorLabel} 대운권이라 단기 성과에 매달리기보다 방향성과 포지션을 길게 잡는 해석이 맞습니다.` : `지금은 ${currentMajorLabel} 대운권이라 단기 성과보다 방향성과 포지션을 길게 잡는 해석이 더 자연스럽습니다.` : ''}`,
         keywords: compactText(['업무 범위', '마감선', '책임', currentMajorLabel]),
       },
     ],
   };
   const healthDetail: DetailTopicReportContent = {
-    lead: `건강운은 의학적 진단이 아니라 명식의 강한 기운과 부족한 기운이 생활 리듬에 주는 부담을 읽는 참고 해석입니다. 전체 흐름은 ${overallScore}점 기준으로 보되, 몸 상태는 실제 증상과 의료 판단을 우선해야 합니다.`,
+    lead: isMaleCounselor
+      ? `건강운은 의학적 진단이 아닙니다. 명식의 강한 기운과 부족한 기운이 생활 리듬에 주는 부담을 읽는 참고 해석으로 보셔야 하고, 전체 흐름은 ${overallScore}점 기준이되 몸 상태는 실제 증상과 의료 판단을 우선해야 합니다.`
+      : `건강운은 의학적 진단이 아니라 명식의 강한 기운과 부족한 기운이 생활 리듬에 주는 부담을 읽는 참고 해석입니다. 전체 흐름은 ${overallScore}점 기준으로 보되, 몸 상태는 실제 증상과 의료 판단을 우선해야 합니다.`,
     scoreLabel: `${overallScore}점`,
     highlights: ['건강운', '참고 해석', '생활 리듬', '의료 판단'],
     blocks: [

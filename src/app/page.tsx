@@ -1,9 +1,12 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronRight } from 'lucide-react';
+import { CounselorSelector } from '@/components/counselor/counselor-selector';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import { AppShell } from '@/shared/layout/app-shell';
 import {
   HOME_DAILY_LINES,
@@ -60,6 +63,13 @@ export default function HomePage() {
   const selectedTone = toneClasses(selectedWisdom.tone);
   const displayName = profilePreview?.profile?.displayName?.trim() || '방문자';
   const todayLabel = formatTodayLabel();
+  const {
+    counselor,
+    counselorId,
+    hydrated: counselorReady,
+    persistState,
+    selectCounselor,
+  } = usePreferredCounselor(profilePreview?.profile?.preferredCounselor ?? null);
 
   useEffect(() => {
     let isActive = true;
@@ -134,6 +144,17 @@ export default function HomePage() {
 
       {/* ─── HERO ─── */}
       <section ref={heroRef} className="moon-hero">
+        <div className="moon-hero-media" aria-hidden>
+          <Image
+            src="/intro/moonlight_main.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center"
+          />
+          <div className="moon-hero-media-overlay" />
+        </div>
         <div className="moon-particles" aria-hidden />
 
         <div
@@ -181,6 +202,30 @@ export default function HomePage() {
           <div className="flex flex-wrap justify-center gap-3">
             <Link href="/saju/new" className="moon-cta-primary">사주 시작하기</Link>
             <Link href="/today-fortune" className="moon-cta-secondary">오늘의 운세</Link>
+          </div>
+
+          <div className="moon-counselor-selector-wrap w-full max-w-5xl">
+            <CounselorSelector
+              value={counselorId}
+              onChange={(nextCounselor) => void selectCounselor(nextCounselor)}
+              variant="hero"
+              title="사주를 읽는 선생을 골라보세요"
+              description="해석 엔진은 같고, 말의 결만 달라집니다. 고르신 선생의 말투는 대화와 사주 해석에 이어집니다."
+            />
+            <p className="mt-3 text-center text-xs leading-6 text-[var(--app-copy-soft)]">
+              지금은{' '}
+              <span className={cn('font-semibold', counselor.accentClassName)}>
+                {counselor.label}
+              </span>
+              {' '}기준으로 읽도록 맞춰집니다.
+              {persistState === 'saved'
+                ? ' 로그인 계정에도 저장했습니다.'
+                : persistState === 'local_only'
+                  ? ' 이 기기에는 바로 반영했고, 로그인 저장은 환경에 따라 나중에 이어질 수 있습니다.'
+                  : counselorReady
+                    ? ` ${counselor.signature}`
+                    : ''}
+            </p>
           </div>
 
           <p className="text-sm text-[var(--app-copy-soft)]">

@@ -1,5 +1,9 @@
 import { createServiceClient, hasSupabaseServerEnv, hasSupabaseServiceEnv } from '@/lib/supabase/server';
 import { requireAccount } from '@/lib/account';
+import {
+  normalizeMoonlightCounselor,
+  type MoonlightCounselorId,
+} from '@/lib/counselors';
 import type { BirthInput, SolarTimeMode } from '@/lib/saju/types';
 
 export interface BirthProfileFields {
@@ -19,6 +23,7 @@ export interface BirthProfileFields {
 
 export interface UserProfile extends BirthProfileFields {
   displayName: string;
+  preferredCounselor?: MoonlightCounselorId | null;
 }
 
 export interface FamilyProfile extends BirthProfileFields {
@@ -38,6 +43,8 @@ const PROFILE_SELECT_WITH_LOCATION =
   'display_name, birth_year, birth_month, birth_day, birth_hour, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
 const PROFILE_SELECT_FULL =
   'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
+const PROFILE_SELECT_WITH_COUNSELOR =
+  'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode, preferred_counselor';
 const FAMILY_PROFILE_SELECT =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, gender, note, created_at';
 const FAMILY_PROFILE_SELECT_WITH_MINUTE =
@@ -50,6 +57,8 @@ const BIRTH_MINUTE_MIGRATION_ERROR =
   '운영 DB에 출생 분 저장 컬럼이 아직 적용되지 않았습니다. 005_profile_birth_minutes.sql 마이그레이션이 필요합니다.';
 const BIRTH_LOCATION_MIGRATION_ERROR =
   '운영 DB에 출생 지역 저장 컬럼이 아직 적용되지 않았습니다. 009_profile_birth_locations.sql 마이그레이션이 필요합니다.';
+const PREFERRED_COUNSELOR_MIGRATION_ERROR =
+  '운영 DB에 선생 선택 저장 컬럼이 아직 적용되지 않았습니다. 010_profile_preferred_counselor.sql 마이그레이션이 필요합니다.';
 
 type ProfileRow = {
   display_name?: string | null;
@@ -63,6 +72,7 @@ type ProfileRow = {
   birth_latitude?: number | null;
   birth_longitude?: number | null;
   solar_time_mode?: SolarTimeMode | null;
+  preferred_counselor?: MoonlightCounselorId | null;
   gender?: 'male' | 'female' | null;
   note?: string | null;
 };
@@ -92,6 +102,11 @@ function removeBirthLocation<T extends Record<string, unknown>>(payload: T) {
     solar_time_mode: _solarTimeMode,
     ...rest
   } = payload;
+  return rest;
+}
+
+function removePreferredCounselor<T extends Record<string, unknown>>(payload: T) {
+  const { preferred_counselor: _preferredCounselor, ...rest } = payload;
   return rest;
 }
 
@@ -149,6 +164,24 @@ export function isMissingBirthLocationColumnError(error: unknown) {
   );
 }
 
+export function isMissingPreferredCounselorColumnError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+
+  const code = 'code' in error ? String(error.code ?? '') : '';
+  const message = 'message' in error ? String(error.message ?? '') : '';
+  const details = 'details' in error ? String(error.details ?? '') : '';
+  const hint = 'hint' in error ? String(error.hint ?? '') : '';
+  const combined = `${message} ${details} ${hint}`;
+
+  return (
+    combined.includes('preferred_counselor') &&
+    (code === '42703' ||
+      code === 'PGRST204' ||
+      combined.includes('column') ||
+      combined.includes('schema cache'))
+  );
+}
+
 function hasProfileBirthLocation(profile: BirthProfileFields) {
   return Boolean(
     profile.birthLocationCode ||
@@ -187,6 +220,13 @@ async function writeProfilePayloadWithFallback<
       nextPayload = removeBirthLocation(nextPayload ?? currentPayload);
     }
 
+    if (isMissingPreferredCounselorColumnError(response.error)) {
+      if ('preferred_counselor' in currentPayload && currentPayload.preferred_counselor) {
+        throw new Error(PREFERRED_COUNSELOR_MIGRATION_ERROR);
+      }
+      nextPayload = removePreferredCounselor(nextPayload ?? currentPayload);
+    }
+
     if (!nextPayload) break;
 
     currentPayload = nextPayload as T;
@@ -209,7 +249,8 @@ async function loadWithProfileSelectFallback<T>(
     if (
       response.error &&
       (isMissingBirthMinuteColumnError(response.error) ||
-        isMissingBirthLocationColumnError(response.error))
+        isMissingBirthLocationColumnError(response.error) ||
+        isMissingPreferredCounselorColumnError(response.error))
     ) {
       continue;
     }
@@ -231,6 +272,7 @@ function getErrorMessage(error: unknown) {
 function mapUserProfile(row: ProfileRow | null | undefined): UserProfile {
   return {
     displayName: row?.display_name ?? '',
+    preferredCounselor: normalizeMoonlightCounselor(row?.preferred_counselor),
     birthYear: toNumberOrNull(row?.birth_year),
     birthMonth: toNumberOrNull(row?.birth_month),
     birthDay: toNumberOrNull(row?.birth_day),
@@ -321,6 +363,7 @@ export async function getProfileSettingsData(redirectPath: string) {
       },
       profile: {
         displayName: '',
+        preferredCounselor: null,
         birthYear: null,
         birthMonth: null,
         birthDay: null,
@@ -355,6 +398,7 @@ export async function getProfileSettingsData(redirectPath: string) {
       .order('created_at', { ascending: false });
 
   const profileResponse = await loadWithProfileSelectFallback(loadProfile, [
+    PROFILE_SELECT_WITH_COUNSELOR,
     PROFILE_SELECT_FULL,
     PROFILE_SELECT_WITH_LOCATION,
     PROFILE_SELECT_WITH_MINUTE,
@@ -409,6 +453,7 @@ export async function getUserProfileById(userId: string): Promise<UserProfile> {
       .maybeSingle();
 
   const profileResponse = await loadWithProfileSelectFallback(loadProfile, [
+    PROFILE_SELECT_WITH_COUNSELOR,
     PROFILE_SELECT_FULL,
     PROFILE_SELECT_WITH_LOCATION,
     PROFILE_SELECT_WITH_MINUTE,
@@ -450,6 +495,30 @@ export async function upsertProfile(userId: string, profile: UserProfile) {
   if (response.error) {
     throw new Error(getErrorMessage(response.error));
   }
+}
+
+export async function updatePreferredCounselor(
+  userId: string,
+  preferredCounselor: MoonlightCounselorId
+) {
+  const service = await createServiceClient();
+  const payload = {
+    user_id: userId,
+    preferred_counselor: preferredCounselor,
+    updated_at: new Date().toISOString(),
+  };
+
+  let response = await service.from('profiles').upsert(payload);
+
+  if (response.error && isMissingPreferredCounselorColumnError(response.error)) {
+    return { persisted: false as const };
+  }
+
+  if (response.error) {
+    throw new Error(getErrorMessage(response.error));
+  }
+
+  return { persisted: true as const };
 }
 
 export async function createFamilyProfile(

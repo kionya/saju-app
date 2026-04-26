@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildSajuReport, normalizeFocusTopic } from '@/domain/saju/report';
+import {
+  normalizeMoonlightCounselor,
+  resolveMoonlightCounselor,
+  type MoonlightCounselorId,
+} from '@/lib/counselors';
+import { getUserProfileById } from '@/lib/profile';
 import { createServiceClient, hasSupabaseServiceEnv } from '@/lib/supabase/server';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
 import {
   buildFallbackInterpretation,
   createInterpretationPrompt,
+  getInterpretationPromptVersion,
   parseInterpretationText,
-  SAJU_INTERPRETATION_PROMPT_VERSION,
   type SajuAiInterpretation,
 } from '@/server/ai/saju-interpretation';
 import {
@@ -23,6 +29,7 @@ interface InterpretRequest {
   readingId: string;
   topic?: string;
   regenerate?: boolean;
+  counselorId?: MoonlightCounselorId;
 }
 
 interface CachedInterpretationRow {
@@ -50,11 +57,17 @@ function parseInterpretRequest(payload: unknown): InterpretRequest | null {
     readingId,
     topic: readString(data, 'topic') || undefined,
     regenerate: data.regenerate === true,
+    counselorId: normalizeMoonlightCounselor(data.counselorId) ?? undefined,
   };
 }
 
-async function readCachedInterpretation(readingId: string, topic: string) {
+async function readCachedInterpretation(
+  readingId: string,
+  topic: string,
+  counselorId: MoonlightCounselorId
+) {
   if (!hasSupabaseServiceEnv || !isReadingId(readingId)) return null;
+  const promptVersion = getInterpretationPromptVersion(counselorId);
 
   try {
     const supabase = await createServiceClient();
@@ -63,7 +76,7 @@ async function readCachedInterpretation(readingId: string, topic: string) {
       .select('interpretation_json, model, source, fallback_reason, error_message, updated_at')
       .eq('reading_id', readingId)
       .eq('topic', topic)
-      .eq('prompt_version', SAJU_INTERPRETATION_PROMPT_VERSION)
+      .eq('prompt_version', promptVersion)
       .maybeSingle();
 
     if (error || !data) return null;
@@ -76,6 +89,7 @@ async function readCachedInterpretation(readingId: string, topic: string) {
 async function writeCachedInterpretation(input: {
   readingId: string;
   topic: string;
+  counselorId: MoonlightCounselorId;
   interpretation: SajuAiInterpretation;
   model: string | null;
   source: AiGenerationSource;
@@ -84,6 +98,7 @@ async function writeCachedInterpretation(input: {
 }) {
   if (!hasSupabaseServiceEnv || !isReadingId(input.readingId)) return;
   if (input.source !== 'openai') return;
+  const promptVersion = getInterpretationPromptVersion(input.counselorId);
 
   try {
     const supabase = await createServiceClient();
@@ -91,7 +106,7 @@ async function writeCachedInterpretation(input: {
       {
         reading_id: input.readingId,
         topic: input.topic,
-        prompt_version: SAJU_INTERPRETATION_PROMPT_VERSION,
+        prompt_version: promptVersion,
         interpretation_json: input.interpretation,
         model: input.model,
         source: input.source,
@@ -127,14 +142,20 @@ export async function POST(req: NextRequest) {
 
   const topic = normalizeFocusTopic(parsed.topic);
   const cacheable = isReadingId(parsed.readingId);
+  const storedCounselor =
+    reading.userId && hasSupabaseServiceEnv
+      ? (await getUserProfileById(reading.userId)).preferredCounselor
+      : null;
+  const counselorId = resolveMoonlightCounselor(parsed.counselorId, storedCounselor);
 
   if (cacheable && !parsed.regenerate) {
-    const cached = await readCachedInterpretation(parsed.readingId, topic);
+    const cached = await readCachedInterpretation(parsed.readingId, topic, counselorId);
     if (cached) {
       return NextResponse.json({
         ok: true,
         readingId: parsed.readingId,
         topic,
+        counselorId,
         cached: true,
         cacheable,
         source: cached.source,
@@ -148,8 +169,8 @@ export async function POST(req: NextRequest) {
   }
 
   const report = buildSajuReport(reading.input, reading.sajuData, topic);
-  const fallback = buildFallbackInterpretation(report);
-  const prompt = createInterpretationPrompt(reading, report);
+  const fallback = buildFallbackInterpretation(report, counselorId);
+  const prompt = createInterpretationPrompt(reading, report, counselorId);
   const model = getOpenAIInterpretationModel();
   const aiResult = await generateAiText({
     ...prompt,
@@ -170,6 +191,7 @@ export async function POST(req: NextRequest) {
   await writeCachedInterpretation({
     readingId: parsed.readingId,
     topic,
+    counselorId,
     interpretation: parsedInterpretation.interpretation,
     model: aiResult.model,
     source,
@@ -181,6 +203,7 @@ export async function POST(req: NextRequest) {
     ok: true,
     readingId: parsed.readingId,
     topic,
+    counselorId,
     cached: false,
     cacheable,
     source,

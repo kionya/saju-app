@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { normalizeMoonlightCounselor } from '@/lib/counselors';
 import { createClient, hasSupabaseServerEnv } from '@/lib/supabase/server';
 import {
   isMissingBirthLocationColumnError,
   isMissingBirthMinuteColumnError,
   isMissingFamilyProfilesTableError,
+  isMissingPreferredCounselorColumnError,
   upsertProfile,
   type UserProfile,
 } from '@/lib/profile';
@@ -17,6 +19,8 @@ const PROFILE_SELECT_WITH_LOCATION =
   'display_name, birth_year, birth_month, birth_day, birth_hour, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
 const PROFILE_SELECT_FULL =
   'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
+const PROFILE_SELECT_WITH_COUNSELOR =
+  'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode, preferred_counselor';
 const FAMILY_PROFILE_SELECT =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, gender, note, created_at';
 const FAMILY_PROFILE_SELECT_WITH_MINUTE =
@@ -38,6 +42,7 @@ type ProfileRow = {
   birth_latitude?: number | null;
   birth_longitude?: number | null;
   solar_time_mode?: SolarTimeMode | null;
+  preferred_counselor?: 'male' | 'female' | null;
   gender?: 'male' | 'female' | null;
   note?: string | null;
 };
@@ -112,7 +117,8 @@ async function loadWithProfileSelectFallback<T>(
     if (
       response.error &&
       (isMissingBirthMinuteColumnError(response.error) ||
-        isMissingBirthLocationColumnError(response.error))
+        isMissingBirthLocationColumnError(response.error) ||
+        isMissingPreferredCounselorColumnError(response.error))
     ) {
       continue;
     }
@@ -228,6 +234,7 @@ export async function GET() {
       .order('created_at', { ascending: false });
 
   const profileResponse = await loadWithProfileSelectFallback(loadProfile, [
+    PROFILE_SELECT_WITH_COUNSELOR,
     PROFILE_SELECT_FULL,
     PROFILE_SELECT_WITH_LOCATION,
     PROFILE_SELECT_WITH_MINUTE,
@@ -266,6 +273,7 @@ export async function GET() {
       birthLatitude: profile?.birth_latitude ?? null,
       birthLongitude: profile?.birth_longitude ?? null,
       solarTimeMode: profile?.solar_time_mode === 'longitude' ? 'longitude' : 'standard',
+      preferredCounselor: normalizeMoonlightCounselor(profile?.preferred_counselor),
       gender: profile?.gender ?? null,
       note: profile?.note ?? '',
     },

@@ -7,6 +7,7 @@ export type HomeProfileLoadStatus = 'loading' | 'ready' | 'error';
 
 export interface HomeBirthProfile {
   displayName?: string | null;
+  preferredCounselor?: 'male' | 'female' | null;
   birthYear: number | null;
   birthMonth: number | null;
   birthDay: number | null;
