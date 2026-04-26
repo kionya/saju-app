@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Badge } from '@/components/ui/badge';
+import FortuneCalendarPanel from '@/components/ai/fortune-calendar-panel';
 import LifetimeReportPanel from '@/components/ai/lifetime-report-panel';
 import YearlyReportPanel from '@/components/ai/yearly-report-panel';
 import {
@@ -361,10 +362,12 @@ export default async function SajuPremiumPage({ params }: Props) {
           <>
             <LifetimeReportPanel slug={slug} targetYear={targetYear} />
             <YearlyReportPanel slug={slug} targetYear={targetYear} />
+            <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess />
           </>
         ) : yearlyAccessLabel ? (
           <>
             <YearlyReportPanel slug={slug} targetYear={targetYear} />
+            <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess={false} />
             <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
               <article className="moon-lunar-panel p-6">
                 <div className="app-starfield" />
@@ -435,6 +438,7 @@ export default async function SajuPremiumPage({ params }: Props) {
             </section>
           </>
         ) : (
+        <>
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <article className="moon-lunar-panel p-6">
             <div className="app-starfield" />
@@ -524,6 +528,8 @@ export default async function SajuPremiumPage({ params }: Props) {
             </div>
           </article>
         </section>
+        <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess={false} />
+        </>
         )}
       </AppPage>
     </AppShell>

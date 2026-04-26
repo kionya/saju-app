@@ -4,4 +4,6 @@ export * from './yearly-types';
 export * from './build-yearly-report';
 export * from './lifetime-types';
 export * from './build-lifetime-report';
+export * from './fortune-calendar-types';
+export * from './build-fortune-calendar';
 export * from './topic-rule-table';
