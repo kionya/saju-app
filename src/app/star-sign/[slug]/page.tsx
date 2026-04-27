@@ -9,6 +9,8 @@ import {
 } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { STAR_SIGN_FORTUNES } from '@/lib/free-content-pages';
+import { getOptionalSignedInProfile } from '@/lib/profile';
+import { buildProfileReadingSlug, buildStarSignSlugFromProfile } from '@/lib/profile-personalization';
 import { AppShell } from '@/shared/layout/app-shell';
 
 interface Props {
@@ -46,6 +48,14 @@ export default async function StarSignDetailPage({ params }: Props) {
 
   if (!item) notFound();
 
+  const profile = await getOptionalSignedInProfile();
+  const personalizedSlug = buildStarSignSlugFromProfile(profile);
+  const readingSlug = buildProfileReadingSlug(profile);
+  const personalizedItem =
+    personalizedSlug
+      ? STAR_SIGN_FORTUNES.find((entry) => entry.slug === personalizedSlug) ?? null
+      : null;
+  const isPersonalizedMatch = personalizedSlug === item.slug;
   const meta = STAR_SIGN_META[item.slug as keyof typeof STAR_SIGN_META];
   const relatedItems = STAR_SIGN_FORTUNES.filter((entry) => entry.slug !== item.slug).slice(0, 3);
 
@@ -68,6 +78,21 @@ export default async function StarSignDetailPage({ params }: Props) {
             {item.summary} 달빛선생은 이 흐름을 “{meta.seniorCopy}”라는 한 문장으로 먼저
             받아들인 뒤, 오늘의 감정선과 선택의 온도를 차분히 읽어드립니다.
           </p>
+          {personalizedItem ? (
+            <div className="mt-5 rounded-[1.2rem] border border-[var(--app-sky)]/24 bg-[var(--app-sky)]/10 px-4 py-4 text-sm leading-7 text-[var(--app-copy)]">
+              {isPersonalizedMatch ? (
+                <>
+                  저장된 MY 프로필 기준으로 보면 선생님의 별자리는 <strong>{personalizedItem.label}</strong>
+                  입니다. 지금 보고 계신 상세 해석이 바로 선생님 기준 흐름입니다.
+                </>
+              ) : (
+                <>
+                  저장된 MY 프로필 기준으로는 <strong>{personalizedItem.label}</strong>이 선생님의
+                  별자리입니다. 지금은 <strong>{item.label}</strong> 흐름을 비교해서 보고 계십니다.
+                </>
+              )}
+            </div>
+          ) : null}
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.94fr_1.06fr]">
@@ -101,9 +126,16 @@ export default async function StarSignDetailPage({ params }: Props) {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Link href="/saju/new">
+              {personalizedItem && !isPersonalizedMatch ? (
+                <Link href={`/star-sign/${personalizedItem.slug}`}>
+                  <Button className="rounded-full bg-[var(--app-plum)] px-6 text-white hover:opacity-90">
+                    내 별자리로 돌아가기
+                  </Button>
+                </Link>
+              ) : null}
+              <Link href={readingSlug ? `/saju/${readingSlug}` : '/saju/new'}>
                 <Button className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]">
-                  사주와 함께 보기
+                  {readingSlug ? '내 사주와 함께 보기' : '사주와 함께 보기'}
                 </Button>
               </Link>
               <Link href="/star-sign">

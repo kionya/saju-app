@@ -9,6 +9,8 @@ import {
 } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { ZODIAC_FORTUNES } from '@/lib/free-content-pages';
+import { getOptionalSignedInProfile } from '@/lib/profile';
+import { buildProfileReadingSlug, buildZodiacSlugFromProfile } from '@/lib/profile-personalization';
 import { AppShell } from '@/shared/layout/app-shell';
 
 interface Props {
@@ -44,6 +46,12 @@ export default async function ZodiacDetailPage({ params }: Props) {
 
   if (!item) notFound();
 
+  const profile = await getOptionalSignedInProfile();
+  const personalizedSlug = buildZodiacSlugFromProfile(profile);
+  const readingSlug = buildProfileReadingSlug(profile);
+  const personalizedItem =
+    personalizedSlug ? ZODIAC_FORTUNES.find((entry) => entry.slug === personalizedSlug) ?? null : null;
+  const isPersonalizedMatch = personalizedSlug === item.slug;
   const meta = ZODIAC_META[item.slug as keyof typeof ZODIAC_META];
   const relatedItems = ZODIAC_FORTUNES.filter((entry) => entry.slug !== item.slug).slice(0, 3);
 
@@ -65,6 +73,21 @@ export default async function ZodiacDetailPage({ params }: Props) {
           <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
             {meta.yearlyMessage}. 오늘의 포인트와 올해의 기조를 함께 놓고 보시면, 급한 판단보다 생활의 리듬을 더 편안하게 가다듬으실 수 있습니다.
           </p>
+          {personalizedItem ? (
+            <div className="mt-5 rounded-[1.2rem] border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-4 py-4 text-sm leading-7 text-[var(--app-copy)]">
+              {isPersonalizedMatch ? (
+                <>
+                  저장된 MY 프로필 기준으로 보면 선생님의 띠는 <strong>{personalizedItem.label}</strong>
+                  입니다. 지금 보고 계신 흐름이 바로 선생님 기준 연운입니다.
+                </>
+              ) : (
+                <>
+                  저장된 MY 프로필 기준으로는 <strong>{personalizedItem.label}</strong>가 선생님의 띠입니다.
+                  지금은 <strong>{item.label}</strong> 흐름을 비교해서 보고 계십니다.
+                </>
+              )}
+            </div>
+          ) : null}
         </section>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[0.88fr_1.12fr]">
@@ -96,9 +119,16 @@ export default async function ZodiacDetailPage({ params }: Props) {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Link href="/saju/new">
+              {personalizedItem && !isPersonalizedMatch ? (
+                <Link href={`/zodiac/${personalizedItem.slug}`}>
+                  <Button className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]">
+                    내 띠로 돌아가기
+                  </Button>
+                </Link>
+              ) : null}
+              <Link href={readingSlug ? `/saju/${readingSlug}` : '/saju/new'}>
                 <Button className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]">
-                  맞춤 사주로 이어보기
+                  {readingSlug ? '내 사주로 이어보기' : '맞춤 사주로 이어보기'}
                 </Button>
               </Link>
               <Link href="/zodiac">

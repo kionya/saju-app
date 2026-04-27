@@ -4,6 +4,8 @@ import { TarotCardArtwork } from '@/components/tarot/tarot-card-artwork';
 import { Badge } from '@/components/ui/badge';
 import { TAROT_CARD_KEYWORDS, TAROT_TO_SAJU_BRIDGE } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { getOptionalSignedInProfile } from '@/lib/profile';
+import { buildProfileReadingSlug } from '@/lib/profile-personalization';
 import {
   getTarotReadingForQuestion,
   getTarotSpreadForQuestion,
@@ -31,6 +33,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function TarotResultPage({ searchParams }: Props) {
   const { question, cardId, orientation } = await searchParams;
+  const profile = await getOptionalSignedInProfile();
+  const readingSlug = buildProfileReadingSlug(profile);
   const currentQuestion = normalizeQuestion(question);
   const reading = await getTarotReadingForQuestion({
     question: currentQuestion,
@@ -129,6 +133,17 @@ export default async function TarotResultPage({ searchParams }: Props) {
               </p>
             </div>
 
+            {readingSlug ? (
+              <div className="rounded-[1.35rem] border border-[var(--app-sky)]/24 bg-[var(--app-sky)]/10 px-5 py-5">
+                <div className="app-caption">MY 프로필 기준 사주 브리지</div>
+                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+                  저장된 MY 프로필이 있어 이 카드의 질문을 선생님의 사주 흐름과 바로 겹쳐 볼 수
+                  있습니다. 타로는 지금 마음을 읽고, 사주는 같은 질문이 왜 반복되는지를 더 길게
+                  설명해 줍니다.
+                </p>
+              </div>
+            ) : null}
+
             <div className="rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
               <div className="app-caption">이번 주 마음에 두실 한 가지</div>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{reading.action}</p>
@@ -154,10 +169,10 @@ export default async function TarotResultPage({ searchParams }: Props) {
 
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/saju/new"
+                href={readingSlug ? `/saju/${readingSlug}` : '/saju/new'}
                 className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
               >
-                내 사주와 겹쳐 읽기
+                {readingSlug ? '내 사주 흐름과 함께 보기' : '내 사주와 겹쳐 읽기'}
               </Link>
               <Link
                 href="/membership"
@@ -166,7 +181,14 @@ export default async function TarotResultPage({ searchParams }: Props) {
                 심층 해석 플랜 보기
               </Link>
               <Link
-                href="/dialogue"
+                href={{
+                  pathname: '/dialogue',
+                  query: {
+                    from: 'tarot',
+                    question:
+                      '방금 본 타로 결과를 제 사주 흐름까지 함께 놓고 보면 어떻게 읽어야 하나요?',
+                  },
+                }}
                 className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
               >
                 달빛선생께 더 여쭙기
