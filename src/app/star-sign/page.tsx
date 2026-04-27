@@ -9,6 +9,8 @@ import {
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
 import { STAR_SIGN_FORTUNES } from '@/lib/free-content-pages';
+import { getOptionalSignedInProfile } from '@/lib/profile';
+import { buildProfileReadingSlug, buildStarSignSlugFromProfile } from '@/lib/profile-personalization';
 import { AppShell } from '@/shared/layout/app-shell';
 
 export const metadata: Metadata = {
@@ -20,12 +22,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function StarSignPage() {
+export default async function StarSignPage() {
+  const profile = await getOptionalSignedInProfile();
+  const personalizedSlug = buildStarSignSlugFromProfile(profile);
+  const readingSlug = buildProfileReadingSlug(profile);
   const featured =
-    STAR_SIGN_FORTUNES.find((item) => item.slug === STAR_SIGN_BLUEPRINT.featuredSlug) ??
+    STAR_SIGN_FORTUNES.find(
+      (item) => item.slug === (personalizedSlug ?? STAR_SIGN_BLUEPRINT.featuredSlug)
+    ) ??
     STAR_SIGN_FORTUNES[0];
 
   const featuredMeta = STAR_SIGN_META[featured.slug as keyof typeof STAR_SIGN_META];
+  const hasPersonalizedProfile = Boolean(profile && personalizedSlug);
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
@@ -36,13 +44,15 @@ export default function StarSignPage() {
           <article className="app-panel p-6 text-center">
             <div className="text-6xl">{featuredMeta.symbol}</div>
             <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-plum)]">
-              {featured.label}
+              {hasPersonalizedProfile ? `선생님은 ${featured.label}` : featured.label}
             </div>
             <div className="mt-2 text-sm tracking-[0.22em] text-[var(--app-copy-muted)]">
               {featured.dateRange}
             </div>
             <div className="moon-lunar-panel mt-6 rounded-[1.3rem] border-[var(--app-plum)]/22 px-5 py-5">
-              <div className="app-caption">오늘의 별자리</div>
+              <div className="app-caption">
+                {hasPersonalizedProfile ? 'MY 프로필 기준 별자리' : '오늘의 별자리'}
+              </div>
               <div className="mt-4 font-[var(--font-heading)] text-2xl leading-[1.5] text-[var(--app-ivory)]">
                 {featured.summary}
               </div>
@@ -53,6 +63,17 @@ export default function StarSignPage() {
           </article>
 
           <article className="space-y-4">
+            {hasPersonalizedProfile ? (
+              <div className="rounded-[1.35rem] border border-[var(--app-sky)]/26 bg-[var(--app-sky)]/10 px-5 py-5">
+                <div className="app-caption">약한 개인화 연결</div>
+                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+                  저장된 MY 프로필 생일 기준으로 선생님의 별자리를 먼저 보여드렸습니다.
+                  별자리 흐름은 가볍게 읽고, 더 깊은 흐름은 사주 결과로 이어보시는 구성이 가장
+                  자연스럽습니다.
+                </p>
+              </div>
+            ) : null}
+
             <div className="app-panel p-6">
               <div className="app-caption">이번 주 흐름</div>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
@@ -72,15 +93,15 @@ export default function StarSignPage() {
             <div className="flex flex-wrap gap-3">
               <Link href={`/star-sign/${featured.slug}`}>
                 <Button className="rounded-full bg-[var(--app-plum)] px-6 text-white hover:opacity-90">
-                  내 별자리 흐름 자세히 보기
+                  {hasPersonalizedProfile ? '내 별자리 바로 보기' : '별자리 흐름 자세히 보기'}
                 </Button>
               </Link>
-              <Link href="/saju/new">
+              <Link href={readingSlug ? `/saju/${readingSlug}` : '/saju/new'}>
                 <Button
                   variant="outline"
                   className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
                 >
-                  사주와 함께 보기
+                  {readingSlug ? '내 사주와 함께 보기' : '사주와 함께 보기'}
                 </Button>
               </Link>
             </div>

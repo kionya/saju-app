@@ -9,6 +9,8 @@ import {
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
 import { ZODIAC_FORTUNES } from '@/lib/free-content-pages';
+import { getOptionalSignedInProfile } from '@/lib/profile';
+import { buildProfileReadingSlug, buildZodiacSlugFromProfile } from '@/lib/profile-personalization';
 import { AppShell } from '@/shared/layout/app-shell';
 
 export const metadata: Metadata = {
@@ -20,11 +22,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function ZodiacPage() {
+export default async function ZodiacPage() {
+  const profile = await getOptionalSignedInProfile();
+  const personalizedSlug = buildZodiacSlugFromProfile(profile);
+  const readingSlug = buildProfileReadingSlug(profile);
   const featured =
-    ZODIAC_FORTUNES.find((item) => item.slug === ZODIAC_BLUEPRINT.highlightedSlug) ??
+    ZODIAC_FORTUNES.find(
+      (item) => item.slug === (personalizedSlug ?? ZODIAC_BLUEPRINT.highlightedSlug)
+    ) ??
     ZODIAC_FORTUNES[0];
   const featuredMeta = ZODIAC_META[featured.slug as keyof typeof ZODIAC_META];
+  const hasPersonalizedProfile = Boolean(profile && personalizedSlug);
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
@@ -35,7 +43,7 @@ export default function ZodiacPage() {
           <article className="app-panel p-6 text-center">
             <div className="text-6xl">{featuredMeta.symbol}</div>
             <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
-              선생님은 {featured.label}
+              {hasPersonalizedProfile ? `선생님은 ${featured.label}` : featured.label}
             </div>
             <div className="mt-2 text-sm tracking-[0.22em] text-[var(--app-copy-muted)]">
               {featured.years}
@@ -50,6 +58,16 @@ export default function ZodiacPage() {
           </article>
 
           <article className="app-panel p-6">
+            {hasPersonalizedProfile ? (
+              <div className="mb-6 rounded-[1.3rem] border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-5 py-5">
+                <div className="app-caption">MY 프로필 기준 띠</div>
+                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+                  저장된 MY 프로필 생년을 기준으로 선생님의 띠를 먼저 보여드렸습니다. 띠운세는
+                  익숙한 언어로 흐름을 먼저 읽고, 더 깊은 바탕은 사주 결과로 이어보시면 좋습니다.
+                </p>
+              </div>
+            ) : null}
+
             <div className="app-caption">다른 띠 보기</div>
             <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4">
               {ZODIAC_FORTUNES.map((item) => {
@@ -88,15 +106,15 @@ export default function ZodiacPage() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href={`/zodiac/${featured.slug}`}>
                 <Button className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]">
-                  {featured.label} 자세히 보기
+                  {hasPersonalizedProfile ? '내 띠 바로 보기' : `${featured.label} 자세히 보기`}
                 </Button>
               </Link>
-              <Link href="/saju/new">
+              <Link href={readingSlug ? `/saju/${readingSlug}` : '/saju/new'}>
                 <Button
                   variant="outline"
                   className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
                 >
-                  맞춤 사주 보기
+                  {readingSlug ? '내 사주로 이어보기' : '맞춤 사주 보기'}
                 </Button>
               </Link>
             </div>

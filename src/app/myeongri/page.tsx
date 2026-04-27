@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
+import { getOptionalSignedInProfile } from '@/lib/profile';
+import { buildProfileReadingSlug } from '@/lib/profile-personalization';
 import { AppShell } from '@/shared/layout/app-shell';
 
 export const metadata: Metadata = {
@@ -37,12 +39,47 @@ const EXPLORATIONS = [
   },
 ] as const;
 
-export default function MyeongriPage() {
+export default async function MyeongriPage() {
+  const profile = await getOptionalSignedInProfile();
+  const readingSlug = buildProfileReadingSlug(profile);
+
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
       <div className="wisdom-category-page">
         <WisdomCategoryHero slug="myeongri" />
         <div className="wisdom-category-body">
+        {readingSlug ? (
+          <section className="mt-8 rounded-[1.8rem] border border-[var(--app-gold)]/24 bg-[linear-gradient(180deg,rgba(210,176,114,0.14),rgba(10,18,36,0.94))] p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="max-w-2xl">
+                <div className="app-caption">내 사주로 이어보기</div>
+                <h2 className="mt-3 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
+                  개념 설명보다, 선생님의 사주에 바로 대입해 볼 수 있습니다
+                </h2>
+                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+                  명리 탐구는 개념을 배우는 공간이지만, 저장된 MY 프로필이 있으면 이미 만들어진
+                  선생님의 사주 결과로 바로 이어볼 수 있습니다. 읽다가 궁금한 개념이 생기면 내
+                  결과와 번갈아 보는 흐름이 가장 이해가 빠릅니다.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href={`/saju/${readingSlug}`}
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                >
+                  내 통합 결과 보기
+                </Link>
+                <Link
+                  href={`/saju/${readingSlug}/elements`}
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm font-semibold text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                >
+                  내 오행 바로 보기
+                </Link>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         <section className="mt-8 grid gap-4 md:grid-cols-3">
           {EXPLORATIONS.map((item) => (
             <Link

@@ -1,4 +1,9 @@
-import { createServiceClient, hasSupabaseServerEnv, hasSupabaseServiceEnv } from '@/lib/supabase/server';
+import {
+  createClient,
+  createServiceClient,
+  hasSupabaseServerEnv,
+  hasSupabaseServiceEnv,
+} from '@/lib/supabase/server';
 import { requireAccount } from '@/lib/account';
 import {
   normalizeMoonlightCounselor,
@@ -593,6 +598,29 @@ export async function getUserProfileById(userId: string): Promise<UserProfile> {
   }
 
   return mapUserProfile(profileResponse.data as ProfileRow | null);
+}
+
+export async function getOptionalSignedInProfile(): Promise<UserProfile | null> {
+  if (!hasSupabaseServerEnv || !hasSupabaseServiceEnv) {
+    return null;
+  }
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return null;
+    }
+
+    const profile = await getUserProfileById(user.id);
+    return hasCoreBirthProfile(profile) ? profile : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function upsertProfile(userId: string, profile: UserProfile) {

@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { TAROT_CARD_KEYWORDS, TAROT_QUESTION_OPTIONS } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
+import { getOptionalSignedInProfile } from '@/lib/profile';
+import { buildProfileReadingSlug } from '@/lib/profile-personalization';
 import { getTarotSpreadForQuestion, getTodayTarotPreview } from '@/lib/tarot-api';
 import { AppShell } from '@/shared/layout/app-shell';
 
@@ -20,6 +22,8 @@ export const metadata: Metadata = {
 };
 
 export default async function DailyTarotPage() {
+  const profile = await getOptionalSignedInProfile();
+  const readingSlug = buildProfileReadingSlug(profile);
   const featuredReading = await getTodayTarotPreview();
   const premiumSpread = await getTarotSpreadForQuestion(DAILY_TAROT_QUESTION);
   const sourceLabel = featuredReading.source === 'api' ? '78장 덱 기준' : '로컬 덱 기준';
@@ -94,6 +98,29 @@ export default async function DailyTarotPage() {
                       </span>
                     </div>
                   ))}
+                </div>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <Link
+                    href={readingSlug ? `/saju/${readingSlug}` : '/saju/new'}
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-plum)]/34 bg-[var(--app-plum)]/12 px-5 text-sm font-semibold text-[var(--app-plum)] transition-colors hover:bg-[var(--app-plum)]/18"
+                  >
+                    {readingSlug ? '이 질문을 내 사주 흐름과 함께 보기' : '사주와 함께 보기'}
+                  </Link>
+                  {readingSlug ? (
+                    <Link
+                      href={{
+                        pathname: '/dialogue',
+                        query: {
+                          from: 'tarot',
+                          question:
+                            '지금 뽑으려는 타로 질문을 제 사주 흐름까지 함께 놓고 보면 어떻게 읽어야 하나요?',
+                        },
+                      }}
+                      className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm font-semibold text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                    >
+                      대화에서 같이 묻기
+                    </Link>
+                  ) : null}
                 </div>
               </div>
             </article>
