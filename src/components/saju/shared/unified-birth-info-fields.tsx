@@ -96,12 +96,15 @@ export function UnifiedBirthInfoFields({
             </Label>
             <Input
               id="unified-birth-year"
+              name="moonlight-birth-year"
               value={draft.year}
               onChange={(event) => {
                 trigger(onStarted);
                 onChange({ year: event.target.value });
               }}
               placeholder="1982"
+              autoComplete="off"
+              inputMode="numeric"
             />
           </div>
           <div>
@@ -110,12 +113,15 @@ export function UnifiedBirthInfoFields({
             </Label>
             <Input
               id="unified-birth-month"
+              name="moonlight-birth-month"
               value={draft.month}
               onChange={(event) => {
                 trigger(onStarted);
                 onChange({ month: event.target.value });
               }}
               placeholder="1"
+              autoComplete="off"
+              inputMode="numeric"
             />
           </div>
           <div>
@@ -124,12 +130,15 @@ export function UnifiedBirthInfoFields({
             </Label>
             <Input
               id="unified-birth-day"
+              name="moonlight-birth-day"
               value={draft.day}
               onChange={(event) => {
                 trigger(onStarted);
                 onChange({ day: event.target.value });
               }}
               placeholder="29"
+              autoComplete="off"
+              inputMode="numeric"
             />
           </div>
         </div>
@@ -141,6 +150,7 @@ export function UnifiedBirthInfoFields({
             </Label>
             <select
               id="unified-birth-hour"
+              name="moonlight-birth-hour"
               value={draft.hour}
               onChange={(event) => {
                 trigger(onStarted);
@@ -164,6 +174,7 @@ export function UnifiedBirthInfoFields({
             </Label>
             <Input
               id="unified-birth-minute"
+              name="moonlight-birth-minute"
               value={draft.minute}
               onChange={(event) => {
                 trigger(onStarted);
@@ -171,6 +182,8 @@ export function UnifiedBirthInfoFields({
               }}
               disabled={draft.unknownBirthTime}
               placeholder="45"
+              autoComplete="off"
+              inputMode="numeric"
             />
           </div>
           <label className="mt-8 flex items-center gap-2 text-sm text-[var(--app-copy)]">
@@ -226,6 +239,7 @@ export function UnifiedBirthInfoFields({
           <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
             <Input
               id="unified-birth-location"
+              name="moonlight-birth-location"
               value={draft.birthLocationLabel}
               onChange={(event) => {
                 trigger(onStarted);
@@ -235,6 +249,7 @@ export function UnifiedBirthInfoFields({
                 });
               }}
               placeholder="서울, 부산, 수원처럼 입력"
+              autoComplete="off"
             />
             <Button
               type="button"
@@ -299,6 +314,7 @@ export function UnifiedBirthInfoFields({
           </Label>
           <select
             id="unified-time-rule"
+            name="moonlight-time-rule"
             value={draft.timeRule}
             onChange={(event) => {
               trigger(onStarted);
