@@ -55,6 +55,81 @@ const ELEMENT_WINDOWS: Record<string, string[]> = {
   수: ['21:00 - 23:00', '23:00 - 01:00'],
 };
 
+const CONCERN_WINDOW_COPY: Record<
+  ConcernId,
+  {
+    favorableTitle: string;
+    favorableTail: string;
+    cautionTitle: string;
+    cautionTail: string;
+    actNowTitle: string;
+    waitTitle: string;
+    actNowTail: string;
+    waitTail: string;
+  }
+> = {
+  love_contact: {
+    favorableTitle: '먼저 닿는 말을 쓰기 좋은 시간',
+    favorableTail: '짧은 안부나 확인처럼 부담이 낮은 표현부터 꺼내는 편이 맞습니다.',
+    cautionTitle: '감정 해석이 과열되기 쉬운 시간',
+    cautionTail: '반응을 재촉하거나 감정의 결론을 묻는 말은 한 템포 늦추는 편이 안전합니다.',
+    actNowTitle: '오늘 먼저 연락할 때',
+    waitTitle: '조금 늦춰서 연락할 때',
+    actNowTail: '안부처럼 가벼운 첫 문장을 쓰면 흐름을 열기 쉽습니다.',
+    waitTail: '말의 온도와 길이를 다듬으면 충돌을 줄이기 좋습니다.',
+  },
+  money_spend: {
+    favorableTitle: '정산과 확인을 끝내기 좋은 시간',
+    favorableTail: '수입 확대보다 약속된 금액과 고정비를 먼저 정리하는 편이 정확합니다.',
+    cautionTitle: '과신 결제가 새기 쉬운 시간',
+    cautionTail: '비교 없이 결제하거나 권유만 믿고 움직이는 선택은 한 번 더 확인하세요.',
+    actNowTitle: '오늘 바로 결제할 때',
+    waitTitle: '하루 보류하고 다시 볼 때',
+    actNowTail: '정해진 생활성 지출은 구조를 분명히 하고 끝내는 쪽이 낫습니다.',
+    waitTail: '비교와 정산을 거치면 손실 체감이 확실히 줄어듭니다.',
+  },
+  work_meeting: {
+    favorableTitle: '기준과 역할을 먼저 세우기 좋은 시간',
+    favorableTail: '회의나 계약은 결론보다 조건과 책임 범위를 선명히 하는 쪽이 더 강합니다.',
+    cautionTitle: '확답이 부담으로 남기 쉬운 시간',
+    cautionTail: '합의가 덜 된 상태에서 바로 확답하거나 서명하는 흐름은 조심해야 합니다.',
+    actNowTitle: '오늘 미팅을 바로 진행할 때',
+    waitTitle: '한 번 더 조율하고 진행할 때',
+    actNowTail: '기준과 역할만 분명하면 속도는 충분히 붙습니다.',
+    waitTail: '수정안과 다음 약속을 함께 잡으면 주도권을 덜 잃습니다.',
+  },
+  relationship_conflict: {
+    favorableTitle: '말의 순서를 조율하기 좋은 시간',
+    favorableTail: '큰 대화보다 짧은 확인과 사실 정리를 먼저 두는 편이 흐름을 덜 흔듭니다.',
+    cautionTitle: '서운함이 결론처럼 커지기 쉬운 시간',
+    cautionTail: '단정형 표현이나 감정의 잔상을 크게 남기는 말은 줄이는 편이 좋습니다.',
+    actNowTitle: '바로 말할 때',
+    waitTitle: '조금 식힌 뒤 말할 때',
+    actNowTail: '사실과 감정을 분리해 말하면 오해를 줄이기 쉽습니다.',
+    waitTail: '질문형 문장으로 바꾸면 상대의 방어를 낮추는 데 도움이 됩니다.',
+  },
+  energy_health: {
+    favorableTitle: '힘을 써도 버틸 수 있는 시간',
+    favorableTail: '집중해야 할 일은 짧게 끊어 밀고, 중간 회복 구간을 분명히 두는 편이 맞습니다.',
+    cautionTitle: '피로가 누적되기 쉬운 시간',
+    cautionTail: '몰아서 움직이기보다 쉬는 길이와 강도를 미리 정해두는 편이 안전합니다.',
+    actNowTitle: '일정을 강하게 밀어붙일 때',
+    waitTitle: '중간에 쉬어가며 쓸 때',
+    actNowTail: '짧은 성과는 날 수 있지만 회복 구간이 없으면 뒷심이 급히 떨어질 수 있습니다.',
+    waitTail: '집중 시간은 오히려 길어지고 판단도 차분해지기 쉽습니다.',
+  },
+  general: {
+    favorableTitle: '하루의 첫 행동을 정하기 좋은 시간',
+    favorableTail: '큰 결론보다 작은 행동 하나를 먼저 끝내는 편이 전체 흐름을 안정시킵니다.',
+    cautionTitle: '균형이 무너지기 쉬운 시간',
+    cautionTail: '생각만 길어지거나 반대로 너무 서두르면 좋은 흐름도 거칠어질 수 있습니다.',
+    actNowTitle: '바로 움직일 때',
+    waitTitle: '흐름을 먼저 보고 움직일 때',
+    actNowTail: '작게라도 먼저 끝내는 행동이 하루 전체의 기준을 만들어 줍니다.',
+    waitTail: '우선순위를 먼저 세우면 뒤쪽 선택이 훨씬 가벼워집니다.',
+  },
+};
+
 function clampScore(value: number) {
   return Math.max(48, Math.min(92, Math.round(value)));
 }
@@ -63,6 +138,20 @@ function compactStrings(parts: Array<string | null | undefined>) {
   return parts
     .map((part) => part?.trim())
     .filter((part): part is string => Boolean(part));
+}
+
+function uniqueStrings(parts: Array<string | null | undefined>, limit?: number) {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const part of compactStrings(parts)) {
+    if (seen.has(part)) continue;
+    seen.add(part);
+    result.push(part);
+    if (limit && result.length >= limit) break;
+  }
+
+  return result;
 }
 
 function getScore(report: SajuReport, key: ReportScore['key']) {
@@ -183,6 +272,37 @@ function getTodayEvidenceSnippet(report: SajuReport) {
   return toEvidenceSnippet(card);
 }
 
+function getTodayEvidenceCard(
+  report: SajuReport,
+  type: 'lead' | 'caution'
+) {
+  const rule = getTopicInterpretationRule(report.focusTopic);
+  const priorities = type === 'lead' ? rule.evidencePriority : rule.cautionPriority;
+  return selectEvidenceCard(report.evidenceCards, priorities);
+}
+
+function getEvidenceActionHints(
+  report: SajuReport,
+  type: 'lead' | 'caution',
+  limit = 2
+) {
+  return uniqueStrings(getTodayEvidenceCard(report, type)?.practicalActions ?? [], limit);
+}
+
+function getLuckFactLine(sajuData: SajuDataV1) {
+  return compactStrings([
+    sajuData.currentLuck?.currentMajorLuck?.ganzi
+      ? `${sajuData.currentLuck.currentMajorLuck.ganzi} 대운`
+      : null,
+    sajuData.currentLuck?.saewoon?.ganzi
+      ? `${sajuData.currentLuck.saewoon.ganzi} 세운`
+      : null,
+    sajuData.currentLuck?.wolwoon?.ganzi
+      ? `${sajuData.currentLuck.wolwoon.ganzi} 월운`
+      : null,
+  ]).join(' / ');
+}
+
 function buildOneLineBody(
   concernId: ConcernId,
   concernLabel: string,
@@ -262,17 +382,24 @@ function buildTimeWindows(
   sajuData: SajuDataV1,
   type: 'favorable' | 'caution'
 ): TodayTimeWindow[] {
+  const concernCopy = CONCERN_WINDOW_COPY[concernId];
   const supportElements = getLuckyElementsFromSajuData(sajuData);
   const dominantElement = ELEMENT_INFO[sajuData.fiveElements.dominant].name.split(' ')[0];
   const baseElements =
     type === 'favorable'
       ? supportElements.slice(0, 2)
       : [sajuData.fiveElements.weakest, sajuData.fiveElements.dominant];
+  const evidenceSnippet = getTodayEvidenceSnippet(report);
+  const actionHints = getEvidenceActionHints(report, type === 'favorable' ? 'lead' : 'caution', 2);
+  const actionLead =
+    type === 'favorable' ? report.primaryAction.description : report.cautionAction.description;
+  const luckFact = getLuckFactLine(sajuData);
 
   return baseElements.slice(0, 2).flatMap((element, index) => {
     const elementLabel = typeof element === 'string' ? ELEMENT_INFO[element].name.split(' ')[0] : dominantElement;
     const ranges = ELEMENT_WINDOWS[element] ?? ELEMENT_WINDOWS.토;
     const range = ranges[index % ranges.length] ?? ranges[0];
+    const hint = actionHints[index] ?? actionHints[0];
 
     return [
       {
@@ -280,108 +407,74 @@ function buildTimeWindows(
         mood: type,
         title:
           type === 'favorable'
-            ? `${elementLabel} 흐름을 쓰기 좋은 시간`
-            : `${elementLabel} 과열을 조심할 시간`,
+            ? `${elementLabel} · ${concernCopy.favorableTitle}`
+            : `${elementLabel} · ${concernCopy.cautionTitle}`,
         body:
           type === 'favorable'
             ? compactStrings([
-                getTodayEvidenceSnippet(report),
-                report.primaryAction.description,
-                concernId === 'money_spend' ? '결제보다 정산을 먼저 보는 편이 맞습니다.' : '짧고 분명한 행동으로 흐름을 잡기 좋습니다.',
+                evidenceSnippet,
+                hint ? `${hint} 흐름을 먼저 쓰기 좋습니다.` : null,
+                actionLead,
+                luckFact ? `지금은 ${luckFact}을 함께 보고 움직이면 흐름을 덜 놓칩니다.` : null,
+                concernCopy.favorableTail,
               ]).join(' ')
             : compactStrings([
-                getTodayEvidenceSnippet(report),
-                report.cautionAction.description,
-                concernId === 'relationship_conflict' ? '감정 섞인 결론을 바로 꺼내지 않는 편이 안전합니다.' : '한 번 더 확인하고 속도를 낮추는 편이 좋습니다.',
+                evidenceSnippet,
+                hint ? `${hint}을 먼저 점검해야 과열을 줄일 수 있습니다.` : null,
+                actionLead,
+                luckFact ? `지금은 ${luckFact}이 겹쳐 보여 단기 반응을 크게 믿지 않는 편이 안전합니다.` : null,
+                concernCopy.cautionTail,
               ]).join(' '),
       },
     ];
   });
 }
 
-function buildScenarioComparison(concernId: ConcernId, report: SajuReport) {
+function buildScenarioComparison(
+  concernId: ConcernId,
+  report: SajuReport,
+  sajuData: SajuDataV1
+) {
+  const concernCopy = CONCERN_WINDOW_COPY[concernId];
   const evidenceSnippet = getTodayEvidenceSnippet(report);
-  switch (concernId) {
-    case 'love_contact':
-      return [
-        {
-          title: '오늘 먼저 연락할 때',
-          better: compactStrings([evidenceSnippet, report.primaryAction.description, '안부처럼 가벼운 문장으로 시작하면 흐름이 덜 흔들립니다.']).join(' '),
-          watch: `${report.cautionAction.description} 감정 확인이나 결론 요구는 부담으로 읽힐 수 있습니다.`,
-        },
-        {
-          title: '조금 늦춰 볼 때',
-          better: '오후 흐름을 보고 톤을 다듬으면 말의 충돌을 줄이기 좋습니다.',
-          watch: '지나치게 미루면 다시 말을 꺼내기 어려워질 수 있습니다.',
-        },
-      ];
-    case 'money_spend':
-      return [
-        {
-          title: '오늘 바로 결제할 때',
-          better: compactStrings([evidenceSnippet, '정해진 결제나 생활성 지출은 한 번에 정리하면 마음이 가벼워집니다.']).join(' '),
-          watch: '기분 전환성 소비나 지인 권유 결제는 만족보다 피로를 남기기 쉽습니다.',
-        },
-        {
-          title: '하루 보류할 때',
-          better: '비교와 정산을 거치면 체감 손실을 줄이기 좋습니다.',
-          watch: '정말 필요한 결제까지 미루면 일정이 꼬일 수 있어 우선순위를 나눠야 합니다.',
-        },
-      ];
-    case 'work_meeting':
-      return [
-        {
-          title: '오늘 미팅을 밀어붙일 때',
-          better: compactStrings([evidenceSnippet, '기준과 역할만 먼저 분명히 하면 결론이 빨라질 수 있습니다.']).join(' '),
-          watch: '합의가 덜 된 상태에서 서명이나 확답을 먼저 주면 뒤에서 조정 비용이 커질 수 있습니다.',
-        },
-        {
-          title: '한 번 더 조율할 때',
-          better: '상대의 조건을 더 듣고 수정안을 꺼내면 흐름이 안정됩니다.',
-          watch: '지나치게 미루면 주도권이 약해질 수 있으니 다음 약속은 바로 잡는 편이 좋습니다.',
-        },
-      ];
-    case 'relationship_conflict':
-      return [
-        {
-          title: '바로 말할 때',
-          better: compactStrings([evidenceSnippet, '사실 확인과 감정 분리를 먼저 하면 오해를 줄이기 좋습니다.']).join(' '),
-          watch: '서운함을 결론처럼 말하면 작은 일도 관계의 상처로 남기 쉽습니다.',
-        },
-        {
-          title: '조금 식힌 뒤 말할 때',
-          better: '질문형 문장으로 바꾸면 상대도 방어를 덜 세웁니다.',
-          watch: '너무 오래 미루면 혼자 해석이 커져 더 단단한 말로 튈 수 있습니다.',
-        },
-      ];
-    case 'energy_health':
-      return [
-        {
-          title: '일정을 강하게 밀어붙일 때',
-          better: compactStrings([evidenceSnippet, '짧은 성과는 낼 수 있지만 중간 회복 구간을 꼭 넣어야 합니다.']).join(' '),
-          watch: '몰아서 움직이면 오후 후반부터 피로가 한꺼번에 밀릴 수 있습니다.',
-        },
-        {
-          title: '중간에 쉬어갈 때',
-          better: '집중 시간이 오히려 길어지고 판단이 차분해집니다.',
-          watch: '완전히 늘어지기보다 쉬는 시간의 길이를 정해두는 편이 좋습니다.',
-        },
-      ];
-    case 'general':
-    default:
-      return [
-        {
-          title: '바로 움직일 때',
-          better: compactStrings([evidenceSnippet, report.primaryAction.description, '작은 행동 하나를 먼저 끝내면 하루 전체가 정리되기 쉽습니다.']).join(' '),
-          watch: `${report.cautionAction.description} 큰 결론부터 잡으면 흐름을 과하게 소모할 수 있습니다.`,
-        },
-        {
-          title: '흐름을 먼저 볼 때',
-          better: '우선순위를 먼저 세우면 뒤쪽 선택이 훨씬 가벼워집니다.',
-          watch: '생각만 길어지면 좋은 기회도 손에서 미끄러질 수 있습니다.',
-        },
-      ];
-  }
+  const leadHints = getEvidenceActionHints(report, 'lead', 2);
+  const cautionHints = getEvidenceActionHints(report, 'caution', 2);
+  const leadHint = leadHints[0];
+  const secondaryLeadHint = leadHints[1] ?? leadHints[0];
+  const cautionHint = cautionHints[0];
+  const secondaryCautionHint = cautionHints[1] ?? cautionHints[0];
+  const luckFact = getLuckFactLine(sajuData);
+
+  return [
+    {
+      title: concernCopy.actNowTitle,
+      better: compactStrings([
+        evidenceSnippet,
+        report.primaryAction.description,
+        leadHint ? `${leadHint}부터 잡고 들어가면 흐름을 덜 놓칩니다.` : null,
+        concernCopy.actNowTail,
+      ]).join(' '),
+      watch: compactStrings([
+        report.cautionAction.description,
+        cautionHint ? `${cautionHint}을 같이 놓치면 작은 선택도 피로로 바뀌기 쉽습니다.` : null,
+        luckFact ? `특히 ${luckFact}이 겹친 날이라 단기 반응을 과신하지 않는 편이 좋습니다.` : null,
+      ]).join(' '),
+    },
+    {
+      title: concernCopy.waitTitle,
+      better: compactStrings([
+        evidenceSnippet,
+        secondaryLeadHint ? `${secondaryLeadHint}을 먼저 정리하고 움직이면 결과가 더 매끈해집니다.` : null,
+        concernCopy.waitTail,
+      ]).join(' '),
+      watch: compactStrings([
+        secondaryCautionHint
+          ? `${secondaryCautionHint}을 미루기만 하면 같은 빈틈이 뒤에서 다시 커질 수 있습니다.`
+          : null,
+        '우선순위 없이 미루기만 하면 좋은 흐름도 손에서 미끄러질 수 있습니다.',
+      ]).join(' '),
+    },
+  ];
 }
 
 function buildEvidenceLines(
@@ -405,6 +498,52 @@ function buildEvidenceLines(
   }
 
   return lines;
+}
+
+function buildRecommendedActions(
+  concernId: ConcernId,
+  focusReport: SajuReport,
+  sajuData: SajuDataV1
+) {
+  const concernCopy = CONCERN_WINDOW_COPY[concernId];
+  const leadHints = getEvidenceActionHints(focusReport, 'lead', 3);
+  const actions = uniqueStrings(
+    [
+      focusReport.primaryAction.description,
+      ...leadHints.map((item) => `${item} 흐름부터 먼저 잡아보세요.`),
+      getLuckFactLine(sajuData)
+        ? `지금은 ${getLuckFactLine(sajuData)}을 같이 보며 ${concernCopy.favorableTail}`
+        : concernCopy.favorableTail,
+      `보완축 ${sajuData.yongsin?.primary?.label ?? '용신'}을 생활 루틴으로 쓰면 체감 안정감이 더 큽니다.`,
+    ],
+    3
+  );
+
+  return actions;
+}
+
+function buildAvoidActions(
+  concernId: ConcernId,
+  focusReport: SajuReport,
+  input: BirthInput,
+  sajuData: SajuDataV1
+) {
+  const concernCopy = CONCERN_WINDOW_COPY[concernId];
+  const cautionHints = getEvidenceActionHints(focusReport, 'caution', 3);
+  const actions = uniqueStrings(
+    [
+      focusReport.cautionAction.description,
+      ...cautionHints.map((item) => `${item}을 놓친 채 밀어붙이지 않는 편이 좋습니다.`),
+      input.unknownTime
+        ? '태어난 시간이 없으니 세부 타이밍보다 큰 흐름을 먼저 믿는 편이 안전합니다.'
+        : getLuckFactLine(sajuData)
+          ? `${getLuckFactLine(sajuData)}이 겹친 날이라 반응이 좋더라도 같은 속도로 하루 종일 밀지 않는 편이 낫습니다.`
+          : concernCopy.cautionTail,
+    ],
+    3
+  );
+
+  return actions;
 }
 
 export function buildTodayFortuneFreeResult(
@@ -510,27 +649,9 @@ export function buildTodayFortunePremiumResult(
     ),
     favorableWindows: buildTimeWindows(concernId, focusReport, sajuData, 'favorable'),
     cautionWindows: buildTimeWindows(concernId, focusReport, sajuData, 'caution'),
-    avoidActions: [
-      focusReport.cautionAction.description,
-      concernId === 'money_spend'
-        ? '가격 비교 없이 바로 결제하거나 지인 권유만 믿고 움직이지 않는 편이 좋습니다.'
-        : concernId === 'relationship_conflict'
-          ? '서운함을 결론처럼 크게 말하지 않는 편이 좋습니다.'
-          : '확신이 덜 선 상태에서 큰 결론을 먼저 꺼내지 않는 편이 좋습니다.',
-      input.unknownTime
-        ? '태어난 시간이 없으니 시간대 판단은 무리해서 세게 믿지 않는 편이 안전합니다.'
-        : '지금 좋다고 느껴도 같은 톤을 하루 종일 끌고 가지 않는 편이 좋습니다.',
-    ],
-    recommendedActions: [
-      focusReport.primaryAction.description,
-      concernId === 'work_meeting'
-        ? '상대 조건과 내 기준을 두 문장으로 먼저 정리해 두는 편이 좋습니다.'
-        : concernId === 'love_contact'
-          ? '짧은 안부나 확인 메시지처럼 부담이 낮은 표현부터 쓰는 편이 좋습니다.'
-          : '중요한 결정보다 작은 확인과 정산부터 끝내는 편이 좋습니다.',
-      `보완축 ${sajuData.yongsin?.primary?.label ?? '용신'}을 생활 루틴으로 써보는 것이 도움이 됩니다.`,
-    ],
-    scenarios: buildScenarioComparison(concernId, focusReport),
+    avoidActions: buildAvoidActions(concernId, focusReport, input, sajuData),
+    recommendedActions: buildRecommendedActions(concernId, focusReport, sajuData),
+    scenarios: buildScenarioComparison(concernId, focusReport, sajuData),
     evidenceLines: buildEvidenceLines(focusReport, todayReport, sajuData, Boolean(input.unknownTime)),
     followUpQuestions: concern.followUpQuestions,
     safetyNote:
