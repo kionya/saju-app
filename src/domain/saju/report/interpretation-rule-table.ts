@@ -195,6 +195,46 @@ export function selectEvidenceCard(
   return cards[0] ?? null;
 }
 
+function getLastReadableChar(value: string) {
+  for (let index = value.length - 1; index >= 0; index -= 1) {
+    const char = value[index];
+    if (!char) continue;
+    if (/\s/.test(char)) continue;
+    if (/["'“”‘’)\]}.,!?]/.test(char)) continue;
+    return char;
+  }
+
+  return '';
+}
+
+function hasBatchimLike(value: string) {
+  const lastChar = getLastReadableChar(value);
+  if (!lastChar) return false;
+
+  const code = lastChar.charCodeAt(0) - 0xac00;
+  if (code < 0 || code > 11171) return false;
+
+  return code % 28 !== 0;
+}
+
+function endsWithRieulBatchim(value: string) {
+  const lastChar = getLastReadableChar(value);
+  if (!lastChar) return false;
+
+  const code = lastChar.charCodeAt(0) - 0xac00;
+  if (code < 0 || code > 11171) return false;
+
+  return code % 28 === 8;
+}
+
+function withKoreanParticle(value: string, consonantParticle: string, vowelParticle: string) {
+  if (consonantParticle === '으로' && vowelParticle === '로' && endsWithRieulBatchim(value)) {
+    return `${value}${vowelParticle}`;
+  }
+
+  return `${value}${hasBatchimLike(value) ? consonantParticle : vowelParticle}`;
+}
+
 export function toEvidenceSnippet(card: ReportEvidenceCard | null) {
   if (!card) return null;
   const candidate = card.plainSummary ?? card.body ?? card.title;
@@ -203,8 +243,9 @@ export function toEvidenceSnippet(card: ReportEvidenceCard | null) {
     .replace(/^전문적으로는\s*/, '')
     .replace(/\s+/g, ' ')
     .trim();
-  if (!normalized) return `${card.label}에서는 ${card.title}로 읽힙니다.`;
+  const titleWithParticle = withKoreanParticle(card.title, '으로', '로');
+  if (!normalized) return `${card.label}에서는 ${titleWithParticle} 읽힙니다.`;
 
   const [firstSentence] = normalized.split(/(?<=[.!?])\s+/);
-  return `${card.label}에서는 ${card.title}로 읽힙니다. ${firstSentence ?? normalized}`.trim();
+  return `${card.label}에서는 ${titleWithParticle} 읽힙니다. ${firstSentence ?? normalized}`.trim();
 }

@@ -159,6 +159,55 @@ function stripEvidenceBoilerplate(text: string) {
     .trim();
 }
 
+function getLastReadableChar(value: string) {
+  for (let index = value.length - 1; index >= 0; index -= 1) {
+    const char = value[index];
+    if (!char) continue;
+    if (/\s/.test(char)) continue;
+    if (/["'“”‘’)\]}.,!?]/.test(char)) continue;
+    return char;
+  }
+
+  return '';
+}
+
+function hasBatchimLike(value: string) {
+  const lastChar = getLastReadableChar(value);
+  if (!lastChar) return false;
+
+  const code = lastChar.charCodeAt(0) - 0xac00;
+  if (code < 0 || code > 11171) return false;
+
+  return code % 28 !== 0;
+}
+
+function endsWithRieulBatchim(value: string) {
+  const lastChar = getLastReadableChar(value);
+  if (!lastChar) return false;
+
+  const code = lastChar.charCodeAt(0) - 0xac00;
+  if (code < 0 || code > 11171) return false;
+
+  return code % 28 === 8;
+}
+
+function withKoreanParticle(value: string, consonantParticle: string, vowelParticle: string) {
+  if (consonantParticle === '으로' && vowelParticle === '로' && endsWithRieulBatchim(value)) {
+    return `${value}${vowelParticle}`;
+  }
+
+  return `${value}${hasBatchimLike(value) ? consonantParticle : vowelParticle}`;
+}
+
+function polishFortuneCopy(text: string) {
+  return text
+    .replace(/([^\s]+\s*\([^)]+\))\([^)]+\)/g, '$1')
+    .replace(/([^\s]+(?:\s*\([^)]+\))?)을\(를\)/g, (_, value: string) => withKoreanParticle(value, '을', '를'))
+    .replace(/([0-9]+점)로 계산되어/g, (_, value: string) => `${withKoreanParticle(value, '으로', '로')} 계산되어`)
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function normalizeEvidenceTitleForSentence(
   key: ReportEvidenceCard['key'],
   title: string
@@ -250,7 +299,7 @@ function buildReasonSnippet(
 
     switch (evidenceCard.key) {
       case 'strength':
-        base = `${evidenceCard.label}은 ${sentenceTitle}로 계산되어 ${normalizedBody}`;
+        base = `${evidenceCard.label}은 ${withKoreanParticle(sentenceTitle, '으로', '로')} 계산되어 ${normalizedBody}`;
         break;
       case 'pattern':
         base = `${evidenceCard.label}은 ${sentenceTitle}로 잡히며 ${normalizedBody}`;
@@ -271,9 +320,11 @@ function buildReasonSnippet(
     );
   }
 
-  if (!unknownBirthTime) return base;
+  if (!unknownBirthTime) return polishFortuneCopy(base);
 
-  return `${base} 다만 태어난 시간이 없어 시주(時柱) 기반 세부 타이밍은 보수적으로 줄여 읽습니다.`;
+  return polishFortuneCopy(
+    `${base} 다만 태어난 시간이 없어 시주(時柱) 기반 세부 타이밍은 보수적으로 줄여 읽습니다.`
+  );
 }
 
 function buildKasiSummary(kasiComparison: KasiSingleInputComparison | null | undefined) {
@@ -346,7 +397,7 @@ function buildTodayGroundingSummary(
     ],
     evidenceLines: evidenceCards
       .slice(0, 3)
-      .map((card) => `${card.label} · ${card.plainSummary || card.title}`),
+      .map((card) => polishFortuneCopy(`${card.label} · ${card.plainSummary || card.title}`)),
     kasi: buildKasiSummary(kasiComparison),
   };
 }
@@ -391,9 +442,9 @@ function buildRiskBody(
   return joinUniqueSentences([
     evidenceSnippet,
     actionLead,
-    cautionHint ? `오늘은 "${cautionHint}"을 놓치면 흐름이 급히 거칠어질 수 있습니다.` : null,
+    cautionHint ? `오늘은 ${withKoreanParticle(`"${cautionHint}"`, '을', '를')} 놓치면 흐름이 급히 거칠어질 수 있습니다.` : null,
     luckFact ? `지금은 ${luckFact}이 겹쳐 보여 단기 반응을 크게 믿지 않는 편이 안전합니다.` : concernCopy.cautionTail,
-  ]);
+  ].map((part) => (part ? polishFortuneCopy(part) : part)));
 }
 
 function getTodayEvidenceSnippet(report: SajuReport) {

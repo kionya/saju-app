@@ -114,7 +114,9 @@ test('today fortune free result surfaces grounding facts and evidence lines near
   assert.ok(result.groundingSummary.evidenceLines.length >= 2);
   assert.match(result.reasonSnippet.body, /^강약은 /);
   assert.doesNotMatch(result.reasonSnippet.body, /중화은/);
+  assert.doesNotMatch(result.reasonSnippet.body, /66점로/);
   assert.doesNotMatch(result.groundingSummary.factLines.join(' '), /\([가-힣]+\)\([가-힣]+\)/);
+  assert.doesNotMatch(result.groundingSummary.evidenceLines.join(' '), /을\(를\)/);
 });
 
 test('today fortune one-line body does not repeat the same grounding sentence twice', () => {
@@ -145,7 +147,7 @@ test('today fortune relationship one-line body does not repeat the same 합충 s
   });
 
   const needle =
-    '합충에서는 파 · 반합 · 육합로 읽힙니다. 파 · 반합 · 육합 흐름은 관계나 선택이 가만히 머물기보다 묶이거나 움직이는 지점을 보여줍니다.';
+    '합충에서는 파 · 반합 · 육합으로 읽힙니다. 파 · 반합 · 육합 흐름은 관계나 선택이 가만히 머물기보다 묶이거나 움직이는 지점을 보여줍니다.';
   const count = result.oneLine.body.split(needle).length - 1;
 
   assert.equal(count, 1);
@@ -175,5 +177,5 @@ test('today fortune opportunity and risk copy stays concise and grounded', () =>
   assert.doesNotMatch(result.opportunity.body, /^[^.!?]+점 기준입니다\./);
   assert.doesNotMatch(result.risk.body, /^[^.!?]+점 기준입니다\./);
   assert.match(result.opportunity.body, /오늘은 ".+"부터 먼저 잡는 편이 좋습니다\./);
-  assert.match(result.risk.body, /오늘은 ".+"을 놓치면 흐름이 급히 거칠어질 수 있습니다\./);
+  assert.match(result.risk.body, /오늘은 ".+"를 놓치면 흐름이 급히 거칠어질 수 있습니다\./);
 });
