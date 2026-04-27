@@ -517,7 +517,7 @@ function getElementWindowTail(
 
   return index === 0
     ? `${info.keywords[0]} 쪽으로 과하게 밀면 작은 반응도 크게 받아들이기 쉽습니다.`
-    : `${info.keywords[1] ?? info.keywords[0]}을 놓치면 같은 오해가 뒤에서 다시 커질 수 있습니다.`;
+    : `${withKoreanParticle(info.keywords[1] ?? info.keywords[0], '을', '를')} 놓치면 같은 오해가 뒤에서 다시 커질 수 있습니다.`;
 }
 
 function buildOneLineBody(
@@ -637,7 +637,7 @@ function buildTimeWindows(
               ])
             : joinUniqueSentences([
                 evidenceSnippet,
-                hint ? `오늘은 "${hint}"을 먼저 점검해야 과열을 줄일 수 있습니다.` : null,
+                hint ? `오늘은 ${withKoreanParticle(`"${hint}"`, '을', '를')} 먼저 점검해야 과열을 줄일 수 있습니다.` : null,
                 actionLead,
                 luckFact ? `지금은 ${luckFact}이 겹쳐 보여 단기 반응을 크게 믿지 않는 편이 안전합니다.` : null,
                 getElementWindowTail(elementLabel, type, index),
@@ -676,7 +676,7 @@ function buildScenarioComparison(
       ]),
       watch: joinUniqueSentences([
         cautionAction,
-        cautionHint ? `"${cautionHint}"을 같이 놓치면 작은 선택도 피로로 바뀌기 쉽습니다.` : null,
+        cautionHint ? `${withKoreanParticle(`"${cautionHint}"`, '을', '를')} 같이 놓치면 작은 선택도 피로로 바뀌기 쉽습니다.` : null,
         luckFact ? `특히 ${luckFact}이 겹친 날이라 단기 반응을 과신하지 않는 편이 좋습니다.` : null,
       ]),
     },
@@ -684,12 +684,12 @@ function buildScenarioComparison(
       title: concernCopy.waitTitle,
       better: joinUniqueSentences([
         evidenceSnippet,
-        secondaryLeadHint ? `"${secondaryLeadHint}"을 먼저 정리하고 움직이면 결과가 더 매끈해집니다.` : null,
+        secondaryLeadHint ? `${withKoreanParticle(`"${secondaryLeadHint}"`, '을', '를')} 먼저 정리하고 움직이면 결과가 더 매끈해집니다.` : null,
         concernCopy.waitTail,
       ]),
       watch: joinUniqueSentences([
         secondaryCautionHint
-          ? `"${secondaryCautionHint}"을 미루기만 하면 같은 빈틈이 뒤에서 다시 커질 수 있습니다.`
+          ? `${withKoreanParticle(`"${secondaryCautionHint}"`, '을', '를')} 미루기만 하면 같은 빈틈이 뒤에서 다시 커질 수 있습니다.`
           : null,
         '우선순위 없이 미루기만 하면 좋은 흐름도 손에서 미끄러질 수 있습니다.',
       ]),
