@@ -155,11 +155,15 @@ test('today fortune relationship one-line body does not repeat the same 합충 s
 
 test('today fortune time windows vary their body copy across different ranges', () => {
   const input = createSampleInput();
-  const sajuData = calculateSajuDataV1(input);
+  const sajuData = calculateSajuDataV1(input, { calculatedAt: '2026-04-27T12:00:00+09:00' });
   const result = buildTodayFortunePremiumResult(input, sajuData, 'relationship_conflict');
 
   assert.equal(result.favorableWindows.length, 2);
   assert.equal(result.cautionWindows.length, 2);
+  assert.ok(result.favorableWindows.every((item) => item.title.includes('시 ·')));
+  assert.ok(result.cautionWindows.every((item) => item.title.includes('시 ·')));
+  assert.notEqual(result.favorableWindows[0]?.range, result.favorableWindows[1]?.range);
+  assert.notEqual(result.cautionWindows[0]?.range, result.cautionWindows[1]?.range);
   assert.notEqual(result.favorableWindows[0]?.body, result.favorableWindows[1]?.body);
   assert.notEqual(result.cautionWindows[0]?.body, result.cautionWindows[1]?.body);
 });

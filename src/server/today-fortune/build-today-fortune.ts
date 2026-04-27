@@ -1,3 +1,4 @@
+import { Solar } from 'lunar-typescript';
 import {
   buildSajuReport,
   type ReportEvidenceCard,
@@ -12,7 +13,6 @@ import {
 } from '@/domain/saju/report/interpretation-rule-table';
 import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 import type { SajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
-import { ELEMENT_INFO, getLuckyElementsFromSajuData } from '@/lib/saju/elements';
 import { resolveMoonlightCounselor, type MoonlightCounselorId } from '@/lib/counselors';
 import { selectUpsell } from '@/lib/upsell';
 import { getTodayConcern } from '@/lib/today-fortune/concerns';
@@ -26,7 +26,7 @@ import type {
   TodayTimeRule,
   TodayTimeWindow,
 } from '@/lib/today-fortune/types';
-import type { BirthInput } from '@/lib/saju/types';
+import type { BirthInput, Branch, Element, Stem } from '@/lib/saju/types';
 
 interface TodayFortuneBuildOptions {
   concernId: ConcernId;
@@ -47,12 +47,119 @@ const SCORE_LABELS: Record<TodayScoreItem['key'], string> = {
   condition: '컨디션',
 };
 
-const ELEMENT_WINDOWS: Record<string, string[]> = {
-  목: ['05:00 - 07:00', '07:00 - 09:00'],
-  화: ['09:00 - 11:00', '11:00 - 13:00'],
-  토: ['13:00 - 15:00', '19:00 - 21:00'],
-  금: ['15:00 - 17:00', '17:00 - 19:00'],
-  수: ['21:00 - 23:00', '23:00 - 01:00'],
+const TIME_BLOCKS: Array<{
+  range: string;
+  startHour: number;
+  midpointHour: number;
+  dayOffset: number;
+}> = [
+  { range: '23:00 - 01:00', startHour: 23, midpointHour: 0, dayOffset: 1 },
+  { range: '01:00 - 03:00', startHour: 1, midpointHour: 2, dayOffset: 0 },
+  { range: '03:00 - 05:00', startHour: 3, midpointHour: 4, dayOffset: 0 },
+  { range: '05:00 - 07:00', startHour: 5, midpointHour: 6, dayOffset: 0 },
+  { range: '07:00 - 09:00', startHour: 7, midpointHour: 8, dayOffset: 0 },
+  { range: '09:00 - 11:00', startHour: 9, midpointHour: 10, dayOffset: 0 },
+  { range: '11:00 - 13:00', startHour: 11, midpointHour: 12, dayOffset: 0 },
+  { range: '13:00 - 15:00', startHour: 13, midpointHour: 14, dayOffset: 0 },
+  { range: '15:00 - 17:00', startHour: 15, midpointHour: 16, dayOffset: 0 },
+  { range: '17:00 - 19:00', startHour: 17, midpointHour: 18, dayOffset: 0 },
+  { range: '19:00 - 21:00', startHour: 19, midpointHour: 20, dayOffset: 0 },
+  { range: '21:00 - 23:00', startHour: 21, midpointHour: 22, dayOffset: 0 },
+];
+
+const STEM_ELEMENT_MAP: Record<Stem, Element> = {
+  '甲': '목',
+  '乙': '목',
+  '丙': '화',
+  '丁': '화',
+  '戊': '토',
+  '己': '토',
+  '庚': '금',
+  '辛': '금',
+  '壬': '수',
+  '癸': '수',
+};
+
+const BRANCH_ELEMENT_MAP: Record<Branch, Element> = {
+  '子': '수',
+  '丑': '토',
+  '寅': '목',
+  '卯': '목',
+  '辰': '토',
+  '巳': '화',
+  '午': '화',
+  '未': '토',
+  '申': '금',
+  '酉': '금',
+  '戌': '토',
+  '亥': '수',
+};
+
+const BRANCH_ORDER: Branch[] = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+
+const BRANCH_SIX_HARMONIES = new Map<string, string>(
+  [
+    ['子-丑', '토'],
+    ['寅-亥', '목'],
+    ['卯-戌', '화'],
+    ['辰-酉', '금'],
+    ['巳-申', '수'],
+    ['午-未', '토'],
+  ] as const
+);
+
+const BRANCH_CLASHES = new Set<string>(['子-午', '丑-未', '寅-申', '卯-酉', '辰-戌', '巳-亥']);
+const BRANCH_HARMS = new Set<string>(['子-未', '丑-午', '寅-巳', '卯-辰', '申-亥', '酉-戌']);
+const BRANCH_BREAKS = new Set<string>(['子-酉', '卯-午', '辰-丑', '未-戌', '寅-亥', '巳-申']);
+const BRANCH_PUNISHMENTS = new Set<string>([
+  '寅-巳',
+  '巳-申',
+  '寅-申',
+  '丑-未',
+  '未-戌',
+  '丑-戌',
+  '子-卯',
+  '辰-辰',
+  '午-午',
+  '酉-酉',
+  '亥-亥',
+]);
+
+const HALF_HARMONY_PAIRS = new Map<string, string>(
+  [
+    ['申-子', '수 반합'],
+    ['子-辰', '수 반합'],
+    ['亥-卯', '목 반합'],
+    ['卯-未', '목 반합'],
+    ['寅-午', '화 반합'],
+    ['午-戌', '화 반합'],
+    ['巳-酉', '금 반합'],
+    ['酉-丑', '금 반합'],
+  ] as const
+);
+
+const GENERATED_BY_MAP: Record<Element, Element> = {
+  목: '화',
+  화: '토',
+  토: '금',
+  금: '수',
+  수: '목',
+};
+
+const GENERATOR_OF_MAP: Record<Element, Element> = {
+  목: '수',
+  화: '목',
+  토: '화',
+  금: '토',
+  수: '금',
+};
+
+const CONTROLLER_OF_MAP: Record<Element, Element> = {
+  목: '금',
+  화: '수',
+  토: '목',
+  금: '화',
+  수: '토',
 };
 
 const CONCERN_WINDOW_COPY: Record<
@@ -206,6 +313,146 @@ function polishFortuneCopy(text: string) {
     .replace(/([0-9]+점)로 계산되어/g, (_, value: string) => `${withKoreanParticle(value, '으로', '로')} 계산되어`)
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+interface LocalDateTimeSnapshot {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+}
+
+interface TodayTimeBlockEvaluation {
+  range: string;
+  timeGanzi: string;
+  stem: Stem;
+  branch: Branch;
+  stemElement: Element;
+  branchElement: Element;
+  score: number;
+  supportiveDelta: number;
+  relationDelta: number;
+  evidenceCard: ReportEvidenceCard | undefined;
+  evidenceSnippet: string | null;
+  actionLead: string;
+  hint: string | null;
+  relationSummary: string | null;
+  supportSummary: string | null;
+  cautionSummary: string | null;
+}
+
+function getLocalDateTimeSnapshot(
+  calculatedAt: string,
+  timeZone: string
+): LocalDateTimeSnapshot {
+  const parsed = new Date(calculatedAt);
+  const sourceDate = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hourCycle: 'h23',
+    });
+    const parts: Partial<Record<keyof LocalDateTimeSnapshot, number>> = {};
+
+    for (const part of formatter.formatToParts(sourceDate)) {
+      if (
+        part.type === 'year' ||
+        part.type === 'month' ||
+        part.type === 'day' ||
+        part.type === 'hour' ||
+        part.type === 'minute'
+      ) {
+        parts[part.type] = Number.parseInt(part.value, 10);
+      }
+    }
+
+    if (
+      parts.year !== undefined &&
+      parts.month !== undefined &&
+      parts.day !== undefined &&
+      parts.hour !== undefined &&
+      parts.minute !== undefined
+    ) {
+      return {
+        year: parts.year,
+        month: parts.month,
+        day: parts.day,
+        hour: parts.hour,
+        minute: parts.minute,
+      };
+    }
+  } catch {
+    // Fall through to UTC below.
+  }
+
+  return {
+    year: sourceDate.getUTCFullYear(),
+    month: sourceDate.getUTCMonth() + 1,
+    day: sourceDate.getUTCDate(),
+    hour: sourceDate.getUTCHours(),
+    minute: sourceDate.getUTCMinutes(),
+  };
+}
+
+function pad2(value: number) {
+  return String(value).padStart(2, '0');
+}
+
+function addDaysToDateParts(
+  year: number,
+  month: number,
+  day: number,
+  dayOffset: number
+) {
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() + dayOffset);
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+  };
+}
+
+function resolveTimeZoneOffset(baseDate: Date, timeZone: string) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      timeZoneName: 'shortOffset',
+    }).formatToParts(baseDate);
+    const offset = parts.find((part) => part.type === 'timeZoneName')?.value ?? 'GMT+9';
+    const normalized = offset.replace('GMT', '');
+    const match = normalized.match(/^([+-])(\d{1,2})(?::?(\d{2}))?$/);
+    if (!match) return '+09:00';
+    const [, sign, hours, minutes] = match;
+    return `${sign}${hours.padStart(2, '0')}:${(minutes ?? '00').padStart(2, '0')}`;
+  } catch {
+    return '+09:00';
+  }
+}
+
+function sortBranchKey(left: Branch, right: Branch) {
+  return [left, right]
+    .sort((a, b) => BRANCH_ORDER.indexOf(a) - BRANCH_ORDER.indexOf(b))
+    .join('-');
+}
+
+function generatedByElement(element: Element) {
+  return GENERATED_BY_MAP[element];
+}
+
+function generatorOfElement(element: Element) {
+  return GENERATOR_OF_MAP[element];
+}
+
+function controllerOfElement(element: Element) {
+  return CONTROLLER_OF_MAP[element];
 }
 
 function normalizeEvidenceTitleForSentence(
@@ -499,27 +746,6 @@ function buildLeadNarrative(report: SajuReport) {
   return joinUniqueSentences([baseSummary]);
 }
 
-function getElementWindowTail(
-  element: string,
-  type: 'favorable' | 'caution',
-  index: number
-) {
-  const info =
-    ELEMENT_INFO[(Object.keys(ELEMENT_INFO) as Array<keyof typeof ELEMENT_INFO>).find(
-      (key) => ELEMENT_INFO[key].name.startsWith(element)
-    ) ?? '토'];
-
-  if (type === 'favorable') {
-    return index === 0
-      ? `${info.keywords[0]}처럼 첫 말을 짧게 정리하면 흐름을 가볍게 열 수 있습니다.`
-      : `${info.keywords[1] ?? info.keywords[0]} 감각으로 확인과 마무리를 하면 뒤쪽 선택이 더 편해집니다.`;
-  }
-
-  return index === 0
-    ? `${info.keywords[0]} 쪽으로 과하게 밀면 작은 반응도 크게 받아들이기 쉽습니다.`
-    : `${withKoreanParticle(info.keywords[1] ?? info.keywords[0], '을', '를')} 놓치면 같은 오해가 뒤에서 다시 커질 수 있습니다.`;
-}
-
 function buildOneLineBody(
   concernId: ConcernId,
   concernLabel: string,
@@ -555,6 +781,350 @@ function buildOneLineBody(
         `${concernLabel}으로 읽으면 ${todayLead}`,
       ]);
   }
+}
+
+function getTimeBlockBaseScore(report: SajuReport) {
+  const focusScore = getScore(report, report.focusScoreKey);
+  return focusScore?.score ?? getScore(report, 'overall')?.score ?? 70;
+}
+
+function getTimeBlockCalculatedAt(
+  sajuData: SajuDataV1,
+  block: (typeof TIME_BLOCKS)[number]
+) {
+  const baseDate = new Date(sajuData.metadata.calculatedAt);
+  const local = getLocalDateTimeSnapshot(
+    sajuData.metadata.calculatedAt,
+    sajuData.input.timezone
+  );
+  const nextDate = addDaysToDateParts(local.year, local.month, local.day, block.dayOffset);
+  const offset = resolveTimeZoneOffset(baseDate, sajuData.input.timezone);
+  return `${nextDate.year}-${pad2(nextDate.month)}-${pad2(nextDate.day)}T${pad2(block.midpointHour)}:00:00${offset}`;
+}
+
+function parseTimeBlockPillar(
+  sajuData: SajuDataV1,
+  block: (typeof TIME_BLOCKS)[number]
+) {
+  const calculatedAt = getTimeBlockCalculatedAt(sajuData, block);
+  const local = getLocalDateTimeSnapshot(calculatedAt, sajuData.input.timezone);
+  const solar = Solar.fromYmdHms(local.year, local.month, local.day, local.hour, 0, 0);
+  const eightChar = solar.getLunar().getEightChar();
+  eightChar.setSect(sajuData.input.jasiMethod === 'split' ? 1 : 2);
+
+  const timeGanzi = eightChar.getTime();
+  const stem = timeGanzi[0] as Stem;
+  const branch = timeGanzi[1] as Branch;
+
+  return {
+    calculatedAt,
+    timeGanzi,
+    stem,
+    branch,
+    stemElement: STEM_ELEMENT_MAP[stem],
+    branchElement: BRANCH_ELEMENT_MAP[branch],
+  };
+}
+
+function describeBranchRelation(left: Branch, right: Branch) {
+  const branchKey = sortBranchKey(left, right);
+
+  if (BRANCH_SIX_HARMONIES.has(branchKey)) {
+    return { label: '육합', delta: 7, tone: 'support' as const };
+  }
+  if (HALF_HARMONY_PAIRS.has(branchKey)) {
+    return { label: '반합', delta: 5, tone: 'support' as const };
+  }
+  if (BRANCH_CLASHES.has(branchKey)) {
+    return { label: '충', delta: -7, tone: 'caution' as const };
+  }
+  if (BRANCH_PUNISHMENTS.has(branchKey)) {
+    return { label: '형', delta: -5, tone: 'caution' as const };
+  }
+  if (BRANCH_BREAKS.has(branchKey)) {
+    return { label: '파', delta: -4, tone: 'caution' as const };
+  }
+  if (BRANCH_HARMS.has(branchKey)) {
+    return { label: '해', delta: -3, tone: 'caution' as const };
+  }
+
+  return null;
+}
+
+function getTimeBlockRelationImpact(
+  blockBranch: Branch,
+  sajuData: SajuDataV1
+) {
+  const natalBranches = [
+    { slot: '시주', branch: sajuData.pillars.hour?.branch ?? null, weight: 0.9 },
+    { slot: '일주', branch: sajuData.pillars.day.branch, weight: 1.35 },
+    { slot: '월주', branch: sajuData.pillars.month.branch, weight: 1.15 },
+    { slot: '년주', branch: sajuData.pillars.year.branch, weight: 0.8 },
+  ];
+
+  const details = natalBranches
+    .filter((entry): entry is { slot: string; branch: Branch; weight: number } => Boolean(entry.branch))
+    .map((entry) => {
+      const relation = describeBranchRelation(blockBranch, entry.branch);
+      if (!relation) return null;
+      return {
+        ...relation,
+        slot: entry.slot,
+        branch: entry.branch,
+        weightedDelta: Math.round(relation.delta * entry.weight),
+      };
+    })
+    .filter(
+      (
+        detail
+      ): detail is {
+        label: string;
+        delta: number;
+        tone: 'support' | 'caution';
+        slot: string;
+        branch: Branch;
+        weightedDelta: number;
+      } => Boolean(detail)
+    );
+
+  const totalDelta = details.reduce((sum, detail) => sum + detail.weightedDelta, 0);
+  const supportLabels = details
+    .filter((detail) => detail.tone === 'support')
+    .map((detail) => `${detail.slot} ${detail.branch}와 ${detail.label}`)
+    .slice(0, 2);
+  const cautionLabels = details
+    .filter((detail) => detail.tone === 'caution')
+    .map((detail) => `${detail.slot} ${detail.branch}와 ${detail.label}`)
+    .slice(0, 2);
+
+  return {
+    totalDelta,
+    supportLabels,
+    cautionLabels,
+  };
+}
+
+function getTimeBlockElementImpact(sajuData: SajuDataV1, stemElement: Element, branchElement: Element) {
+  const primaryElement = (sajuData.yongsin?.primary?.value as Element | undefined) ?? null;
+  const supportElements = (sajuData.yongsin?.secondary ?? []).map((item) => item.value as Element);
+  const cautionElements = (sajuData.yongsin?.kiyshin ?? []).map((item) => item.value as Element);
+  const dayMasterElement = sajuData.dayMaster.element;
+  const resourceElement = generatorOfElement(dayMasterElement);
+  const outputElement = generatedByElement(dayMasterElement);
+  const officerElement = controllerOfElement(dayMasterElement);
+
+  let delta = 0;
+  const supportLines: string[] = [];
+  const cautionLines: string[] = [];
+
+  if (primaryElement && branchElement === primaryElement) {
+    delta += 8;
+    supportLines.push(`${branchElement} 기운이 1순위 용신과 맞닿습니다.`);
+  }
+  if (primaryElement && stemElement === primaryElement) {
+    delta += 4;
+    supportLines.push(`${stemElement} 기운이 오늘 보완축을 한 번 더 밀어줍니다.`);
+  }
+  if (supportElements.includes(branchElement)) {
+    delta += 5;
+    supportLines.push(`${branchElement} 기운이 보조 용신과 이어져 작은 선택을 받쳐줍니다.`);
+  }
+  if (supportElements.includes(stemElement)) {
+    delta += 2;
+  }
+  if (cautionElements.includes(branchElement)) {
+    delta -= 6;
+    cautionLines.push(`${branchElement} 기운이 기신 축과 닿아 과한 반응을 키우기 쉽습니다.`);
+  }
+  if (cautionElements.includes(stemElement)) {
+    delta -= 3;
+  }
+
+  if (sajuData.strength?.level === '신강') {
+    if (branchElement === outputElement || branchElement === officerElement) {
+      delta += 3;
+      supportLines.push(`${branchElement} 기운이 강한 일간의 힘을 밖으로 잘 빼줍니다.`);
+    }
+    if (branchElement === dayMasterElement || branchElement === resourceElement) {
+      delta -= 3;
+      cautionLines.push(`${branchElement} 기운이 이미 강한 축을 더 키워 균형을 무겁게 만들 수 있습니다.`);
+    }
+  }
+
+  if (sajuData.strength?.level === '신약') {
+    if (branchElement === dayMasterElement || branchElement === resourceElement) {
+      delta += 4;
+      supportLines.push(`${branchElement} 기운이 약한 축을 바로 보강해 버티는 힘을 줍니다.`);
+    }
+    if (branchElement === outputElement || branchElement === officerElement) {
+      delta -= 4;
+      cautionLines.push(`${branchElement} 기운이 약한 일간의 체력을 더 빨리 소모시킬 수 있습니다.`);
+    }
+  }
+
+  if (branchElement === sajuData.fiveElements.weakest) {
+    delta += 2;
+  }
+  if (branchElement === sajuData.fiveElements.dominant) {
+    delta -= 2;
+  }
+
+  return {
+    delta,
+    supportLines,
+    cautionLines,
+  };
+}
+
+function selectTimeBlockEvidenceCard(
+  report: SajuReport,
+  type: 'favorable' | 'caution',
+  supportiveDelta: number,
+  relationDelta: number
+) {
+  const rule = getTopicInterpretationRule(report.focusTopic);
+  const priorities = type === 'favorable' ? rule.evidencePriority : rule.cautionPriority;
+  const relationWeighted = Math.abs(relationDelta) >= 4;
+  const strengthWeighted = Math.abs(supportiveDelta) >= 6;
+
+  return [...report.evidenceCards].sort((left, right) => {
+    const scoreCard = (card: ReportEvidenceCard) => {
+      let score = 24 - Math.max(0, priorities.indexOf(card.key)) * 4;
+      if (priorities.indexOf(card.key) === -1) score = 2;
+      if (card.key === 'relations' && relationWeighted) score += 8;
+      if (card.key === 'yongsin' && supportiveDelta > 0) score += 7;
+      if (card.key === 'strength' && strengthWeighted) score += 5;
+      if (card.key === 'gongmang' && type === 'caution' && supportiveDelta < 0) score += 3;
+      return score;
+    };
+
+    return scoreCard(right) - scoreCard(left);
+  })[0];
+}
+
+function buildTimeBlockEvaluations(
+  concernId: ConcernId,
+  report: SajuReport,
+  sajuData: SajuDataV1
+) {
+  const baseScore = getTimeBlockBaseScore(report);
+  const concernCopy = CONCERN_WINDOW_COPY[concernId];
+  const actionRuleLeadHints = getEvidenceActionHints(report, 'lead', 3);
+  const actionRuleCautionHints = getEvidenceActionHints(report, 'caution', 3);
+  const luckFact = getLuckFactLine(sajuData);
+
+  return TIME_BLOCKS.map((block) => {
+    const timePillar = parseTimeBlockPillar(sajuData, block);
+    const elementImpact = getTimeBlockElementImpact(
+      sajuData,
+      timePillar.stemElement,
+      timePillar.branchElement
+    );
+    const relationImpact = getTimeBlockRelationImpact(timePillar.branch, sajuData);
+    const score = clampScore(baseScore + elementImpact.delta + relationImpact.totalDelta);
+    const evidenceCard = selectTimeBlockEvidenceCard(
+      report,
+      score >= baseScore ? 'favorable' : 'caution',
+      elementImpact.delta,
+      relationImpact.totalDelta
+    );
+    const evidenceSnippet = evidenceCard ? toEvidenceSnippet(evidenceCard) : null;
+    const hints = uniqueStrings(
+      evidenceCard?.practicalActions ?? [],
+      3
+    );
+    const fallbackHints = score >= baseScore ? actionRuleLeadHints : actionRuleCautionHints;
+    const hintPool = hints.length > 0 ? hints : fallbackHints;
+    const hint =
+      hintPool.length > 0
+        ? hintPool[(block.startHour + Math.max(0, score - 40)) % hintPool.length]
+        : null;
+    const actionLead = compactActionDescription(
+      score >= baseScore ? report.primaryAction.description : report.cautionAction.description,
+      evidenceSnippet
+    );
+    const supportSummary = uniqueStrings(
+      [
+        `${timePillar.timeGanzi}시에는 ${timePillar.branchElement} 기운이 전면에 서서 오늘 흐름의 결을 바꿉니다.`,
+        ...elementImpact.supportLines,
+        relationImpact.supportLabels[0]
+          ? `${relationImpact.supportLabels.join(', ')}이 들어와 말이나 결정이 묶이는 힘을 더합니다.`
+          : null,
+      ],
+      2
+    ).join(' ');
+    const cautionSummary = uniqueStrings(
+      [
+        `${timePillar.timeGanzi}시는 ${timePillar.branchElement} 기운이 튀어나와 감정이나 판단을 과하게 밀기 쉬운 블록입니다.`,
+        ...elementImpact.cautionLines,
+        relationImpact.cautionLabels[0]
+          ? `${relationImpact.cautionLabels.join(', ')}이 겹치면 작은 반응도 크게 받아들이기 쉽습니다.`
+          : null,
+      ],
+      2
+    ).join(' ');
+    const relationSummary =
+      relationImpact.supportLabels[0] || relationImpact.cautionLabels[0]
+        ? uniqueStrings([
+            relationImpact.supportLabels[0]
+              ? `${relationImpact.supportLabels.join(', ')}이 들어와 관계가 묶이는 쪽으로 작동합니다.`
+              : null,
+            relationImpact.cautionLabels[0]
+              ? `${relationImpact.cautionLabels.join(', ')}이 겹치면 말의 여파가 오래 남기 쉽습니다.`
+              : null,
+          ]).join(' ')
+        : null;
+
+    return {
+      range: block.range,
+      timeGanzi: timePillar.timeGanzi,
+      stem: timePillar.stem,
+      branch: timePillar.branch,
+      stemElement: timePillar.stemElement,
+      branchElement: timePillar.branchElement,
+      score,
+      supportiveDelta: elementImpact.delta,
+      relationDelta: relationImpact.totalDelta,
+      evidenceCard,
+      evidenceSnippet,
+      actionLead,
+      hint,
+      relationSummary,
+      supportSummary,
+      cautionSummary,
+      luckFact,
+      favorableTail: concernCopy.favorableTail,
+      cautionTail: concernCopy.cautionTail,
+    };
+  });
+}
+
+function pickTimeBlockWindows(
+  evaluations: ReturnType<typeof buildTimeBlockEvaluations>,
+  type: 'favorable' | 'caution'
+) {
+  const sorted = [...evaluations].sort((left, right) =>
+    type === 'favorable' ? right.score - left.score : left.score - right.score
+  );
+  const selected: typeof evaluations = [];
+
+  for (const candidate of sorted) {
+    if (selected.length === 0) {
+      selected.push(candidate);
+      continue;
+    }
+
+    const hasDifferentEvidence = selected.every(
+      (item) => item.evidenceCard?.key !== candidate.evidenceCard?.key
+    );
+    const hasDifferentBranch = selected.every((item) => item.branch !== candidate.branch);
+    if (hasDifferentEvidence || hasDifferentBranch || selected.length >= 2) {
+      selected.push(candidate);
+    }
+    if (selected.length >= 2) break;
+  }
+
+  return selected.slice(0, 2);
 }
 
 function toTodayScores(
@@ -597,55 +1167,36 @@ function buildTimeWindows(
   type: 'favorable' | 'caution'
 ): TodayTimeWindow[] {
   const concernCopy = CONCERN_WINDOW_COPY[concernId];
-  const supportElements = getLuckyElementsFromSajuData(sajuData);
-  const dominantElement = ELEMENT_INFO[sajuData.fiveElements.dominant].name.split(' ')[0];
-  const baseElements =
-    type === 'favorable'
-      ? supportElements.slice(0, 2)
-      : [sajuData.fiveElements.weakest, sajuData.fiveElements.dominant];
-  const evidenceSnippet = getTodayEvidenceSnippet(report);
-  const actionHints = getEvidenceActionHints(report, type === 'favorable' ? 'lead' : 'caution', 2);
-  const actionLead = compactActionDescription(
-    type === 'favorable' ? report.primaryAction.description : report.cautionAction.description,
-    evidenceSnippet
-  );
-  const luckFact = getLuckFactLine(sajuData);
+  const evaluations = pickTimeBlockWindows(buildTimeBlockEvaluations(concernId, report, sajuData), type);
 
-  return baseElements.slice(0, 2).flatMap((element, index) => {
-    const elementLabel = typeof element === 'string' ? ELEMENT_INFO[element].name.split(' ')[0] : dominantElement;
-    const ranges = ELEMENT_WINDOWS[element] ?? ELEMENT_WINDOWS.토;
-    const range = ranges[index % ranges.length] ?? ranges[0];
-    const hint = actionHints[index] ?? actionHints[0];
-
-    return [
-      {
-        range,
-        mood: type,
-        title:
-          type === 'favorable'
-            ? `${elementLabel} · ${concernCopy.favorableTitle}`
-            : `${elementLabel} · ${concernCopy.cautionTitle}`,
-        body:
-          type === 'favorable'
-            ? joinUniqueSentences([
-                evidenceSnippet,
-                hint ? `오늘은 "${hint}" 쪽으로 먼저 움직이기 좋습니다.` : null,
-                actionLead,
-                luckFact ? `지금은 ${luckFact}을 함께 보고 움직이면 흐름을 덜 놓칩니다.` : null,
-                getElementWindowTail(elementLabel, type, index),
-                concernCopy.favorableTail,
-              ])
-            : joinUniqueSentences([
-                evidenceSnippet,
-                hint ? `오늘은 ${withKoreanParticle(`"${hint}"`, '을', '를')} 먼저 점검해야 과열을 줄일 수 있습니다.` : null,
-                actionLead,
-                luckFact ? `지금은 ${luckFact}이 겹쳐 보여 단기 반응을 크게 믿지 않는 편이 안전합니다.` : null,
-                getElementWindowTail(elementLabel, type, index),
-                concernCopy.cautionTail,
-              ]),
-      },
-    ];
-  });
+  return evaluations.map((item) => ({
+    range: item.range,
+    mood: type,
+    title:
+      type === 'favorable'
+        ? `${item.timeGanzi}시 · ${concernCopy.favorableTitle}`
+        : `${item.timeGanzi}시 · ${concernCopy.cautionTitle}`,
+    body:
+      type === 'favorable'
+        ? joinUniqueSentences([
+            item.evidenceSnippet,
+            item.supportSummary,
+            item.hint ? `이 시간대에는 "${item.hint}"부터 먼저 쓰는 편이 좋습니다.` : null,
+            item.actionLead,
+            item.relationSummary,
+            item.luckFact ? `지금은 ${item.luckFact}을 함께 보고 움직이면 흐름을 덜 놓칩니다.` : null,
+            item.favorableTail,
+          ])
+        : joinUniqueSentences([
+            item.evidenceSnippet,
+            item.cautionSummary,
+            item.hint ? `이 시간대에는 ${withKoreanParticle(`"${item.hint}"`, '을', '를')} 먼저 점검해야 과열을 줄일 수 있습니다.` : null,
+            item.actionLead,
+            item.relationSummary,
+            item.luckFact ? `지금은 ${item.luckFact}이 겹쳐 보여 단기 반응을 크게 믿지 않는 편이 안전합니다.` : null,
+            item.cautionTail,
+          ]),
+  }));
 }
 
 function buildScenarioComparison(
