@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { UnifiedBirthInfoFields, type BirthLocationSearchResultLike } from '@/components/saju/shared/unified-birth-info-fields';
 import { BIRTH_LOCATION_PRESETS } from '@/lib/saju/birth-location';
@@ -61,42 +61,73 @@ export function BirthInfoStepper({
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationMessage, setLocationMessage] = useState('');
   const [locationResults, setLocationResults] = useState<BirthLocationSearchResult[]>([]);
+  const autoProfileAttemptedRef = useRef(false);
 
-  async function handleLoadProfile() {
-    setProfileLoading(true);
-    setProfileMessage('');
+  function applyProfileBirthInfo(profile: NonNullable<ProfileResponse['profile']>, message: string) {
+    onStarted();
+    onChange({
+      calendarType: profile.calendarType ?? 'solar',
+      year: String(profile.birthYear ?? ''),
+      month: String(profile.birthMonth ?? ''),
+      day: String(profile.birthDay ?? ''),
+      hour: profile.birthHour === null ? '' : String(profile.birthHour),
+      minute: profile.birthMinute === null ? '' : String(profile.birthMinute),
+      unknownBirthTime: profile.birthHour === null,
+      birthLocationCode: profile.birthLocationCode ?? '',
+      birthLocationLabel: profile.birthLocationLabel ?? '',
+      birthLatitude: profile.birthLatitude === null ? '' : String(profile.birthLatitude),
+      birthLongitude: profile.birthLongitude === null ? '' : String(profile.birthLongitude),
+      gender: profile.gender ?? '',
+      timeRule: profile.timeRule ?? draft.timeRule,
+    });
+    setProfileMessage(message);
+  }
+
+  async function loadProfile(options?: { silent?: boolean }) {
+    const silent = options?.silent === true;
+    if (!silent) {
+      setProfileLoading(true);
+      setProfileMessage('');
+    }
 
     try {
       const response = await fetch('/api/profile', { cache: 'no-store' });
       const data = (await response.json().catch(() => null)) as ProfileResponse | null;
 
       if (!response.ok || !data?.authenticated || !data.profile?.birthYear) {
-        setProfileMessage('MY 프로필에 저장된 출생 정보가 아직 충분하지 않습니다.');
+        if (!silent) {
+          setProfileMessage('MY 프로필에 저장된 출생 정보가 아직 충분하지 않습니다.');
+        }
         return;
       }
 
-      onChange({
-        calendarType: data.profile.calendarType ?? 'solar',
-        year: String(data.profile.birthYear ?? ''),
-        month: String(data.profile.birthMonth ?? ''),
-        day: String(data.profile.birthDay ?? ''),
-        hour: data.profile.birthHour === null ? '' : String(data.profile.birthHour),
-        minute: data.profile.birthMinute === null ? '' : String(data.profile.birthMinute),
-        unknownBirthTime: data.profile.birthHour === null,
-        birthLocationCode: data.profile.birthLocationCode ?? '',
-        birthLocationLabel: data.profile.birthLocationLabel ?? '',
-        birthLatitude: data.profile.birthLatitude === null ? '' : String(data.profile.birthLatitude),
-        birthLongitude: data.profile.birthLongitude === null ? '' : String(data.profile.birthLongitude),
-        gender: data.profile.gender ?? '',
-        timeRule: data.profile.timeRule ?? draft.timeRule,
-      });
-      setProfileMessage('MY 프로필의 출생 정보를 불러왔습니다.');
+      applyProfileBirthInfo(
+        data.profile,
+        silent
+          ? '로그인된 MY 프로필의 출생 정보를 기본값으로 불러왔습니다.'
+          : 'MY 프로필의 출생 정보를 불러왔습니다.'
+      );
     } catch {
-      setProfileMessage('MY 프로필을 불러오는 중 네트워크 오류가 있었습니다.');
+      if (!silent) {
+        setProfileMessage('MY 프로필을 불러오는 중 네트워크 오류가 있었습니다.');
+      }
     } finally {
-      setProfileLoading(false);
+      if (!silent) {
+        setProfileLoading(false);
+      }
     }
   }
+
+  async function handleLoadProfile() {
+    setProfileLoading(true);
+    await loadProfile();
+  }
+
+  useEffect(() => {
+    if (autoProfileAttemptedRef.current || hasBirthCore(draft)) return;
+    autoProfileAttemptedRef.current = true;
+    void loadProfile({ silent: true });
+  }, [draft]);
 
   async function handleLocationSearch() {
     const query = draft.birthLocationLabel.trim();

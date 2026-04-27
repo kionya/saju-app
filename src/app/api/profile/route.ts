@@ -106,6 +106,15 @@ function readString(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
+function readBirthPayloadValue(
+  data: Record<string, unknown>,
+  primaryKey: string,
+  unifiedKey: string
+) {
+  if (data[primaryKey] !== undefined) return data[primaryKey];
+  return data[unifiedKey];
+}
+
 function parseBirthLocationFields(
   data: Record<string, unknown>,
   timeRule: UnifiedTimeRule
@@ -176,7 +185,7 @@ function getErrorMessage(error: unknown) {
   return '알 수 없는 오류가 발생했습니다.';
 }
 
-function parseProfile(payload: unknown): UserProfile | null {
+export function parseProfile(payload: unknown): UserProfile | null {
   if (!payload || typeof payload !== 'object') return null;
 
   const data = payload as Record<string, unknown>;
@@ -194,34 +203,39 @@ function parseProfile(payload: unknown): UserProfile | null {
       : 'standard';
   const birthLocation = parseBirthLocationFields(data, timeRule);
   const unknownBirthTime = data.unknownBirthTime === true;
+  const birthYearValue = readBirthPayloadValue(data, 'birthYear', 'year');
+  const birthMonthValue = readBirthPayloadValue(data, 'birthMonth', 'month');
+  const birthDayValue = readBirthPayloadValue(data, 'birthDay', 'day');
+  const birthHourValue = readBirthPayloadValue(data, 'birthHour', 'hour');
+  const birthMinuteValue = readBirthPayloadValue(data, 'birthMinute', 'minute');
 
   const birthYear =
-    data.birthYear === '' || data.birthYear === undefined || data.birthYear === null
+    birthYearValue === '' || birthYearValue === undefined || birthYearValue === null
       ? null
-      : parseOptionalInt(data.birthYear, 1900, new Date().getFullYear());
+      : parseOptionalInt(birthYearValue, 1900, new Date().getFullYear());
   const birthMonth =
-    data.birthMonth === '' || data.birthMonth === undefined || data.birthMonth === null
+    birthMonthValue === '' || birthMonthValue === undefined || birthMonthValue === null
       ? null
-      : parseOptionalInt(data.birthMonth, 1, 12);
+      : parseOptionalInt(birthMonthValue, 1, 12);
   const birthDay =
-    data.birthDay === '' || data.birthDay === undefined || data.birthDay === null
+    birthDayValue === '' || birthDayValue === undefined || birthDayValue === null
       ? null
-      : parseOptionalInt(data.birthDay, 1, 31);
+      : parseOptionalInt(birthDayValue, 1, 31);
   const birthHour =
-    unknownBirthTime || data.birthHour === '' || data.birthHour === undefined || data.birthHour === null
+    unknownBirthTime || birthHourValue === '' || birthHourValue === undefined || birthHourValue === null
       ? null
-      : parseOptionalInt(data.birthHour, 0, 23);
+      : parseOptionalInt(birthHourValue, 0, 23);
   const birthMinute =
-    unknownBirthTime || data.birthMinute === '' || data.birthMinute === undefined || data.birthMinute === null
+    unknownBirthTime || birthMinuteValue === '' || birthMinuteValue === undefined || birthMinuteValue === null
       ? null
-      : parseOptionalInt(data.birthMinute, 0, 59);
+      : parseOptionalInt(birthMinuteValue, 0, 59);
 
   if (
-    (data.birthYear !== '' && data.birthYear !== undefined && data.birthYear !== null && birthYear === null) ||
-    (data.birthMonth !== '' && data.birthMonth !== undefined && data.birthMonth !== null && birthMonth === null) ||
-    (data.birthDay !== '' && data.birthDay !== undefined && data.birthDay !== null && birthDay === null) ||
-    (data.birthHour !== '' && data.birthHour !== undefined && data.birthHour !== null && birthHour === null) ||
-    (data.birthMinute !== '' && data.birthMinute !== undefined && data.birthMinute !== null && birthMinute === null) ||
+    (birthYearValue !== '' && birthYearValue !== undefined && birthYearValue !== null && birthYear === null) ||
+    (birthMonthValue !== '' && birthMonthValue !== undefined && birthMonthValue !== null && birthMonth === null) ||
+    (birthDayValue !== '' && birthDayValue !== undefined && birthDayValue !== null && birthDay === null) ||
+    (birthHourValue !== '' && birthHourValue !== undefined && birthHourValue !== null && birthHour === null) ||
+    (birthMinuteValue !== '' && birthMinuteValue !== undefined && birthMinuteValue !== null && birthMinute === null) ||
     (birthHour === null && birthMinute !== null) ||
     !birthLocation.ok
   ) {

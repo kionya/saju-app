@@ -16,6 +16,10 @@ import { getSajuVerificationAudit, type SajuVerificationCheck } from '@/server/v
 import { getLifetimeVerificationAudit } from '@/server/verification/lifetime-audit';
 import { getYearlyVerificationAudit } from '@/server/verification/yearly-audit';
 import { getTodayFortuneVerificationAudit } from '@/server/verification/today-fortune-audit';
+import {
+  getProfileLinkageVerificationAudit,
+  type ProfileLinkageServiceAudit,
+} from '@/server/verification/profile-linkage-audit';
 import { normalizeConcernId } from '@/lib/today-fortune/concerns';
 import { cn } from '@/lib/utils';
 
@@ -239,6 +243,48 @@ function YearlyChecks({
   );
 }
 
+function ProfileLinkageRows({ services }: { services: ProfileLinkageServiceAudit[] }) {
+  return (
+    <div className="mt-5 grid gap-3 lg:grid-cols-2">
+      {services.map((service) => (
+        <article
+          key={service.key}
+          className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4"
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge ok={service.status === 'ready'}>
+              {service.status === 'ready'
+                ? '연동됨'
+                : service.status === 'partial'
+                  ? '부분 연동'
+                  : '독립 기능'}
+            </StatusBadge>
+            <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-muted)]">
+              {service.label}
+            </Badge>
+          </div>
+          <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{service.detail}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy)]">
+              self {service.usesSelfProfile ? 'yes' : 'no'}
+            </Badge>
+            <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy)]">
+              family {service.usesFamilyProfiles ? 'yes' : 'no'}
+            </Badge>
+            <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy)]">
+              schema {service.usesSharedBirthSchema ? 'shared' : 'local'}
+            </Badge>
+            <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy)]">
+              engine {service.usesSajuEngine ? 'saju' : 'none'}
+            </Badge>
+          </div>
+          <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">{service.continuity}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 export default async function VerificationPage({ searchParams }: VerificationPageProps) {
   const params = await searchParams;
   const concept = params.concept?.trim() || DEFAULT_CLASSICS_AUDIT_CONCEPT;
@@ -249,18 +295,20 @@ export default async function VerificationPage({ searchParams }: VerificationPag
   const normalizedTargetYear =
     Number.isInteger(targetYear) && targetYear >= 1900 && targetYear <= 2100 ? targetYear : 2026;
   const counselor = params.counselor === 'male' ? 'male' : 'female';
-  const [classicsAudit, todayFortuneAudit, sajuAudit, lifetimeAudit, yearlyAudit] = await Promise.all([
+  const [classicsAudit, todayFortuneAudit, sajuAudit, lifetimeAudit, yearlyAudit, profileLinkageAudit] = await Promise.all([
     getClassicsVerificationAudit({ concept, limit: 5 }),
     getTodayFortuneVerificationAudit({ slug, concernId: concern, counselorId: counselor }),
     getSajuVerificationAudit({ slug, topic }),
     getLifetimeVerificationAudit({ slug, targetYear: normalizedTargetYear, counselorId: counselor }),
     getYearlyVerificationAudit({ slug, targetYear: normalizedTargetYear, counselorId: counselor }),
+    Promise.resolve(getProfileLinkageVerificationAudit()),
   ]);
   const classicsApiHref = `/api/verification/classics?concept=${encodeURIComponent(concept)}&limit=5`;
   const todayFortuneApiHref = `/api/verification/today-fortune?slug=${encodeURIComponent(slug)}&concern=${encodeURIComponent(concern)}&counselor=${counselor}`;
   const sajuApiHref = `/api/verification/saju?slug=${encodeURIComponent(slug)}&topic=${encodeURIComponent(topic)}`;
   const lifetimeApiHref = `/api/verification/lifetime?slug=${encodeURIComponent(slug)}&targetYear=${normalizedTargetYear}&counselor=${counselor}`;
   const yearlyApiHref = `/api/verification/yearly?slug=${encodeURIComponent(slug)}&targetYear=${normalizedTargetYear}&counselor=${counselor}`;
+  const profileLinkageApiHref = '/api/verification/profile-linkage';
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -272,6 +320,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
             <StatusBadge ok={sajuAudit.status === 'ready'}>사주 {sajuAudit.status}</StatusBadge>
             <StatusBadge ok={lifetimeAudit.status === 'ready'}>평생 {lifetimeAudit.status}</StatusBadge>
             <StatusBadge ok={yearlyAudit.status === 'ready'}>연간 {yearlyAudit.status}</StatusBadge>
+            <StatusBadge ok={profileLinkageAudit.status === 'ready'}>연동지도 {profileLinkageAudit.status}</StatusBadge>
             <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
               검색 제외
             </Badge>
@@ -356,6 +405,53 @@ export default async function VerificationPage({ searchParams }: VerificationPag
               새로고침
             </button>
           </form>
+        </section>
+
+        <section className="app-panel p-6">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <div className="app-caption">프로필 연동 지도</div>
+              <h2 className="mt-2 text-2xl font-semibold text-[var(--app-ivory)]">
+                어떤 서비스가 내 기본정보를 실제로 쓰는지 한눈에 확인
+              </h2>
+            </div>
+            <JsonLink href={profileLinkageApiHref} />
+          </div>
+          <div className="mt-5 grid gap-3 lg:grid-cols-4">
+            <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+              <div className="app-caption">linked</div>
+              <div className="mt-2 text-2xl font-semibold text-[var(--app-ivory)]">
+                {profileLinkageAudit.overview.linkedServiceCount}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+              <div className="app-caption">partial</div>
+              <div className="mt-2 text-2xl font-semibold text-[var(--app-ivory)]">
+                {profileLinkageAudit.overview.partialServiceCount}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+              <div className="app-caption">independent</div>
+              <div className="mt-2 text-2xl font-semibold text-[var(--app-ivory)]">
+                {profileLinkageAudit.overview.independentServiceCount}
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
+              <div className="app-caption">key checks</div>
+              <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">
+                {profileLinkageAudit.checks.filter((check) => check.ok).length}/{profileLinkageAudit.checks.length} 통과
+              </div>
+            </div>
+          </div>
+
+          <YearlyChecks checks={profileLinkageAudit.checks} />
+          <ProfileLinkageRows services={profileLinkageAudit.services} />
+
+          {profileLinkageAudit.warnings.length > 0 ? (
+            <div className="mt-5 rounded-2xl border border-amber-300/30 bg-amber-400/10 p-4 text-sm text-amber-100">
+              {profileLinkageAudit.warnings.join(' ')}
+            </div>
+          ) : null}
         </section>
 
         <section className="app-panel p-6">
