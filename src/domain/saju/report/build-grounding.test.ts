@@ -33,7 +33,7 @@ test('buildSajuInterpretationGrounding creates fact_json and evidence_json from 
   assert.equal(grounding.evidenceJson.pattern.name, data.pattern?.name ?? null);
   assert.equal(
     grounding.evidenceJson.yongsin.primary,
-    data.yongsin?.primary ? `${data.yongsin.primary.label}(${data.yongsin.primary.value})` : null
+    data.yongsin?.primary?.label ?? null
   );
   assert.ok(grounding.evidenceJson.classics.cards.length > 0);
   assert.ok(grounding.evidenceJson.classics.cards.some((card) => card.key === 'yongsin'));

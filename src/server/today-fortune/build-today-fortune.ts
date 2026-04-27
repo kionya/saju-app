@@ -159,6 +159,17 @@ function stripEvidenceBoilerplate(text: string) {
     .trim();
 }
 
+function normalizeEvidenceTitleForSentence(
+  key: ReportEvidenceCard['key'],
+  title: string
+) {
+  if (key === 'strength') {
+    return title.replace(/\s*·\s*/g, ' ');
+  }
+
+  return title.replace(/\s*·\s*/g, ' · ');
+}
+
 function joinUniqueSentences(parts: Array<string | null | undefined>) {
   const seen = new Set<string>();
   const sentences: string[] = [];
@@ -235,21 +246,23 @@ function buildReasonSnippet(
 
   let base = defaultBase;
   if (evidenceCard && normalizedTitle && normalizedBody) {
+    const sentenceTitle = normalizeEvidenceTitleForSentence(evidenceCard.key, normalizedTitle);
+
     switch (evidenceCard.key) {
       case 'strength':
-        base = `${evidenceCard.label}은 ${normalizedTitle}로 계산되어 ${normalizedBody}`;
+        base = `${evidenceCard.label}은 ${sentenceTitle}로 계산되어 ${normalizedBody}`;
         break;
       case 'pattern':
-        base = `${evidenceCard.label}은 ${normalizedTitle}로 잡히며 ${normalizedBody}`;
+        base = `${evidenceCard.label}은 ${sentenceTitle}로 잡히며 ${normalizedBody}`;
         break;
       case 'yongsin':
-        base = `${evidenceCard.label}은 ${normalizedTitle}로 읽으며 ${normalizedBody}`;
+        base = `${evidenceCard.label}은 ${sentenceTitle}로 읽으며 ${normalizedBody}`;
         break;
       case 'relations':
-        base = `${evidenceCard.label}은 ${normalizedTitle}로 읽히고 ${normalizedBody}`;
+        base = `${evidenceCard.label}은 ${sentenceTitle}로 읽히고 ${normalizedBody}`;
         break;
       default:
-        base = `${evidenceCard.label}은 ${normalizedTitle}로 읽으며 ${normalizedBody}`;
+        base = `${evidenceCard.label}은 ${sentenceTitle}로 읽으며 ${normalizedBody}`;
         break;
     }
   } else if (evidenceCard?.plainSummary || evidenceCard?.technicalSummary || evidenceCard?.body) {

@@ -31,6 +31,10 @@ function getPrimaryConcept(report: SajuReport) {
 }
 
 function formatYongsinSymbol(symbol: { label: string; value: string }) {
+  if (symbol.label.includes(`(${symbol.value})`)) {
+    return symbol.label;
+  }
+
   return `${symbol.label}(${symbol.value})`;
 }
 
