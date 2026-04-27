@@ -137,8 +137,8 @@ export function buildHomePersonalizationCopy(
   if (status === 'loading') {
     return {
       eyebrow: '내 오늘의 운',
-      title: '내 정보 확인 중입니다.',
-      body: '로그인 상태와 저장된 생년월일을 확인해 홈 흐름을 조용히 맞추고 있습니다.',
+      title: '선생님 기준 흐름을 불러오고 있습니다.',
+      body: '로그인 상태와 저장된 생년월일을 확인해 오늘 가장 먼저 볼 축을 맞추고 있습니다.',
       ctaLabel: '개인 리포트 열기',
       ctaHref: '/saju/new',
       isPersonalized: false,
@@ -148,8 +148,8 @@ export function buildHomePersonalizationCopy(
   if (status === 'error') {
     return {
       eyebrow: '기본 오늘의 운',
-      title: '기본 흐름으로 먼저 보여드립니다.',
-      body: '프로필 정보를 불러오지 못해 공통 오늘 흐름을 보여드립니다. 결과 페이지와 MY 정보는 그대로 이용하실 수 있습니다.',
+      title: '기본 흐름부터 먼저 확인해 보세요.',
+      body: '프로필 정보를 불러오지 못해 공통 흐름을 먼저 보여드립니다. MY 정보는 다시 열어도 그대로 이어집니다.',
       ctaLabel: 'MY 정보 확인',
       ctaHref: '/my/profile',
       isPersonalized: false,
@@ -159,7 +159,7 @@ export function buildHomePersonalizationCopy(
   if (!profilePreview?.authenticated) {
     return {
       eyebrow: '기본 오늘의 운',
-      title: '로그인하면 홈도 내 정보 기준으로 바뀝니다.',
+      title: '로그인하면 오늘 가장 예민한 축이 바로 보입니다.',
       body: '지금은 모든 방문자에게 공통 흐름을 보여드립니다. 로그인 후 생년월일을 저장하면 재물, 컨디션, 관계 흐름을 내 정보 기준으로 조정합니다.',
       ctaLabel: '로그인하기',
       ctaHref: '/login?next=/',
@@ -170,8 +170,8 @@ export function buildHomePersonalizationCopy(
   if (!hasCompleteBirthProfile(profilePreview.profile)) {
     return {
       eyebrow: '내 오늘의 운',
-      title: '생년월일을 저장하면 홈 흐름이 개인화됩니다.',
-      body: '로그인은 확인되었습니다. MY 프로필에 생년월일을 저장하면 홈의 오늘 흐름도 매번 입력 없이 내 정보 기준으로 보여드립니다.',
+      title: '생년월일을 저장하면 오늘 먼저 조심할 흐름이 보입니다.',
+      body: '로그인은 확인되었습니다. MY 프로필에 생년월일을 저장하면 홈에서도 입력 없이 선생님 기준 흐름을 바로 보여드립니다.',
       ctaLabel: 'MY 프로필 저장',
       ctaHref: '/my/profile',
       isPersonalized: false,
@@ -182,8 +182,8 @@ export function buildHomePersonalizationCopy(
 
   return {
     eyebrow: '내 정보 기반 오늘의 운',
-    title: `${displayName}님의 오늘 흐름입니다.`,
-    body: `${profilePreview.profile.birthYear}.${profilePreview.profile.birthMonth}.${profilePreview.profile.birthDay} 출생 정보를 기준으로 홈의 세 가지 흐름을 조정했습니다.`,
+    title: `${displayName}님, 오늘 먼저 볼 흐름을 골라드렸습니다.`,
+    body: `${profilePreview.profile.birthYear}.${profilePreview.profile.birthMonth}.${profilePreview.profile.birthDay} 출생 정보를 기준으로 재물, 컨디션, 관계 축을 먼저 추려드렸습니다.`,
     ctaLabel: '개인 리포트 열기',
     ctaHref: '/saju/new',
     isPersonalized: true,

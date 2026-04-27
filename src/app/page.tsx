@@ -38,6 +38,41 @@ function formatTodayLabel() {
   return `${values.year}년 ${values.month} ${values.day} · ${values.weekday}`;
 }
 
+function buildHomeImpactSignal(
+  items: ReturnType<typeof buildPersonalizedTodaySummary>,
+  isPersonalized: boolean
+) {
+  const weakest = [...items].sort((a, b) => a.ratio - b.ratio)[0];
+  const strongest = [...items].sort((a, b) => b.ratio - a.ratio)[0];
+
+  const signalByLabel: Record<string, { headline: string; body: string }> = {
+    재물: {
+      headline: isPersonalized ? '지출보다 정산을 먼저 볼수록 좋습니다.' : '돈의 흐름은 속도보다 점검이 먼저입니다.',
+      body: '큰 기회보다 새는 구멍을 먼저 막을수록 체감 운이 더 단단해집니다.',
+    },
+    컨디션: {
+      headline: isPersonalized ? '무리하면 바로 티가 나는 날입니다.' : '컨디션은 회복 리듬을 먼저 살피는 편이 좋습니다.',
+      body: '몰아서 버티기보다 쉬는 구간을 먼저 정해두면 하루가 훨씬 안정적으로 갑니다.',
+    },
+    관계: {
+      headline: isPersonalized ? '말의 온도를 낮출수록 흐름이 풀립니다.' : '관계운은 표현의 세기보다 타이밍을 보세요.',
+      body: '결론을 서두르기보다 짧은 확인과 부드러운 말투가 오해를 줄여줍니다.',
+    },
+  };
+
+  const signal = signalByLabel[weakest.label] ?? {
+    headline: '오늘은 흐름을 먼저 읽고 움직이는 편이 좋습니다.',
+    body: '무리하게 앞서가기보다 약한 축을 먼저 보완하면 운의 체감이 더 좋아집니다.',
+  };
+
+  return {
+    weakest,
+    strongest,
+    headline: signal.headline,
+    body: signal.body,
+  };
+}
+
 export default function HomePage() {
   const [selectedSlug, setSelectedSlug] = useState(WISDOM_CARDS[0].slug);
   const [selectedConcern, setSelectedConcern] = useState<ConcernId>('general');
@@ -68,6 +103,10 @@ export default function HomePage() {
   const selectedTone = toneClasses(selectedWisdom.tone);
   const displayName = profilePreview?.profile?.displayName?.trim() || '방문자';
   const todayLabel = formatTodayLabel();
+  const impactSignal = useMemo(
+    () => buildHomeImpactSignal(personalizedTodaySummary, personalizationCopy.isPersonalized),
+    [personalizationCopy.isPersonalized, personalizedTodaySummary]
+  );
   const {
     counselor,
     counselorId,
@@ -272,7 +311,7 @@ export default function HomePage() {
               <div>
                 <div className="app-caption">{personalizationCopy.eyebrow}</div>
                 <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
-                  내 오늘의 운
+                  {personalizationCopy.title}
                 </h2>
               </div>
               <span className={cn(
@@ -285,7 +324,32 @@ export default function HomePage() {
               </span>
             </div>
 
-            <div className="mt-6 space-y-5">
+            <div className="mt-6 rounded-[1.3rem] border border-[var(--app-gold)]/18 bg-[linear-gradient(135deg,rgba(210,176,114,0.10),rgba(8,15,30,0.88))] p-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-3 py-1 text-xs text-[var(--app-gold-text)]">
+                  오늘 가장 먼저 볼 흐름
+                </span>
+                <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs text-[var(--app-copy-muted)]">
+                  {impactSignal.weakest.label}運 {impactSignal.weakest.value}
+                </span>
+              </div>
+              <div className="mt-4 font-[var(--font-heading)] text-2xl leading-9 text-[var(--app-ivory)]">
+                {impactSignal.headline}
+              </div>
+              <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+                {impactSignal.body}
+              </p>
+              <div className="mt-4 rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm text-[var(--app-copy-muted)]">
+                가장 강한 축은 <span className="text-[var(--app-ivory)]">{impactSignal.strongest.label}運</span>입니다.
+                {' '}오늘은 강한 쪽을 밀기보다 약한 쪽을 먼저 정리하면 전체 체감이 더 좋아집니다.
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <div className="app-caption">세 축 요약</div>
+            </div>
+
+            <div className="mt-4 space-y-5">
               {personalizedTodaySummary.map((item, i) => {
                 const tone = toneClasses(item.tone);
                 return (
