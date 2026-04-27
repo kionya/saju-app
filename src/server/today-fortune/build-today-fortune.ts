@@ -151,6 +151,14 @@ function normalizeSentenceKey(text: string) {
   return text.replace(/\s+/g, ' ').trim();
 }
 
+function stripEvidenceBoilerplate(text: string) {
+  return text
+    .replace(/^쉽게 말하면\s*/g, '')
+    .replace(/^전문적으로는\s*/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function joinUniqueSentences(parts: Array<string | null | undefined>) {
   const seen = new Set<string>();
   const sentences: string[] = [];
@@ -219,11 +227,36 @@ function buildReasonSnippet(
   evidenceCard: ReportEvidenceCard | undefined,
   unknownBirthTime: boolean
 ) {
-  const base =
-    evidenceCard?.plainSummary ||
-    evidenceCard?.technicalSummary ||
-    evidenceCard?.body ||
+  const defaultBase =
     '오늘 해석은 일간과 현재 운의 강약을 먼저 잡고, 그 위에 관계와 돈, 말의 속도를 겹쳐 읽습니다.';
+
+  const normalizedTitle = evidenceCard?.title?.replace(/\s*·\s*/g, ' ').trim();
+  const normalizedBody = evidenceCard?.body ? stripEvidenceBoilerplate(evidenceCard.body) : '';
+
+  let base = defaultBase;
+  if (evidenceCard && normalizedTitle && normalizedBody) {
+    switch (evidenceCard.key) {
+      case 'strength':
+        base = `${evidenceCard.label}은 ${normalizedTitle}로 계산되어 ${normalizedBody}`;
+        break;
+      case 'pattern':
+        base = `${evidenceCard.label}은 ${normalizedTitle}로 잡히며 ${normalizedBody}`;
+        break;
+      case 'yongsin':
+        base = `${evidenceCard.label}은 ${normalizedTitle}로 읽으며 ${normalizedBody}`;
+        break;
+      case 'relations':
+        base = `${evidenceCard.label}은 ${normalizedTitle}로 읽히고 ${normalizedBody}`;
+        break;
+      default:
+        base = `${evidenceCard.label}은 ${normalizedTitle}로 읽으며 ${normalizedBody}`;
+        break;
+    }
+  } else if (evidenceCard?.plainSummary || evidenceCard?.technicalSummary || evidenceCard?.body) {
+    base = stripEvidenceBoilerplate(
+      evidenceCard.plainSummary || evidenceCard.technicalSummary || evidenceCard.body
+    );
+  }
 
   if (!unknownBirthTime) return base;
 
@@ -303,6 +336,51 @@ function buildTodayGroundingSummary(
       .map((card) => `${card.label} · ${card.plainSummary || card.title}`),
     kasi: buildKasiSummary(kasiComparison),
   };
+}
+
+function buildOpportunityBody(
+  concernId: ConcernId,
+  focusReport: SajuReport,
+  sajuData: SajuDataV1
+) {
+  const concernCopy = CONCERN_WINDOW_COPY[concernId];
+  const evidenceSnippet = getTodayEvidenceSnippet(focusReport);
+  const actionLead = compactActionDescription(
+    focusReport.primaryAction.description,
+    evidenceSnippet
+  );
+  const leadHint = getEvidenceActionHints(focusReport, 'lead', 1)[0];
+  const luckFact = getLuckFactLine(sajuData);
+
+  return joinUniqueSentences([
+    evidenceSnippet,
+    actionLead,
+    leadHint ? `오늘은 "${leadHint}"부터 먼저 잡는 편이 좋습니다.` : null,
+    luckFact ? `지금은 ${luckFact}을 함께 보며 ${concernCopy.favorableTail}` : concernCopy.favorableTail,
+  ]);
+}
+
+function buildRiskBody(
+  concernId: ConcernId,
+  focusReport: SajuReport,
+  sajuData: SajuDataV1
+) {
+  const concernCopy = CONCERN_WINDOW_COPY[concernId];
+  const cautionCard = getTodayEvidenceCard(focusReport, 'caution');
+  const evidenceSnippet = cautionCard ? toEvidenceSnippet(cautionCard) : null;
+  const actionLead = compactActionDescription(
+    focusReport.cautionAction.description,
+    evidenceSnippet
+  );
+  const cautionHint = getEvidenceActionHints(focusReport, 'caution', 1)[0];
+  const luckFact = getLuckFactLine(sajuData);
+
+  return joinUniqueSentences([
+    evidenceSnippet,
+    actionLead,
+    cautionHint ? `오늘은 "${cautionHint}"을 놓치면 흐름이 급히 거칠어질 수 있습니다.` : null,
+    luckFact ? `지금은 ${luckFact}이 겹쳐 보여 단기 반응을 크게 믿지 않는 편이 안전합니다.` : concernCopy.cautionTail,
+  ]);
 }
 
 function getTodayEvidenceSnippet(report: SajuReport) {
@@ -692,11 +770,11 @@ export function buildTodayFortuneFreeResult(
     scores,
     opportunity: {
       title: `${concern.shortLabel} 쪽 기회`,
-      body: focusReport.primaryAction.description,
+      body: buildOpportunityBody(options.concernId, focusReport, sajuData),
     },
     risk: {
       title: `${concern.shortLabel} 쪽 주의`,
-      body: focusReport.cautionAction.description,
+      body: buildRiskBody(options.concernId, focusReport, sajuData),
     },
     reasonSnippet: {
       title: '사주 근거 한 줄',

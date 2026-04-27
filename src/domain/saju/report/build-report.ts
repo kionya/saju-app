@@ -462,7 +462,7 @@ function buildStrengthEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     details: strength.rationale.length > 0
       ? strength.rationale.slice(0, 3)
       : ['강약 점수는 계산되었고, 세부 근거 문장은 다음 단계에서 보강됩니다.'],
-    plainSummary: `쉽게 말하면 ${strength.level}은 내 기운을 밀고 나가는 힘과 외부 압력을 받아내는 힘의 균형입니다. 이 명식은 ${strength.score}점으로 계산되어 ${STRENGTH_INTERPRETATION[strength.level]}`,
+    plainSummary: `쉽게 말하면 ${withParticle(strength.level, '은', '는')} 내 기운을 밀고 나가는 힘과 외부 압력을 받아내는 힘의 균형입니다. 이 명식은 ${strength.score}점으로 계산되어 ${STRENGTH_INTERPRETATION[strength.level]}`,
     technicalSummary: '전문적으로는 월령의 계절 보정, 일간을 돕는 오행, 일간을 소모시키는 오행, 지지의 뿌리를 함께 계산합니다.',
     practicalActions: EVIDENCE_ACTIONS.strength[strength.level],
     explainers: CORE_TERM_EXPLAINERS.strength,

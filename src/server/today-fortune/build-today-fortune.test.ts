@@ -112,6 +112,7 @@ test('today fortune free result surfaces grounding facts and evidence lines near
   assert.ok(result.groundingSummary.primaryConcept.length > 0);
   assert.ok(result.groundingSummary.factLines.length >= 3);
   assert.ok(result.groundingSummary.evidenceLines.length >= 2);
+  assert.match(result.reasonSnippet.body, /^강약은 /);
 });
 
 test('today fortune one-line body does not repeat the same grounding sentence twice', () => {
@@ -157,4 +158,20 @@ test('today fortune time windows vary their body copy across different ranges', 
   assert.equal(result.cautionWindows.length, 2);
   assert.notEqual(result.favorableWindows[0]?.body, result.favorableWindows[1]?.body);
   assert.notEqual(result.cautionWindows[0]?.body, result.cautionWindows[1]?.body);
+});
+
+test('today fortune opportunity and risk copy stays concise and grounded', () => {
+  const input = createSampleInput();
+  const sajuData = calculateSajuDataV1(input);
+  const result = buildTodayFortuneFreeResult(input, sajuData, {
+    concernId: 'money_spend',
+    sourceSessionId: 'sample-reading',
+    calendarType: 'solar',
+    timeRule: 'standard',
+  });
+
+  assert.doesNotMatch(result.opportunity.body, /^[^.!?]+점 기준입니다\./);
+  assert.doesNotMatch(result.risk.body, /^[^.!?]+점 기준입니다\./);
+  assert.match(result.opportunity.body, /오늘은 ".+"부터 먼저 잡는 편이 좋습니다\./);
+  assert.match(result.risk.body, /오늘은 ".+"을 놓치면 흐름이 급히 거칠어질 수 있습니다\./);
 });
