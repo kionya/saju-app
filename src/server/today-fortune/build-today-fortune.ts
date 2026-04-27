@@ -342,6 +342,21 @@ function getLuckFactLine(sajuData: SajuDataV1) {
   ]).join(' / ');
 }
 
+function buildLeadNarrative(report: SajuReport) {
+  const baseSummary = report.summaryHighlights[0] ?? report.summary;
+  const evidenceSnippet = getTodayEvidenceSnippet(report);
+
+  if (!baseSummary) {
+    return evidenceSnippet ?? '';
+  }
+
+  if (!evidenceSnippet) {
+    return joinUniqueSentences([baseSummary]);
+  }
+
+  return joinUniqueSentences([baseSummary]);
+}
+
 function getElementWindowTail(
   element: string,
   type: 'favorable' | 'caution',
@@ -370,35 +385,32 @@ function buildOneLineBody(
   todayReport: SajuReport,
   counselorId: MoonlightCounselorId
 ) {
-  const baseSummary = focusReport.summaryHighlights[0] ?? focusReport.summary;
-  const evidenceSnippet = getTodayEvidenceSnippet(focusReport);
+  const focusLead = buildLeadNarrative(focusReport);
+  const todayLead = buildLeadNarrative(todayReport);
 
   switch (concernId) {
     case 'love_contact':
       return joinUniqueSentences([
-        baseSummary,
-        evidenceSnippet,
+        focusLead,
         counselorId === 'male'
           ? '먼저 닿는 말의 강도보다 속도를 조절하는 쪽이 낫습니다.'
           : '먼저 닿는 말의 온도와 속도를 맞추는 쪽이 훨씬 자연스럽습니다.',
       ]);
     case 'money_spend':
-      return joinUniqueSentences([baseSummary, evidenceSnippet, '수입 확대보다 새는 돈을 막는 판단이 오늘 체감 차이를 크게 만듭니다.']);
+      return joinUniqueSentences([focusLead, '수입 확대보다 새는 돈을 막는 판단이 오늘 체감 차이를 크게 만듭니다.']);
     case 'work_meeting':
-      return joinUniqueSentences([baseSummary, evidenceSnippet, '회의나 계약은 결론을 서두르기보다 먼저 기준을 분명히 세우는 편이 좋습니다.']);
+      return joinUniqueSentences([focusLead, '회의나 계약은 결론을 서두르기보다 먼저 기준을 분명히 세우는 편이 좋습니다.']);
     case 'relationship_conflict':
-      return joinUniqueSentences([baseSummary, evidenceSnippet, '감정을 크게 밀기보다 질문 한 마디로 온도를 낮추는 쪽이 안전합니다.']);
+      return joinUniqueSentences([focusLead, '감정을 크게 밀기보다 질문 한 마디로 온도를 낮추는 쪽이 안전합니다.']);
     case 'energy_health':
       return joinUniqueSentences([
-        todayReport.summaryHighlights[0] ?? todayReport.summary,
-        getTodayEvidenceSnippet(todayReport),
+        todayLead,
         '몸을 밀어붙이는 시간과 쉬어야 할 구간을 나눠 쓰는 것이 중요합니다.',
       ]);
     case 'general':
     default:
       return joinUniqueSentences([
-        `${concernLabel}으로 읽으면 ${todayReport.summaryHighlights[0] ?? todayReport.summary}`,
-        getTodayEvidenceSnippet(todayReport),
+        `${concernLabel}으로 읽으면 ${todayLead}`,
       ]);
   }
 }

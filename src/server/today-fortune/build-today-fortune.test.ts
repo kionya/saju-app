@@ -131,6 +131,23 @@ test('today fortune one-line body does not repeat the same grounding sentence tw
   assert.equal(count, 1);
 });
 
+test('today fortune relationship one-line body does not repeat the same 합충 snippet twice', () => {
+  const input = createSampleInput();
+  const sajuData = calculateSajuDataV1(input);
+  const result = buildTodayFortuneFreeResult(input, sajuData, {
+    concernId: 'relationship_conflict',
+    sourceSessionId: 'sample-reading',
+    calendarType: 'solar',
+    timeRule: 'standard',
+  });
+
+  const needle =
+    '합충에서는 파 · 반합 · 육합로 읽힙니다. 파 · 반합 · 육합 흐름은 관계나 선택이 가만히 머물기보다 묶이거나 움직이는 지점을 보여줍니다.';
+  const count = result.oneLine.body.split(needle).length - 1;
+
+  assert.equal(count, 1);
+});
+
 test('today fortune time windows vary their body copy across different ranges', () => {
   const input = createSampleInput();
   const sajuData = calculateSajuDataV1(input);
