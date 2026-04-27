@@ -1075,6 +1075,26 @@
       radial-gradient(circle at 50% 52%, rgba(166, 124, 181, 0.14), transparent 36%);
   }
 
+  .moon-hero-poster,
+  .moon-hero-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .moon-hero-video {
+    opacity: 0.96;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .moon-hero-video {
+      display: none;
+    }
+  }
+
   /* Star particle field */
   .moon-particles {
     position: absolute;
@@ -1237,6 +1257,12 @@
     animation: app-fade-up 720ms ease both 440ms;
   }
 
+  .moon-hero-actions,
+  .moon-hero-concern-card,
+  .moon-counselor-selector-wrap {
+    width: 100%;
+  }
+
   /* CTA buttons */
   .moon-cta-primary {
     display: inline-flex;
@@ -1287,6 +1313,60 @@
     background: rgba(212, 176, 106, 0.13);
     color: var(--app-ivory);
     transform: translateY(-2px);
+  }
+
+  @media (max-width: 640px) {
+    .moon-hero {
+      min-height: 88svh;
+      padding: 4.75rem 1rem 5.75rem;
+    }
+
+    .moon-brand-mark {
+      gap: 0.45rem;
+    }
+
+    .moon-hero-orb {
+      width: 4.85rem;
+      height: 4.85rem;
+    }
+
+    .moon-date-badge {
+      padding: 0.36rem 0.9rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.13em;
+    }
+
+    .moon-hero-h1 {
+      font-size: clamp(1.58rem, 7.2vw, 2.15rem);
+      line-height: 1.28;
+    }
+
+    .moon-hero-sub {
+      margin-top: 0.9rem;
+      font-size: 0.95rem;
+      line-height: 1.75;
+    }
+
+    .moon-hero-actions {
+      gap: 0.65rem;
+    }
+
+    .moon-cta-primary,
+    .moon-cta-secondary {
+      width: 100%;
+      height: 3rem;
+      padding-inline: 1.2rem;
+      font-size: 0.92rem;
+    }
+
+    .moon-hero-concern-card {
+      border-radius: 1.4rem;
+      padding: 1rem 0.95rem;
+    }
+
+    .moon-counselor-selector-wrap {
+      margin-top: -0.15rem;
+    }
   }
 
   /* Scroll hint */

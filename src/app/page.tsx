@@ -1,12 +1,12 @@
 'use client';
 
-import Image from 'next/image';
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import { CounselorSelector } from '@/components/counselor/counselor-selector';
 import { TodayConcernSelector } from '@/components/today-fortune/today-concern-selector';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { MoonlightHeroVideo } from '@/components/home/moonlight-hero-video';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import { trackMoonlightEvent } from '@/lib/analytics';
 import type { ConcernId } from '@/lib/today-fortune/types';
@@ -153,17 +153,7 @@ export default function HomePage() {
 
       {/* ─── HERO ─── */}
       <section ref={heroRef} className="moon-hero">
-        <div className="moon-hero-media" aria-hidden>
-          <Image
-            src="/intro/moonlight_main.png"
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-center"
-          />
-          <div className="moon-hero-media-overlay" />
-        </div>
+        <MoonlightHeroVideo />
         <div className="moon-particles" aria-hidden />
 
         <div
@@ -208,14 +198,14 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="moon-hero-actions flex flex-wrap justify-center gap-3">
             <Link href={`/today-fortune?concern=${selectedConcern}`} className="moon-cta-primary">
               오늘 고민 먼저 보기
             </Link>
             <Link href="/saju/new" className="moon-cta-secondary">사주 시작하기</Link>
           </div>
 
-          <div className="w-full max-w-5xl rounded-[1.8rem] border border-[var(--app-line)] bg-[rgba(7,13,28,0.62)] px-5 py-5 backdrop-blur">
+          <div className="moon-hero-concern-card w-full max-w-5xl rounded-[1.8rem] border border-[var(--app-line)] bg-[rgba(7,13,28,0.62)] px-5 py-5 backdrop-blur">
             <div className="text-xs tracking-[0.22em] text-[var(--app-gold)]/72">오늘 고민 빠른 선택</div>
             <div className="mt-3">
               <TodayConcernSelector
