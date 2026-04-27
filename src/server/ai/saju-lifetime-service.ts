@@ -1,4 +1,5 @@
-import { buildLifetimeReport } from '@/domain/saju/report';
+import { buildLifetimeReport, type SajuInterpretationGrounding } from '@/domain/saju/report';
+import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 import {
   normalizeMoonlightCounselor,
   resolveMoonlightCounselor,
@@ -53,6 +54,8 @@ export interface LifetimeInterpretationResponsePayload {
   fallbackReason: AiFallbackReason | null;
   errorMessage: string | null;
   generationMs: number;
+  grounding: SajuInterpretationGrounding;
+  kasiComparison: KasiSingleInputComparison | null;
   interpretation: SajuLifetimeAiInterpretation;
   report: ReturnType<typeof buildLifetimeReport>;
   reportText: string;
@@ -127,6 +130,8 @@ export async function generateLifetimeInterpretation(
     fallbackReason,
     errorMessage,
     generationMs: Date.now() - startedAt,
+    grounding: reading.grounding,
+    kasiComparison: reading.kasiComparison,
     interpretation,
     report,
     reportText,

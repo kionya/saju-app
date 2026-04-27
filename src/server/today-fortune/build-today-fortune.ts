@@ -1,9 +1,16 @@
-import { buildSajuReport, type ReportEvidenceCard, type ReportScore, type SajuReport } from '@/domain/saju/report';
+import {
+  buildSajuReport,
+  type ReportEvidenceCard,
+  type ReportScore,
+  type SajuInterpretationGrounding,
+  type SajuReport,
+} from '@/domain/saju/report';
 import {
   getTopicInterpretationRule,
   selectEvidenceCard,
   toEvidenceSnippet,
 } from '@/domain/saju/report/interpretation-rule-table';
+import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 import type { SajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
 import { ELEMENT_INFO, getLuckyElementsFromSajuData } from '@/lib/saju/elements';
 import { resolveMoonlightCounselor, type MoonlightCounselorId } from '@/lib/counselors';
@@ -27,6 +34,8 @@ interface TodayFortuneBuildOptions {
   calendarType: TodayCalendarType;
   timeRule: TodayTimeRule;
   counselorId?: MoonlightCounselorId | null;
+  grounding?: SajuInterpretationGrounding | null;
+  kasiComparison?: KasiSingleInputComparison | null;
 }
 
 const SCORE_LABELS: Record<TodayScoreItem['key'], string> = {
@@ -91,6 +100,81 @@ function buildReasonSnippet(
   if (!unknownBirthTime) return base;
 
   return `${base} 다만 태어난 시간이 없어 시주(時柱) 기반 세부 타이밍은 보수적으로 줄여 읽습니다.`;
+}
+
+function buildKasiSummary(kasiComparison: KasiSingleInputComparison | null | undefined) {
+  if (!kasiComparison) {
+    return {
+      available: false,
+      ok: true,
+      summary: '역법 대조 정보는 아직 함께 저장되지 않았습니다.',
+    };
+  }
+
+  const lunarDate = `${kasiComparison.kasi.lunYear}.${kasiComparison.kasi.lunMonth}.${kasiComparison.kasi.lunDay}${kasiComparison.kasi.lunLeapmonth === '윤' ? ' 윤달' : ''}`;
+  if (kasiComparison.issues.length === 0) {
+    return {
+      available: true,
+      ok: true,
+      summary: `KASI 역법과 대조했을 때 음력일과 일진이 일치합니다. 기준 음력일은 ${lunarDate}, 일진은 ${kasiComparison.kasi.lunIljin ?? '미제공'}입니다.`,
+    };
+  }
+
+  const issueSummary = kasiComparison.issues
+    .slice(0, 2)
+    .map((issue) => `${issue.field} 차이`)
+    .join(', ');
+
+  return {
+    available: true,
+    ok: false,
+    summary: `KASI 대조에서 ${issueSummary}가 확인됐습니다. 기준 음력일은 ${lunarDate}, 일진은 ${kasiComparison.kasi.lunIljin ?? '미제공'}입니다.`,
+  };
+}
+
+function buildTodayGroundingSummary(
+  grounding: SajuInterpretationGrounding | null | undefined,
+  kasiComparison: KasiSingleInputComparison | null | undefined,
+  focusReport: SajuReport,
+  sajuData: SajuDataV1
+) {
+  const evidenceCards =
+    focusReport.focusTopic === 'today'
+      ? grounding?.evidenceJson.classics.cards ?? focusReport.evidenceCards
+      : focusReport.evidenceCards;
+  const primaryConcept = focusReport.evidenceCards[0]?.label ?? grounding?.evidenceJson.primaryConcept ?? '용신';
+  const strengthLine =
+    grounding?.evidenceJson.strength.level && grounding?.evidenceJson.strength.score !== null
+      ? `강약 ${grounding.evidenceJson.strength.level} · ${grounding.evidenceJson.strength.score}점`
+      : `강약 ${sajuData.strength?.level ?? '판정 준비 중'}`;
+  const patternLine =
+    grounding?.evidenceJson.pattern.name
+      ? `격국 ${grounding.evidenceJson.pattern.name}${grounding.evidenceJson.pattern.tenGod ? ` · ${grounding.evidenceJson.pattern.tenGod}` : ''}`
+      : `격국 ${sajuData.pattern?.name ?? '판정 준비 중'}`;
+  const yongsinLine =
+    grounding?.evidenceJson.yongsin.primary
+      ? `용신 ${grounding.evidenceJson.yongsin.primary}${grounding.evidenceJson.yongsin.support.length > 0 ? ` · 보조 ${grounding.evidenceJson.yongsin.support.join(' · ')}` : ''}`
+      : `용신 ${sajuData.yongsin?.primary?.label ?? '판정 준비 중'}`;
+  const luckLine = grounding?.evidenceJson.luckFlow.currentMajorLuck
+    ? `현재 대운 ${grounding.evidenceJson.luckFlow.currentMajorLuck}`
+    : grounding?.evidenceJson.luckFlow.saewoon
+      ? `현재 세운 ${grounding.evidenceJson.luckFlow.saewoon}`
+      : `현재 운 ${sajuData.currentLuck?.saewoon?.ganzi ?? '정리 중'}`;
+
+  return {
+    primaryConcept,
+    factLines: [
+      `일간 ${sajuData.dayMaster.stem}${sajuData.dayMaster.element ? ` · ${sajuData.dayMaster.element}` : ''}`,
+      strengthLine,
+      patternLine,
+      yongsinLine,
+      luckLine,
+    ],
+    evidenceLines: evidenceCards
+      .slice(0, 3)
+      .map((card) => `${card.label} · ${card.plainSummary || card.title}`),
+    kasi: buildKasiSummary(kasiComparison),
+  };
 }
 
 function getTodayEvidenceSnippet(report: SajuReport) {
@@ -353,6 +437,12 @@ export function buildTodayFortuneFreeResult(
     conditionScore
   );
   const reasonBody = buildReasonSnippet(focusReport.evidenceCards[0], Boolean(input.unknownTime));
+  const groundingSummary = buildTodayGroundingSummary(
+    options.grounding,
+    options.kasiComparison,
+    focusReport,
+    sajuData
+  );
   const upsell = selectUpsell({ scores }, options.concernId);
 
   return {
@@ -385,6 +475,7 @@ export function buildTodayFortuneFreeResult(
       title: '사주 근거 한 줄',
       body: reasonBody,
     },
+    groundingSummary,
     nextAction: {
       copy: upsell.copy,
       product: 'TODAY_DEEP_READING',
@@ -397,7 +488,9 @@ export function buildTodayFortuneFreeResult(
 export function buildTodayFortunePremiumResult(
   input: BirthInput,
   sajuData: SajuDataV1,
-  concernId: ConcernId
+  concernId: ConcernId,
+  grounding?: SajuInterpretationGrounding | null,
+  kasiComparison?: KasiSingleInputComparison | null
 ): TodayFortunePremiumResult {
   const concern = getTodayConcern(concernId);
   const todayReport = buildSajuReport(input, sajuData, 'today');
@@ -409,6 +502,12 @@ export function buildTodayFortunePremiumResult(
   return {
     productCode: 'TODAY_DEEP_READING',
     coinCost: 1,
+    groundingSummary: buildTodayGroundingSummary(
+      grounding,
+      kasiComparison,
+      focusReport,
+      sajuData
+    ),
     favorableWindows: buildTimeWindows(concernId, focusReport, sajuData, 'favorable'),
     cautionWindows: buildTimeWindows(concernId, focusReport, sajuData, 'caution'),
     avoidActions: [

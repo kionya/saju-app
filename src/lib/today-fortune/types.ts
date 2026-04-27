@@ -63,6 +63,16 @@ export interface TodayFortuneFreeResult {
     title: string;
     body: string;
   };
+  groundingSummary: {
+    primaryConcept: string;
+    factLines: string[];
+    evidenceLines: string[];
+    kasi: {
+      available: boolean;
+      ok: boolean;
+      summary: string;
+    };
+  };
   nextAction: {
     copy: string;
     product: 'TODAY_DEEP_READING';
@@ -87,6 +97,7 @@ export interface TodayScenarioComparison {
 export interface TodayFortunePremiumResult {
   productCode: 'TODAY_DEEP_READING';
   coinCost: 1;
+  groundingSummary: TodayFortuneFreeResult['groundingSummary'];
   favorableWindows: TodayTimeWindow[];
   cautionWindows: TodayTimeWindow[];
   avoidActions: string[];

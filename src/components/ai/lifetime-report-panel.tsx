@@ -2,8 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { GroundingKasiSummary } from '@/components/ai/grounding-kasi-summary';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import type { SajuInterpretationGrounding } from '@/domain/saju/report';
+import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import type { MoonlightCounselorId } from '@/lib/counselors';
 import type { AiFallbackReason, AiGenerationSource } from '@/server/ai/openai-text';
@@ -30,6 +33,8 @@ interface LifetimeInterpretationResponse {
   fallbackReason: AiFallbackReason | null;
   errorMessage: string | null;
   generationMs: number;
+  grounding: SajuInterpretationGrounding;
+  kasiComparison: KasiSingleInputComparison | null;
   interpretation: SajuLifetimeAiInterpretation;
   report: SajuLifetimeReport;
   reportText: string;
@@ -453,6 +458,13 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
               ))}
             </div>
           </div>
+        </div>
+        <div className="mt-6">
+          <GroundingKasiSummary
+            grounding={data.grounding}
+            kasiComparison={data.kasiComparison}
+            title="이 평생 리포트가 참고한 실제 계산 근거"
+          />
         </div>
       </section>
 

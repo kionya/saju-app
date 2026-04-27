@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { GroundingKasiSummary } from '@/components/ai/grounding-kasi-summary';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import type { SajuInterpretationGrounding } from '@/domain/saju/report';
+import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import type { MoonlightCounselorId } from '@/lib/counselors';
 import type { AiFallbackReason, AiGenerationSource } from '@/server/ai/openai-text';
@@ -33,6 +36,8 @@ interface YearlyInterpretationResponse {
   errorMessage: string | null;
   generationMs: number;
   updatedAt?: string;
+  grounding: SajuInterpretationGrounding;
+  kasiComparison: KasiSingleInputComparison | null;
   interpretation: SajuYearlyAiInterpretation;
   reportText: string;
   stageResults: Array<{
@@ -229,6 +234,14 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
 
       <div className="mt-6 rounded-[24px] border border-[var(--app-gold)]/18 bg-[rgba(210,176,114,0.08)] px-5 py-5">
         <div className="space-y-3">{renderParagraphs(interpretation.opening)}</div>
+      </div>
+
+      <div className="mt-6">
+        <GroundingKasiSummary
+          grounding={data.grounding}
+          kasiComparison={data.kasiComparison}
+          title="이 연간 리포트가 참고한 실제 계산 근거"
+        />
       </div>
 
       <div className="mt-6">

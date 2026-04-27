@@ -178,7 +178,10 @@ export async function POST(req: NextRequest) {
   }
 
   const report = buildSajuReport(reading.input, reading.sajuData, topic);
-  const grounding = buildSajuInterpretationGrounding(reading.input, reading.sajuData, report);
+  const grounding =
+    topic === 'today'
+      ? reading.grounding
+      : buildSajuInterpretationGrounding(reading.input, reading.sajuData, report);
   const fallback = buildFallbackInterpretation(report, counselorId, grounding);
   const prompt = createInterpretationPrompt(
     grounding,

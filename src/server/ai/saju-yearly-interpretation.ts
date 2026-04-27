@@ -499,6 +499,9 @@ function createSharedGrounding(
     pattern: data.pattern,
     yongsin: data.yongsin,
     currentLuck: data.currentLuck,
+    factJson: record.grounding.factJson,
+    evidenceJson: record.grounding.evidenceJson,
+    kasiComparison: record.kasiComparison,
   };
 }
 

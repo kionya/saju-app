@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateSajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
+import { buildSajuInterpretationGrounding, buildSajuReport } from '@/domain/saju/report';
 import { createClient } from '@/lib/supabase/server';
-import { createReading } from '@/lib/saju/readings';
+import { createReading, resolveReading } from '@/lib/saju/readings';
 import { toSlug } from '@/lib/saju/pillars';
 import { normalizeMoonlightCounselor } from '@/lib/counselors';
 import { buildTodayFortuneFreeResult } from '@/server/today-fortune/build-today-fortune';
@@ -62,6 +63,12 @@ export async function POST(req: NextRequest) {
   const counselorId = normalizeMoonlightCounselor(rawPayload?.counselorId);
 
   let sourceSessionId = toSlug(parsed.input);
+  let persistedGrounding = buildSajuInterpretationGrounding(
+    parsed.input,
+    sajuData,
+    buildSajuReport(parsed.input, sajuData, 'today')
+  );
+  let persistedKasiComparison = null;
 
   if (
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -70,6 +77,11 @@ export async function POST(req: NextRequest) {
   ) {
     try {
       sourceSessionId = await createReading(parsed.input, user?.id ?? null);
+      const persistedReading = await resolveReading(sourceSessionId);
+      if (persistedReading) {
+        persistedGrounding = persistedReading.grounding;
+        persistedKasiComparison = persistedReading.kasiComparison;
+      }
     } catch {
       sourceSessionId = toSlug(parsed.input);
     }
@@ -81,6 +93,8 @@ export async function POST(req: NextRequest) {
     calendarType: payload.calendarType,
     timeRule: payload.timeRule,
     counselorId,
+    grounding: persistedGrounding,
+    kasiComparison: persistedKasiComparison,
   });
 
   return NextResponse.json({

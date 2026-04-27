@@ -154,6 +154,9 @@ test('createYearlyInterpretationPrompt grounds narrative and monthly passes on y
     (monthlyGrounding.yearlyEvidence as { monthlyFlows: unknown[] }).monthlyFlows.length,
     12
   );
+  assert.equal('factJson' in narrativeGrounding, true);
+  assert.equal('evidenceJson' in narrativeGrounding, true);
+  assert.equal('kasiComparison' in narrativeGrounding, true);
   assert.equal(
     'monthlyFlows' in (narrativeGrounding.yearlyEvidence as Record<string, unknown>),
     false

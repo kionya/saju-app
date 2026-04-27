@@ -83,14 +83,33 @@ export function TodayPremiumPanel({
 
       <article className="rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
         <div className="app-caption">사주 근거 상세</div>
+        <div className="mt-2 text-xs tracking-[0.18em] text-[var(--app-gold-soft)]">
+          핵심 기준 · {result.groundingSummary.primaryConcept}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {result.groundingSummary.factLines.map((item) => (
+            <span
+              key={item}
+              className="rounded-full border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-3 py-1 text-xs leading-6 text-[var(--app-copy-soft)]"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
         <div className="mt-4 space-y-3">
+          {result.groundingSummary.evidenceLines.map((item) => (
+            <div key={item} className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]">
+              {item}
+            </div>
+          ))}
           {result.evidenceLines.map((item) => (
             <div key={item} className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]">
               {item}
             </div>
           ))}
         </div>
-        <p className="mt-4 text-xs leading-6 text-[var(--app-copy-soft)]">{result.safetyNote}</p>
+        <p className="mt-4 text-xs leading-6 text-[var(--app-copy-soft)]">{result.groundingSummary.kasi.summary}</p>
+        <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">{result.safetyNote}</p>
       </article>
     </section>
   );

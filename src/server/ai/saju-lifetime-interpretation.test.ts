@@ -81,6 +81,9 @@ test('createLifetimeInterpretationPrompt keeps lifetime report prompt separate f
   assert.match(prompt.instructions, /평생 사주 기준서/);
   assert.match(prompt.instructions, /연간 운세가 아니라 원국 중심 평생 소장 리포트/);
   assert.match(prompt.instructions, /달빛 남선생/);
+  assert.equal('factJson' in grounding, true);
+  assert.equal('evidenceJson' in grounding, true);
+  assert.equal('kasiComparison' in grounding, true);
   assert.equal(
     'yearlyAppendix' in (grounding.lifetimeEvidence as Record<string, unknown>),
     true

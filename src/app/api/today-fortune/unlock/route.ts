@@ -49,7 +49,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '코인이 부족합니다.', remaining: access.remaining }, { status: 402 });
   }
 
-  const result = buildTodayFortunePremiumResult(reading.input, reading.sajuData, concernId);
+  const result = buildTodayFortunePremiumResult(
+    reading.input,
+    reading.sajuData,
+    concernId,
+    reading.grounding,
+    reading.kasiComparison
+  );
 
   return NextResponse.json({
     ok: true,

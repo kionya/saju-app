@@ -1,4 +1,5 @@
-import { buildYearlyReport } from '@/domain/saju/report';
+import { buildYearlyReport, type SajuInterpretationGrounding } from '@/domain/saju/report';
+import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 import {
   normalizeMoonlightCounselor,
   resolveMoonlightCounselor,
@@ -70,6 +71,8 @@ export interface YearlyInterpretationResponsePayload {
   errorMessage: string | null;
   generationMs: number;
   updatedAt?: string;
+  grounding: SajuInterpretationGrounding;
+  kasiComparison: KasiSingleInputComparison | null;
   interpretation: SajuYearlyAiInterpretation;
   reportText: string;
   stageResults: YearlyGenerationStageResult[];
@@ -239,6 +242,8 @@ export async function generateYearlyInterpretation(
         errorMessage: cached.error_message,
         generationMs: 0,
         updatedAt: cached.updated_at,
+        grounding: reading.grounding,
+        kasiComparison: reading.kasiComparison,
         interpretation: cached.interpretation_json,
         reportText: renderYearlyInterpretationReport(cached.interpretation_json),
         stageResults: [],
@@ -372,6 +377,8 @@ export async function generateYearlyInterpretation(
     errorMessage,
     generationMs: Date.now() - startedAt,
     updatedAt: new Date().toISOString(),
+    grounding: reading.grounding,
+    kasiComparison: reading.kasiComparison,
     interpretation,
     reportText: renderYearlyInterpretationReport(interpretation),
     stageResults,

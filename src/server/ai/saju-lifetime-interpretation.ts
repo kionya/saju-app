@@ -356,6 +356,9 @@ function createGrounding(
     yongsin: data.yongsin,
     currentLuck: data.currentLuck,
     majorLuck: data.majorLuck,
+    factJson: record.grounding.factJson,
+    evidenceJson: record.grounding.evidenceJson,
+    kasiComparison: record.kasiComparison,
     lifetimeEvidence: report,
   };
 }
