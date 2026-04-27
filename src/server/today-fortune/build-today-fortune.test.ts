@@ -113,3 +113,31 @@ test('today fortune free result surfaces grounding facts and evidence lines near
   assert.ok(result.groundingSummary.factLines.length >= 3);
   assert.ok(result.groundingSummary.evidenceLines.length >= 2);
 });
+
+test('today fortune one-line body does not repeat the same grounding sentence twice', () => {
+  const input = createSampleInput();
+  const sajuData = calculateSajuDataV1(input);
+  const result = buildTodayFortuneFreeResult(input, sajuData, {
+    concernId: 'money_spend',
+    sourceSessionId: 'sample-reading',
+    calendarType: 'solar',
+    timeRule: 'standard',
+  });
+
+  const needle =
+    '용신에서는 1순위 火 (화) · 보조 木 (목) · 水 (수)로 읽힙니다. 이 명식은 가장 먼저 火 (화) 기운을 보완 후보로 봅니다.';
+  const count = result.oneLine.body.split(needle).length - 1;
+
+  assert.equal(count, 1);
+});
+
+test('today fortune time windows vary their body copy across different ranges', () => {
+  const input = createSampleInput();
+  const sajuData = calculateSajuDataV1(input);
+  const result = buildTodayFortunePremiumResult(input, sajuData, 'relationship_conflict');
+
+  assert.equal(result.favorableWindows.length, 2);
+  assert.equal(result.cautionWindows.length, 2);
+  assert.notEqual(result.favorableWindows[0]?.body, result.favorableWindows[1]?.body);
+  assert.notEqual(result.cautionWindows[0]?.body, result.cautionWindows[1]?.body);
+});

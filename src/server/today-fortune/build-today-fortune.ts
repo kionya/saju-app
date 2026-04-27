@@ -140,6 +140,33 @@ function compactStrings(parts: Array<string | null | undefined>) {
     .filter((part): part is string => Boolean(part));
 }
 
+function splitSentences(text: string) {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function normalizeSentenceKey(text: string) {
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+function joinUniqueSentences(parts: Array<string | null | undefined>) {
+  const seen = new Set<string>();
+  const sentences: string[] = [];
+
+  for (const part of compactStrings(parts)) {
+    for (const sentence of splitSentences(part)) {
+      const key = normalizeSentenceKey(sentence);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      sentences.push(sentence);
+    }
+  }
+
+  return sentences.join(' ');
+}
+
 function uniqueStrings(parts: Array<string | null | undefined>, limit?: number) {
   const seen = new Set<string>();
   const result: string[] = [];
@@ -152,6 +179,18 @@ function uniqueStrings(parts: Array<string | null | undefined>, limit?: number) 
   }
 
   return result;
+}
+
+function compactActionDescription(
+  description: string,
+  evidenceSnippet: string | null
+) {
+  const withoutScorePrefix = description.replace(/^[^.!?]+점 기준입니다\.\s*/, '').trim();
+  const withoutEvidence = evidenceSnippet
+    ? withoutScorePrefix.replace(evidenceSnippet, '').trim()
+    : withoutScorePrefix;
+
+  return joinUniqueSentences([withoutEvidence]);
 }
 
 function getScore(report: SajuReport, key: ReportScore['key']) {
@@ -303,6 +342,27 @@ function getLuckFactLine(sajuData: SajuDataV1) {
   ]).join(' / ');
 }
 
+function getElementWindowTail(
+  element: string,
+  type: 'favorable' | 'caution',
+  index: number
+) {
+  const info =
+    ELEMENT_INFO[(Object.keys(ELEMENT_INFO) as Array<keyof typeof ELEMENT_INFO>).find(
+      (key) => ELEMENT_INFO[key].name.startsWith(element)
+    ) ?? '토'];
+
+  if (type === 'favorable') {
+    return index === 0
+      ? `${info.keywords[0]}처럼 첫 말을 짧게 정리하면 흐름을 가볍게 열 수 있습니다.`
+      : `${info.keywords[1] ?? info.keywords[0]} 감각으로 확인과 마무리를 하면 뒤쪽 선택이 더 편해집니다.`;
+  }
+
+  return index === 0
+    ? `${info.keywords[0]} 쪽으로 과하게 밀면 작은 반응도 크게 받아들이기 쉽습니다.`
+    : `${info.keywords[1] ?? info.keywords[0]}을 놓치면 같은 오해가 뒤에서 다시 커질 수 있습니다.`;
+}
+
 function buildOneLineBody(
   concernId: ConcernId,
   concernLabel: string,
@@ -315,31 +375,31 @@ function buildOneLineBody(
 
   switch (concernId) {
     case 'love_contact':
-      return compactStrings([
+      return joinUniqueSentences([
         baseSummary,
         evidenceSnippet,
         counselorId === 'male'
           ? '먼저 닿는 말의 강도보다 속도를 조절하는 쪽이 낫습니다.'
           : '먼저 닿는 말의 온도와 속도를 맞추는 쪽이 훨씬 자연스럽습니다.',
-      ]).join(' ');
+      ]);
     case 'money_spend':
-      return compactStrings([baseSummary, evidenceSnippet, '수입 확대보다 새는 돈을 막는 판단이 오늘 체감 차이를 크게 만듭니다.']).join(' ');
+      return joinUniqueSentences([baseSummary, evidenceSnippet, '수입 확대보다 새는 돈을 막는 판단이 오늘 체감 차이를 크게 만듭니다.']);
     case 'work_meeting':
-      return compactStrings([baseSummary, evidenceSnippet, '회의나 계약은 결론을 서두르기보다 먼저 기준을 분명히 세우는 편이 좋습니다.']).join(' ');
+      return joinUniqueSentences([baseSummary, evidenceSnippet, '회의나 계약은 결론을 서두르기보다 먼저 기준을 분명히 세우는 편이 좋습니다.']);
     case 'relationship_conflict':
-      return compactStrings([baseSummary, evidenceSnippet, '감정을 크게 밀기보다 질문 한 마디로 온도를 낮추는 쪽이 안전합니다.']).join(' ');
+      return joinUniqueSentences([baseSummary, evidenceSnippet, '감정을 크게 밀기보다 질문 한 마디로 온도를 낮추는 쪽이 안전합니다.']);
     case 'energy_health':
-      return compactStrings([
+      return joinUniqueSentences([
         todayReport.summaryHighlights[0] ?? todayReport.summary,
         getTodayEvidenceSnippet(todayReport),
         '몸을 밀어붙이는 시간과 쉬어야 할 구간을 나눠 쓰는 것이 중요합니다.',
-      ]).join(' ');
+      ]);
     case 'general':
     default:
-      return compactStrings([
+      return joinUniqueSentences([
         `${concernLabel}으로 읽으면 ${todayReport.summaryHighlights[0] ?? todayReport.summary}`,
         getTodayEvidenceSnippet(todayReport),
-      ]).join(' ');
+      ]);
   }
 }
 
@@ -391,8 +451,10 @@ function buildTimeWindows(
       : [sajuData.fiveElements.weakest, sajuData.fiveElements.dominant];
   const evidenceSnippet = getTodayEvidenceSnippet(report);
   const actionHints = getEvidenceActionHints(report, type === 'favorable' ? 'lead' : 'caution', 2);
-  const actionLead =
-    type === 'favorable' ? report.primaryAction.description : report.cautionAction.description;
+  const actionLead = compactActionDescription(
+    type === 'favorable' ? report.primaryAction.description : report.cautionAction.description,
+    evidenceSnippet
+  );
   const luckFact = getLuckFactLine(sajuData);
 
   return baseElements.slice(0, 2).flatMap((element, index) => {
@@ -411,20 +473,22 @@ function buildTimeWindows(
             : `${elementLabel} · ${concernCopy.cautionTitle}`,
         body:
           type === 'favorable'
-            ? compactStrings([
+            ? joinUniqueSentences([
                 evidenceSnippet,
-                hint ? `${hint} 흐름을 먼저 쓰기 좋습니다.` : null,
+                hint ? `오늘은 "${hint}" 쪽으로 먼저 움직이기 좋습니다.` : null,
                 actionLead,
                 luckFact ? `지금은 ${luckFact}을 함께 보고 움직이면 흐름을 덜 놓칩니다.` : null,
+                getElementWindowTail(elementLabel, type, index),
                 concernCopy.favorableTail,
-              ]).join(' ')
-            : compactStrings([
+              ])
+            : joinUniqueSentences([
                 evidenceSnippet,
-                hint ? `${hint}을 먼저 점검해야 과열을 줄일 수 있습니다.` : null,
+                hint ? `오늘은 "${hint}"을 먼저 점검해야 과열을 줄일 수 있습니다.` : null,
                 actionLead,
                 luckFact ? `지금은 ${luckFact}이 겹쳐 보여 단기 반응을 크게 믿지 않는 편이 안전합니다.` : null,
+                getElementWindowTail(elementLabel, type, index),
                 concernCopy.cautionTail,
-              ]).join(' '),
+              ]),
       },
     ];
   });
@@ -444,35 +508,37 @@ function buildScenarioComparison(
   const cautionHint = cautionHints[0];
   const secondaryCautionHint = cautionHints[1] ?? cautionHints[0];
   const luckFact = getLuckFactLine(sajuData);
+  const primaryAction = compactActionDescription(report.primaryAction.description, evidenceSnippet);
+  const cautionAction = compactActionDescription(report.cautionAction.description, evidenceSnippet);
 
   return [
     {
       title: concernCopy.actNowTitle,
-      better: compactStrings([
+      better: joinUniqueSentences([
         evidenceSnippet,
-        report.primaryAction.description,
-        leadHint ? `${leadHint}부터 잡고 들어가면 흐름을 덜 놓칩니다.` : null,
+        primaryAction,
+        leadHint ? `특히 "${leadHint}"부터 잡고 들어가면 흐름을 덜 놓칩니다.` : null,
         concernCopy.actNowTail,
-      ]).join(' '),
-      watch: compactStrings([
-        report.cautionAction.description,
-        cautionHint ? `${cautionHint}을 같이 놓치면 작은 선택도 피로로 바뀌기 쉽습니다.` : null,
+      ]),
+      watch: joinUniqueSentences([
+        cautionAction,
+        cautionHint ? `"${cautionHint}"을 같이 놓치면 작은 선택도 피로로 바뀌기 쉽습니다.` : null,
         luckFact ? `특히 ${luckFact}이 겹친 날이라 단기 반응을 과신하지 않는 편이 좋습니다.` : null,
-      ]).join(' '),
+      ]),
     },
     {
       title: concernCopy.waitTitle,
-      better: compactStrings([
+      better: joinUniqueSentences([
         evidenceSnippet,
-        secondaryLeadHint ? `${secondaryLeadHint}을 먼저 정리하고 움직이면 결과가 더 매끈해집니다.` : null,
+        secondaryLeadHint ? `"${secondaryLeadHint}"을 먼저 정리하고 움직이면 결과가 더 매끈해집니다.` : null,
         concernCopy.waitTail,
-      ]).join(' '),
-      watch: compactStrings([
+      ]),
+      watch: joinUniqueSentences([
         secondaryCautionHint
-          ? `${secondaryCautionHint}을 미루기만 하면 같은 빈틈이 뒤에서 다시 커질 수 있습니다.`
+          ? `"${secondaryCautionHint}"을 미루기만 하면 같은 빈틈이 뒤에서 다시 커질 수 있습니다.`
           : null,
         '우선순위 없이 미루기만 하면 좋은 흐름도 손에서 미끄러질 수 있습니다.',
-      ]).join(' '),
+      ]),
     },
   ];
 }
@@ -507,9 +573,14 @@ function buildRecommendedActions(
 ) {
   const concernCopy = CONCERN_WINDOW_COPY[concernId];
   const leadHints = getEvidenceActionHints(focusReport, 'lead', 3);
+  const leadEvidenceSnippet = getTodayEvidenceSnippet(focusReport);
+  const primaryAction = compactActionDescription(
+    focusReport.primaryAction.description,
+    leadEvidenceSnippet
+  );
   const actions = uniqueStrings(
     [
-      focusReport.primaryAction.description,
+      primaryAction,
       ...leadHints.map((item) => `${item} 흐름부터 먼저 잡아보세요.`),
       getLuckFactLine(sajuData)
         ? `지금은 ${getLuckFactLine(sajuData)}을 같이 보며 ${concernCopy.favorableTail}`
@@ -530,9 +601,14 @@ function buildAvoidActions(
 ) {
   const concernCopy = CONCERN_WINDOW_COPY[concernId];
   const cautionHints = getEvidenceActionHints(focusReport, 'caution', 3);
+  const cautionEvidenceSnippet = getTodayEvidenceSnippet(focusReport);
+  const cautionAction = compactActionDescription(
+    focusReport.cautionAction.description,
+    cautionEvidenceSnippet
+  );
   const actions = uniqueStrings(
     [
-      focusReport.cautionAction.description,
+      cautionAction,
       ...cautionHints.map((item) => `${item}을 놓친 채 밀어붙이지 않는 편이 좋습니다.`),
       input.unknownTime
         ? '태어난 시간이 없으니 세부 타이밍보다 큰 흐름을 먼저 믿는 편이 안전합니다.'
