@@ -1181,20 +1181,22 @@ function buildTimeWindows(
         ? joinUniqueSentences([
             item.evidenceSnippet,
             item.supportSummary,
-            item.hint ? `이 시간대에는 "${item.hint}"부터 먼저 쓰는 편이 좋습니다.` : null,
-            item.actionLead,
             item.relationSummary,
-            item.luckFact ? `지금은 ${item.luckFact}을 함께 보고 움직이면 흐름을 덜 놓칩니다.` : null,
-            item.favorableTail,
+            item.hint ? `이 시간대에는 "${item.hint}"부터 먼저 쓰는 편이 좋습니다.` : null,
+            item.supportiveDelta >= 6
+              ? `${item.timeGanzi}시는 보완축과 맞물려 작은 확인을 실제 성과로 바꾸기 좋습니다.`
+              : item.actionLead,
+            item.luckFact ? `지금은 ${item.luckFact}을 함께 보면 이 시간대 판단이 더 또렷해집니다.` : null,
           ])
         : joinUniqueSentences([
             item.evidenceSnippet,
             item.cautionSummary,
-            item.hint ? `이 시간대에는 ${withKoreanParticle(`"${item.hint}"`, '을', '를')} 먼저 점검해야 과열을 줄일 수 있습니다.` : null,
-            item.actionLead,
             item.relationSummary,
-            item.luckFact ? `지금은 ${item.luckFact}이 겹쳐 보여 단기 반응을 크게 믿지 않는 편이 안전합니다.` : null,
-            item.cautionTail,
+            item.hint ? `이 시간대에는 ${withKoreanParticle(`"${item.hint}"`, '을', '를')} 먼저 점검해야 과열을 줄일 수 있습니다.` : null,
+            item.relationDelta <= -5
+              ? `${item.timeGanzi}시는 말보다 여파가 오래 남기 쉬워 결제나 확답을 한 번 더 늦추는 편이 안전합니다.`
+              : item.actionLead,
+            item.luckFact ? `지금은 ${item.luckFact}이 겹쳐 보여 이 시간대 반응을 크게 믿지 않는 편이 안전합니다.` : null,
           ]),
   }));
 }
