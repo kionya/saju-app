@@ -133,8 +133,16 @@ export async function getTodayFortuneVerificationAudit({
         calendarType: 'solar',
         timeRule: 'standard',
         counselorId: normalizedCounselorId,
+        grounding: reading.grounding,
+        kasiComparison: reading.kasiComparison,
       });
-      const premium = buildTodayFortunePremiumResult(reading.input, reading.sajuData, concern.id);
+      const premium = buildTodayFortunePremiumResult(
+        reading.input,
+        reading.sajuData,
+        concern.id,
+        reading.grounding,
+        reading.kasiComparison
+      );
       return { concern, free, premium };
     });
 
@@ -183,9 +191,11 @@ export async function getTodayFortuneVerificationAudit({
         ok:
           selected.free.scores.length === 6 &&
           selected.free.followUpQuestions.length >= 3 &&
+          selected.free.groundingSummary.factLines.length >= 3 &&
+          selected.free.groundingSummary.evidenceLines.length >= 2 &&
           selected.free.nextAction.product === 'TODAY_DEEP_READING' &&
           selected.free.nextAction.coinCost === 1,
-        detail: `scores ${selected.free.scores.length}개 · follow-up ${selected.free.followUpQuestions.length}개 · CTA ${selected.free.nextAction.coinCost}코인`,
+        detail: `scores ${selected.free.scores.length}개 · grounding facts ${selected.free.groundingSummary.factLines.length}개 · follow-up ${selected.free.followUpQuestions.length}개 · CTA ${selected.free.nextAction.coinCost}코인`,
       },
       {
         key: 'today-premium-result-shape',
@@ -193,6 +203,8 @@ export async function getTodayFortuneVerificationAudit({
         ok:
           selected.premium.productCode === 'TODAY_DEEP_READING' &&
           selected.premium.coinCost === 1 &&
+          selected.premium.groundingSummary.factLines.length >= 3 &&
+          selected.premium.groundingSummary.evidenceLines.length >= 2 &&
           selected.premium.favorableWindows.length >= 2 &&
           selected.premium.cautionWindows.length >= 2 &&
           selected.premium.avoidActions.length === 3 &&
@@ -200,6 +212,15 @@ export async function getTodayFortuneVerificationAudit({
           selected.premium.scenarios.length >= 2 &&
           selected.premium.evidenceLines.length >= 3,
         detail: `유리 ${selected.premium.favorableWindows.length} · 주의 ${selected.premium.cautionWindows.length} · 피하기 ${selected.premium.avoidActions.length} · 추천 ${selected.premium.recommendedActions.length}`,
+      },
+      {
+        key: 'today-grounding-kasi',
+        label: 'grounding / KASI 요약 노출',
+        ok:
+          selected.free.groundingSummary.primaryConcept.length > 0 &&
+          selected.free.groundingSummary.kasi.summary.length > 0 &&
+          selected.premium.groundingSummary.kasi.summary.length > 0,
+        detail: `${selected.free.groundingSummary.primaryConcept} · ${selected.free.groundingSummary.kasi.summary}`,
       },
       {
         key: 'today-concern-coverage',
