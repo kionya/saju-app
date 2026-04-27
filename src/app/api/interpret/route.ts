@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { buildSajuReport, normalizeFocusTopic } from '@/domain/saju/report';
+import {
+  buildSajuInterpretationGrounding,
+  buildSajuReport,
+  normalizeFocusTopic,
+} from '@/domain/saju/report';
 import {
   normalizeMoonlightCounselor,
   resolveMoonlightCounselor,
@@ -174,10 +178,15 @@ export async function POST(req: NextRequest) {
   }
 
   const report = buildSajuReport(reading.input, reading.sajuData, topic);
-  const fallback = buildFallbackInterpretation(report, counselorId);
+  const grounding = buildSajuInterpretationGrounding(reading.input, reading.sajuData, report);
+  const fallback = buildFallbackInterpretation(report, counselorId, grounding);
   const prompt = createInterpretationPrompt(
-    reading,
-    report,
+    grounding,
+    {
+      topic: report.focusTopic,
+      label: report.focusLabel,
+      scoreKey: report.focusScoreKey,
+    },
     counselorId,
     recentFeedbackSummary
   );

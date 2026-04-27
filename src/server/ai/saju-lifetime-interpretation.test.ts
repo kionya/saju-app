@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { normalizeToSajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
-import { buildLifetimeReport } from '@/domain/saju/report';
+import {
+  buildLifetimeReport,
+  buildSajuInterpretationGrounding,
+  buildSajuReport,
+} from '@/domain/saju/report';
 import type { ReadingRecord } from '@/lib/saju/readings';
 import type { BirthInput } from '@/lib/saju/types';
 import {
@@ -24,6 +28,8 @@ const birthInput: BirthInput = {
 
 function createReadingRecord(): ReadingRecord {
   const sajuData = normalizeToSajuDataV1(birthInput, null);
+  const report = buildSajuReport(birthInput, sajuData, 'today');
+  const grounding = buildSajuInterpretationGrounding(birthInput, sajuData, report);
 
   return {
     id: 'lifetime-test-reading',
@@ -31,6 +37,8 @@ function createReadingRecord(): ReadingRecord {
     input: birthInput,
     sajuData,
     result: {} as ReadingRecord['result'],
+    grounding,
+    kasiComparison: null,
   };
 }
 

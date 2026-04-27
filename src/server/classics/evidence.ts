@@ -2,6 +2,7 @@ import {
   createServiceClient,
   hasSupabaseServiceEnv,
 } from '@/lib/supabase/server';
+import type { ReportEvidenceKey } from '@/domain/saju/report';
 
 export const DEFAULT_CLASSIC_EVIDENCE_LIMIT = 3;
 const MAX_CLASSIC_EVIDENCE_LIMIT = 20;
@@ -82,6 +83,24 @@ export interface ClassicEvidenceResult {
   status: ClassicEvidenceStatus;
   setupRequired: boolean;
   error?: string;
+}
+
+export function getClassicConceptForEvidenceKey(key: ReportEvidenceKey) {
+  switch (key) {
+    case 'pattern':
+      return '격국';
+    case 'strength':
+      return '강약';
+    case 'relations':
+      return '합충';
+    case 'gongmang':
+      return '공망';
+    case 'specialSals':
+      return '신살';
+    case 'yongsin':
+    default:
+      return '용신';
+  }
 }
 
 export function normalizeClassicEvidenceQuery(value: string) {
@@ -191,4 +210,25 @@ export async function getClassicEvidence({
       error: error instanceof Error ? error.message : 'Classic evidence lookup failed.',
     };
   }
+}
+
+export async function getClassicEvidenceBundle({
+  concepts,
+  limit,
+}: {
+  concepts: string[];
+  limit?: number;
+}) {
+  const uniqueConcepts = [...new Set(concepts.map(normalizeClassicEvidenceQuery).filter(Boolean))];
+  const entries = await Promise.all(
+    uniqueConcepts.map(async (concept) => [
+      concept,
+      await getClassicEvidence({
+        concept,
+        limit,
+      }),
+    ] as const)
+  );
+
+  return Object.fromEntries(entries);
 }

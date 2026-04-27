@@ -1,4 +1,9 @@
 import { buildSajuReport, type ReportEvidenceCard, type ReportScore, type SajuReport } from '@/domain/saju/report';
+import {
+  getTopicInterpretationRule,
+  selectEvidenceCard,
+  toEvidenceSnippet,
+} from '@/domain/saju/report/interpretation-rule-table';
 import type { SajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
 import { ELEMENT_INFO, getLuckyElementsFromSajuData } from '@/lib/saju/elements';
 import { resolveMoonlightCounselor, type MoonlightCounselorId } from '@/lib/counselors';
@@ -45,6 +50,12 @@ function clampScore(value: number) {
   return Math.max(48, Math.min(92, Math.round(value)));
 }
 
+function compactStrings(parts: Array<string | null | undefined>) {
+  return parts
+    .map((part) => part?.trim())
+    .filter((part): part is string => Boolean(part));
+}
+
 function getScore(report: SajuReport, key: ReportScore['key']) {
   return report.scores.find((item) => item.key === key);
 }
@@ -82,6 +93,12 @@ function buildReasonSnippet(
   return `${base} 다만 태어난 시간이 없어 시주(時柱) 기반 세부 타이밍은 보수적으로 줄여 읽습니다.`;
 }
 
+function getTodayEvidenceSnippet(report: SajuReport) {
+  const rule = getTopicInterpretationRule(report.focusTopic);
+  const card = selectEvidenceCard(report.evidenceCards, rule.evidencePriority);
+  return toEvidenceSnippet(card);
+}
+
 function buildOneLineBody(
   concernId: ConcernId,
   concernLabel: string,
@@ -90,21 +107,35 @@ function buildOneLineBody(
   counselorId: MoonlightCounselorId
 ) {
   const baseSummary = focusReport.summaryHighlights[0] ?? focusReport.summary;
+  const evidenceSnippet = getTodayEvidenceSnippet(focusReport);
 
   switch (concernId) {
     case 'love_contact':
-      return `${baseSummary} ${counselorId === 'male' ? '먼저 닿는 말의 강도보다 속도를 조절하는 쪽이 낫습니다.' : '먼저 닿는 말의 온도와 속도를 맞추는 쪽이 훨씬 자연스럽습니다.'}`;
+      return compactStrings([
+        baseSummary,
+        evidenceSnippet,
+        counselorId === 'male'
+          ? '먼저 닿는 말의 강도보다 속도를 조절하는 쪽이 낫습니다.'
+          : '먼저 닿는 말의 온도와 속도를 맞추는 쪽이 훨씬 자연스럽습니다.',
+      ]).join(' ');
     case 'money_spend':
-      return `${baseSummary} 수입 확대보다 새는 돈을 막는 판단이 오늘 체감 차이를 크게 만듭니다.`;
+      return compactStrings([baseSummary, evidenceSnippet, '수입 확대보다 새는 돈을 막는 판단이 오늘 체감 차이를 크게 만듭니다.']).join(' ');
     case 'work_meeting':
-      return `${baseSummary} 회의나 계약은 결론을 서두르기보다 먼저 기준을 분명히 세우는 편이 좋습니다.`;
+      return compactStrings([baseSummary, evidenceSnippet, '회의나 계약은 결론을 서두르기보다 먼저 기준을 분명히 세우는 편이 좋습니다.']).join(' ');
     case 'relationship_conflict':
-      return `${baseSummary} 감정을 크게 밀기보다 질문 한 마디로 온도를 낮추는 쪽이 안전합니다.`;
+      return compactStrings([baseSummary, evidenceSnippet, '감정을 크게 밀기보다 질문 한 마디로 온도를 낮추는 쪽이 안전합니다.']).join(' ');
     case 'energy_health':
-      return `${todayReport.summaryHighlights[0] ?? todayReport.summary} 몸을 밀어붙이는 시간과 쉬어야 할 구간을 나눠 쓰는 것이 중요합니다.`;
+      return compactStrings([
+        todayReport.summaryHighlights[0] ?? todayReport.summary,
+        getTodayEvidenceSnippet(todayReport),
+        '몸을 밀어붙이는 시간과 쉬어야 할 구간을 나눠 쓰는 것이 중요합니다.',
+      ]).join(' ');
     case 'general':
     default:
-      return `${concernLabel}으로 읽으면 ${todayReport.summaryHighlights[0] ?? todayReport.summary}`;
+      return compactStrings([
+        `${concernLabel}으로 읽으면 ${todayReport.summaryHighlights[0] ?? todayReport.summary}`,
+        getTodayEvidenceSnippet(todayReport),
+      ]).join(' ');
   }
 }
 
@@ -169,20 +200,29 @@ function buildTimeWindows(
             : `${elementLabel} 과열을 조심할 시간`,
         body:
           type === 'favorable'
-            ? `${report.primaryAction.description} ${concernId === 'money_spend' ? '결제보다 정산을 먼저 보는 편이 맞습니다.' : '짧고 분명한 행동으로 흐름을 잡기 좋습니다.'}`
-            : `${report.cautionAction.description} ${concernId === 'relationship_conflict' ? '감정 섞인 결론을 바로 꺼내지 않는 편이 안전합니다.' : '한 번 더 확인하고 속도를 낮추는 편이 좋습니다.'}`,
+            ? compactStrings([
+                getTodayEvidenceSnippet(report),
+                report.primaryAction.description,
+                concernId === 'money_spend' ? '결제보다 정산을 먼저 보는 편이 맞습니다.' : '짧고 분명한 행동으로 흐름을 잡기 좋습니다.',
+              ]).join(' ')
+            : compactStrings([
+                getTodayEvidenceSnippet(report),
+                report.cautionAction.description,
+                concernId === 'relationship_conflict' ? '감정 섞인 결론을 바로 꺼내지 않는 편이 안전합니다.' : '한 번 더 확인하고 속도를 낮추는 편이 좋습니다.',
+              ]).join(' '),
       },
     ];
   });
 }
 
 function buildScenarioComparison(concernId: ConcernId, report: SajuReport) {
+  const evidenceSnippet = getTodayEvidenceSnippet(report);
   switch (concernId) {
     case 'love_contact':
       return [
         {
           title: '오늘 먼저 연락할 때',
-          better: `${report.primaryAction.description} 안부처럼 가벼운 문장으로 시작하면 흐름이 덜 흔들립니다.`,
+          better: compactStrings([evidenceSnippet, report.primaryAction.description, '안부처럼 가벼운 문장으로 시작하면 흐름이 덜 흔들립니다.']).join(' '),
           watch: `${report.cautionAction.description} 감정 확인이나 결론 요구는 부담으로 읽힐 수 있습니다.`,
         },
         {
@@ -195,7 +235,7 @@ function buildScenarioComparison(concernId: ConcernId, report: SajuReport) {
       return [
         {
           title: '오늘 바로 결제할 때',
-          better: '정해진 결제나 생활성 지출은 한 번에 정리하면 마음이 가벼워집니다.',
+          better: compactStrings([evidenceSnippet, '정해진 결제나 생활성 지출은 한 번에 정리하면 마음이 가벼워집니다.']).join(' '),
           watch: '기분 전환성 소비나 지인 권유 결제는 만족보다 피로를 남기기 쉽습니다.',
         },
         {
@@ -208,7 +248,7 @@ function buildScenarioComparison(concernId: ConcernId, report: SajuReport) {
       return [
         {
           title: '오늘 미팅을 밀어붙일 때',
-          better: '기준과 역할만 먼저 분명히 하면 결론이 빨라질 수 있습니다.',
+          better: compactStrings([evidenceSnippet, '기준과 역할만 먼저 분명히 하면 결론이 빨라질 수 있습니다.']).join(' '),
           watch: '합의가 덜 된 상태에서 서명이나 확답을 먼저 주면 뒤에서 조정 비용이 커질 수 있습니다.',
         },
         {
@@ -221,7 +261,7 @@ function buildScenarioComparison(concernId: ConcernId, report: SajuReport) {
       return [
         {
           title: '바로 말할 때',
-          better: '사실 확인과 감정 분리를 먼저 하면 오해를 줄이기 좋습니다.',
+          better: compactStrings([evidenceSnippet, '사실 확인과 감정 분리를 먼저 하면 오해를 줄이기 좋습니다.']).join(' '),
           watch: '서운함을 결론처럼 말하면 작은 일도 관계의 상처로 남기 쉽습니다.',
         },
         {
@@ -234,7 +274,7 @@ function buildScenarioComparison(concernId: ConcernId, report: SajuReport) {
       return [
         {
           title: '일정을 강하게 밀어붙일 때',
-          better: '짧은 성과는 낼 수 있지만 중간 회복 구간을 꼭 넣어야 합니다.',
+          better: compactStrings([evidenceSnippet, '짧은 성과는 낼 수 있지만 중간 회복 구간을 꼭 넣어야 합니다.']).join(' '),
           watch: '몰아서 움직이면 오후 후반부터 피로가 한꺼번에 밀릴 수 있습니다.',
         },
         {
@@ -248,7 +288,7 @@ function buildScenarioComparison(concernId: ConcernId, report: SajuReport) {
       return [
         {
           title: '바로 움직일 때',
-          better: `${report.primaryAction.description} 작은 행동 하나를 먼저 끝내면 하루 전체가 정리되기 쉽습니다.`,
+          better: compactStrings([evidenceSnippet, report.primaryAction.description, '작은 행동 하나를 먼저 끝내면 하루 전체가 정리되기 쉽습니다.']).join(' '),
           watch: `${report.cautionAction.description} 큰 결론부터 잡으면 흐름을 과하게 소모할 수 있습니다.`,
         },
         {

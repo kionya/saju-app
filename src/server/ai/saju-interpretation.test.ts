@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
+import { normalizeToSajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
+import { buildSajuInterpretationGrounding, buildSajuReport } from '@/domain/saju/report';
+import type { BirthInput } from '@/lib/saju/types';
 import {
   buildFallbackInterpretation,
+  createInterpretationPrompt,
   parseInterpretationText,
   type SajuAiInterpretation,
 } from './saju-interpretation';
@@ -12,6 +16,14 @@ const fallback: SajuAiInterpretation = {
   headline: '기본 제목',
   summary: '기본 요약입니다.',
   insights: ['기본 통찰'],
+};
+
+const birthInput: BirthInput = {
+  year: 1982,
+  month: 1,
+  day: 29,
+  hour: 8,
+  gender: 'male',
 };
 
 test('parseInterpretationText accepts fenced JSON and normalizes fields', () => {
@@ -55,4 +67,37 @@ test('buildFallbackInterpretation derives compact insight copy from report', () 
     '강점: 목 기운을 먼저 활용합니다.',
     '주의: 급한 결정은 줄입니다.',
   ]);
+});
+
+test('buildFallbackInterpretation can derive summary and insights from grounding evidence', () => {
+  const data = normalizeToSajuDataV1(birthInput, null);
+  const report = buildSajuReport(birthInput, data, 'today');
+  const grounding = buildSajuInterpretationGrounding(birthInput, data, report);
+
+  const interpretation = buildFallbackInterpretation(report, 'female', grounding);
+
+  assert.match(interpretation.summary, /강약|격국|용신/);
+  assert.ok(interpretation.insights.some((item) => /강약|격국|용신|합충|공망|신살/.test(item)));
+});
+
+test('createInterpretationPrompt now sends fact and evidence JSON without report fallback prose', () => {
+  const data = normalizeToSajuDataV1(birthInput, null);
+  const report = buildSajuReport(birthInput, data, 'today');
+  const grounding = buildSajuInterpretationGrounding(birthInput, data, report);
+
+  const prompt = createInterpretationPrompt(
+    grounding,
+    {
+      topic: report.focusTopic,
+      label: report.focusLabel,
+      scoreKey: report.focusScoreKey,
+    },
+    'female',
+    null
+  );
+
+  assert.match(prompt.instructions, /factJson과 evidenceJson/);
+  assert.match(prompt.input, /"factJson"/);
+  assert.match(prompt.input, /"evidenceJson"/);
+  assert.doesNotMatch(prompt.input, /reportFallback/);
 });

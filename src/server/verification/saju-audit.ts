@@ -1,7 +1,8 @@
-import { buildSajuReport, normalizeFocusTopic } from '@/domain/saju/report';
+import { buildSajuInterpretationGrounding, buildSajuReport, normalizeFocusTopic } from '@/domain/saju/report';
 import type { SajuPillar } from '@/domain/saju/engine/saju-data-v1';
 import type { FocusTopic, ReportEvidenceKey } from '@/domain/saju/report/types';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
+import { compareBirthInputWithKasi } from '@/domain/saju/validation/kasi-calendar';
 
 const DEFAULT_AUDIT_SLUG = '1982-1-29-8-male';
 
@@ -78,6 +79,7 @@ export async function getSajuVerificationAudit({
     const data = reading.sajuData;
     const report = buildSajuReport(reading.input, data, normalizedTopic);
     const conceptForClassics = chooseClassicConcept(report);
+    const grounding = buildSajuInterpretationGrounding(reading.input, data, report);
     const legacyCitations = Array.isArray(
       (report as unknown as Record<string, unknown>).classicalCitations
     )
@@ -86,6 +88,15 @@ export async function getSajuVerificationAudit({
       : [];
     const hasLegacyCitationLayer = legacyCitations.length > 0;
     const kasiKeyConfigured = Boolean(process.env.KASI_SERVICE_KEY?.trim());
+    const kasiValidation =
+      kasiKeyConfigured && process.env.KASI_SERVICE_KEY
+        ? await compareBirthInputWithKasi(reading.input, process.env.KASI_SERVICE_KEY).catch((error) => ({
+            kasi: null,
+            local: null,
+            issues: [],
+            errorMessage: error instanceof Error ? error.message : 'KASI 비교를 실행하지 못했습니다.',
+          }))
+        : null;
     const checks: SajuVerificationCheck[] = [
       {
         key: 'pillars-present',
@@ -139,6 +150,20 @@ export async function getSajuVerificationAudit({
         detail: kasiKeyConfigured
           ? 'KASI_SERVICE_KEY가 설정되어 외부 달력 검증을 실행할 수 있습니다.'
           : 'KASI_SERVICE_KEY가 비어 있어 외부 절기 검증은 아직 못 돌립니다.',
+      },
+      {
+        key: 'kasi-calendar-match',
+        label: 'KASI 음양력/일진 대조',
+        ok: !kasiValidation || (kasiValidation.issues?.length ?? 0) === 0,
+        detail: !kasiValidation
+          ? 'KASI live 비교는 아직 실행하지 않았습니다.'
+          : 'errorMessage' in kasiValidation
+            ? kasiValidation.errorMessage
+            : kasiValidation.issues.length === 0
+              ? '현재 입력 기준으로 음력일과 일진이 KASI 응답과 일치합니다.'
+              : `대조 차이 ${kasiValidation.issues.length}건: ${kasiValidation.issues
+                  .map((item) => item.field)
+                  .join(', ')}`,
       },
       {
         key: 'legacy-classical-citation-layer',
@@ -211,6 +236,8 @@ export async function getSajuVerificationAudit({
             : null,
         },
       },
+      grounding,
+      kasiValidation,
       checks,
       warnings: checks.filter((check) => !check.ok).map((check) => check.detail),
       errors: [],

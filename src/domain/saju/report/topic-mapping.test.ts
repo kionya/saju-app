@@ -144,3 +144,11 @@ test('focus actions change by selected topic', () => {
   assert.match(buildSajuReport(birthInput, data, 'career').primaryAction.description, /직장운/);
   assert.match(buildSajuReport(birthInput, data, 'relationship').primaryAction.description, /관계운/);
 });
+
+test('summary and action copy now reference computed evidence instead of generic prose only', () => {
+  const data = normalizeToSajuDataV1(birthInput, null);
+  const report = buildSajuReport(birthInput, data, 'today');
+  const combined = [report.summaryHighlights.join(' '), report.primaryAction.description, report.cautionAction.description].join(' ');
+
+  assert.match(combined, /강약|격국|용신|합충|공망|신살/);
+});

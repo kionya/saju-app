@@ -9,6 +9,7 @@ import type {
 } from '@/domain/saju/engine/saju-data-v1';
 import { SajuAiInterpretationPanel } from '@/components/ai/saju-ai-interpretation-panel';
 import { ClassicEvidencePanel } from '@/components/classics/classic-evidence-panel';
+import { SajuFactEvidencePanel } from '@/components/saju/saju-fact-evidence-panel';
 import { Badge } from '@/components/ui/badge';
 import DetailUnlock from '@/components/detail-unlock';
 import { SajuResultViewTracker } from '@/features/saju-detail/saju-result-view-tracker';
@@ -17,9 +18,15 @@ import SiteHeader from '@/features/shared-navigation/site-header';
 import { ELEMENT_INFO } from '@/lib/saju/elements';
 import type { Branch, Element, Stem } from '@/lib/saju/types';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
-import { buildSajuReport, FOCUS_TOPIC_META } from '@/domain/saju/report';
+import { buildSajuInterpretationGrounding, buildSajuReport, FOCUS_TOPIC_META } from '@/domain/saju/report';
 import type { ReportEvidenceCard, ReportScore, SajuReport } from '@/domain/saju/report';
+import { compareBirthInputWithKasi } from '@/domain/saju/validation/kasi-calendar';
 import { buildFallbackInterpretation } from '@/server/ai/saju-interpretation';
+import {
+  getClassicConceptForEvidenceKey,
+  getClassicEvidenceBundle,
+  type ClassicEvidenceItem,
+} from '@/server/classics/evidence';
 import { cn } from '@/lib/utils';
 import { AppPage, AppShell } from '@/shared/layout/app-shell';
 
@@ -301,6 +308,54 @@ function getPrimaryClassicEvidenceConcept(report: ReturnType<typeof buildSajuRep
   }
 }
 
+function CardLinkedClassicEvidence({
+  items,
+}: {
+  items: ClassicEvidenceItem[];
+}) {
+  if (items.length === 0) return null;
+
+  return (
+    <div className="border-t border-[var(--app-line)] pt-4">
+      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
+        연결된 고전 문단
+      </div>
+      <div className="mt-3 grid gap-3">
+        {items.slice(0, 1).map((item) => (
+          <div
+            key={item.passage.id}
+            className="rounded-2xl border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-4"
+          >
+            <div className="flex flex-wrap items-center gap-2 text-[11px] text-[var(--app-copy-soft)]">
+              <span className="rounded-full border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/10 px-2.5 py-1 text-[var(--app-gold-text)]">
+                {item.work.titleKo}
+              </span>
+              <span>{item.section.path}</span>
+              <span>{item.provenance.sourceRef}</span>
+            </div>
+            <p className="mt-3 text-sm leading-7 text-[var(--app-ivory)]">
+              {item.passage.commentaryKo ??
+                item.passage.literalKo ??
+                `${item.work.titleKo} ${item.section.titleKo} 문단을 현재 ${item.provenance.verificationStatus === 'reviewed' ? '검수된' : '검수 전'} 고전 근거로 연결했습니다.`}
+            </p>
+            <details className="mt-3">
+              <summary className="cursor-pointer list-none text-xs font-medium text-[var(--app-gold-text)]">
+                원문 확인
+              </summary>
+              <blockquote
+                lang="zh-Hant"
+                className="mt-3 break-words rounded-2xl border border-[var(--app-gold)]/14 bg-[rgba(8,10,18,0.32)] px-3 py-3 font-[var(--font-heading)] text-sm leading-7 text-[var(--app-gold-text)]"
+              >
+                {item.passage.originalZh}
+              </blockquote>
+            </details>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default async function SajuResultPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { topic } = await searchParams;
@@ -310,6 +365,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
 
   const { input, sajuData } = reading;
   const report = buildSajuReport(input, sajuData, topic);
+  const grounding = reading.grounding ?? buildSajuInterpretationGrounding(input, sajuData, report);
 
   const pillars = [
     { label: '년주', pillar: sajuData.pillars.year },
@@ -320,6 +376,19 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
   const majorLuckPreview = sajuData.majorLuck?.slice(0, 6) ?? [];
   const currentMajorIndex = sajuData.currentLuck?.currentMajorLuck?.index ?? null;
   const classicEvidenceConcept = getPrimaryClassicEvidenceConcept(report);
+  const classicEvidenceBundle = await getClassicEvidenceBundle({
+    concepts: report.evidenceCards.map((card) => getClassicConceptForEvidenceKey(card.key)),
+    limit: 1,
+  });
+  const primaryClassicItems = classicEvidenceBundle[classicEvidenceConcept]?.items ?? [];
+  let kasiComparison = reading.kasiComparison;
+  if (!kasiComparison && process.env.KASI_SERVICE_KEY) {
+    try {
+      kasiComparison = await compareBirthInputWithKasi(input, process.env.KASI_SERVICE_KEY);
+    } catch {
+      kasiComparison = null;
+    }
+  }
   const currentMajorFlow = getTimelineItem(report, '대운 흐름');
 
   return (
@@ -576,6 +645,12 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           ))}
         </section>
 
+        <SajuFactEvidencePanel
+          grounding={grounding}
+          kasiComparison={kasiComparison}
+          primaryClassicItems={primaryClassicItems}
+        />
+
         <div>
           <DetailUnlock
             slug={slug}
@@ -691,6 +766,12 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                               </div>
                             ))}
                           </div>
+
+                          <CardLinkedClassicEvidence
+                            items={
+                              classicEvidenceBundle[getClassicConceptForEvidenceKey(card.key)]?.items ?? []
+                            }
+                          />
                         </div>
                       </details>
                     </article>
@@ -875,7 +956,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               readingId={slug}
               topic={report.focusTopic}
               focusLabel={report.focusLabel}
-              fallbackInterpretation={buildFallbackInterpretation(report)}
+              fallbackInterpretation={buildFallbackInterpretation(report, 'female', grounding)}
               cacheEnabled={isReadingId(slug)}
             />
 

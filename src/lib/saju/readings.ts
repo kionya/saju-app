@@ -7,6 +7,15 @@ import {
   normalizeToSajuDataV1,
   type SajuDataV1,
 } from '@/domain/saju/engine/saju-data-v1';
+import {
+  buildSajuInterpretationGrounding,
+  buildSajuReport,
+  type SajuInterpretationGrounding,
+} from '@/domain/saju/report';
+import {
+  compareBirthInputWithKasi,
+  type KasiSingleInputComparison,
+} from '@/domain/saju/validation/kasi-calendar';
 
 const READING_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -22,12 +31,56 @@ interface ReadingRow {
   result_json: unknown;
 }
 
+export interface PersistedReadingEnvelope {
+  _grounding?: SajuInterpretationGrounding;
+  _kasiComparison?: KasiSingleInputComparison | null;
+}
+
 export interface ReadingRecord {
   id: string;
   userId: string | null;
   input: BirthInput;
   sajuData: SajuDataV1;
   result: LegacySajuResult;
+  grounding: SajuInterpretationGrounding;
+  kasiComparison: KasiSingleInputComparison | null;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : null;
+}
+
+export function extractPersistedReadingEnvelope(value: unknown): PersistedReadingEnvelope {
+  const record = asRecord(value);
+  if (!record) return {};
+
+  return {
+    _grounding: record._grounding as SajuInterpretationGrounding | undefined,
+    _kasiComparison: (record._kasiComparison as KasiSingleInputComparison | null | undefined) ?? null,
+  };
+}
+
+export function createStoredReadingResultJson(
+  sajuData: SajuDataV1,
+  grounding: SajuInterpretationGrounding,
+  kasiComparison: KasiSingleInputComparison | null
+) {
+  return {
+    ...sajuData,
+    _grounding: grounding,
+    _kasiComparison: kasiComparison,
+  };
+}
+
+async function buildKasiComparisonSnapshot(input: BirthInput) {
+  const serviceKey = process.env.KASI_SERVICE_KEY?.trim();
+  if (!serviceKey) return null;
+
+  try {
+    return await compareBirthInputWithKasi(input, serviceKey);
+  } catch {
+    return null;
+  }
 }
 
 function deriveBirthInputFromSajuData(
@@ -71,15 +124,23 @@ function mapReadingRow(row: ReadingRow): ReadingRecord {
     hour: row.birth_hour ?? undefined,
     gender: row.gender ?? undefined,
   };
+  const persisted = extractPersistedReadingEnvelope(row.result_json);
   const sajuData = normalizeToSajuDataV1(input, row.result_json);
+  const normalizedInput = deriveBirthInputFromSajuData(input, sajuData);
+  const report = buildSajuReport(normalizedInput, sajuData, 'today');
+  const grounding =
+    persisted._grounding ??
+    buildSajuInterpretationGrounding(normalizedInput, sajuData, report);
 
   return {
     id: row.id,
     userId: row.user_id,
-    input: deriveBirthInputFromSajuData(input, sajuData),
+    input: normalizedInput,
     sajuData,
     // Keep the legacy shape available while screens migrate to SajuDataV1.
     result: deriveLegacySajuResult(sajuData),
+    grounding,
+    kasiComparison: persisted._kasiComparison ?? null,
   };
 }
 
@@ -89,6 +150,11 @@ export async function createReading(
 ): Promise<string> {
   const supabase = await createServiceClient();
   const sajuData = calculateSajuDataV1(input);
+  const normalizedInput = deriveBirthInputFromSajuData(input, sajuData);
+  const report = buildSajuReport(normalizedInput, sajuData, 'today');
+  const grounding = buildSajuInterpretationGrounding(normalizedInput, sajuData, report);
+  const kasiComparison = await buildKasiComparisonSnapshot(normalizedInput);
+  const persistedResultJson = createStoredReadingResultJson(sajuData, grounding, kasiComparison);
 
   const { data, error } = await supabase
     .from('readings')
@@ -99,7 +165,7 @@ export async function createReading(
       birth_day: input.day,
       birth_hour: input.hour ?? null,
       gender: input.gender ?? null,
-      result_json: sajuData,
+      result_json: persistedResultJson,
     })
     .select('id')
     .single();
@@ -165,5 +231,11 @@ export async function resolveReading(
     input: deriveBirthInputFromSajuData(input, sajuData),
     sajuData,
     result: deriveLegacySajuResult(sajuData),
+    grounding: buildSajuInterpretationGrounding(
+      deriveBirthInputFromSajuData(input, sajuData),
+      sajuData,
+      buildSajuReport(deriveBirthInputFromSajuData(input, sajuData), sajuData, 'today')
+    ),
+    kasiComparison: null,
   };
 }

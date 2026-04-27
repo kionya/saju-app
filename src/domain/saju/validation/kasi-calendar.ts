@@ -47,6 +47,12 @@ export interface KasiComparisonIssue {
   severity: 'error' | 'warning';
 }
 
+export interface KasiSingleInputComparison {
+  kasi: KasiLunCalInfo;
+  local: LocalCalendarComparable;
+  issues: KasiComparisonIssue[];
+}
+
 export const KASI_COMPARISON_SAMPLES: KasiComparisonSample[] = [
   {
     id: 'regular-docs-era',
@@ -311,4 +317,29 @@ export async function runKasiCalendarValidation(
   }
 
   return results;
+}
+
+export async function compareBirthInputWithKasi(
+  input: BirthInput,
+  serviceKey: string,
+  fetcher: typeof fetch = fetch
+): Promise<KasiSingleInputComparison> {
+  const kasi = await fetchKasiLunCalInfo(input, serviceKey, fetcher);
+  const local = buildLocalCalendarComparable(input);
+  const pseudoSample: KasiComparisonSample = {
+    id: 'live-reading',
+    label: '실시간 사주 입력',
+    reason: '사용자가 실제로 본 명식의 음양력/일진 대조용입니다.',
+    input,
+    compare: {
+      lunarDate: true,
+      dayPillar: true,
+    },
+  };
+
+  return {
+    kasi,
+    local,
+    issues: compareKasiWithLocalSample(pseudoSample, kasi),
+  };
 }
