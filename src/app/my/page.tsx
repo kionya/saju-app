@@ -123,10 +123,10 @@ export default async function MyPage() {
         <section className="my-family-card app-panel p-5">
           <div className="app-caption">가족 사주</div>
           <h2 className="mt-3 font-[var(--font-heading)] text-xl text-[var(--app-ivory)]">
-            가까운 분들의 흐름도 함께
+            가족 정보도 같은 입력 기준으로 보관
           </h2>
           <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">
-            가족 프로필을 저장해두면 매번 다시 입력하지 않고 궁합과 가족 리포트로 이어갈 수 있습니다.
+            양력·음력, 시간 모름, 출생지까지 함께 저장해두면 매번 다시 입력하지 않고 궁합과 가족 리포트로 이어갈 수 있습니다.
           </p>
           <Link
             href="/my/profile"

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { UnifiedBirthInfoFields, type BirthLocationSearchResultLike } from '@/components/saju/shared/unified-birth-info-fields';
 import { BIRTH_LOCATION_PRESETS } from '@/lib/saju/birth-location';
 import type { TodayFortuneBirthPayload } from '@/lib/today-fortune/types';
+import type { UnifiedCalendarType, UnifiedTimeRule } from '@/lib/saju/unified-birth-entry';
 
 interface ProfileResponse {
   authenticated: boolean;
@@ -20,6 +21,8 @@ interface ProfileResponse {
     birthLatitude: number | null;
     birthLongitude: number | null;
     solarTimeMode: 'standard' | 'longitude';
+    calendarType: UnifiedCalendarType;
+    timeRule: UnifiedTimeRule;
     gender: 'male' | 'female' | null;
   } | null;
 }
@@ -73,6 +76,7 @@ export function BirthInfoStepper({
       }
 
       onChange({
+        calendarType: data.profile.calendarType ?? 'solar',
         year: String(data.profile.birthYear ?? ''),
         month: String(data.profile.birthMonth ?? ''),
         day: String(data.profile.birthDay ?? ''),
@@ -84,8 +88,7 @@ export function BirthInfoStepper({
         birthLatitude: data.profile.birthLatitude === null ? '' : String(data.profile.birthLatitude),
         birthLongitude: data.profile.birthLongitude === null ? '' : String(data.profile.birthLongitude),
         gender: data.profile.gender ?? '',
-        timeRule:
-          data.profile.solarTimeMode === 'longitude' ? 'trueSolarTime' : draft.timeRule,
+        timeRule: data.profile.timeRule ?? draft.timeRule,
       });
       setProfileMessage('MY 프로필의 출생 정보를 불러왔습니다.');
     } catch {

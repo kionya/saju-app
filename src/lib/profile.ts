@@ -5,8 +5,15 @@ import {
   type MoonlightCounselorId,
 } from '@/lib/counselors';
 import type { BirthInput, SolarTimeMode } from '@/lib/saju/types';
+import type {
+  UnifiedCalendarType,
+  UnifiedTimeRule,
+} from '@/lib/saju/unified-birth-entry';
+import { resolveUnifiedBirthInput } from '@/lib/saju/unified-birth-entry';
 
 export interface BirthProfileFields {
+  calendarType: UnifiedCalendarType;
+  timeRule: UnifiedTimeRule;
   birthYear: number | null;
   birthMonth: number | null;
   birthDay: number | null;
@@ -43,8 +50,10 @@ const PROFILE_SELECT_WITH_LOCATION =
   'display_name, birth_year, birth_month, birth_day, birth_hour, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
 const PROFILE_SELECT_FULL =
   'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
+const PROFILE_SELECT_WITH_BIRTH_RULES =
+  'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode, birth_calendar_type, birth_time_rule';
 const PROFILE_SELECT_WITH_COUNSELOR =
-  'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode, preferred_counselor';
+  'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode, birth_calendar_type, birth_time_rule, preferred_counselor';
 const FAMILY_PROFILE_SELECT =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, gender, note, created_at';
 const FAMILY_PROFILE_SELECT_WITH_MINUTE =
@@ -53,15 +62,21 @@ const FAMILY_PROFILE_SELECT_WITH_LOCATION =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, gender, note, created_at, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
 const FAMILY_PROFILE_SELECT_FULL =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, created_at, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
+const FAMILY_PROFILE_SELECT_WITH_BIRTH_RULES =
+  'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, created_at, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode, birth_calendar_type, birth_time_rule';
 const BIRTH_MINUTE_MIGRATION_ERROR =
   '운영 DB에 출생 분 저장 컬럼이 아직 적용되지 않았습니다. 005_profile_birth_minutes.sql 마이그레이션이 필요합니다.';
 const BIRTH_LOCATION_MIGRATION_ERROR =
   '운영 DB에 출생 지역 저장 컬럼이 아직 적용되지 않았습니다. 009_profile_birth_locations.sql 마이그레이션이 필요합니다.';
+const BIRTH_RULE_MIGRATION_ERROR =
+  '운영 DB에 양력/음력 및 시각 규칙 저장 컬럼이 아직 적용되지 않았습니다. 014_profile_birth_calendar_fields.sql 마이그레이션이 필요합니다.';
 const PREFERRED_COUNSELOR_MIGRATION_ERROR =
   '운영 DB에 선생 선택 저장 컬럼이 아직 적용되지 않았습니다. 010_profile_preferred_counselor.sql 마이그레이션이 필요합니다.';
 
 type ProfileRow = {
   display_name?: string | null;
+  birth_calendar_type?: UnifiedCalendarType | null;
+  birth_time_rule?: UnifiedTimeRule | null;
   birth_year?: number | null;
   birth_month?: number | null;
   birth_day?: number | null;
@@ -107,6 +122,15 @@ function removeBirthLocation<T extends Record<string, unknown>>(payload: T) {
 
 function removePreferredCounselor<T extends Record<string, unknown>>(payload: T) {
   const { preferred_counselor: _preferredCounselor, ...rest } = payload;
+  return rest;
+}
+
+function removeBirthRuleFields<T extends Record<string, unknown>>(payload: T) {
+  const {
+    birth_calendar_type: _birthCalendarType,
+    birth_time_rule: _birthTimeRule,
+    ...rest
+  } = payload;
   return rest;
 }
 
@@ -182,6 +206,24 @@ export function isMissingPreferredCounselorColumnError(error: unknown) {
   );
 }
 
+export function isMissingBirthRuleColumnError(error: unknown) {
+  if (!error || typeof error !== 'object') return false;
+
+  const code = 'code' in error ? String(error.code ?? '') : '';
+  const message = 'message' in error ? String(error.message ?? '') : '';
+  const details = 'details' in error ? String(error.details ?? '') : '';
+  const hint = 'hint' in error ? String(error.hint ?? '') : '';
+  const combined = `${message} ${details} ${hint}`;
+
+  return (
+    (combined.includes('birth_calendar_type') || combined.includes('birth_time_rule')) &&
+    (code === '42703' ||
+      code === 'PGRST204' ||
+      combined.includes('column') ||
+      combined.includes('schema cache'))
+  );
+}
+
 function hasProfileBirthLocation(profile: BirthProfileFields) {
   return Boolean(
     profile.birthLocationCode ||
@@ -190,6 +232,10 @@ function hasProfileBirthLocation(profile: BirthProfileFields) {
       profile.birthLongitude !== null ||
       profile.solarTimeMode === 'longitude'
   );
+}
+
+function hasNonDefaultBirthRules(profile: BirthProfileFields) {
+  return profile.calendarType !== 'solar' || profile.timeRule !== 'standard';
 }
 
 async function writeProfilePayloadWithFallback<
@@ -227,6 +273,13 @@ async function writeProfilePayloadWithFallback<
       nextPayload = removePreferredCounselor(nextPayload ?? currentPayload);
     }
 
+    if (isMissingBirthRuleColumnError(response.error)) {
+      if (hasNonDefaultBirthRules(profile)) {
+        throw new Error(BIRTH_RULE_MIGRATION_ERROR);
+      }
+      nextPayload = removeBirthRuleFields(nextPayload ?? currentPayload);
+    }
+
     if (!nextPayload) break;
 
     currentPayload = nextPayload as T;
@@ -250,6 +303,7 @@ async function loadWithProfileSelectFallback<T>(
       response.error &&
       (isMissingBirthMinuteColumnError(response.error) ||
         isMissingBirthLocationColumnError(response.error) ||
+        isMissingBirthRuleColumnError(response.error) ||
         isMissingPreferredCounselorColumnError(response.error))
     ) {
       continue;
@@ -269,10 +323,40 @@ function getErrorMessage(error: unknown) {
   return '알 수 없는 오류가 발생했습니다.';
 }
 
+function deriveStoredSolarTimeMode(row: Pick<
+  ProfileRow,
+  | 'birth_time_rule'
+  | 'birth_location_code'
+  | 'birth_location_label'
+  | 'birth_latitude'
+  | 'birth_longitude'
+  | 'solar_time_mode'
+>) {
+  const hasLocation = Boolean(
+    row.birth_location_code ||
+      row.birth_location_label ||
+      row.birth_latitude !== null ||
+      row.birth_longitude !== null
+  );
+
+  if (row.birth_time_rule === 'trueSolarTime' && hasLocation) {
+    return 'longitude' as const;
+  }
+
+  return row.solar_time_mode === 'longitude' ? ('longitude' as const) : ('standard' as const);
+}
+
 function mapUserProfile(row: ProfileRow | null | undefined): UserProfile {
   return {
     displayName: row?.display_name ?? '',
     preferredCounselor: normalizeMoonlightCounselor(row?.preferred_counselor),
+    calendarType: row?.birth_calendar_type === 'lunar' ? 'lunar' : 'solar',
+    timeRule:
+      row?.birth_time_rule === 'trueSolarTime' ||
+      row?.birth_time_rule === 'nightZi' ||
+      row?.birth_time_rule === 'earlyZi'
+        ? row.birth_time_rule
+        : 'standard',
     birthYear: toNumberOrNull(row?.birth_year),
     birthMonth: toNumberOrNull(row?.birth_month),
     birthDay: toNumberOrNull(row?.birth_day),
@@ -282,7 +366,14 @@ function mapUserProfile(row: ProfileRow | null | undefined): UserProfile {
     birthLocationLabel: row?.birth_location_label ?? '',
     birthLatitude: toNumberOrNull(row?.birth_latitude),
     birthLongitude: toNumberOrNull(row?.birth_longitude),
-    solarTimeMode: row?.solar_time_mode === 'longitude' ? 'longitude' : 'standard',
+    solarTimeMode: deriveStoredSolarTimeMode({
+      birth_time_rule: row?.birth_time_rule ?? null,
+      birth_location_code: row?.birth_location_code ?? null,
+      birth_location_label: row?.birth_location_label ?? null,
+      birth_latitude: row?.birth_latitude ?? null,
+      birth_longitude: row?.birth_longitude ?? null,
+      solar_time_mode: row?.solar_time_mode ?? null,
+    }),
     gender: row?.gender ?? null,
     note: row?.note ?? '',
   };
@@ -309,6 +400,29 @@ export function toBirthInputFromProfile(
     birthDay: number;
   }
 ): BirthInput {
+  const resolved = resolveUnifiedBirthInput(
+    {
+      calendarType: profile.calendarType,
+      timeRule: profile.timeRule,
+      year: String(profile.birthYear),
+      month: String(profile.birthMonth),
+      day: String(profile.birthDay),
+      hour: profile.birthHour === null ? '' : String(profile.birthHour),
+      minute: profile.birthMinute === null ? '' : String(profile.birthMinute),
+      unknownBirthTime: profile.birthHour === null,
+      gender: profile.gender ?? '',
+      birthLocationCode: profile.birthLocationCode ?? '',
+      birthLocationLabel: profile.birthLocationLabel,
+      birthLatitude: profile.birthLatitude === null ? '' : String(profile.birthLatitude),
+      birthLongitude: profile.birthLongitude === null ? '' : String(profile.birthLongitude),
+    },
+    { requireGender: false }
+  );
+
+  if (resolved.ok) {
+    return resolved.input;
+  }
+
   const hasBirthLocation =
     Boolean(profile.birthLocationLabel) &&
     profile.birthLatitude !== null &&
@@ -320,6 +434,7 @@ export function toBirthInputFromProfile(
     day: profile.birthDay,
     hour: profile.birthHour ?? undefined,
     minute: profile.birthMinute ?? undefined,
+    unknownTime: profile.birthHour === null,
     gender: profile.gender ?? undefined,
     birthLocation: hasBirthLocation
       ? {
@@ -329,7 +444,8 @@ export function toBirthInputFromProfile(
           longitude: profile.birthLongitude!,
         }
       : null,
-    solarTimeMode: hasBirthLocation ? profile.solarTimeMode : 'standard',
+    solarTimeMode:
+      hasBirthLocation && profile.timeRule === 'trueSolarTime' ? 'longitude' : 'standard',
   };
 }
 
@@ -338,6 +454,13 @@ function mapFamilyProfile(row: FamilyProfileRow): FamilyProfile {
     id: row.id,
     label: row.label,
     relationship: row.relationship,
+    calendarType: row.birth_calendar_type === 'lunar' ? 'lunar' : 'solar',
+    timeRule:
+      row.birth_time_rule === 'trueSolarTime' ||
+      row.birth_time_rule === 'nightZi' ||
+      row.birth_time_rule === 'earlyZi'
+        ? row.birth_time_rule
+        : 'standard',
     birthYear: toNumberOrNull(row.birth_year),
     birthMonth: toNumberOrNull(row.birth_month),
     birthDay: toNumberOrNull(row.birth_day),
@@ -347,7 +470,7 @@ function mapFamilyProfile(row: FamilyProfileRow): FamilyProfile {
     birthLocationLabel: row.birth_location_label ?? '',
     birthLatitude: toNumberOrNull(row.birth_latitude),
     birthLongitude: toNumberOrNull(row.birth_longitude),
-    solarTimeMode: row.solar_time_mode === 'longitude' ? 'longitude' : 'standard',
+    solarTimeMode: deriveStoredSolarTimeMode(row),
     gender: row.gender ?? null,
     note: row.note ?? '',
     createdAt: row.created_at,
@@ -364,6 +487,8 @@ export async function getProfileSettingsData(redirectPath: string) {
       profile: {
         displayName: '',
         preferredCounselor: null,
+        calendarType: 'solar',
+        timeRule: 'standard',
         birthYear: null,
         birthMonth: null,
         birthDay: null,
@@ -399,6 +524,7 @@ export async function getProfileSettingsData(redirectPath: string) {
 
   const profileResponse = await loadWithProfileSelectFallback(loadProfile, [
     PROFILE_SELECT_WITH_COUNSELOR,
+    PROFILE_SELECT_WITH_BIRTH_RULES,
     PROFILE_SELECT_FULL,
     PROFILE_SELECT_WITH_LOCATION,
     PROFILE_SELECT_WITH_MINUTE,
@@ -406,6 +532,7 @@ export async function getProfileSettingsData(redirectPath: string) {
   ]);
 
   const familyResponse = await loadWithProfileSelectFallback(loadFamilyProfiles, [
+    FAMILY_PROFILE_SELECT_WITH_BIRTH_RULES,
     FAMILY_PROFILE_SELECT_FULL,
     FAMILY_PROFILE_SELECT_WITH_LOCATION,
     FAMILY_PROFILE_SELECT_WITH_MINUTE,
@@ -454,6 +581,7 @@ export async function getUserProfileById(userId: string): Promise<UserProfile> {
 
   const profileResponse = await loadWithProfileSelectFallback(loadProfile, [
     PROFILE_SELECT_WITH_COUNSELOR,
+    PROFILE_SELECT_WITH_BIRTH_RULES,
     PROFILE_SELECT_FULL,
     PROFILE_SELECT_WITH_LOCATION,
     PROFILE_SELECT_WITH_MINUTE,
@@ -473,6 +601,8 @@ export async function upsertProfile(userId: string, profile: UserProfile) {
   const payload = {
     user_id: userId,
     display_name: profile.displayName || null,
+    birth_calendar_type: profile.calendarType,
+    birth_time_rule: profile.timeRule,
     birth_year: profile.birthYear,
     birth_month: profile.birthMonth,
     birth_day: profile.birthDay,
@@ -531,6 +661,8 @@ export async function createFamilyProfile(
     user_id: userId,
     label: profile.label,
     relationship: profile.relationship,
+    birth_calendar_type: profile.calendarType,
+    birth_time_rule: profile.timeRule,
     birth_year: profile.birthYear,
     birth_month: profile.birthMonth,
     birth_day: profile.birthDay,
@@ -574,6 +706,8 @@ export async function updateFamilyProfile(
   const payload = {
     label: profile.label,
     relationship: profile.relationship,
+    birth_calendar_type: profile.calendarType,
+    birth_time_rule: profile.timeRule,
     birth_year: profile.birthYear,
     birth_month: profile.birthMonth,
     birth_day: profile.birthDay,

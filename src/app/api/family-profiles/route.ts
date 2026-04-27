@@ -7,6 +7,7 @@ import {
   type FamilyProfileInput,
 } from '@/lib/profile';
 import type { SolarTimeMode } from '@/lib/saju/types';
+import type { UnifiedCalendarType, UnifiedTimeRule } from '@/lib/saju/unified-birth-entry';
 
 function parseOptionalInt(value: unknown, min: number, max: number) {
   if (value === null || value === undefined || value === '') return null;
@@ -26,7 +27,10 @@ function readString(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function parseBirthLocationFields(data: Record<string, unknown>) {
+function parseBirthLocationFields(
+  data: Record<string, unknown>,
+  timeRule: UnifiedTimeRule
+) {
   const code = readString(data.birthLocationCode);
   const label = readString(data.birthLocationLabel);
   const latitude = parseOptionalNumber(data.birthLatitude, -90, 90);
@@ -54,7 +58,8 @@ function parseBirthLocationFields(data: Record<string, unknown>) {
     birthLocationLabel: label,
     birthLatitude: latitude,
     birthLongitude: longitude,
-    solarTimeMode: data.solarTimeMode === 'longitude' ? 'longitude' as const : 'standard' as const,
+    solarTimeMode:
+      timeRule === 'trueSolarTime' ? ('longitude' as const) : ('standard' as const),
   };
 }
 
@@ -70,7 +75,16 @@ function parseFamilyProfile(
   const note = typeof data.note === 'string' ? data.note.trim() : '';
   const gender =
     data.gender === 'male' || data.gender === 'female' ? data.gender : null;
-  const birthLocation = parseBirthLocationFields(data);
+  const calendarType =
+    data.calendarType === 'lunar' ? 'lunar' : data.calendarType === 'solar' ? 'solar' : 'solar';
+  const timeRule =
+    data.timeRule === 'trueSolarTime' ||
+    data.timeRule === 'nightZi' ||
+    data.timeRule === 'earlyZi'
+      ? data.timeRule
+      : 'standard';
+  const birthLocation = parseBirthLocationFields(data, timeRule);
+  const unknownBirthTime = data.unknownBirthTime === true;
 
   if (!label || !relationship) {
     return null;
@@ -89,11 +103,11 @@ function parseFamilyProfile(
       ? null
       : parseOptionalInt(data.birthDay, 1, 31);
   const birthHour =
-    data.birthHour === '' || data.birthHour === undefined || data.birthHour === null
+    unknownBirthTime || data.birthHour === '' || data.birthHour === undefined || data.birthHour === null
       ? null
       : parseOptionalInt(data.birthHour, 0, 23);
   const birthMinute =
-    data.birthMinute === '' || data.birthMinute === undefined || data.birthMinute === null
+    unknownBirthTime || data.birthMinute === '' || data.birthMinute === undefined || data.birthMinute === null
       ? null
       : parseOptionalInt(data.birthMinute, 0, 59);
 
@@ -112,6 +126,8 @@ function parseFamilyProfile(
   return {
     label,
     relationship,
+    calendarType: calendarType as UnifiedCalendarType,
+    timeRule: timeRule as UnifiedTimeRule,
     birthYear,
     birthMonth,
     birthDay,

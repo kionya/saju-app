@@ -4,12 +4,17 @@ import { createClient, hasSupabaseServerEnv } from '@/lib/supabase/server';
 import {
   isMissingBirthLocationColumnError,
   isMissingBirthMinuteColumnError,
+  isMissingBirthRuleColumnError,
   isMissingFamilyProfilesTableError,
   isMissingPreferredCounselorColumnError,
   upsertProfile,
   type UserProfile,
 } from '@/lib/profile';
 import type { SolarTimeMode } from '@/lib/saju/types';
+import type {
+  UnifiedCalendarType,
+  UnifiedTimeRule,
+} from '@/lib/saju/unified-birth-entry';
 
 const PROFILE_SELECT =
   'display_name, birth_year, birth_month, birth_day, birth_hour, gender, note';
@@ -19,8 +24,10 @@ const PROFILE_SELECT_WITH_LOCATION =
   'display_name, birth_year, birth_month, birth_day, birth_hour, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
 const PROFILE_SELECT_FULL =
   'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
+const PROFILE_SELECT_WITH_BIRTH_RULES =
+  'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode, birth_calendar_type, birth_time_rule';
 const PROFILE_SELECT_WITH_COUNSELOR =
-  'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode, preferred_counselor';
+  'display_name, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode, birth_calendar_type, birth_time_rule, preferred_counselor';
 const FAMILY_PROFILE_SELECT =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, gender, note, created_at';
 const FAMILY_PROFILE_SELECT_WITH_MINUTE =
@@ -29,9 +36,13 @@ const FAMILY_PROFILE_SELECT_WITH_LOCATION =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, gender, note, created_at, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
 const FAMILY_PROFILE_SELECT_FULL =
   'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, created_at, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode';
+const FAMILY_PROFILE_SELECT_WITH_BIRTH_RULES =
+  'id, label, relationship, birth_year, birth_month, birth_day, birth_hour, birth_minute, gender, note, created_at, birth_location_code, birth_location_label, birth_latitude, birth_longitude, solar_time_mode, birth_calendar_type, birth_time_rule';
 
 type ProfileRow = {
   display_name?: string | null;
+  birth_calendar_type?: UnifiedCalendarType | null;
+  birth_time_rule?: UnifiedTimeRule | null;
   birth_year?: number | null;
   birth_month?: number | null;
   birth_day?: number | null;
@@ -54,6 +65,29 @@ type FamilyProfileRow = ProfileRow & {
   created_at: string;
 };
 
+function deriveStoredSolarTimeMode(row: Pick<
+  ProfileRow,
+  | 'birth_time_rule'
+  | 'birth_location_code'
+  | 'birth_location_label'
+  | 'birth_latitude'
+  | 'birth_longitude'
+  | 'solar_time_mode'
+>) {
+  const hasLocation = Boolean(
+    row.birth_location_code ||
+      row.birth_location_label ||
+      row.birth_latitude !== null ||
+      row.birth_longitude !== null
+  );
+
+  if (row.birth_time_rule === 'trueSolarTime' && hasLocation) {
+    return 'longitude' as const;
+  }
+
+  return row.solar_time_mode === 'longitude' ? ('longitude' as const) : ('standard' as const);
+}
+
 function parseOptionalInt(value: unknown, min: number, max: number) {
   if (value === null || value === undefined || value === '') return null;
   const parsed = Number(value);
@@ -72,7 +106,10 @@ function readString(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
 }
 
-function parseBirthLocationFields(data: Record<string, unknown>) {
+function parseBirthLocationFields(
+  data: Record<string, unknown>,
+  timeRule: UnifiedTimeRule
+) {
   const code = readString(data.birthLocationCode);
   const label = readString(data.birthLocationLabel);
   const latitude = parseOptionalNumber(data.birthLatitude, -90, 90);
@@ -100,7 +137,8 @@ function parseBirthLocationFields(data: Record<string, unknown>) {
     birthLocationLabel: label,
     birthLatitude: latitude,
     birthLongitude: longitude,
-    solarTimeMode: data.solarTimeMode === 'longitude' ? 'longitude' as const : 'standard' as const,
+    solarTimeMode:
+      timeRule === 'trueSolarTime' ? ('longitude' as const) : ('standard' as const),
   };
 }
 
@@ -118,6 +156,7 @@ async function loadWithProfileSelectFallback<T>(
       response.error &&
       (isMissingBirthMinuteColumnError(response.error) ||
         isMissingBirthLocationColumnError(response.error) ||
+        isMissingBirthRuleColumnError(response.error) ||
         isMissingPreferredCounselorColumnError(response.error))
     ) {
       continue;
@@ -145,7 +184,16 @@ function parseProfile(payload: unknown): UserProfile | null {
   const note = typeof data.note === 'string' ? data.note.trim() : '';
   const gender =
     data.gender === 'male' || data.gender === 'female' ? data.gender : null;
-  const birthLocation = parseBirthLocationFields(data);
+  const calendarType =
+    data.calendarType === 'lunar' ? 'lunar' : data.calendarType === 'solar' ? 'solar' : 'solar';
+  const timeRule =
+    data.timeRule === 'trueSolarTime' ||
+    data.timeRule === 'nightZi' ||
+    data.timeRule === 'earlyZi'
+      ? data.timeRule
+      : 'standard';
+  const birthLocation = parseBirthLocationFields(data, timeRule);
+  const unknownBirthTime = data.unknownBirthTime === true;
 
   const birthYear =
     data.birthYear === '' || data.birthYear === undefined || data.birthYear === null
@@ -160,11 +208,11 @@ function parseProfile(payload: unknown): UserProfile | null {
       ? null
       : parseOptionalInt(data.birthDay, 1, 31);
   const birthHour =
-    data.birthHour === '' || data.birthHour === undefined || data.birthHour === null
+    unknownBirthTime || data.birthHour === '' || data.birthHour === undefined || data.birthHour === null
       ? null
       : parseOptionalInt(data.birthHour, 0, 23);
   const birthMinute =
-    data.birthMinute === '' || data.birthMinute === undefined || data.birthMinute === null
+    unknownBirthTime || data.birthMinute === '' || data.birthMinute === undefined || data.birthMinute === null
       ? null
       : parseOptionalInt(data.birthMinute, 0, 59);
 
@@ -182,6 +230,8 @@ function parseProfile(payload: unknown): UserProfile | null {
 
   return {
     displayName,
+    calendarType,
+    timeRule,
     birthYear,
     birthMonth,
     birthDay,
@@ -235,6 +285,7 @@ export async function GET() {
 
   const profileResponse = await loadWithProfileSelectFallback(loadProfile, [
     PROFILE_SELECT_WITH_COUNSELOR,
+    PROFILE_SELECT_WITH_BIRTH_RULES,
     PROFILE_SELECT_FULL,
     PROFILE_SELECT_WITH_LOCATION,
     PROFILE_SELECT_WITH_MINUTE,
@@ -242,6 +293,7 @@ export async function GET() {
   ]);
 
   const familyResponse = await loadWithProfileSelectFallback(loadFamilyProfiles, [
+    FAMILY_PROFILE_SELECT_WITH_BIRTH_RULES,
     FAMILY_PROFILE_SELECT_FULL,
     FAMILY_PROFILE_SELECT_WITH_LOCATION,
     FAMILY_PROFILE_SELECT_WITH_MINUTE,
@@ -263,6 +315,13 @@ export async function GET() {
     authenticated: true,
     profile: {
       displayName: profile?.display_name ?? '',
+      calendarType: profile?.birth_calendar_type === 'lunar' ? 'lunar' : 'solar',
+      timeRule:
+        profile?.birth_time_rule === 'trueSolarTime' ||
+        profile?.birth_time_rule === 'nightZi' ||
+        profile?.birth_time_rule === 'earlyZi'
+          ? profile.birth_time_rule
+          : 'standard',
       birthYear: profile?.birth_year ?? null,
       birthMonth: profile?.birth_month ?? null,
       birthDay: profile?.birth_day ?? null,
@@ -272,7 +331,14 @@ export async function GET() {
       birthLocationLabel: profile?.birth_location_label ?? '',
       birthLatitude: profile?.birth_latitude ?? null,
       birthLongitude: profile?.birth_longitude ?? null,
-      solarTimeMode: profile?.solar_time_mode === 'longitude' ? 'longitude' : 'standard',
+      solarTimeMode: deriveStoredSolarTimeMode({
+        birth_time_rule: profile?.birth_time_rule ?? null,
+        birth_location_code: profile?.birth_location_code ?? null,
+        birth_location_label: profile?.birth_location_label ?? null,
+        birth_latitude: profile?.birth_latitude ?? null,
+        birth_longitude: profile?.birth_longitude ?? null,
+        solar_time_mode: profile?.solar_time_mode ?? null,
+      }),
       preferredCounselor: normalizeMoonlightCounselor(profile?.preferred_counselor),
       gender: profile?.gender ?? null,
       note: profile?.note ?? '',
@@ -283,6 +349,13 @@ export async function GET() {
           id: profile.id,
           label: profile.label,
           relationship: profile.relationship,
+          calendarType: profile.birth_calendar_type === 'lunar' ? 'lunar' : 'solar',
+          timeRule:
+            profile.birth_time_rule === 'trueSolarTime' ||
+            profile.birth_time_rule === 'nightZi' ||
+            profile.birth_time_rule === 'earlyZi'
+              ? profile.birth_time_rule
+              : 'standard',
           birthYear: profile.birth_year ?? null,
           birthMonth: profile.birth_month ?? null,
           birthDay: profile.birth_day ?? null,
@@ -292,7 +365,7 @@ export async function GET() {
           birthLocationLabel: profile.birth_location_label ?? '',
           birthLatitude: profile.birth_latitude ?? null,
           birthLongitude: profile.birth_longitude ?? null,
-          solarTimeMode: profile.solar_time_mode === 'longitude' ? 'longitude' : 'standard',
+          solarTimeMode: deriveStoredSolarTimeMode(profile),
           gender: profile.gender ?? null,
           note: profile.note ?? '',
           createdAt: profile.created_at,

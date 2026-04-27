@@ -55,6 +55,8 @@ const STEP_PATHS: Record<OnboardingStep, string> = {
 };
 
 interface ProfileApiBirthFields {
+  calendarType: 'solar' | 'lunar';
+  timeRule: 'standard' | 'trueSolarTime' | 'nightZi' | 'earlyZi';
   birthYear: number | null;
   birthMonth: number | null;
   birthDay: number | null;
@@ -92,6 +94,8 @@ interface SavedBirthProfile {
   label: string;
   nickname: string;
   detail: string;
+  calendarType: 'solar' | 'lunar';
+  timeRule: 'standard' | 'trueSolarTime' | 'nightZi' | 'earlyZi';
   birthYear: number;
   birthMonth: number;
   birthDay: number;
@@ -217,6 +221,7 @@ function hasBirthFields<T extends ProfileApiBirthFields | null | undefined>(
 }
 
 function formatSavedProfileDetail(profile: ProfileApiBirthFields) {
+  const calendarLabel = profile.calendarType === 'lunar' ? '음력' : '양력';
   const dateLabel = `${profile.birthYear}.${profile.birthMonth}.${profile.birthDay}`;
   const hourLabel =
     profile.birthHour === null
@@ -230,7 +235,7 @@ function formatSavedProfileDetail(profile: ProfileApiBirthFields) {
   const locationLabel = profile.birthLocationLabel
     ? ` · ${profile.birthLocationLabel}${profile.solarTimeMode === 'longitude' ? ' 경도 보정' : ''}`
     : '';
-  return `${dateLabel} · ${hourLabel} · ${genderLabel}${locationLabel}`;
+  return `${calendarLabel} ${dateLabel} · ${hourLabel} · ${genderLabel}${locationLabel}`;
 }
 
 function buildSavedProfileOptions(data: ProfileApiResponse): SavedBirthProfile[] {
@@ -243,6 +248,8 @@ function buildSavedProfileOptions(data: ProfileApiResponse): SavedBirthProfile[]
       label: data.profile.displayName ? `내 정보 · ${data.profile.displayName}` : '내 정보 불러오기',
       nickname: data.profile.displayName,
       detail: formatSavedProfileDetail(data.profile),
+      calendarType: data.profile.calendarType ?? 'solar',
+      timeRule: data.profile.timeRule ?? 'standard',
       birthYear: data.profile.birthYear,
       birthMonth: data.profile.birthMonth,
       birthDay: data.profile.birthDay,
@@ -266,6 +273,8 @@ function buildSavedProfileOptions(data: ProfileApiResponse): SavedBirthProfile[]
       label: `${profile.label} · ${profile.relationship}`,
       nickname: profile.label,
       detail: formatSavedProfileDetail(profile),
+      calendarType: profile.calendarType ?? 'solar',
+      timeRule: profile.timeRule ?? 'standard',
       birthYear: profile.birthYear,
       birthMonth: profile.birthMonth,
       birthDay: profile.birthDay,
@@ -499,8 +508,8 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
     markBirthStarted('profile');
     setForm((current) => ({
       ...current,
-      calendarType: 'solar',
-      timeRule: profile.solarTimeMode === 'longitude' ? 'trueSolarTime' : 'standard',
+      calendarType: profile.calendarType,
+      timeRule: profile.timeRule,
       year: String(profile.birthYear),
       month: String(profile.birthMonth),
       day: String(profile.birthDay),
