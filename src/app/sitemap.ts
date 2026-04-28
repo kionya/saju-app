@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { DREAM_ENTRIES, STAR_SIGN_FORTUNES, ZODIAC_FORTUNES } from '@/lib/free-content-pages';
+import { ENGINE_METHOD_ENTRIES } from '@/lib/engine-method-pages';
 import { getSiteUrl } from '@/lib/site';
 
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -62,6 +63,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${siteUrl}/about-engine`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.76,
+    },
+    {
+      url: `${siteUrl}/method`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.74,
+    },
+    {
       url: `${siteUrl}/terms`,
       lastModified: now,
       changeFrequency: 'yearly',
@@ -90,6 +103,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency: 'weekly' as const,
       priority: 0.7,
+    })),
+    ...ENGINE_METHOD_ENTRIES.map((item) => ({
+      url: `${siteUrl}/method/${item.slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.72,
     })),
   ];
 }

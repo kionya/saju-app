@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { ENGINE_METHOD_ENTRIES } from '@/lib/engine-method-pages';
 import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 export const metadata: Metadata = {
@@ -457,6 +458,26 @@ export default function AboutEnginePage() {
               </details>
             ))}
           </div>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-3">
+          {ENGINE_METHOD_ENTRIES.map((entry) => (
+            <Link
+              key={entry.slug}
+              href={`/method/${entry.slug}`}
+              className="app-panel block p-6 transition-colors hover:bg-[rgba(255,255,255,0.05)]"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="border-[var(--app-gold)]/20 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+                  {entry.eyebrow}
+                </Badge>
+                <Badge className="border-white/10 bg-white/5 text-white/62">더 읽어보기</Badge>
+              </div>
+              <h2 className="mt-5 text-3xl font-semibold text-[var(--app-ivory)]">{entry.title}</h2>
+              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{entry.summary}</p>
+              <div className="mt-5 text-sm font-semibold text-[var(--app-gold-text)]">기준서와 연결된 글 보기</div>
+            </Link>
+          ))}
         </section>
 
         <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
