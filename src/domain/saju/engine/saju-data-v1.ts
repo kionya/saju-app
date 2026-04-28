@@ -22,6 +22,7 @@ import {
 } from './orrery-adapter';
 
 export const SAJU_DATA_V1 = 'saju-data/v1' as const;
+export const SAJU_RULE_SET_V1 = 'moonlight-rules/v1' as const;
 
 export type SajuDataVersion = typeof SAJU_DATA_V1;
 export type SajuComputationSource =
@@ -287,6 +288,7 @@ export interface SajuInputSnapshot {
 export interface SajuComputationMetadata {
   source: SajuComputationSource;
   engineVersion: string;
+  ruleSetVersion: string;
   calculatedAt: string;
   completeness: SajuCompleteness;
   pendingSections: SajuPendingSection[];
@@ -470,6 +472,7 @@ export function seedSajuDataV1FromLegacy(
     metadata: {
       source: 'legacy-typescript',
       engineVersion: options?.engineVersion ?? 'legacy-typescript-v0',
+      ruleSetVersion: SAJU_RULE_SET_V1,
       calculatedAt,
       completeness: 'seed',
       pendingSections: [...SAJU_V1_PENDING_FROM_LEGACY],
@@ -525,7 +528,8 @@ export function normalizeToSajuDataV1(
   }
 ): SajuDataV1 {
   if (isSajuDataV1(value)) {
-    return shouldPreserveSajuDataV1(value) ? value : enrichSajuDataV1(value);
+    const normalized = ensureMetadataDefaults(value);
+    return shouldPreserveSajuDataV1(normalized) ? normalized : enrichSajuDataV1(normalized);
   }
 
   if (isLegacySajuResult(value)) {
@@ -620,6 +624,7 @@ function enrichSajuDataV1(base: SajuDataV1): SajuDataV1 {
       ...base.metadata,
       source: 'orrery-reference',
       engineVersion: 'orrery-reference-v1',
+      ruleSetVersion: base.metadata.ruleSetVersion ?? SAJU_RULE_SET_V1,
       completeness: pendingSections.length === 0 ? 'complete' : 'partial',
       pendingSections,
     },
@@ -643,6 +648,17 @@ function enrichSajuDataV1(base: SajuDataV1): SajuDataV1 {
     extensions: {
       ...(next.extensions ?? {}),
       orrery: buildOrreryReferenceExtension(next),
+    },
+  };
+}
+
+function ensureMetadataDefaults(value: SajuDataV1): SajuDataV1 {
+  if (value.metadata.ruleSetVersion) return value;
+  return {
+    ...value,
+    metadata: {
+      ...value.metadata,
+      ruleSetVersion: SAJU_RULE_SET_V1,
     },
   };
 }

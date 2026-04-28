@@ -8,6 +8,7 @@ import {
 import { getUserProfileById } from '@/lib/profile';
 import { getRecentFortuneFeedbackSummary } from '@/lib/fortune-feedback';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
+import { buildSajuReportRuntimeMetadata, type SajuReportRuntimeMetadata } from '@/lib/saju/report-metadata';
 import { createServiceClient, hasSupabaseServiceEnv } from '@/lib/supabase/server';
 import {
   buildFallbackYearlyInterpretation,
@@ -62,6 +63,7 @@ export interface YearlyInterpretationResponsePayload {
   targetYear: number;
   counselorId: MoonlightCounselorId;
   promptVersion: string;
+  metadata: SajuReportRuntimeMetadata;
   cached: boolean;
   cacheable: boolean;
   cacheKeyType: YearlyCacheKeyType;
@@ -233,6 +235,11 @@ export async function generateYearlyInterpretation(
         targetYear: request.targetYear,
         counselorId,
         promptVersion,
+        metadata: buildSajuReportRuntimeMetadata(reading.metadata, {
+          promptVersion,
+          llmModel: cached.model,
+          generationSource: cached.source,
+        }),
         cached: true,
         cacheable,
         cacheKeyType: cacheKey.cacheKeyType,
@@ -368,6 +375,11 @@ export async function generateYearlyInterpretation(
     targetYear: request.targetYear,
     counselorId,
     promptVersion,
+    metadata: buildSajuReportRuntimeMetadata(reading.metadata, {
+      promptVersion,
+      llmModel: model,
+      generationSource: source,
+    }),
     cached: false,
     cacheable,
     cacheKeyType: cacheKey.cacheKeyType,

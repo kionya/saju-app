@@ -22,6 +22,7 @@ export function GroundingDecisionTrace({
   compact?: boolean;
 }) {
   const trace = buildGroundingDecisionTrace(grounding, kasiComparison);
+  const engineLine = `engine ${grounding.factJson.metadata.engineVersion} · rules ${grounding.factJson.metadata.ruleSetVersion}`;
 
   return (
     <details className="rounded-[20px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
@@ -87,6 +88,7 @@ export function GroundingDecisionTrace({
             </p>
           ))}
         </div>
+        <p className="mt-4 text-xs leading-6 text-[var(--app-copy-soft)]">{engineLine}</p>
       </div>
     </details>
   );

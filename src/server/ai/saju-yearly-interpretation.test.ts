@@ -5,6 +5,7 @@ import {
   buildSajuReport,
   buildYearlyReport,
 } from '@/domain/saju/report';
+import { buildPersistedSajuReadingMetadata } from '@/lib/saju/report-metadata';
 import type { ReadingRecord } from '@/lib/saju/readings';
 import type { BirthInput } from '@/lib/saju/types';
 import {
@@ -44,6 +45,7 @@ function createReadingRecord(): ReadingRecord {
     result: {} as ReadingRecord['result'],
     grounding,
     kasiComparison: null,
+    metadata: buildPersistedSajuReadingMetadata(birthInput, sajuData, grounding, null),
   };
 }
 

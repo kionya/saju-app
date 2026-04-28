@@ -8,6 +8,7 @@ import {
 import { getUserProfileById } from '@/lib/profile';
 import { getRecentFortuneFeedbackSummary } from '@/lib/fortune-feedback';
 import { isReadingId, resolveReading, type ReadingRecord } from '@/lib/saju/readings';
+import { buildSajuReportRuntimeMetadata, type SajuReportRuntimeMetadata } from '@/lib/saju/report-metadata';
 import {
   buildFallbackLifetimeInterpretation,
   createLifetimeInterpretationPrompt,
@@ -47,6 +48,7 @@ export interface LifetimeInterpretationResponsePayload {
   targetYear: number;
   counselorId: MoonlightCounselorId;
   promptVersion: string;
+  metadata: SajuReportRuntimeMetadata;
   cached: false;
   cacheable: false;
   source: AiGenerationSource;
@@ -123,6 +125,11 @@ export async function generateLifetimeInterpretation(
     targetYear: request.targetYear,
     counselorId,
     promptVersion,
+    metadata: buildSajuReportRuntimeMetadata(reading.metadata, {
+      promptVersion,
+      llmModel: aiResult.model,
+      generationSource: source,
+    }),
     cached: false,
     cacheable: false,
     source,

@@ -26,6 +26,7 @@ test('buildSajuInterpretationGrounding creates fact_json and evidence_json from 
 
   assert.equal(grounding.factJson.schemaVersion, SAJU_FACT_JSON_V1);
   assert.equal(grounding.evidenceJson.schemaVersion, SAJU_EVIDENCE_JSON_V1);
+  assert.ok(grounding.factJson.metadata.ruleSetVersion.length > 0);
   assert.equal(grounding.factJson.pillars.day.ganzi, data.pillars.day.ganzi);
   assert.equal(grounding.factJson.dayMaster.stem, data.dayMaster.stem);
   assert.equal(grounding.factJson.fiveElements.dominant, data.fiveElements.dominant);

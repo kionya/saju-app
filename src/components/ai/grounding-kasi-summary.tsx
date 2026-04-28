@@ -1,6 +1,7 @@
 import type { SajuInterpretationGrounding } from '@/domain/saju/report';
 import { GroundingDecisionTrace } from '@/components/saju/grounding-decision-trace';
 import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
+import type { SajuReportRuntimeMetadata } from '@/lib/saju/report-metadata';
 
 function buildKasiLine(kasiComparison: KasiSingleInputComparison | null | undefined) {
   if (!kasiComparison) {
@@ -45,11 +46,13 @@ export function GroundingKasiSummary({
   kasiComparison,
   title = '이 리포트가 보는 실제 근거',
   id,
+  metadata,
 }: {
   grounding: SajuInterpretationGrounding;
   kasiComparison?: KasiSingleInputComparison | null;
   title?: string;
   id?: string;
+  metadata?: SajuReportRuntimeMetadata | null;
 }) {
   const factLines = buildFactLines(grounding);
   const evidenceLines = grounding.evidenceJson.classics.cards
@@ -83,6 +86,13 @@ export function GroundingKasiSummary({
         ))}
       </div>
       <p className="mt-4 text-xs leading-6 text-[var(--app-copy-soft)]">{buildKasiLine(kasiComparison)}</p>
+      {metadata ? (
+        <p className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">
+          engine {metadata.engineVersion} · rules {metadata.ruleSetVersion}
+          {metadata.promptVersion ? ` · prompt ${metadata.promptVersion}` : ''}
+          {metadata.llmModel ? ` · model ${metadata.llmModel}` : ''}
+        </p>
+      ) : null}
       <div className="mt-4">
         <GroundingDecisionTrace
           grounding={grounding}

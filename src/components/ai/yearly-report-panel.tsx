@@ -8,6 +8,7 @@ import type { SajuInterpretationGrounding } from '@/domain/saju/report';
 import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import type { MoonlightCounselorId } from '@/lib/counselors';
+import type { SajuReportRuntimeMetadata } from '@/lib/saju/report-metadata';
 import type { AiFallbackReason, AiGenerationSource } from '@/server/ai/openai-text';
 import type {
   SajuYearlyAiInterpretation,
@@ -27,6 +28,7 @@ interface YearlyInterpretationResponse {
   targetYear: number;
   counselorId: MoonlightCounselorId;
   promptVersion: string;
+  metadata: SajuReportRuntimeMetadata;
   cached: boolean;
   cacheable: boolean;
   cacheKeyType: 'reading_id' | 'reading_slug' | 'unavailable';
@@ -244,6 +246,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
           id="yearly-evidence"
           grounding={data.grounding}
           kasiComparison={data.kasiComparison}
+          metadata={data.metadata}
           title="이 연간 리포트가 참고한 실제 계산 근거"
         />
       </div>

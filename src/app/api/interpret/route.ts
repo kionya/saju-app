@@ -13,6 +13,7 @@ import { getUserProfileById } from '@/lib/profile';
 import { getRecentFortuneFeedbackSummary } from '@/lib/fortune-feedback';
 import { createServiceClient, hasSupabaseServiceEnv } from '@/lib/supabase/server';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
+import { buildSajuReportRuntimeMetadata } from '@/lib/saju/report-metadata';
 import {
   buildFallbackInterpretation,
   createInterpretationPrompt,
@@ -171,6 +172,11 @@ export async function POST(req: NextRequest) {
         model: cached.model,
         fallbackReason: cached.fallback_reason,
         errorMessage: cached.error_message,
+        metadata: buildSajuReportRuntimeMetadata(reading.metadata, {
+          promptVersion: getInterpretationPromptVersion(counselorId),
+          llmModel: cached.model,
+          generationSource: cached.source,
+        }),
         interpretation: cached.interpretation_json,
         updatedAt: cached.updated_at,
       });
@@ -232,6 +238,11 @@ export async function POST(req: NextRequest) {
     model: aiResult.model,
     fallbackReason,
     errorMessage,
+    metadata: buildSajuReportRuntimeMetadata(reading.metadata, {
+      promptVersion: getInterpretationPromptVersion(counselorId),
+      llmModel: aiResult.model,
+      generationSource: source,
+    }),
     interpretation: parsedInterpretation.interpretation,
   });
 }

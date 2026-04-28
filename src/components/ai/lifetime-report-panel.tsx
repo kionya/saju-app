@@ -9,6 +9,7 @@ import type { SajuInterpretationGrounding } from '@/domain/saju/report';
 import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import type { MoonlightCounselorId } from '@/lib/counselors';
+import type { SajuReportRuntimeMetadata } from '@/lib/saju/report-metadata';
 import type { AiFallbackReason, AiGenerationSource } from '@/server/ai/openai-text';
 import type { SajuLifetimeReport } from '@/domain/saju/report/lifetime-types';
 import type { SajuLifetimeAiInterpretation } from '@/server/ai/saju-lifetime-interpretation';
@@ -26,6 +27,7 @@ interface LifetimeInterpretationResponse {
   targetYear: number;
   counselorId: MoonlightCounselorId;
   promptVersion: string;
+  metadata: SajuReportRuntimeMetadata;
   cached: false;
   cacheable: false;
   source: AiGenerationSource;
@@ -467,6 +469,7 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
             id="lifetime-evidence"
             grounding={data.grounding}
             kasiComparison={data.kasiComparison}
+            metadata={data.metadata}
             title="이 평생 리포트가 참고한 실제 계산 근거"
           />
         </div>

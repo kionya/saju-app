@@ -16,6 +16,10 @@ import {
   compareBirthInputWithKasi,
   type KasiSingleInputComparison,
 } from '@/domain/saju/validation/kasi-calendar';
+import {
+  buildPersistedSajuReadingMetadata,
+  type SajuPersistedReadingMetadata,
+} from '@/lib/saju/report-metadata';
 
 const READING_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -34,6 +38,7 @@ interface ReadingRow {
 export interface PersistedReadingEnvelope {
   _grounding?: SajuInterpretationGrounding;
   _kasiComparison?: KasiSingleInputComparison | null;
+  _metadata?: SajuPersistedReadingMetadata;
 }
 
 export interface ReadingRecord {
@@ -44,6 +49,7 @@ export interface ReadingRecord {
   result: LegacySajuResult;
   grounding: SajuInterpretationGrounding;
   kasiComparison: KasiSingleInputComparison | null;
+  metadata: SajuPersistedReadingMetadata;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -57,18 +63,21 @@ export function extractPersistedReadingEnvelope(value: unknown): PersistedReadin
   return {
     _grounding: record._grounding as SajuInterpretationGrounding | undefined,
     _kasiComparison: (record._kasiComparison as KasiSingleInputComparison | null | undefined) ?? null,
+    _metadata: record._metadata as SajuPersistedReadingMetadata | undefined,
   };
 }
 
 export function createStoredReadingResultJson(
   sajuData: SajuDataV1,
   grounding: SajuInterpretationGrounding,
-  kasiComparison: KasiSingleInputComparison | null
+  kasiComparison: KasiSingleInputComparison | null,
+  metadata: SajuPersistedReadingMetadata
 ) {
   return {
     ...sajuData,
     _grounding: grounding,
     _kasiComparison: kasiComparison,
+    _metadata: metadata,
   };
 }
 
@@ -131,6 +140,9 @@ function mapReadingRow(row: ReadingRow): ReadingRecord {
   const grounding =
     persisted._grounding ??
     buildSajuInterpretationGrounding(normalizedInput, sajuData, report);
+  const metadata =
+    persisted._metadata ??
+    buildPersistedSajuReadingMetadata(normalizedInput, sajuData, grounding, persisted._kasiComparison ?? null);
 
   return {
     id: row.id,
@@ -141,6 +153,7 @@ function mapReadingRow(row: ReadingRow): ReadingRecord {
     result: deriveLegacySajuResult(sajuData),
     grounding,
     kasiComparison: persisted._kasiComparison ?? null,
+    metadata,
   };
 }
 
@@ -154,7 +167,8 @@ export async function createReading(
   const report = buildSajuReport(normalizedInput, sajuData, 'today');
   const grounding = buildSajuInterpretationGrounding(normalizedInput, sajuData, report);
   const kasiComparison = await buildKasiComparisonSnapshot(normalizedInput);
-  const persistedResultJson = createStoredReadingResultJson(sajuData, grounding, kasiComparison);
+  const metadata = buildPersistedSajuReadingMetadata(normalizedInput, sajuData, grounding, kasiComparison);
+  const persistedResultJson = createStoredReadingResultJson(sajuData, grounding, kasiComparison, metadata);
 
   const { data, error } = await supabase
     .from('readings')
@@ -224,18 +238,18 @@ export async function resolveReading(
   if (!input) return null;
 
   const sajuData = calculateSajuDataV1(input);
+  const normalizedInput = deriveBirthInputFromSajuData(input, sajuData);
+  const report = buildSajuReport(normalizedInput, sajuData, 'today');
+  const grounding = buildSajuInterpretationGrounding(normalizedInput, sajuData, report);
 
   return {
     id: identifier,
     userId: null,
-    input: deriveBirthInputFromSajuData(input, sajuData),
+    input: normalizedInput,
     sajuData,
     result: deriveLegacySajuResult(sajuData),
-    grounding: buildSajuInterpretationGrounding(
-      deriveBirthInputFromSajuData(input, sajuData),
-      sajuData,
-      buildSajuReport(deriveBirthInputFromSajuData(input, sajuData), sajuData, 'today')
-    ),
+    grounding,
     kasiComparison: null,
+    metadata: buildPersistedSajuReadingMetadata(normalizedInput, sajuData, grounding, null),
   };
 }
