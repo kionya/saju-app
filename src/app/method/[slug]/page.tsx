@@ -4,7 +4,12 @@ import { notFound } from 'next/navigation';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { Badge } from '@/components/ui/badge';
 import { AppPage, AppShell } from '@/shared/layout/app-shell';
-import { ENGINE_METHOD_ENTRIES, getEngineMethodEntry } from '@/lib/engine-method-pages';
+import {
+  ENGINE_METHOD_ENTRIES,
+  type EngineMethodEntry,
+  getEngineMethodEntriesBySlug,
+  getEngineMethodEntry,
+} from '@/lib/engine-method-pages';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -42,6 +47,31 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+function buildMethodFaqs(item: EngineMethodEntry) {
+  const firstSection = item.sections[0];
+  const secondSection = item.sections[1];
+  const visibleChecks = item.checklist.slice(0, 3).join(', ');
+
+  return [
+    {
+      question: item.question,
+      answer: item.lead,
+    },
+    {
+      question: `${item.title}에서 먼저 확인해야 할 기준은 무엇인가요?`,
+      answer: firstSection
+        ? `${firstSection.body} 달빛선생에서는 ${visibleChecks} 같은 기준을 결과 화면에서 함께 확인할 수 있습니다.`
+        : `${visibleChecks} 같은 기준을 먼저 확인하는 편이 좋습니다.`,
+    },
+    {
+      question: '달빛선생에서는 이 주제를 어떤 방식으로 보여주나요?',
+      answer: secondSection
+        ? `${secondSection.body} 결과 화면에서는 판정 근거와 체크 포인트를 같이 보여주고, 필요한 경우 엔진 기준서와 심층 리포트로 이어서 확인할 수 있습니다.`
+        : '결과 화면에서는 판정 근거와 체크 포인트를 같이 보여주고, 필요한 경우 엔진 기준서와 심층 리포트로 이어서 확인할 수 있습니다.',
+    },
+  ];
+}
+
 export default async function MethodDetailPage({ params }: Props) {
   const { slug } = await params;
   const item = getEngineMethodEntry(slug);
@@ -50,11 +80,60 @@ export default async function MethodDetailPage({ params }: Props) {
     notFound();
   }
 
-  const relatedItems = ENGINE_METHOD_ENTRIES.filter((entry) => entry.slug !== item.slug);
+  const guidedItems = getEngineMethodEntriesBySlug(item.relatedSlugs);
+  const secondaryItems = ENGINE_METHOD_ENTRIES.filter(
+    (entry) => entry.slug !== item.slug && !item.relatedSlugs.includes(entry.slug)
+  ).slice(0, 3);
+  const faqs = buildMethodFaqs(item);
+  const articleJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: item.title,
+    description: item.description,
+    inLanguage: 'ko-KR',
+    isAccessibleForFree: true,
+    mainEntityOfPage: `https://saju-app-lac.vercel.app/method/${item.slug}`,
+    url: `https://saju-app-lac.vercel.app/method/${item.slug}`,
+    articleSection: item.eyebrow,
+    keywords: item.keywords,
+    author: {
+      '@type': 'Organization',
+      name: '달빛선생',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: '달빛선생',
+      url: 'https://saju-app-lac.vercel.app',
+    },
+    about: item.keywords.map((keyword) => ({
+      '@type': 'Thing',
+      name: keyword,
+    })),
+  };
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  };
 
   return (
     <AppShell header={<SiteHeader />}>
       <AppPage className="space-y-6">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
         <section className="app-panel px-6 py-7 sm:px-8 sm:py-8">
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
@@ -104,6 +183,21 @@ export default async function MethodDetailPage({ params }: Props) {
             </section>
 
             <section className="app-panel p-6 sm:p-7">
+              <div className="app-caption">자주 이어지는 질문</div>
+              <div className="mt-4 space-y-4">
+                {faqs.map((faq) => (
+                  <div
+                    key={faq.question}
+                    className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4"
+                  >
+                    <h2 className="text-sm font-semibold text-[var(--app-ivory)]">{faq.question}</h2>
+                    <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{faq.answer}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="app-panel p-6 sm:p-7">
               <div className="app-caption">마무리 문장</div>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{item.closing}</p>
               <div className="mt-6 flex flex-wrap gap-3">
@@ -131,9 +225,35 @@ export default async function MethodDetailPage({ params }: Props) {
         </section>
 
         <section className="app-panel p-6 sm:p-7">
-          <div className="app-caption">같이 읽어보기</div>
+          <div className="app-caption">다음으로 읽으면 좋은 글</div>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy)]">
+            이 글을 읽고 보통 이어지는 질문만 먼저 골라 두었습니다. 비슷한 말만 반복되는 목록보다,
+            판정 흐름이 자연스럽게 이어지는 순서로 읽는 편이 이해가 훨씬 쉬워집니다.
+          </p>
           <div className="mt-5 grid gap-4 lg:grid-cols-3">
-            {relatedItems.map((entry) => (
+            {guidedItems.map((entry) => (
+              <Link
+                key={entry.slug}
+                href={`/method/${entry.slug}`}
+                className="rounded-[22px] border border-[var(--app-gold)]/20 bg-[rgba(255,255,255,0.03)] p-5 transition-colors hover:bg-[rgba(255,255,255,0.05)]"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="text-sm text-[var(--app-gold-text)]">{entry.eyebrow}</div>
+                  <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+                    이어 읽기
+                  </Badge>
+                </div>
+                <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">{entry.title}</h2>
+                <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{entry.summary}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section className="app-panel p-6 sm:p-7">
+          <div className="app-caption">넓게 이어보기</div>
+          <div className="mt-5 grid gap-4 lg:grid-cols-3">
+            {secondaryItems.map((entry) => (
               <Link
                 key={entry.slug}
                 href={`/method/${entry.slug}`}

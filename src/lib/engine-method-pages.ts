@@ -12,6 +12,7 @@ export interface EngineMethodEntry {
   question: string;
   lead: string;
   keywords: string[];
+  relatedSlugs: string[];
   sections: EngineMethodSection[];
   checklist: string[];
   closing: string;
@@ -40,6 +41,11 @@ export const ENGINE_METHOD_ENTRIES: EngineMethodEntry[] = [
     lead:
       '대화형 AI는 문장을 잘 쓰지만, 명식 계산과 격국·용신 판정까지 동시에 맡기면 기준이 흔들릴 수 있습니다. 달빛선생이 계산과 설명을 분리하는 이유도 여기에 있습니다.',
     keywords: ['AI 사주', '사주 계산 기준', '격국 판정', '용신 해석'],
+    relatedSlugs: [
+      'why-ai-saju-differs-from-calendar-apps',
+      'why-pattern-judgments-diverge',
+      'why-yongsin-is-hard',
+    ],
     sections: [
       {
         title: '흔들림은 말투보다 판정 순서에서 먼저 시작됩니다',
@@ -78,6 +84,11 @@ export const ENGINE_METHOD_ENTRIES: EngineMethodEntry[] = [
     lead:
       '사주는 시주와 절기 경계에서 몇 분 차이로도 해석의 중심이 달라질 수 있습니다. 진태양시는 바로 이 경계 구간을 더 정확하게 읽기 위한 시간 보정 기준입니다.',
     keywords: ['진태양시', '출생지 사주', '시주 계산', '절기 경계'],
+    relatedSlugs: [
+      'why-jeolgi-matters-in-chart-calculation',
+      'what-if-birth-hour-is-unknown',
+      'why-ai-saju-differs-from-calendar-apps',
+    ],
     sections: [
       {
         title: '표준시와 진태양시는 같은 시간을 다르게 읽습니다',
@@ -116,6 +127,11 @@ export const ENGINE_METHOD_ENTRIES: EngineMethodEntry[] = [
     lead:
       '용신은 “부족한 오행 하나를 채우는 문제”처럼 보이지만 실제로는 그렇게 단순하지 않습니다. 강약, 월령, 격국, 계절성, 현재 운이 어떻게 겹치는지를 함께 봐야 하기 때문입니다.',
     keywords: ['용신 계산', '격국 용신', '사주 강약', '계절성 사주'],
+    relatedSlugs: [
+      'why-pattern-judgments-diverge',
+      'why-jeolgi-matters-in-chart-calculation',
+      'how-far-to-trust-gongmang-and-shinsal',
+    ],
     sections: [
       {
         title: '용신은 억부만으로 끝나지 않습니다',
@@ -154,6 +170,11 @@ export const ENGINE_METHOD_ENTRIES: EngineMethodEntry[] = [
     lead:
       '격국은 이름 하나를 붙이는 작업처럼 보이지만, 실제로는 월령의 주도권, 천간 투출, 일간 강약을 어떤 순서로 읽느냐에 따라 해석이 달라질 수 있습니다. 격국이 갈리면 그 뒤 용신과 현실 조언도 함께 달라지기 쉽습니다.',
     keywords: ['격국 판정', '정관격', '종격', '월령 사주', '투출'],
+    relatedSlugs: [
+      'why-yongsin-is-hard',
+      'why-jeolgi-matters-in-chart-calculation',
+      'why-ai-saju-can-drift',
+    ],
     sections: [
       {
         title: '격국은 먼저 월령의 주도권을 확인하는 작업입니다',
@@ -192,6 +213,11 @@ export const ENGINE_METHOD_ENTRIES: EngineMethodEntry[] = [
     lead:
       '출생시를 모른다고 해서 사주풀이가 완전히 멈추는 것은 아닙니다. 다만 시주가 바꾸는 영역을 무리해서 단정하지 않고, 일간·월령·대운처럼 더 안정적인 축을 중심으로 읽어야 결과가 덜 흔들립니다.',
     keywords: ['출생시 모름', '사주 시주', '사주 정확도', '시간 모를 때 사주'],
+    relatedSlugs: [
+      'what-is-true-solar-time',
+      'why-jeolgi-matters-in-chart-calculation',
+      'how-to-read-daewoon-and-sewoon-together',
+    ],
     sections: [
       {
         title: '시간을 몰라도 읽을 수 있는 축은 남아 있습니다',
@@ -230,6 +256,11 @@ export const ENGINE_METHOD_ENTRIES: EngineMethodEntry[] = [
     lead:
       '만세력 앱은 기둥과 운의 구조를 보여주는 데 강하고, 대화형 AI는 문장 설명에 강합니다. 문제는 계산 기준과 설명 레이어가 분리되지 않으면 사용자가 “기둥이 다른가, 말투만 다른가”를 구분하기 어려워진다는 점입니다.',
     keywords: ['만세력 앱', 'AI 사주 비교', '사주 결과 차이', '기둥 계산'],
+    relatedSlugs: [
+      'why-ai-saju-can-drift',
+      'what-is-true-solar-time',
+      'why-jeolgi-matters-in-chart-calculation',
+    ],
     sections: [
       {
         title: '만세력 앱은 보통 구조를, AI는 보통 설명을 잘합니다',
@@ -268,6 +299,11 @@ export const ENGINE_METHOD_ENTRIES: EngineMethodEntry[] = [
     lead:
       '사주에서 월은 달력 숫자가 아니라 절기의 흐름으로 잡습니다. 같은 3월이라도 절기 경계를 넘었는지에 따라 월령이 바뀌고, 그 변화는 격국·강약·용신 판정의 출발점을 함께 바꿉니다.',
     keywords: ['절기 사주', '월령', '사주 월주', '명식 계산 기준'],
+    relatedSlugs: [
+      'what-is-true-solar-time',
+      'why-pattern-judgments-diverge',
+      'why-yongsin-is-hard',
+    ],
     sections: [
       {
         title: '사주에서 월은 달력이 아니라 계절의 문턱입니다',
@@ -306,6 +342,11 @@ export const ENGINE_METHOD_ENTRIES: EngineMethodEntry[] = [
     lead:
       '세운은 한 해의 촉발점이고, 대운은 그 촉발점이 어떤 배경 위에서 작동하는지 알려주는 큰 흐름입니다. 올해 운만 따로 보면 말은 빠르지만, 왜 그 일이 지금 더 크게 체감되는지는 놓치기 쉽습니다.',
     keywords: ['대운 세운', '사주 운세 흐름', '연간 운세', '대운 해석'],
+    relatedSlugs: [
+      'what-if-birth-hour-is-unknown',
+      'how-far-to-trust-gongmang-and-shinsal',
+      'why-ai-saju-differs-from-calendar-apps',
+    ],
     sections: [
       {
         title: '대운은 배경, 세운은 촉발점에 가깝습니다',
@@ -344,6 +385,11 @@ export const ENGINE_METHOD_ENTRIES: EngineMethodEntry[] = [
     lead:
       '공망과 신살은 많은 분들이 가장 먼저 불안해하는 항목이지만, 실제로는 중심 판정을 뒤집는 기준이 아니라 보조 신호에 가깝습니다. 문제는 이 항목이 과장되면 사주가 구조 해석이 아니라 공포 예언처럼 들린다는 점입니다.',
     keywords: ['공망', '신살', '사주 해석 기준', '사주 불안'],
+    relatedSlugs: [
+      'how-to-read-daewoon-and-sewoon-together',
+      'why-yongsin-is-hard',
+      'what-if-birth-hour-is-unknown',
+    ],
     sections: [
       {
         title: '공망과 신살은 중심 판정 위에 얹는 보조 레이어입니다',
