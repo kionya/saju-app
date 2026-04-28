@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { GroundingKasiSummary } from '@/components/ai/grounding-kasi-summary';
+import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { SajuInterpretationGrounding } from '@/domain/saju/report';
@@ -248,6 +249,21 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
           kasiComparison={data.kasiComparison}
           metadata={data.metadata}
           title="이 연간 리포트가 참고한 실제 계산 근거"
+        />
+      </div>
+
+      <div className="mt-6">
+        <EngineMethodLinks
+          title="연간 흐름을 읽을 때 같이 보면 좋은 기준"
+          description="대운과 세운을 어떻게 같이 읽는지, 시간을 모를 때 어디까지 보수적으로 낮춰야 하는지, 공망과 신살은 어느 선까지 참고해야 하는지를 함께 정리했습니다."
+          slugs={[
+            'how-to-read-daewoon-and-sewoon-together',
+            'what-if-birth-hour-is-unknown',
+            'how-far-to-trust-gongmang-and-shinsal',
+          ]}
+          ctaHref="/method"
+          ctaLabel="관련 기준 더 보기"
+          compact
         />
       </div>
 

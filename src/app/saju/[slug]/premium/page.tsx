@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import FortuneCalendarPanel from '@/components/ai/fortune-calendar-panel';
 import LifetimeReportPanel from '@/components/ai/lifetime-report-panel';
 import YearlyReportPanel from '@/components/ai/yearly-report-panel';
+import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import {
   SAJU_PREMIUM_SECTIONS,
   SAJU_PREMIUM_PREVIEW,
@@ -380,6 +381,19 @@ export default async function SajuPremiumPage({ params }: Props) {
             </Link>
           </div>
         </section>
+
+        <EngineMethodLinks
+          title="지금 보고 있는 심층 리포트와 가장 직접적으로 이어지는 기준 글"
+          description="격국, 용신, 대운, 시간 기준처럼 실제 판정과 행동 조언을 바꾸는 항목만 골라 바로 이어볼 수 있게 두었습니다."
+          slugs={[
+            'why-pattern-judgments-diverge',
+            'why-yongsin-is-hard',
+            'how-to-read-daewoon-and-sewoon-together',
+            'how-far-to-trust-gongmang-and-shinsal',
+          ]}
+          ctaHref="/method"
+          ctaLabel="연결된 읽을거리 전체 보기"
+        />
 
         {hasLifetimeAccess ? (
           <>

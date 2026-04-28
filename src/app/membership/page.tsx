@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import { AppShell } from '@/shared/layout/app-shell';
 import {
   INTERPRETATION_JOURNEY,
@@ -157,6 +158,21 @@ export default function MembershipPage() {
               </Link>
             </div>
           </article>
+        </section>
+
+        <section className="mt-8">
+          <EngineMethodLinks
+            title="플랜을 고르기 전에, 왜 계산 기준이 가격을 바꾸는지 먼저 보셔도 됩니다"
+            description="멤버십은 단순히 더 많이 보는 플랜이 아니라, 흔들리기 쉬운 판정 축을 더 투명하게 확인하고 오래 보관하는 구조입니다. 아래 글들은 Premium과 Lifetime의 차이를 납득시키는 데 가장 직접적인 읽을거리입니다."
+            slugs={[
+              'why-pattern-judgments-diverge',
+              'why-yongsin-is-hard',
+              'why-ai-saju-differs-from-calendar-apps',
+              'how-to-read-daewoon-and-sewoon-together',
+            ]}
+            ctaHref="/about-engine"
+            ctaLabel="엔진 기준서와 함께 보기"
+          />
         </section>
 
         <section className="mt-8 grid gap-4 lg:grid-cols-3">

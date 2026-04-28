@@ -7,6 +7,7 @@ import { CounselorSelector } from '@/components/counselor/counselor-selector';
 import { TodayConcernSelector } from '@/components/today-fortune/today-concern-selector';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { MoonlightHeroVideo } from '@/components/home/moonlight-hero-video';
+import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import { trackMoonlightEvent } from '@/lib/analytics';
 import type { ConcernId } from '@/lib/today-fortune/types';
@@ -422,6 +423,20 @@ export default function HomePage() {
               ))}
             </div>
           </article>
+        </section>
+
+        <section className="reveal-on-scroll mb-12">
+          <EngineMethodLinks
+            title="달빛선생이 왜 이렇게 읽는지, 짧게 먼저 보셔도 좋습니다"
+            description="홈에서 가장 많이 이어지는 질문은 세 가지입니다. 왜 AI마다 결과가 다른지, 왜 분 단위 시간과 출생지를 묻는지, 시간을 모를 때는 어디까지 읽을 수 있는지부터 짧게 정리해 두었습니다."
+            slugs={[
+              'why-ai-saju-can-drift',
+              'what-is-true-solar-time',
+              'what-if-birth-hour-is-unknown',
+            ]}
+            ctaHref="/method"
+            ctaLabel="기준 읽을거리 전체 보기"
+          />
         </section>
 
         {/* WISDOM GRID */}
