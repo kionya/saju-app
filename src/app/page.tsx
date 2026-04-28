@@ -4,7 +4,9 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import { CounselorSelector } from '@/components/counselor/counselor-selector';
+import { SpecialistMentorGrid } from '@/components/counselor/specialist-mentor-grid';
 import { TodayConcernSelector } from '@/components/today-fortune/today-concern-selector';
+import { ProductReportCard } from '@/components/home/product-report-card';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { MoonlightHeroVideo } from '@/components/home/moonlight-hero-video';
 import { EngineMethodLinks } from '@/components/content/engine-method-links';
@@ -19,6 +21,7 @@ import {
   WISDOM_CARDS,
   toneClasses,
 } from '@/content/moonlight';
+import { PRODUCT_REPORT_CATALOG } from '@/content/report-catalog';
 import {
   buildHomePersonalizationCopy,
   buildPersonalizedTodaySummary,
@@ -392,6 +395,12 @@ export default function HomePage() {
                     ? ` ${counselor.signature}`
                     : ''}
             </p>
+            <div className="mt-6 rounded-[1.5rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.02)] px-5 py-5">
+              <SpecialistMentorGrid
+                title="질문이 분명할 때는, 전문 선생이 먼저 정리해드리는 리포트로 들어가셔도 좋습니다"
+                description="기존 여선생과 남선생은 말투와 설명 결을 고르는 선택입니다. 그와 별개로, 아래 전문 선생들은 어떤 고민을 어떤 리포트로 먼저 보는 편이 좋은지 안내하는 역할을 맡습니다."
+              />
+            </div>
           </article>
         </section>
 
@@ -518,6 +527,24 @@ export default function HomePage() {
             ctaHref="/method"
             ctaLabel="기준 읽을거리 전체 보기"
           />
+        </section>
+
+        <section className="reveal-on-scroll mb-12">
+          <div className="mb-8 text-center">
+            <div className="app-caption mb-3">고민별 리포트</div>
+            <h2 className="moon-section-title mx-auto max-w-3xl">
+              고민별로 깊이가 다른 리포트를 선택하세요
+            </h2>
+            <p className="mx-auto mt-4 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
+              원국 기준서는 나의 바탕을, 연간 전략서는 올해의 흐름을, 궁합과 가족 리포트는 관계의 구조를 따로 정리합니다.
+            </p>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {PRODUCT_REPORT_CATALOG.map((item) => (
+              <ProductReportCard key={item.slug} item={item} />
+            ))}
+          </div>
         </section>
 
         {/* WISDOM GRID */}

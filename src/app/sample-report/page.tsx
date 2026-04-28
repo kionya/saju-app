@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { SpecialistMentorGrid } from '@/components/counselor/specialist-mentor-grid';
 import { Badge } from '@/components/ui/badge';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
@@ -200,6 +201,13 @@ export default function SampleReportPage() {
               ))}
             </div>
           </article>
+        </section>
+
+        <section className="app-panel p-6 sm:p-7">
+          <SpecialistMentorGrid
+            title="질문에 따라 먼저 찾는 전문 선생도 따로 보실 수 있습니다"
+            description="샘플 리포트는 결과물의 구조를 보여드리는 페이지이고, 아래 전문 선생 카드는 어떤 고민을 어떤 리포트로 먼저 이어보면 좋은지 정리해드립니다."
+          />
         </section>
 
         <section className="app-hero-card p-6 sm:p-7">
