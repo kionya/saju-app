@@ -146,7 +146,7 @@ function getCurrentKoreaYear() {
   return Number.isInteger(parsed) ? parsed : new Date().getFullYear();
 }
 
-export function parseAiRequest(payload: unknown): ParsedAiRequest | null {
+function parseAiRequest(payload: unknown): ParsedAiRequest | null {
   if (!payload || typeof payload !== 'object') return null;
 
   const data = payload as Record<string, unknown>;
@@ -183,7 +183,7 @@ export function parseAiRequest(payload: unknown): ParsedAiRequest | null {
   return null;
 }
 
-export function createSafetyResponse(message: string, includeAiChatBilling = true) {
+function createSafetyResponse(message: string, includeAiChatBilling = true) {
   const safety = detectSafeRedirect(message);
 
   if (!safety.shouldBlockResponse) return null;
@@ -202,7 +202,7 @@ export function createSafetyResponse(message: string, includeAiChatBilling = tru
   });
 }
 
-export function inferDialogueFocusTopic(message: string): FocusTopic {
+function inferDialogueFocusTopic(message: string): FocusTopic {
   if (/(연애|애정|썸|고백|이별|결혼|소개팅|재회)/.test(message)) return 'love';
   if (/(재물|돈|금전|수입|지출|투자|사업|매출|정산)/.test(message)) return 'wealth';
   if (/(직장|회사|업무|이직|승진|취업|커리어|직업|면접)/.test(message)) return 'career';
@@ -210,7 +210,7 @@ export function inferDialogueFocusTopic(message: string): FocusTopic {
   return 'today';
 }
 
-export function inferYearlyTargetYear(message: string) {
+function inferYearlyTargetYear(message: string) {
   const explicitYear = message.match(/(20\d{2})\s*년?/);
   if (explicitYear?.[1]) {
     const parsed = Number.parseInt(explicitYear[1], 10);
@@ -226,7 +226,7 @@ export function inferYearlyTargetYear(message: string) {
   return null;
 }
 
-export function isYearlyDialogueIntent(message: string) {
+function isYearlyDialogueIntent(message: string) {
   const hasYearSignal = /(신년\s*운세|신년운세|연간\s*운세|올해\s*운세|올해\s*전체|한\s*해|월별\s*흐름|월별\s*운세|리포트|총론|202\d\s*년)/.test(
     message
   );
@@ -344,7 +344,7 @@ function createDialogueProfileContext(
   };
 }
 
-export function buildDialogueFallback(
+function buildDialogueFallback(
   message: string,
   profileGrounding?: DialogueProfileGrounding | null,
   counselorId: MoonlightCounselorId = 'female'
@@ -507,7 +507,7 @@ function createYearlyDialogueBridge(
   };
 }
 
-export function normalizeDialogueAnswer(text: string) {
+function normalizeDialogueAnswer(text: string) {
   const cleaned = text
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/__(.*?)__/g, '$1')
@@ -527,7 +527,7 @@ export function normalizeDialogueAnswer(text: string) {
   return paragraphs.join('\n\n');
 }
 
-export function createDialoguePrompt(
+function createDialoguePrompt(
   message: string,
   profileGrounding?: DialogueProfileGrounding | null,
   counselorId: MoonlightCounselorId = 'female',

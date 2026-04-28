@@ -185,7 +185,7 @@ function getErrorMessage(error: unknown) {
   return '알 수 없는 오류가 발생했습니다.';
 }
 
-export function parseProfile(payload: unknown): UserProfile | null {
+function parseProfile(payload: unknown): UserProfile | null {
   if (!payload || typeof payload !== 'object') return null;
 
   const data = payload as Record<string, unknown>;
