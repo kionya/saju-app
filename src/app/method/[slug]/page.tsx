@@ -141,14 +141,14 @@ export default async function MethodDetailPage({ params }: Props) {
             </Badge>
             <Badge className="border-white/10 bg-white/5 text-white/68">엔진 기준서 연계 글</Badge>
           </div>
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[var(--app-ivory)] sm:text-5xl">
+          <h1 className="font-display mt-5 text-4xl font-semibold tracking-tight text-[var(--app-ivory)] sm:text-5xl">
             {item.title}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">{item.summary}</p>
 
           <div className="mt-6 rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] p-5">
             <div className="text-sm text-[var(--app-copy-soft)]">이 글이 답하려는 질문</div>
-            <p className="mt-3 text-lg font-semibold text-[var(--app-ivory)]">{item.question}</p>
+            <p className="font-display mt-3 text-lg font-semibold text-[var(--app-ivory)]">{item.question}</p>
             <p className="mt-3 text-sm leading-8 text-[var(--app-copy)]">{item.lead}</p>
           </div>
         </section>
@@ -157,7 +157,9 @@ export default async function MethodDetailPage({ params }: Props) {
           <article className="space-y-4">
             {item.sections.map((section) => (
               <section key={section.title} className="app-panel p-6 sm:p-7">
-                <h2 className="text-3xl font-semibold text-[var(--app-ivory)]">{section.title}</h2>
+                <h2 className="font-display text-3xl font-semibold text-[var(--app-ivory)]">
+                  {section.title}
+                </h2>
                 <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{section.body}</p>
               </section>
             ))}
@@ -167,7 +169,7 @@ export default async function MethodDetailPage({ params }: Props) {
             <section className="moon-lunar-panel p-6 sm:p-7">
               <div className="app-starfield" />
               <div className="app-caption">체크 포인트</div>
-              <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+              <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
                 달빛선생에서는 이 기준이 실제로 보입니다
               </h2>
               <div className="mt-5 space-y-3">
@@ -190,7 +192,9 @@ export default async function MethodDetailPage({ params }: Props) {
                     key={faq.question}
                     className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4"
                   >
-                    <h2 className="text-sm font-semibold text-[var(--app-ivory)]">{faq.question}</h2>
+                <h2 className="font-display text-sm font-semibold text-[var(--app-ivory)]">
+                  {faq.question}
+                </h2>
                     <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{faq.answer}</p>
                   </div>
                 ))}
@@ -243,7 +247,9 @@ export default async function MethodDetailPage({ params }: Props) {
                     이어 읽기
                   </Badge>
                 </div>
-                <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">{entry.title}</h2>
+                <h2 className="font-display mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
+                  {entry.title}
+                </h2>
                 <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{entry.summary}</p>
               </Link>
             ))}
@@ -260,7 +266,9 @@ export default async function MethodDetailPage({ params }: Props) {
                 className="rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] p-5 transition-colors hover:bg-[rgba(255,255,255,0.05)]"
               >
                 <div className="text-sm text-[var(--app-gold-text)]">{entry.eyebrow}</div>
-                <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">{entry.title}</h2>
+                <h2 className="font-display mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
+                  {entry.title}
+                </h2>
                 <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{entry.summary}</p>
               </Link>
             ))}

@@ -62,7 +62,9 @@ export default function MethodIndexPage() {
                 </Badge>
                 <Badge className="border-white/10 bg-white/5 text-white/62">기준서 연계 글</Badge>
               </div>
-              <h2 className="mt-5 text-3xl font-semibold text-[var(--app-ivory)]">{entry.title}</h2>
+              <h2 className="font-display mt-5 text-3xl font-semibold text-[var(--app-ivory)]">
+                {entry.title}
+              </h2>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{entry.summary}</p>
               <div className="mt-5 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4 text-sm leading-7 text-[var(--app-copy-soft)]">
                 {entry.question}
@@ -94,7 +96,7 @@ export default function MethodIndexPage() {
           <article className="moon-lunar-panel p-6 sm:p-7">
             <div className="app-starfield" />
             <div className="app-caption">바로 이어보기</div>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+            <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
               읽은 기준을 바로 리포트에서 확인해보세요
             </h2>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">

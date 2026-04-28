@@ -228,7 +228,9 @@ export default function AboutEnginePage() {
           {ENGINE_PRINCIPLES.map((item) => (
             <article key={item.title} className="app-panel p-6">
               <div className="app-caption">제품 원칙</div>
-              <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">{item.title}</h2>
+              <h2 className="font-display mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
+                {item.title}
+              </h2>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{item.body}</p>
             </article>
           ))}
@@ -237,7 +239,7 @@ export default function AboutEnginePage() {
         <section id="why-not-just-ai" className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
           <article className="app-panel p-6 sm:p-7">
             <div className="app-caption">AI 사주가 흔들리는 이유</div>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+            <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
               일반 AI 사주와 달빛선생의 차이는 말투보다 판정 순서에 있습니다
             </h2>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
@@ -267,7 +269,7 @@ export default function AboutEnginePage() {
           <article className="moon-lunar-panel p-6 sm:p-7">
             <div className="app-starfield" />
             <div className="app-caption">엔진 구조</div>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+            <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
               규칙 엔진이 먼저 계산하고, AI는 그 결과를 설명합니다
             </h2>
             <div className="mt-5 space-y-3">
@@ -283,7 +285,7 @@ export default function AboutEnginePage() {
                   className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="mt-0.5 font-[var(--font-heading)] text-sm text-[var(--app-gold)]/60">
+                    <span className="font-hanja mt-0.5 text-sm text-[var(--app-gold)]/60">
                       {String(index + 1).padStart(2, '0')}
                     </span>
                     <p className="text-sm leading-7 text-[var(--app-copy)]">{item}</p>
@@ -302,7 +304,7 @@ export default function AboutEnginePage() {
           <article className="moon-lunar-panel p-6 sm:p-7">
             <div className="app-starfield" />
             <div className="app-caption">시간 기준</div>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+            <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
               출생시각과 출생지는 왜 끝까지 묻나요?
             </h2>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
@@ -316,7 +318,7 @@ export default function AboutEnginePage() {
                   key={item.label}
                   className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4"
                 >
-                  <div className="text-sm font-semibold text-[var(--app-ivory)]">{item.label}</div>
+                  <div className="font-display text-sm font-semibold text-[var(--app-ivory)]">{item.label}</div>
                   <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
                 </div>
               ))}
@@ -325,7 +327,7 @@ export default function AboutEnginePage() {
 
           <article className="app-panel p-6 sm:p-7">
             <div className="app-caption">정밀도 메시지</div>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+            <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
               1분 차이가 언제 중요한지, 모를 때는 어떻게 안전하게 읽는지 같이 설명합니다
             </h2>
             <div className="mt-5 space-y-3">
@@ -352,7 +354,7 @@ export default function AboutEnginePage() {
         <section id="decision-trace" className="grid gap-6 lg:grid-cols-[1fr_0.95fr]">
           <article className="app-panel p-6 sm:p-7">
             <div className="app-caption">판정 근거 보기</div>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+            <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
               리포트에서는 이 순서대로 근거를 펼쳐드립니다
             </h2>
             <div className="mt-5 space-y-3">
@@ -362,7 +364,7 @@ export default function AboutEnginePage() {
                   className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(7,9,16,0.28)] px-4 py-4"
                 >
                   <div className="flex items-start gap-3">
-                    <span className="mt-0.5 font-[var(--font-heading)] text-sm text-[var(--app-gold)]/60">
+                    <span className="font-hanja mt-0.5 text-sm text-[var(--app-gold)]/60">
                       {String(index + 1).padStart(2, '0')}
                     </span>
                     <p className="text-sm leading-7 text-[var(--app-copy)]">{item}</p>
@@ -375,7 +377,7 @@ export default function AboutEnginePage() {
           <article id="report-ux" className="moon-lunar-panel p-6 sm:p-7">
             <div className="app-starfield" />
             <div className="app-caption">리포트에서 보이는 것</div>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+            <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
               긴 글보다 먼저, 무엇을 근거로 읽었는지가 보여야 합니다
             </h2>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
@@ -398,7 +400,7 @@ export default function AboutEnginePage() {
         <section className="grid gap-6 lg:grid-cols-[1fr_0.95fr]">
           <article className="app-panel p-6 sm:p-7">
             <div className="app-caption">고전 근거와 안전 원칙</div>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+            <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
               원전은 근거로 쓰고, 단정은 낮춥니다
             </h2>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
@@ -421,7 +423,7 @@ export default function AboutEnginePage() {
           <article id="metadata" className="moon-lunar-panel p-6 sm:p-7">
             <div className="app-starfield" />
             <div className="app-caption">버전과 저장 메타데이터</div>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+            <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
               계산 기준이 바뀌어도 다시 추적할 수 있게 남깁니다
             </h2>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
@@ -431,7 +433,7 @@ export default function AboutEnginePage() {
             </p>
             <div className="mt-5 rounded-[20px] border border-[var(--app-line)] bg-[rgba(7,9,16,0.32)] px-5 py-5">
               <div className="app-caption text-[var(--app-gold-soft)]">저장 메타데이터 예시</div>
-              <div className="mt-4 grid gap-2 font-mono text-xs leading-6 text-[var(--app-copy)]">
+              <div className="font-hanja mt-4 grid gap-2 text-xs leading-6 text-[var(--app-copy)]">
                 {VERSION_FIELDS.map((item) => (
                   <div key={item}>{item}</div>
                 ))}
@@ -442,7 +444,7 @@ export default function AboutEnginePage() {
 
         <section id="faq" className="app-panel p-6 sm:p-7">
           <div className="app-caption">FAQ</div>
-          <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+          <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
             엔진 기준서에서 가장 자주 묻는 질문
           </h2>
           <div className="mt-6 space-y-3">
@@ -451,7 +453,7 @@ export default function AboutEnginePage() {
                 key={item.question}
                 className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4"
               >
-                <summary className="cursor-pointer list-none text-sm font-semibold text-[var(--app-ivory)]">
+                <summary className="font-display cursor-pointer list-none text-sm font-semibold text-[var(--app-ivory)]">
                   {item.question}
                 </summary>
                 <p className="mt-3 text-sm leading-8 text-[var(--app-copy)]">{item.answer}</p>
@@ -473,7 +475,9 @@ export default function AboutEnginePage() {
                 </Badge>
                 <Badge className="border-white/10 bg-white/5 text-white/62">더 읽어보기</Badge>
               </div>
-              <h2 className="mt-5 text-3xl font-semibold text-[var(--app-ivory)]">{entry.title}</h2>
+              <h2 className="font-display mt-5 text-3xl font-semibold text-[var(--app-ivory)]">
+                {entry.title}
+              </h2>
               <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{entry.summary}</p>
               <div className="mt-5 text-sm font-semibold text-[var(--app-gold-text)]">기준서와 연결된 글 보기</div>
             </Link>
@@ -483,7 +487,7 @@ export default function AboutEnginePage() {
         <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <article className="app-panel p-6 sm:p-7">
             <div className="app-caption">다음 단계</div>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
+            <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
               기준서를 읽었다면, 이제 해석을 같은 눈으로 보실 수 있습니다
             </h2>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
@@ -509,14 +513,14 @@ export default function AboutEnginePage() {
           <article className="moon-lunar-panel p-6 sm:p-7">
             <div className="app-starfield" />
             <div className="app-caption">핵심 문장</div>
-            <h2 className="mt-3 text-3xl font-semibold text-[var(--app-gold-text)]">
+            <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-gold-text)]">
               달빛선생은 계산된 명리 구조를 AI가 이해하기 쉽게 설명하는 서비스입니다
             </h2>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
               이 한 문장이 홈, 입력 화면, 리포트, 대화, 멤버십까지 같은 기준으로 이어지게 만드는 것이
               달빛선생 엔진 기준서의 목적입니다.
             </p>
-            <div className="mt-5 rounded-[18px] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-5 py-5 text-sm leading-8 text-[var(--app-copy)]">
+            <div className="font-classic mt-5 rounded-[18px] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-5 py-5 text-sm leading-8 text-[var(--app-copy)]">
               좋은 해석은 말맛보다 기준에서 먼저 갈립니다. 달빛선생은 명식, 절기, 격국, 용신, 대운의
               판정을 고정된 계산 기준으로 먼저 잡고, 선생의 말투는 그 결과를 이해하기 쉽게 풀어주는
               설명 레이어로만 사용합니다.

@@ -160,7 +160,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
       <section className="moon-lunar-panel p-6">
         <div className="app-starfield" />
         <div className="app-caption">연간 리포트 생성 중</div>
-        <h2 className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
+        <h2 className="font-display mt-4 text-3xl text-[var(--app-ivory)]">
           {targetYear}년 신년 운세를 정리하고 있습니다
         </h2>
         <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
@@ -202,7 +202,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="app-caption">{targetYear} 신년 운세 프리미엄 리포트</div>
-          <h2 className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
+          <h2 className="font-display mt-4 text-3xl text-[var(--app-ivory)]">
             {targetYear}년 한 해의 큰 흐름을 먼저 읽어드립니다
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
@@ -354,7 +354,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
 
       <div className="mt-6 rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
         <div className="app-caption text-[var(--app-gold-soft)]">올해의 한 줄 요약</div>
-        <p className="mt-4 text-lg font-semibold leading-8 text-[var(--app-ivory)]">
+        <p className="font-display mt-4 text-lg font-semibold leading-8 text-[var(--app-ivory)]">
           {interpretation.oneLineSummary}
         </p>
       </div>
