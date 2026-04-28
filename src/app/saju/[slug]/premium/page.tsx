@@ -356,6 +356,9 @@ export default async function SajuPremiumPage({ params }: Props) {
             평생 리포트는 원국 중심 기준서이고, 올해 리포트는 해당 연도의 흐름 부록입니다. 두 리포트를
             섞지 않고 “평생 기준에서 올해 적용으로” 이어지는 순서로 읽는 구조를 기준으로 정리했습니다.
           </p>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
+            격국, 용신, 대운의 판정은 계산 기준을 먼저 고정하고, AI는 그 결과를 이해하기 쉬운 문장으로만 풀어드립니다.
+          </p>
         </section>
 
         {hasLifetimeAccess ? (

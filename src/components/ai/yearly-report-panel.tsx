@@ -202,6 +202,9 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
           <h2 className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
             {targetYear}년 한 해의 큰 흐름을 먼저 읽어드립니다
           </h2>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
+            명식, 세운, 월운, 대운의 계산 기준을 먼저 고정하고, 이 리포트는 그 결과를 한 해의 언어로 풀어냅니다.
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">

@@ -403,6 +403,9 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
             <h2 className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
               내 사주의 원본 해설서를 평생 기준서로 정리했습니다
             </h2>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
+              일간, 강약, 격국, 용신, 대운의 판정을 먼저 고정하고, 이 리포트는 그 구조를 평생 기준서 문장으로만 풀어냅니다.
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">

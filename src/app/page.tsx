@@ -244,6 +244,16 @@ export default function HomePage() {
             <Link href="/saju/new" className="moon-cta-secondary">사주 시작하기</Link>
           </div>
 
+          <div className="max-w-3xl text-center">
+            <p className="text-sm font-medium text-[var(--app-gold-text)]">
+              좋은 해석은 말맛보다 기준에서 먼저 갈립니다.
+            </p>
+            <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">
+              달빛선생은 AI가 사주를 즉흥적으로 추측하지 않습니다. 출생 정보로 명식과 운의 구조를 먼저 계산하고,
+              선생의 말투는 그 결과를 이해하기 쉽게 풀어주는 역할만 맡습니다.
+            </p>
+          </div>
+
           <div className="moon-hero-concern-card w-full max-w-5xl rounded-[1.8rem] border border-[var(--app-line)] bg-[rgba(7,13,28,0.62)] px-5 py-5 backdrop-blur">
             <div className="text-xs tracking-[0.22em] text-[var(--app-gold)]/72">오늘 고민 빠른 선택</div>
             <div className="mt-3">
@@ -269,7 +279,7 @@ export default function HomePage() {
               onChange={(nextCounselor) => void selectCounselor(nextCounselor)}
               variant="hero"
               title="사주를 읽는 선생을 골라보세요"
-              description="해석 엔진은 같고, 말의 결만 달라집니다. 고르신 선생의 말투는 대화와 사주 해석에 이어집니다."
+              description="명식과 운의 구조는 같은 계산 기준으로 먼저 잡고, 선생의 말투는 그 결과를 이해하기 쉽게 풀어드립니다."
             />
             <p className="mt-3 text-center text-xs leading-6 text-[var(--app-copy-soft)]">
               지금은{' '}

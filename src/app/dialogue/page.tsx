@@ -42,12 +42,10 @@ export default async function DialoguePage({
             <div className="max-w-3xl">
               <div className="app-caption mb-4">달빛선생과 대화</div>
               <h1 className="font-[var(--font-heading)] text-3xl leading-[1.32] tracking-tight text-[var(--app-ivory)] sm:text-4xl">
-                말을 꺼내는 것만으로도<br className="hidden sm:block" />
-                이미 한 걸음 나선 것입니다
+                대화 중에도 명식 기준은 바뀌지 않습니다
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-8 text-[var(--app-copy-muted)]">
-                처음 3회 대화는 무료로 이어집니다. 자주 여쭙는 질문을 먼저 고르셔도 되고,
-                편한 말로 한 줄만 남기셔도 됩니다. MY 프로필에 출생 정보가 있으면 명식을 바로 불러옵니다.
+                달빛선생과의 대화는 이미 계산된 명식과 운의 구조를 바탕으로 이어집니다. AI가 대화 중에 격국이나 용신을 새로 추측하지 않으며, 질문에 맞춰 설명의 우선순위만 다시 정리합니다. 처음 3회 대화는 무료로 이어지고, MY 프로필에 출생 정보가 있으면 명식을 바로 불러옵니다.
               </p>
             </div>
             <div className="flex flex-wrap gap-2 lg:shrink-0">

@@ -26,10 +26,10 @@ export default function MembershipPage() {
             <div>
               <div className="app-caption">결제 · 플랜</div>
               <h1 className="mt-4 font-[var(--font-heading)] text-4xl leading-[1.3] tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-                부담은 덜고, 필요한 깊이만큼만 곁에 두실 수 있습니다
+                프리미엄 리포트는 긴 글이 아니라, 판정 기준이 고정된 해석입니다
               </h1>
               <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-                결제는 늘 조심스러운 일이라, 먼저 가격과 열리는 혜택, 해지와 환불 안내를 한곳에 차분히 모아두었습니다.
+                격국, 용신, 대운처럼 결과를 크게 바꾸는 항목은 AI의 말맛에 맡기지 않고 엔진 기준으로 먼저 계산합니다. 각 플랜은 그 계산 결과를 얼마나 깊고 오래 보관하느냐의 차이로 나뉩니다.
               </p>
             </div>
             <div className="hidden justify-self-end lg:block">
@@ -130,12 +130,12 @@ export default function MembershipPage() {
             <div className="app-starfield" />
             <div className="app-caption">가장 많이 고르는 시작법</div>
             <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
-              먼저 프리미엄으로 넉넉히 써보고,
+              먼저 Premium으로 기준을 읽어보고,
               <br />
-              오래 남길 해석은 평생 리포트로
+              오래 남길 해석은 Lifetime으로
             </div>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-              먼저 넓게 써보신 뒤 정말 자주 다시 보고 싶은 해석만 오래 남기는 방식이 가장 편안합니다.
+              횟수를 늘리는 것보다 계산 기준이 어떻게 고정되는지 먼저 체감하는 편이 더 중요합니다. Premium은 올해와 현재 운의 흐름을, Lifetime은 원국 중심 기준서를 오래 보관하는 구조입니다.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link

@@ -737,7 +737,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                   내 사주를 보려면 출생 정보를 알려주세요
                 </h1>
                 <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
-                  오늘운세처럼 바로 시작합니다. 양력·음력, 태어난 시간, 출생지를 입력하시면 먼저 기본 해석으로 이어지고, 필요하실 때만 심층 리포트로 넓혀보실 수 있습니다.
+                  정확한 출생시각을 모르셔도 괜찮습니다. 다만 시주와 절기 경계에서는 몇 분 차이로 해석의 중심이 달라질 수 있어, 양력·음력, 태어난 시간, 출생지를 함께 받을수록 명식 기준을 더 또렷하게 잡을 수 있습니다. 시간이 정확하지 않으면 시주 판단을 줄이고 일간·월령·대운 중심으로 안전하게 읽습니다.
                 </p>
 
                 <div className="mt-6 rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">

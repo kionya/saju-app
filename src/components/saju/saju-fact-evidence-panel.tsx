@@ -1,4 +1,5 @@
 import type { SajuInterpretationGrounding } from '@/domain/saju/report';
+import { GroundingDecisionTrace } from '@/components/saju/grounding-decision-trace';
 import type { ClassicEvidenceItem } from '@/server/classics/evidence';
 import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 
@@ -34,6 +35,13 @@ export function SajuFactEvidencePanel({
           오늘 보이는 문장이 막연한 요약이 아니라, 어떤 간지와 강약 점수, 격국 근거, 용신 후보를
           바탕으로 나왔는지 먼저 확인할 수 있습니다.
         </p>
+      </div>
+
+      <div className="mt-6">
+        <GroundingDecisionTrace
+          grounding={grounding}
+          kasiComparison={kasiComparison}
+        />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">

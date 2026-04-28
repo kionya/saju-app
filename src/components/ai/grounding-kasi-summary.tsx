@@ -1,4 +1,5 @@
 import type { SajuInterpretationGrounding } from '@/domain/saju/report';
+import { GroundingDecisionTrace } from '@/components/saju/grounding-decision-trace';
 import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 
 function buildKasiLine(kasiComparison: KasiSingleInputComparison | null | undefined) {
@@ -77,6 +78,14 @@ export function GroundingKasiSummary({
         ))}
       </div>
       <p className="mt-4 text-xs leading-6 text-[var(--app-copy-soft)]">{buildKasiLine(kasiComparison)}</p>
+      <div className="mt-4">
+        <GroundingDecisionTrace
+          grounding={grounding}
+          kasiComparison={kasiComparison}
+          title="판정 근거 보기"
+          compact
+        />
+      </div>
     </section>
   );
 }
