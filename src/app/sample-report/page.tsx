@@ -1,25 +1,23 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import SiteHeader from "@/features/shared-navigation/site-header";
-import { AppPage, AppShell, PageHero } from "@/shared/layout/app-shell";
-
-const SAMPLE_REPORT_TARGET = "/saju/1982-1-29-8-male/premium?targetYear=2026";
-
-const SAMPLE_SECTIONS = [
-  "한 줄 총평과 올해의 강한 주제",
-  "격국 후보와 최종 판정 근거",
-  "용신 · 희신 · 기신 정리",
-  "대운 · 세운 · 월운 연결",
-  "PDF 저장과 MY 보관함 재열람",
-] as const;
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import SiteHeader from '@/features/shared-navigation/site-header';
+import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
+import {
+  SAMPLE_DECISION_TRACE,
+  SAMPLE_KEEP_VALUES,
+  SAMPLE_REPORT_HERO,
+  SAMPLE_SUBJECT,
+  SAMPLE_SUMMARY,
+  SAMPLE_TOC,
+} from './sample-report.data';
 
 export const metadata: Metadata = {
-  title: "샘플 기준서",
+  title: '샘플 리포트',
   description:
-    "달빛선생의 명리 기준서가 어떤 구조와 판정 근거로 펼쳐지는지 결제 전에 미리 살펴보세요.",
+    '달빛선생의 프리미엄 명리 리포트가 어떤 구조와 판정 근거로 펼쳐지는지 결제 전에 먼저 확인해보세요.',
   alternates: {
-    canonical: "/sample-report",
+    canonical: '/sample-report',
   },
 };
 
@@ -33,69 +31,64 @@ export default function SampleReportPage() {
               key="sample"
               className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]"
             >
-              샘플 기준서
+              {SAMPLE_REPORT_HERO.eyebrow}
             </Badge>,
             <Badge
-              key="preview"
+              key="mock"
               className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
             >
-              결제 전 미리보기
+              가상 인물 예시
             </Badge>,
           ]}
-          title="당신의 사주를 한 권의 기준서로 남기는 방식부터 먼저 보셔도 괜찮습니다"
-          description="샘플 기준서는 명식 계산 결과를 어떻게 펼쳐 보이는지, 판정 근거와 PDF·보관함 가치가 어떤 순서로 이어지는지 확인하기 위한 미리보기 화면입니다."
+          title={SAMPLE_REPORT_HERO.title}
+          description={SAMPLE_REPORT_HERO.description}
         />
 
-        <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+        <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
           <article className="moon-lunar-panel p-6 sm:p-7">
             <div className="app-starfield" />
-            <div className="app-caption">샘플 기준서에서 먼저 보이는 것</div>
+            <div className="app-caption">샘플 대상</div>
             <h2 className="mt-3 font-display text-3xl text-[var(--app-gold-text)]">
-              길이보다 먼저, 판정 근거와 소장 가치가 보이도록 구성했습니다
+              {SAMPLE_SUBJECT.label} {SAMPLE_SUBJECT.name}의 기준서 예시입니다
             </h2>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-              달빛선생의 기준서는 한 줄 총평에서 끝나지 않습니다. 강약, 격국 후보, 용신 후보,
-              현재 운 연결, PDF 저장, MY 보관함 재열람까지 한 번의 읽기 흐름으로 이어집니다.
+              {SAMPLE_SUBJECT.birth} · {SAMPLE_SUBJECT.place}
+              <br />
+              {SAMPLE_SUBJECT.note}
             </p>
 
-            <div className="mt-5 grid gap-3">
-              {SAMPLE_SECTIONS.map((item, index) => (
-                <div
-                  key={item}
-                  className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4"
-                >
-                  <div className="flex items-start gap-3">
-                    <span className="font-hanja text-sm text-[var(--app-gold)]/70">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <div className="text-sm leading-7 text-[var(--app-copy)]">{item}</div>
-                  </div>
-                </div>
-              ))}
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <section className="rounded-[20px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
+                <div className="app-caption">이 사주의 핵심 한 줄</div>
+                <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+                  {SAMPLE_SUMMARY.oneLine}
+                </p>
+              </section>
+              <section className="rounded-[20px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
+                <div className="app-caption">유리한 선택 방식</div>
+                <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+                  {SAMPLE_SUMMARY.favorableChoice}
+                </p>
+              </section>
             </div>
           </article>
 
           <article className="app-panel p-6 sm:p-7">
-            <div className="app-caption">인용 미리보기</div>
+            <div className="app-caption">다음 단계</div>
             <h2 className="mt-3 font-display text-3xl text-[var(--app-ivory)]">
-              고전 원문과 현대 해석은 같은 결이 아니라, 다른 층으로 나누어 보여드립니다
+              실제 리포트는 입력하신 출생 정보와 엔진 판정 기준에 따라 개별적으로 계산됩니다
             </h2>
-            <blockquote className="mt-5 rounded-[20px] border border-[var(--app-gold)]/16 bg-[var(--app-gold)]/8 px-5 py-5 font-classic text-base leading-8 text-[var(--app-gold-text)]">
-              用神은 부족한 오행을 기계적으로 채우는 표기가 아니라, 격국과 계절, 강약의 균형을
-              함께 보고 판단하는 보완 축입니다.
-            </blockquote>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-              실제 기준서에서는 고전 원문, 한글 풀이, 판정 근거, 참고 해석 여부를 나누어 보여주며,
-              한자 표기는 <span className="font-hanja">甲木 · 用神 · 格局</span>처럼 glyph가
-              흔들리지 않도록 별도 역할을 둡니다.
+              이 페이지는 계산 정확도를 시연하기보다, 달빛선생 리포트가 어디까지 펼쳐지는지
+              결제 전에 먼저 보여드리기 위한 미리보기입니다.
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <Link
-                href={SAMPLE_REPORT_TARGET}
+                href="/saju/new"
                 className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
               >
-                샘플 기준서 열기
+                내 명리 기준서 만들기
               </Link>
               <Link
                 href="/about-engine"
@@ -105,6 +98,134 @@ export default function SampleReportPage() {
               </Link>
             </div>
           </article>
+        </section>
+
+        <section className="grid gap-4 lg:grid-cols-2">
+          <article className="app-panel p-6 sm:p-7">
+            <div className="app-caption">올해 가장 강한 주제 3개</div>
+            <ul className="mt-4 space-y-2 text-sm leading-7 text-[var(--app-copy)]">
+              {SAMPLE_SUMMARY.strongTopics.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="text-[var(--app-gold)]">•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+
+          <article className="app-panel p-6 sm:p-7">
+            <div className="app-caption">조심해야 할 패턴 3개</div>
+            <ul className="mt-4 space-y-2 text-sm leading-7 text-[var(--app-copy)]">
+              {SAMPLE_SUMMARY.cautionPatterns.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="text-[var(--app-gold)]">•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        </section>
+
+        <section className="app-panel p-6 sm:p-7">
+          <div className="app-caption">리포트 목차</div>
+          <h2 className="mt-3 font-display text-3xl text-[var(--app-ivory)]">
+            한 번의 해석이 어디까지 이어지는지, 14개 대섹션으로 먼저 보여드립니다
+          </h2>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {SAMPLE_TOC.map((item, index) => (
+              <article
+                key={item}
+                className="rounded-[20px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
+              >
+                <div className="flex items-start gap-3">
+                  <span className="font-hanja text-sm text-[var(--app-gold)]/75">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
+                  <div className="text-sm leading-7 text-[var(--app-copy)]">{item}</div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+          <article className="app-panel p-6 sm:p-7">
+            <div className="app-caption">판정 근거 미리보기</div>
+            <h2 className="mt-3 font-display text-3xl text-[var(--app-ivory)]">
+              왜 이렇게 읽는지 남기는 구조가 달빛선생 리포트의 중심입니다
+            </h2>
+            <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+              실제 리포트에서는 양력/음력 변환, 시간 보정, 격국 후보, 용신 판단, 현재 운 연결을
+              순서대로 펼쳐서 볼 수 있습니다.
+            </p>
+
+            <div className="mt-5 space-y-3">
+              {SAMPLE_DECISION_TRACE.map((item) => (
+                <details
+                  key={item.step}
+                  className="rounded-[18px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="font-hanja text-sm text-[var(--app-gold)]/75">{item.step}</span>
+                      <span className="text-sm font-semibold text-[var(--app-ivory)]">{item.title}</span>
+                    </div>
+                    <span className="rounded-full border border-[var(--app-line)] px-3 py-1 text-xs text-[var(--app-copy-soft)]">
+                      {item.confidence}
+                    </span>
+                  </summary>
+                  <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">{item.result}</p>
+                </details>
+              ))}
+            </div>
+          </article>
+
+          <article className="moon-lunar-panel p-6 sm:p-7">
+            <div className="app-starfield" />
+            <div className="app-caption">소장 가치 미리보기</div>
+            <h2 className="mt-3 font-display text-3xl text-[var(--app-gold-text)]">
+              한 번 읽고 끝나는 결과가 아니라, 다시 확인할 수 있는 기준서로 남기려 합니다
+            </h2>
+
+            <div className="mt-5 grid gap-3">
+              {SAMPLE_KEEP_VALUES.map((item) => (
+                <article
+                  key={item.title}
+                  className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] px-4 py-4"
+                >
+                  <div className="text-sm font-semibold text-[var(--app-ivory)]">{item.title}</div>
+                  <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
+                </article>
+              ))}
+            </div>
+          </article>
+        </section>
+
+        <section className="app-hero-card p-6 sm:p-7">
+          <div className="app-caption">마지막 확인</div>
+          <h2 className="mt-3 font-display text-3xl text-[var(--app-ivory)]">
+            샘플 구조를 보셨다면, 이제 선생님의 기준서를 직접 만들어보셔도 좋습니다
+          </h2>
+          <p className="app-body-copy mt-4 max-w-3xl">
+            실제 결과는 입력하신 출생 정보와 시간 기준에 따라 개별적으로 계산됩니다. 결제 전에는
+            엔진 기준서와 멤버십 차이도 함께 살펴보실 수 있습니다.
+          </p>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/saju/new"
+              className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+            >
+              내 명리 기준서 만들기
+            </Link>
+            <Link
+              href="/membership"
+              className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+            >
+              프리미엄 기준 보기
+            </Link>
+          </div>
         </section>
       </AppPage>
     </AppShell>

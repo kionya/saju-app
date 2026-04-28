@@ -103,12 +103,6 @@ const TRUST_PILLARS = [
   },
 ] as const;
 
-const PREMIUM_PROOF_POINTS = [
-  '핵심 한 줄 · 올해 강한 주제 · 조심할 패턴부터 먼저 보입니다.',
-  '판정 근거, 시간 보정, KASI 대조 상태를 함께 펼쳐볼 수 있습니다.',
-  '명리 기준서 저장, PDF 소장, 대화 이어보기까지 한 줄로 연결됩니다.',
-] as const;
-
 export default function HomePage() {
   const [selectedSlug, setSelectedSlug] = useState(WISDOM_CARDS[0].slug);
   const [selectedConcern, setSelectedConcern] = useState<ConcernId>('general');
@@ -260,11 +254,11 @@ export default function HomePage() {
           <div className="moon-date-badge">{todayLabel}</div>
 
           <div className="moon-hero-headline-wrap">
-            <div className="app-caption mb-4">Premium Myungri Report</div>
+            <div className="app-caption mb-4">프리미엄 명리 리포트</div>
             <h1 className="moon-hero-h1">당신의 사주를 한 권의 기준서로 남깁니다.</h1>
             <p className="moon-hero-sub">
-              달빛선생은 AI가 명식과 용신을 즉흥적으로 추측하지 않습니다. 출생 정보로 먼저 명식과 운의
-              구조를 계산하고, 그 판정 근거를 고급 리포트와 대화로 풀어드립니다.
+              명식, 격국, 용신, 대운은 엔진이 먼저 계산합니다. 달빛선생은 그 구조를 고급 리포트와
+              대화로 풀어드립니다.
             </p>
           </div>
 
@@ -276,7 +270,7 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="moon-hero-actions flex flex-wrap justify-center gap-3">
+          <div className="moon-hero-actions flex w-full max-w-xl flex-col justify-center gap-3 sm:flex-row">
             <Link href="/saju/new" className="moon-cta-primary">
               내 명리 기준서 만들기
             </Link>
@@ -285,22 +279,6 @@ export default function HomePage() {
               className="moon-cta-secondary"
             >
               샘플 리포트 보기
-            </Link>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-[var(--app-copy-muted)]">
-            <Link
-              href="/about-engine#decision-trace"
-              className="inline-flex items-center gap-2 text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-            >
-              판정 근거 먼저 보기
-            </Link>
-            <span className="hidden h-1 w-1 rounded-full bg-[var(--app-copy-soft)] md:block" />
-            <Link
-              href={`/today-fortune?concern=${selectedConcern}`}
-              className="inline-flex items-center gap-2 hover:text-[var(--app-ivory)]"
-            >
-              오늘의 흐름은 가볍게 먼저 보기
             </Link>
           </div>
 
@@ -329,107 +307,6 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="grid w-full max-w-6xl gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-            <article className="rounded-[1.7rem] border border-[var(--app-gold)]/22 bg-[linear-gradient(135deg,rgba(210,176,114,0.1),rgba(8,15,30,0.9))] px-6 py-6 text-left backdrop-blur">
-              <div className="app-caption">샘플 기준서 미리보기</div>
-              <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
-                한 번의 해석이 오래 남도록, 기준과 근거를 먼저 보여드립니다
-              </h2>
-              <div className="mt-5 space-y-3">
-                {PREMIUM_PROOF_POINTS.map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-[1.1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]"
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link
-                  href={REPORT_SAMPLE_HREF}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
-                >
-                  샘플 리포트 펼쳐보기
-                </Link>
-                <Link
-                  href="/about-engine"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
-                >
-                  엔진 기준서 보기
-                </Link>
-              </div>
-            </article>
-
-            <article className="rounded-[1.7rem] border border-[var(--app-line)] bg-[rgba(7,13,28,0.62)] px-5 py-5 text-left backdrop-blur">
-              <div className="app-caption">빠른 무료 확인</div>
-              <h2 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
-                오늘의 흐름은 가볍게 먼저 보셔도 됩니다
-              </h2>
-              <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
-                오늘 고민 선택, 무료 결과, 1코인 심화풀이로 이어지는 빠른 동선은 그대로 열어두었습니다.
-                다만 달빛선생의 중심 가치는 오늘의 운세보다, 오래 남는 기준서와 판정 근거에 있습니다.
-              </p>
-              <div className="mt-4 rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                {todayLine.title} {todayLine.subtitle}
-              </div>
-              <div className="mt-4">
-                <Link
-                  href={`/today-fortune?concern=${selectedConcern}`}
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-                >
-                  오늘의 흐름 먼저 보기
-                </Link>
-              </div>
-            </article>
-          </div>
-
-          <div className="moon-hero-concern-card w-full max-w-5xl rounded-[1.8rem] border border-[var(--app-line)] bg-[rgba(7,13,28,0.62)] px-5 py-5 backdrop-blur">
-            <div className="text-xs tracking-[0.22em] text-[var(--app-gold)]/72">오늘 고민 빠른 선택</div>
-            <div className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">
-              무료 결과로 지금 가장 먼저 확인할 질문을 고르실 수 있습니다. 심층 기준서와는 별개로, 오늘의 흐름만 빠르게 확인하는 짧은 입구입니다.
-            </div>
-            <div className="mt-3">
-              <TodayConcernSelector
-                value={selectedConcern}
-                onChange={(next) => {
-                  setSelectedConcern(next);
-                  trackMoonlightEvent('today_concern_selected', {
-                    from: 'home',
-                    concern: next,
-                  });
-                }}
-                expanded={concernExpanded}
-                onToggleExpanded={() => setConcernExpanded((current) => !current)}
-                compact
-              />
-            </div>
-          </div>
-
-          <div className="moon-counselor-selector-wrap w-full max-w-5xl">
-            <CounselorSelector
-              value={counselorId}
-              onChange={(nextCounselor) => void selectCounselor(nextCounselor)}
-              variant="hero"
-              title="같은 기준을 다른 말투로 읽는 선생을 골라보세요"
-              description="명식과 운의 구조는 같은 계산 기준으로 먼저 잡고, 선생의 말투는 그 결과를 이해하기 쉽게 풀어드립니다."
-            />
-            <p className="mt-3 text-center text-xs leading-6 text-[var(--app-copy-soft)]">
-              지금은{' '}
-              <span className={cn('font-semibold', counselor.accentClassName)}>
-                {counselor.label}
-              </span>
-              {' '}기준으로 읽도록 맞춰집니다.
-              {persistState === 'saved'
-                ? ' 로그인 계정에도 저장했습니다.'
-                : persistState === 'local_only'
-                  ? ' 이 기기에는 바로 반영했고, 로그인 저장은 환경에 따라 나중에 이어질 수 있습니다.'
-                  : counselorReady
-                    ? ` ${counselor.signature}`
-                    : ''}
-            </p>
-          </div>
-
           <p className="text-sm text-[var(--app-copy-soft)]">
             안녕하세요,{' '}
             <span className="text-[var(--app-gold-text)]">{displayName}</span> 선생님
@@ -445,6 +322,78 @@ export default function HomePage() {
 
       {/* ─── CONTENT ─── */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+        <section className="reveal-on-scroll mb-12 grid gap-5 lg:grid-cols-[1.02fr_0.98fr]">
+          <article className="app-panel p-6 sm:p-8">
+            <div className="app-caption">오늘의 흐름도 가볍게 확인해보세요</div>
+            <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
+              오늘의 고민은 빠르게, 기준서는 길게 이어보실 수 있습니다
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+              무료 결과와 오늘 고민 선택은 그대로 열어두었습니다. 다만 달빛선생의 중심 가치는
+              한 번 보고 지나가는 운세보다, 오래 남는 기준서와 판정 근거에 있습니다.
+            </p>
+            <div className="mt-4 rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+              {todayLine.title} {todayLine.subtitle}
+            </div>
+            <div className="mt-5">
+              <TodayConcernSelector
+                value={selectedConcern}
+                onChange={(next) => {
+                  setSelectedConcern(next);
+                  trackMoonlightEvent('today_concern_selected', {
+                    from: 'home',
+                    concern: next,
+                  });
+                }}
+                expanded={concernExpanded}
+                onToggleExpanded={() => setConcernExpanded((current) => !current)}
+                compact
+              />
+            </div>
+            <div className="mt-5">
+              <Link
+                href={`/today-fortune?concern=${selectedConcern}`}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+              >
+                오늘의 흐름 먼저 보기
+              </Link>
+            </div>
+          </article>
+
+          <article className="app-panel-muted p-6 sm:p-8">
+            <div className="app-caption">같은 기준, 다른 말투</div>
+            <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
+              지금 묻고 싶은 결에 맞춰 선생을 먼저 고르실 수 있습니다
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+              여선생은 관계와 마음의 맥락을, 남선생은 재물과 직업의 기준을 좀 더 선명하게
+              풀어드립니다. 해석의 바탕이 되는 명식과 운의 구조는 같은 기준으로 유지됩니다.
+            </p>
+            <div className="mt-5 rounded-[1.4rem] border border-[var(--app-line)] bg-[rgba(7,13,28,0.42)] p-4">
+              <CounselorSelector
+                value={counselorId}
+                onChange={(nextCounselor) => void selectCounselor(nextCounselor)}
+                variant="hero"
+                title="같은 기준을 다른 말투로 읽는 선생을 골라보세요"
+                description="명식과 운의 구조는 같은 계산 기준으로 먼저 잡고, 선생의 말투는 그 결과를 이해하기 쉽게 풀어드립니다."
+              />
+            </div>
+            <p className="mt-4 text-xs leading-6 text-[var(--app-copy-soft)]">
+              지금은{' '}
+              <span className={cn('font-semibold', counselor.accentClassName)}>
+                {counselor.label}
+              </span>
+              {' '}기준으로 읽도록 맞춰집니다.
+              {persistState === 'saved'
+                ? ' 로그인 계정에도 저장했습니다.'
+                : persistState === 'local_only'
+                  ? ' 이 기기에는 바로 반영했고, 로그인 저장은 환경에 따라 나중에 이어질 수 있습니다.'
+                  : counselorReady
+                    ? ` ${counselor.signature}`
+                    : ''}
+            </p>
+          </article>
+        </section>
 
         {/* TODAY + SETUP */}
         <section className="reveal-on-scroll mb-12 grid gap-5 lg:grid-cols-[1fr_22rem]">
