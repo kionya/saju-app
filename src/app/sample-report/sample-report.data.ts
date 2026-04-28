@@ -46,50 +46,73 @@ export const SAMPLE_TOC = [
   '판정 로그',
 ] as const;
 
-export const SAMPLE_DECISION_TRACE = [
+export const SAMPLE_DECISION_TRACE: DecisionTraceItem[] = [
   {
     step: '01',
     title: '월령 기준',
+    input: '양력 1991-10-18 19:20 · 서울',
+    rule: '양력/음력 변환과 절기 기준 확인',
     result:
-      '양력/음력 변환과 절기 기준을 먼저 확인하고, 월령이 전체 분위기를 어떻게 잡는지부터 읽습니다.',
-    confidence: '정통 기준',
+      '월령이 전체 분위기를 강하게 잡고 있어 계절성 판단을 먼저 두고 읽습니다. 이 샘플에서는 계절성과 월령의 방향이 강약 해석의 첫 기준이 됩니다.',
+    confidence: 'orthodox',
   },
   {
     step: '02',
     title: '일간 강약',
+    rule: '월령과 오행 분포를 함께 보며 일간 강약 확인',
     result:
-      '월령과 오행 분포를 함께 보며, 일간이 어떤 방식으로 힘을 쓰는지 생활 언어로 풀어냅니다.',
-    confidence: '정통 기준',
+      '일간은 스스로 밀어붙이기보다 외부 구조를 활용할 때 힘을 더 안정적으로 씁니다. 강약은 단순 점수표로 끝나지 않고, 실제 생활에서 에너지를 쓰는 방식까지 연결해 설명합니다.',
+    confidence: 'orthodox',
   },
   {
     step: '03',
     title: '격국 후보',
+    rule: '월령, 투출, 강약 순서로 격국 후보 검토',
     result:
-      '한 가지 격만 단정하지 않고, 월령·투출·강약 순서로 우선 후보와 보조 후보를 함께 검토합니다.',
-    confidence: '정통 기준',
+      '한 가지 격만 단정하지 않고, 우선 후보와 보조 후보를 함께 검토합니다. 달빛선생은 격국 후보를 먼저 보여드리고, 왜 한 판정을 우선했는지 이어서 설명하는 흐름을 유지합니다.',
+    confidence: 'orthodox',
   },
   {
     step: '04',
     title: '최종 판정',
+    rule: '격국 후보 중 투출과 생조 관계를 함께 비교',
     result:
-      '격국과 강약, 계절성을 함께 보아 왜 이 판정을 우선했는지 남깁니다.',
-    confidence: '정통 기준',
+      '투출과 생조 관계를 함께 보아 한 가지 해석을 우선 기준으로 세웁니다. 최종 격국은 보기 좋게만 요약하지 않고, 왜 다른 후보보다 이쪽이 앞서는지 근거를 남깁니다.',
+    confidence: 'orthodox',
   },
   {
     step: '05',
     title: '용신 판단',
+    rule: '격국·강약·계절성을 묶어 용신/희신/기신 판정',
     result:
-      '용신·희신·기신은 부족한 오행을 기계적으로 채우기보다, 격국 유지와 균형을 함께 보고 정리합니다.',
-    confidence: '정통 기준',
+      '용신은 부족한 오행을 기계적으로 채우기보다, 격국 유지와 계절 균형을 함께 보며 판단합니다. 실제 결과 화면에서는 용신·희신·기신을 나누고, 어떤 상황에서 도움이 되는지까지 생활 언어로 이어집니다.',
+    confidence: 'orthodox',
   },
   {
     step: '06',
     title: '참고 / 논쟁 해석',
+    rule: '논쟁적 해석은 참고 단계로 낮춰 분리 표시',
     result:
-      '학파 차이가 있는 구간은 중심 결론과 분리해서 참고 해석으로 낮춰 보여드립니다.',
-    confidence: '참고 기준',
+      '학파 차이가 있는 구간은 참고 해석으로 낮추고, 중심 판정과 분리해서 보여드립니다. 공망이나 특수한 해석 항목은 중심 결론을 흔들지 않도록 별도 층으로 정리합니다.',
+    confidence: 'reference',
   },
 ] as const;
+
+export const SAMPLE_REPORT_METADATA: ReportMetadata = {
+  engineVersion: 'saju-engine/v1',
+  ruleSetVersion: 'rule-set/2026-04',
+  promptVersion: 'sample-report/v1',
+  generatedAt: '2026-04-29T00:00:00.000Z',
+  birthInputSnapshot: {
+    year: 1991,
+    month: 10,
+    day: 18,
+    hour: 19,
+    minute: 20,
+    place: '서울',
+  },
+  decisionTrace: SAMPLE_DECISION_TRACE,
+};
 
 export const SAMPLE_KEEP_VALUES = [
   {
@@ -109,3 +132,4 @@ export const SAMPLE_KEEP_VALUES = [
     body: '연간·월간 흐름은 같은 명리 기준 위에서 다시 정리되도록 이어집니다.',
   },
 ] as const;
+import type { DecisionTraceItem, ReportMetadata } from '@/lib/saju/report-contract';

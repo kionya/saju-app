@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SpecialistMentorGrid } from '@/components/counselor/specialist-mentor-grid';
+import { DecisionTracePanel } from '@/components/report/decision-trace-panel';
 import { Badge } from '@/components/ui/badge';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 import {
-  SAMPLE_DECISION_TRACE,
   SAMPLE_KEEP_VALUES,
   SAMPLE_REPORT_HERO,
+  SAMPLE_REPORT_METADATA,
   SAMPLE_SUBJECT,
   SAMPLE_SUMMARY,
   SAMPLE_TOC,
@@ -161,24 +162,8 @@ export default function SampleReportPage() {
               순서대로 펼쳐서 볼 수 있습니다.
             </p>
 
-            <div className="mt-5 space-y-3">
-              {SAMPLE_DECISION_TRACE.map((item) => (
-                <details
-                  key={item.step}
-                  className="rounded-[18px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
-                >
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="font-hanja text-sm text-[var(--app-gold)]/75">{item.step}</span>
-                      <span className="text-sm font-semibold text-[var(--app-ivory)]">{item.title}</span>
-                    </div>
-                    <span className="rounded-full border border-[var(--app-line)] px-3 py-1 text-xs text-[var(--app-copy-soft)]">
-                      {item.confidence}
-                    </span>
-                  </summary>
-                  <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">{item.result}</p>
-                </details>
-              ))}
+            <div className="mt-5">
+              <DecisionTracePanel metadata={SAMPLE_REPORT_METADATA} compact />
             </div>
           </article>
 

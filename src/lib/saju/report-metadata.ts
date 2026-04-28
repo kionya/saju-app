@@ -8,6 +8,7 @@ import type {
 import type { SajuInterpretationGrounding } from '@/domain/saju/report';
 import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 import type { BirthInput } from '@/lib/saju/types';
+import type { DecisionTraceItem, ReportMetadata } from './report-contract';
 
 export const SAJU_READING_METADATA_V1 = 'saju-reading-metadata/v1' as const;
 
@@ -33,12 +34,13 @@ export interface SajuBirthInputSnapshot {
   jasiMethod: BirthInput['jasiMethod'] | null;
 }
 
-export interface SajuPersistedReadingMetadata {
+export interface SajuPersistedReadingMetadata extends ReportMetadata {
   schemaVersion: ReadingMetadataSchemaVersion;
   engineVersion: string;
   ruleSetVersion: string;
   factSchemaVersion: string;
   evidenceSchemaVersion: string;
+  generatedAt: string;
   computation: {
     source: SajuComputationSource;
     calculatedAt: string;
@@ -61,9 +63,10 @@ export interface SajuPersistedReadingMetadata {
 }
 
 export interface SajuReportRuntimeMetadata extends SajuPersistedReadingMetadata {
-  promptVersion: string | null;
-  llmModel: string | null;
+  promptVersion?: string;
+  llmModel?: string;
   generationSource: ReportGenerationSource;
+  decisionTrace?: DecisionTraceItem[];
 }
 
 function buildBirthInputSnapshot(input: BirthInput): SajuBirthInputSnapshot {
@@ -110,6 +113,7 @@ export function buildPersistedSajuReadingMetadata(
     ruleSetVersion: sajuData.metadata.ruleSetVersion,
     factSchemaVersion: grounding.factJson.schemaVersion,
     evidenceSchemaVersion: grounding.evidenceJson.schemaVersion,
+    generatedAt: sajuData.metadata.calculatedAt,
     computation: normalizeComputation(sajuData.metadata),
     birthInputSnapshot: buildBirthInputSnapshot(input),
     timeReference: {
@@ -133,12 +137,14 @@ export function buildSajuReportRuntimeMetadata(
     promptVersion?: string | null;
     llmModel?: string | null;
     generationSource?: ReportGenerationSource;
+    decisionTrace?: DecisionTraceItem[];
   } = {}
 ): SajuReportRuntimeMetadata {
   return {
     ...persisted,
-    promptVersion: options.promptVersion ?? null,
-    llmModel: options.llmModel ?? null,
+    promptVersion: options.promptVersion ?? undefined,
+    llmModel: options.llmModel ?? undefined,
     generationSource: options.generationSource ?? null,
+    decisionTrace: options.decisionTrace,
   };
 }

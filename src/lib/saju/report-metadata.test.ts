@@ -27,6 +27,7 @@ test('report metadata keeps normalized engine and rule-set versions around readi
   assert.equal(metadata.ruleSetVersion, sajuData.metadata.ruleSetVersion);
   assert.equal(metadata.factSchemaVersion, grounding.factJson.schemaVersion);
   assert.equal(metadata.evidenceSchemaVersion, grounding.evidenceJson.schemaVersion);
+  assert.equal(metadata.generatedAt, sajuData.metadata.calculatedAt);
   assert.equal(metadata.verification.kasiCompared, false);
 });
 
@@ -44,4 +45,5 @@ test('report metadata can be extended with prompt and model information for UI r
   assert.equal(runtime.promptVersion, 'prompt/v1');
   assert.equal(runtime.llmModel, 'gpt-5.2-chat-latest');
   assert.equal(runtime.generationSource, 'openai');
+  assert.equal(runtime.decisionTrace, undefined);
 });
