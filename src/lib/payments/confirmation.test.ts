@@ -43,7 +43,7 @@ test('lifetime report confirmation requires a reading slug before Toss approval'
 
   assert.deepEqual(result, {
     ok: false,
-    error: '평생 리포트 결제에는 결과 식별자가 필요합니다.',
+    error: '명리 기준서 결제에는 결과 식별자가 필요합니다.',
   });
 });
 

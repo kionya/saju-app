@@ -1,6 +1,21 @@
 import type { Metadata } from "next";
+import { Gowun_Batang, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import { DEFAULT_DESCRIPTION, SITE_NAME, getSiteUrl } from "@/lib/site";
+
+const brandSerif = Noto_Serif_KR({
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: false,
+  variable: "--font-noto-serif-kr",
+});
+
+const classicBatang = Gowun_Batang({
+  weight: ["400", "700"],
+  display: "swap",
+  preload: false,
+  variable: "--font-gowun-batang",
+});
 
 const layoutModeScript = `
 (() => {
@@ -52,7 +67,7 @@ export default function RootLayout({
   return (
     <html
       lang="ko"
-      className="dark h-full antialiased"
+      className={`${brandSerif.variable} ${classicBatang.variable} dark h-full antialiased`}
       data-app-layout="vertical"
       suppressHydrationWarning
     >

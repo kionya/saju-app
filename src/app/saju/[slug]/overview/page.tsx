@@ -52,8 +52,8 @@ export default async function SajuOverviewPage({ params }: Props) {
           <div className="app-starfield" />
           <div className="relative z-10 flex flex-col items-center gap-5 text-center lg:flex-row lg:text-left lg:items-end lg:justify-between">
             <div>
-              <div className="text-[10px] tracking-[0.62em] text-[var(--app-gold)]/60">四 柱 命 理</div>
-              <h1 className="mt-4 font-[var(--font-heading)] text-5xl font-semibold text-[var(--app-gold-text)] sm:text-6xl">
+              <div className="font-hanja text-[10px] tracking-[0.62em] text-[var(--app-gold)]/60">四 柱 命 理</div>
+              <h1 className="mt-4 font-display text-5xl font-semibold text-[var(--app-gold-text)] sm:text-6xl">
                 사주
               </h1>
               <p className="mt-4 max-w-xl text-base leading-8 text-[var(--app-copy-muted)]">
@@ -63,8 +63,8 @@ export default async function SajuOverviewPage({ params }: Props) {
             </div>
             <div className="flex flex-col items-center gap-2">
               <div className="app-moon-orb h-16 w-16" />
-              <div className="font-[var(--font-heading)] text-xs tracking-[0.42em] text-[var(--app-gold-soft)]">
-                일간 {sajuData.dayMaster.stem}
+              <div className="text-xs tracking-[0.42em] text-[var(--app-gold-soft)]">
+                일간 <span className="font-hanja">{sajuData.dayMaster.stem}</span>
               </div>
             </div>
           </div>
@@ -75,7 +75,7 @@ export default async function SajuOverviewPage({ params }: Props) {
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="app-caption">사주 원국</div>
-              <h2 className="mt-2 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
+              <h2 className="mt-2 font-display text-2xl text-[var(--app-ivory)]">
                 선생님의 四柱
               </h2>
             </div>
@@ -104,7 +104,7 @@ export default async function SajuOverviewPage({ params }: Props) {
                   {/* 천간 */}
                   <div className={`mt-4 border-b pb-3 ${isDay ? 'border-[var(--app-gold)]/20' : 'border-[var(--app-line)]'}`}>
                     <div className="text-[9px] tracking-[0.2em] text-[var(--app-copy-soft)]">천간</div>
-                    <div className={`mt-1 font-[var(--font-heading)] text-4xl font-semibold ${isDay ? 'text-[var(--app-gold-text)]' : 'text-[var(--app-ivory)]'}`}>
+                    <div className={`font-hanja mt-1 text-4xl font-semibold ${isDay ? 'text-[var(--app-gold-text)]' : 'text-[var(--app-ivory)]'}`}>
                       {pillar?.stem ?? '?'}
                     </div>
                   </div>
@@ -112,11 +112,11 @@ export default async function SajuOverviewPage({ params }: Props) {
                   {/* 지지 */}
                   <div className="mt-3">
                     <div className="text-[9px] tracking-[0.2em] text-[var(--app-copy-soft)]">지지</div>
-                    <div className="mt-1 font-[var(--font-heading)] text-3xl font-semibold text-[var(--app-ivory)]">
+                    <div className="font-hanja mt-1 text-3xl font-semibold text-[var(--app-ivory)]">
                       {pillar?.branch ?? '?'}
                     </div>
                     {pillar && (
-                      <div className="mt-2 text-[10px] text-[var(--app-copy-soft)]">
+                      <div className="font-hanja mt-2 text-[10px] text-[var(--app-copy-soft)]">
                         {formatHiddenStems(pillar) ?? '—'}
                       </div>
                     )}
@@ -131,7 +131,7 @@ export default async function SajuOverviewPage({ params }: Props) {
 
           <div className="mt-5 rounded-[1.2rem] border border-[var(--app-gold)]/16 bg-[var(--app-surface-muted)] px-5 py-4 text-sm leading-8 text-[var(--app-copy)]">
             일간{' '}
-            <span className="font-[var(--font-heading)] text-base text-[var(--app-gold-text)]">
+            <span className="font-hanja text-base text-[var(--app-gold-text)]">
               {sajuData.dayMaster.stem}
             </span>
             은 {sajuData.dayMaster.metaphor ?? '자연의 상징'}로 읽습니다.{' '}
@@ -139,12 +139,12 @@ export default async function SajuOverviewPage({ params }: Props) {
           </div>
         </section>
 
-        {/* ─── 기본 해석 + 심층 리포트 ─── */}
+        {/* ─── 기본 해석 + 명리 기준서 ─── */}
         <section className="grid gap-5 lg:grid-cols-[1fr_0.96fr]">
 
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">기본 해석</h2>
+              <h2 className="font-display text-2xl text-[var(--app-ivory)]">기본 해석</h2>
               <Badge className="border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 text-[var(--app-jade)]">무료</Badge>
             </div>
 
@@ -161,7 +161,7 @@ export default async function SajuOverviewPage({ params }: Props) {
                 className="moon-wisdom-link-card group flex items-start gap-4"
                 data-tone="gold"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/8 font-[var(--font-heading)] text-sm text-[var(--app-gold-text)]">
+                <div className="font-hanja flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/8 text-sm text-[var(--app-gold-text)]">
                   {String(index + 1).padStart(2, '0')}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -173,21 +173,21 @@ export default async function SajuOverviewPage({ params }: Props) {
             ))}
           </div>
 
-          {/* 심층 리포트 paywall */}
+          {/* 명리 기준서 paywall */}
           <article className="moon-lunar-panel p-6">
             <div className="app-starfield" />
             <div className="relative z-10">
               <div className="flex items-center justify-between gap-3">
-                <div className="app-caption">심층 리포트</div>
+                <div className="app-caption">명리 기준서</div>
                 <span className="rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 px-3 py-1 text-[10px] tracking-[0.18em] text-[var(--app-gold-text)]">
                   PREMIUM
                 </span>
               </div>
-              <div className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-gold-text)]">
-                심층 리포트
+              <div className="mt-3 font-display text-2xl text-[var(--app-gold-text)]">
+                나의 명리 기준서
               </div>
               <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
-                7가지 항목을 평생 소장용 리포트로 정리합니다. 격국, 용신, 대운, 세운, 분야별 조망까지 한 번에 이어집니다.
+                7가지 항목을 평생 소장용 기준서로 정리합니다. 격국, 용신, 대운, 세운, 분야별 조망까지 한 번에 이어집니다.
               </p>
 
               <div className="mt-5 space-y-2">
@@ -212,7 +212,7 @@ export default async function SajuOverviewPage({ params }: Props) {
                   href={`/saju/${slug}/premium`}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)]"
                 >
-                  심층 리포트 열기 <ArrowRight className="h-4 w-4" />
+                  명리 기준서 열기 <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href="/membership"

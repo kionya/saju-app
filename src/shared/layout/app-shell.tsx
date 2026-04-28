@@ -38,7 +38,7 @@ export function PageHero({ title, description, badges, className }: PageHeroProp
   return (
     <section className={cn('app-hero-card p-7 sm:p-8', className)}>
       {badges ? <div className="flex flex-wrap items-center gap-2">{badges}</div> : null}
-      <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[var(--app-ivory)] sm:text-5xl">
+      <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight text-[var(--app-ivory)] sm:text-5xl">
         {title}
       </h1>
       {description ? (

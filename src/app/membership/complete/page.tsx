@@ -11,9 +11,9 @@ interface Props {
 }
 
 const PLAN_LABELS = {
-  basic: '라이트',
-  premium: 'Premium',
-  lifetime: '평생 심층 리포트',
+  basic: '라이트 대화 멤버십',
+  premium: 'Premium 대화 멤버십',
+  lifetime: '나의 명리 기준서',
 } as const;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -87,7 +87,7 @@ export default async function MembershipCompletePage({ searchParams }: Props) {
               href={primaryHref}
               className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
             >
-              {slug && planSlug === 'lifetime' ? '열린 평생 리포트 보기' : completeGuide.primaryLabel}
+              {slug && planSlug === 'lifetime' ? '열린 명리 기준서 보기' : completeGuide.primaryLabel}
             </Link>
             <Link
               href="/"

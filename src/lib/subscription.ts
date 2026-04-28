@@ -190,11 +190,11 @@ export function getSubscriptionStatusLabel(status: SubscriptionStatus) {
 
 export function getSubscriptionPlanLabel(plan: string) {
   if (plan === 'plus_monthly') {
-    return '라이트 월간 멤버십';
+    return '라이트 대화 멤버십';
   }
 
   if (plan === 'premium_monthly') {
-    return 'Premium 월간 멤버십';
+    return 'Premium 대화 멤버십';
   }
 
   return plan;

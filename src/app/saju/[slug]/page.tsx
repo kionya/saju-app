@@ -606,7 +606,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               </h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
                 총론, 상반기·하반기, 일·재물·연애·관계·건강·이동 흐름, 12개월 요약까지 한 번에 정리한
-                프리미엄 리포트를 심층 리포트 안에서 확인할 수 있습니다.
+                프리미엄 리포트를 명리 기준서 안에서 확인할 수 있습니다.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -617,7 +617,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 2026 신년 리포트 보기
               </Link>
               <span className="text-xs text-[var(--app-copy-soft)]">
-                심층 리포트 탭에서 열립니다
+                명리 기준서 탭에서 열립니다
               </span>
             </div>
           </div>

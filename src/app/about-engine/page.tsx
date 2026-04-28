@@ -379,7 +379,7 @@ export default function AboutEnginePage() {
               긴 글보다 먼저, 무엇을 근거로 읽었는지가 보여야 합니다
             </h2>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-              달빛선생의 심층 리포트는 단순히 분량을 늘리는 방식이 아니라, 계산 기준과 판정 근거가 먼저
+              달빛선생의 명리 기준서는 단순히 분량을 늘리는 방식이 아니라, 계산 기준과 판정 근거가 먼저
               보이고 그 위에 긴 설명이 따라오도록 설계합니다.
             </p>
             <div className="mt-5 grid gap-2 sm:grid-cols-2">

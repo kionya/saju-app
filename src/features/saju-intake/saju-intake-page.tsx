@@ -909,7 +909,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                       결과를 만들기 전 필요한 안내만 짧게 확인합니다
                     </h2>
                     <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
-                      기본 해석을 먼저 확인하고, 더 필요한 부분만 심층 리포트로 이어지는 구조입니다.
+                      기본 해석을 먼저 확인하고, 더 필요한 부분만 명리 기준서로 이어지는 구조입니다.
                     </p>
                     <div className="mt-5 space-y-3">
                       {ONBOARDING_CONSENTS.map((item) => (

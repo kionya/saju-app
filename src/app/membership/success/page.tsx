@@ -171,12 +171,12 @@ function SuccessContent() {
         결제 완료
       </Badge>
       <h1 className="mt-5 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-        {buildPremiumResultHref(confirmedPlan, resolvedSlug) ? '리포트로 이동하고 있습니다' : '이용권이 반영되었습니다'}
+        {buildPremiumResultHref(confirmedPlan, resolvedSlug) ? '기준서로 이동하고 있습니다' : '이용권이 반영되었습니다'}
       </h1>
       <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[var(--app-copy)]">
         {buildPremiumResultHref(confirmedPlan, resolvedSlug)
-          ? '결제 확인이 끝났습니다. 선택하신 프리미엄 리포트 화면으로 바로 이동합니다.'
-          : '멤버십과 리포트 권한을 확인했습니다. 이어서 안내 화면에서 다음에 열어볼 항목을 바로 선택하실 수 있습니다.'}
+          ? '결제 확인이 끝났습니다. 선택하신 명리 기준서 화면으로 바로 이동합니다.'
+          : '멤버십과 기준서 권한을 확인했습니다. 이어서 안내 화면에서 다음에 열어볼 항목을 바로 선택하실 수 있습니다.'}
       </p>
       <div className="mt-7">
         <Link href={completeHref}>

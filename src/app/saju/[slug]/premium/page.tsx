@@ -7,6 +7,7 @@ import LifetimeReportPanel from '@/components/ai/lifetime-report-panel';
 import YearlyReportPanel from '@/components/ai/yearly-report-panel';
 import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import {
+  REPORT_SAMPLE_HREF,
   SAJU_PREMIUM_SECTIONS,
   SAJU_PREMIUM_PREVIEW,
   SAJU_PREMIUM_VALUE_POINTS,
@@ -290,8 +291,8 @@ function canUseSubscriptionForPremiumReport(subscription: Awaited<ReturnType<typ
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    title: '심층 리포트',
-    description: '사주 심층 리포트 유료벽 화면입니다.',
+    title: '명리 기준서',
+    description: '사주 명리 기준서와 연간 부록의 미리보기 및 열람 화면입니다.',
     robots: { index: false, follow: false },
   };
 }
@@ -340,21 +341,21 @@ export default async function SajuPremiumPage({ params }: Props) {
           <div className="flex flex-wrap items-center gap-2">
             <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
               {hasLifetimeAccess
-                ? '평생 리포트 · 전체 열람'
+                ? '명리 기준서 · 전체 열람'
                 : yearlyAccessLabel
                   ? '연간 리포트 · 전체 열람'
-                  : '심층 리포트 · 미리보기'}
+                  : '명리 기준서 · 미리보기'}
             </Badge>
           </div>
-          <h1 className="mt-5 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
+          <h1 className="mt-5 font-display text-4xl text-[var(--app-ivory)] sm:text-5xl">
             {hasLifetimeAccess
-              ? '평생 리포트 본문과 올해 부록이 모두 열렸습니다'
+              ? '명리 기준서 본문과 올해 부록이 모두 열렸습니다'
               : yearlyAccessLabel
-                ? `${targetYear} 연간 리포트와 평생 리포트 미리보기가 열렸습니다`
-                : '나머지 6개 섹션, 전체 해석 보기'}
+                ? `${targetYear} 연간 리포트와 명리 기준서 미리보기가 열렸습니다`
+                : '나머지 6개 섹션, 전체 기준서 보기'}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            평생 리포트는 원국 중심 기준서이고, 올해 리포트는 해당 연도의 흐름 부록입니다. 두 리포트를
+            명리 기준서는 원국 중심 기준서이고, 올해 리포트는 해당 연도의 흐름 부록입니다. 두 리포트를
             섞지 않고 “평생 기준에서 올해 적용으로” 이어지는 순서로 읽는 구조를 기준으로 정리했습니다.
           </p>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
@@ -383,7 +384,7 @@ export default async function SajuPremiumPage({ params }: Props) {
         </section>
 
         <EngineMethodLinks
-          title="지금 보고 있는 심층 리포트와 가장 직접적으로 이어지는 기준 글"
+          title="지금 보고 있는 명리 기준서와 가장 직접적으로 이어지는 기준 글"
           description="격국, 용신, 대운, 시간 기준처럼 실제 판정과 행동 조언을 바꾸는 항목만 골라 바로 이어볼 수 있게 두었습니다."
           slugs={[
             'why-pattern-judgments-diverge',
@@ -413,11 +414,11 @@ export default async function SajuPremiumPage({ params }: Props) {
                     {yearlyAccessLabel}
                   </Badge>
                   <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] text-[var(--app-copy-soft)]">
-                    평생 본문은 별도 권한
+                    기준서 본문은 별도 권한
                   </Badge>
                 </div>
-                <h2 className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
-                  연간 리포트는 열려 있고, 평생 기준서는 별도로 보관합니다
+                <h2 className="mt-4 font-display text-3xl text-[var(--app-gold-text)]">
+                  연간 리포트는 열려 있고, 명리 기준서는 별도로 보관합니다
                 </h2>
                 <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
                   지금 권한으로는 올해 흐름과 월별 타이밍을 모두 읽을 수 있습니다. 다만 평생 소장권은 원국의
@@ -433,11 +434,11 @@ export default async function SajuPremiumPage({ params }: Props) {
                 </div>
               </article>
               <article className="moon-plan-card p-6" data-featured="true">
-                <div className="font-[var(--font-heading)] text-2xl text-[var(--app-gold-text)]">
-                  평생 소장 리포트로 확장하기
+                <div className="font-display text-2xl text-[var(--app-gold-text)]">
+                  평생 소장 기준서로 확장하기
                 </div>
                 <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                  연간 리포트가 “올해의 흐름”이라면, 평생 소장 리포트는 “내 사주의 원본 해설서”입니다.
+                  연간 리포트가 “올해의 흐름”이라면, 평생 소장 기준서는 “내 사주의 원본 해설서”입니다.
                   같은 근거를 쓰더라도 역할이 다르기 때문에, 원국 중심 기준서는 별도의 보관형 본문으로
                   나뉘어야 합니다.
                 </p>
@@ -449,11 +450,11 @@ export default async function SajuPremiumPage({ params }: Props) {
                   ))}
                 </div>
                 <div className="mt-6 rounded-[1.2rem] border border-[var(--app-gold)]/18 bg-[rgba(255,255,255,0.02)] px-5 py-5 text-center">
-                  <div className="font-[var(--font-heading)] text-2xl text-[var(--app-gold-text)]">
-                    평생 소장하기 · 49,000원
+                  <div className="font-display text-2xl text-[var(--app-gold-text)]">
+                    나의 명리 기준서 · 49,000원
                   </div>
                   <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                    평생 리포트 본문과 올해 부록을 한 화면에서 열고, 같은 명식으로 다시 들어와도 계속
+                    명리 기준서 본문과 올해 부록을 한 화면에서 열고, 같은 명식으로 다시 들어와도 계속
                     열람할 수 있습니다.
                   </p>
                   <div className="mt-5 flex flex-wrap justify-center gap-3">
@@ -461,7 +462,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                       href={`/membership/checkout?plan=lifetime&slug=${encodedSlug}&from=saju-premium`}
                       className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
                     >
-                      평생 리포트 열기
+                      명리 기준서 열기
                     </Link>
                     <Link
                       href={`/saju/${slug}`}
@@ -479,9 +480,9 @@ export default async function SajuPremiumPage({ params }: Props) {
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <article className="moon-lunar-panel p-6">
             <div className="app-starfield" />
-            <div className="app-caption">미리보기</div>
-            <div className="mt-4 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
-              ① 일주(日柱) 본질
+            <div className="app-caption">결제 전 미리보기</div>
+            <div className="mt-4 font-display text-2xl text-[var(--app-ivory)]">
+              ① 기준서 첫 섹션 미리보기
             </div>
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
               선생님의 일주는 {sajuData.pillars.day.ganzi}입니다. {sajuData.dayMaster.metaphor ?? '자연의 상징'}이
@@ -516,8 +517,8 @@ export default async function SajuPremiumPage({ params }: Props) {
           </article>
 
           <article className="moon-plan-card p-6" data-featured="true">
-            <div className="font-[var(--font-heading)] text-2xl text-[var(--app-gold-text)]">
-              7개 섹션 완성본
+            <div className="font-display text-2xl text-[var(--app-gold-text)]">
+              7개 섹션 완성형 기준서
             </div>
             <div className="mt-5 grid gap-2">
               {SAJU_PREMIUM_SECTIONS.map((item) => (
@@ -531,7 +532,7 @@ export default async function SajuPremiumPage({ params }: Props) {
             </div>
 
             <div className="mt-6 rounded-[1.2rem] border border-[var(--app-gold)]/18 bg-[rgba(255,255,255,0.02)] px-5 py-5">
-              <div className="app-caption">왜 여기서 심층으로 넘어가실까요?</div>
+              <div className="app-caption">왜 여기서 기준서로 넘어가실까요?</div>
               <div className="mt-4 space-y-3">
                 {SAJU_PREMIUM_VALUE_POINTS.map((item) => (
                   <div key={item} className="text-sm leading-7 text-[var(--app-copy)]">
@@ -541,25 +542,46 @@ export default async function SajuPremiumPage({ params }: Props) {
               </div>
             </div>
 
+            <div className="mt-6 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
+              <div className="app-caption">소장 가치</div>
+              <div className="mt-4 grid gap-3">
+                {[
+                  '판정 근거와 본문이 함께 남는 PDF 저장본',
+                  'MY 보관함에서 다시 여는 기준서 본문',
+                  '업데이트 반영본을 나중에 다시 확인하는 재열람 구조',
+                ].map((item) => (
+                  <div key={item} className="text-sm leading-7 text-[var(--app-copy)]">
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="mt-6 rounded-[1.2rem] border border-[var(--app-gold)]/18 bg-[rgba(255,255,255,0.02)] px-5 py-5 text-center">
-              <div className="font-[var(--font-heading)] text-2xl text-[var(--app-gold-text)]">
-                평생 소장하기 · 49,000원
+              <div className="font-display text-2xl text-[var(--app-gold-text)]">
+                나의 명리 기준서 · 49,000원
               </div>
               <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                오늘 바로 전체 7개 섹션이 열리고, 고전 원문 인용, PDF 저장, 이후 업데이트 반영까지 함께 포함됩니다.
+                오늘 바로 전체 7개 섹션이 열리고, 고전 원문 인용, PDF 저장, MY 보관함 재열람, 이후 업데이트 반영까지 함께 포함됩니다.
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-3">
                 <Link
                   href={`/membership/checkout?plan=lifetime&slug=${encodedSlug}&from=saju-premium`}
                   className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
                 >
-                  완성형 리포트 열기
+                  완성형 기준서 열기
                 </Link>
                 <Link
                   href={`/membership/checkout?plan=premium&slug=${encodedSlug}&from=saju-premium`}
                   className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
                 >
-                  Premium으로 먼저 보기
+                  Premium 멤버십으로 먼저 보기
+                </Link>
+                <Link
+                  href={REPORT_SAMPLE_HREF}
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                >
+                  샘플 기준서 다시 보기
                 </Link>
               </div>
             </div>

@@ -63,6 +63,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${siteUrl}/sample-report`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.72,
+    },
+    {
       url: `${siteUrl}/about-engine`,
       lastModified: now,
       changeFrequency: 'monthly',

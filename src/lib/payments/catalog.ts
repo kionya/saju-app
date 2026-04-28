@@ -27,7 +27,7 @@ export const PAYMENT_PACKAGES = [
   },
   {
     id: 'membership_plus',
-    name: '라이트 월간 멤버십',
+    name: '라이트 대화 멤버십',
     credits: 2,
     price: 4900,
     kind: 'subscription',
@@ -36,7 +36,7 @@ export const PAYMENT_PACKAGES = [
   },
   {
     id: 'membership_premium',
-    name: 'Premium 월간 멤버십',
+    name: 'Premium 대화 멤버십',
     credits: 10,
     price: 9900,
     kind: 'subscription',
@@ -45,7 +45,7 @@ export const PAYMENT_PACKAGES = [
   },
   {
     id: 'lifetime_report',
-    name: '평생 심층 리포트',
+    name: '나의 명리 기준서',
     credits: 0,
     price: 49000,
     kind: 'lifetime_report',

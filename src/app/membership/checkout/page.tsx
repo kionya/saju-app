@@ -55,7 +55,7 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
             선택하신 결제를 마지막으로 한 번 더 살펴보세요
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            가격, 결제 방식, 자동 갱신과 환불 안내를 한 화면에 모아두었습니다. 천천히 읽어보신 뒤 편한 마음으로 결정하시면 됩니다.
+            대화 멤버십인지, 소장형 명리 기준서인지에 따라 결제 뒤 열리는 구조가 다릅니다. 가격, 자동 갱신, 보관 방식까지 한 화면에 모아두었습니다.
           </p>
         </section>
 
@@ -140,8 +140,8 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
                 <div className="rounded-[1.2rem] border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-5 py-5">
                   <div className="app-caption">결과 식별자가 필요합니다</div>
                   <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
-                    평생 심층 리포트는 특정 사주 결과에 붙는 소장권입니다. 먼저 사주 결과를 만든 뒤
-                    해당 결과의 “평생 소장하기” 버튼으로 결제하시면 결제 직후 바로 전체 리포트가 열립니다.
+                    나의 명리 기준서는 특정 사주 결과에 붙는 소장권입니다. 먼저 사주 결과를 만든 뒤
+                    해당 결과의 “명리 기준서 열기” 버튼으로 결제하시면 결제 직후 바로 전체 기준서가 열립니다.
                   </p>
                   <Link
                     href="/saju/new"

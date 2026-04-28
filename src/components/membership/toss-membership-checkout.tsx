@@ -62,7 +62,7 @@ export default function TossMembershipCheckout({
 
   async function handlePayment() {
     if (packageId === 'lifetime_report' && !slug) {
-      setErrorMessage('평생 리포트는 먼저 사주 결과를 만든 뒤 해당 결과 화면에서 결제할 수 있습니다.');
+      setErrorMessage('나의 명리 기준서는 먼저 사주 결과를 만든 뒤 해당 결과 화면에서 결제할 수 있습니다.');
       return;
     }
 
