@@ -359,6 +359,26 @@ export default async function SajuPremiumPage({ params }: Props) {
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
             격국, 용신, 대운의 판정은 계산 기준을 먼저 고정하고, AI는 그 결과를 이해하기 쉬운 문장으로만 풀어드립니다.
           </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href="/about-engine"
+              className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+            >
+              엔진 기준서 보기
+            </Link>
+            <Link
+              href={
+                hasLifetimeAccess
+                  ? '#lifetime-evidence'
+                  : yearlyAccessLabel
+                    ? '#yearly-evidence'
+                    : '/about-engine#decision-trace'
+              }
+              className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+            >
+              {hasLifetimeAccess || yearlyAccessLabel ? '판정 근거 먼저 보기' : '판정 근거 예시 보기'}
+            </Link>
+          </div>
         </section>
 
         {hasLifetimeAccess ? (

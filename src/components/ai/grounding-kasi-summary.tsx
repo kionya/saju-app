@@ -44,10 +44,12 @@ export function GroundingKasiSummary({
   grounding,
   kasiComparison,
   title = '이 리포트가 보는 실제 근거',
+  id,
 }: {
   grounding: SajuInterpretationGrounding;
   kasiComparison?: KasiSingleInputComparison | null;
   title?: string;
+  id?: string;
 }) {
   const factLines = buildFactLines(grounding);
   const evidenceLines = grounding.evidenceJson.classics.cards
@@ -55,7 +57,10 @@ export function GroundingKasiSummary({
     .map((card) => `${card.label} · ${card.plainSummary}`);
 
   return (
-    <section className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
+    <section
+      id={id}
+      className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5"
+    >
       <div className="app-caption text-[var(--app-gold-soft)]">{title}</div>
       <div className="mt-4 flex flex-wrap gap-2">
         {factLines.map((line) => (

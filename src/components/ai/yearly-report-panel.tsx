@@ -241,6 +241,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
 
       <div className="mt-6">
         <GroundingKasiSummary
+          id="yearly-evidence"
           grounding={data.grounding}
           kasiComparison={data.kasiComparison}
           title="이 연간 리포트가 참고한 실제 계산 근거"

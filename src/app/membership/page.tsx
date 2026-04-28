@@ -102,6 +102,63 @@ export default function MembershipPage() {
           ))}
         </section>
 
+        <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_0.95fr]">
+          <article className="app-panel p-6">
+            <div className="app-caption">왜 Premium이 더 깊은가</div>
+            <h2 className="mt-4 text-3xl font-semibold text-[var(--app-ivory)]">
+              혜택보다 먼저, 계산 기준이 어떻게 고정되는지 보실 수 있습니다
+            </h2>
+            <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+              일반 AI 해석이 가장 흔들리기 쉬운 부분은 명식 계산과 격국·용신 판정입니다. 달빛선생
+              Premium은 같은 생년월일이라도 어떤 기준으로 계산하고 어떤 판정 근거를 펼쳐주는지 먼저
+              확인할 수 있게 구성합니다.
+            </p>
+            <div className="mt-5 grid gap-3">
+              {[
+                ['명식 계산', '출생 정보로 먼저 명식과 운의 구조를 계산합니다.'],
+                ['격국·용신', '월령, 투출, 강약, 계절성을 함께 보고 판정합니다.'],
+                ['시간 처리', '출생지·진태양시·야자시·조자시 규칙을 분리해 적용합니다.'],
+                ['설명 방식', 'AI는 계산 결과를 선생의 말투로 풀어주는 역할만 맡습니다.'],
+              ].map(([label, body]) => (
+                <div
+                  key={label}
+                  className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4"
+                >
+                  <div className="text-sm font-semibold text-[var(--app-ivory)]">{label}</div>
+                  <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{body}</p>
+                </div>
+              ))}
+            </div>
+          </article>
+
+          <article className="moon-lunar-panel p-6">
+            <div className="app-starfield" />
+            <div className="app-caption">엔진 기준서</div>
+            <h2 className="mt-4 text-3xl font-semibold text-[var(--app-gold-text)]">
+              판정 근거를 먼저 보고, 그다음에 플랜을 고르셔도 괜찮습니다
+            </h2>
+            <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
+              /about-engine 페이지에서는 달빛선생이 왜 AI에게 명식 계산을 맡기지 않는지, 시간 보정과
+              격국·용신 판정을 어떤 순서로 읽는지, 리포트에서 어떤 근거를 보여주는지를 한 번에
+              정리해 두었습니다.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/about-engine"
+                className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+              >
+                엔진 기준서 보기
+              </Link>
+              <Link
+                href="/about-engine#decision-trace"
+                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+              >
+                판정 근거 예시 보기
+              </Link>
+            </div>
+          </article>
+        </section>
+
         <section className="mt-8 grid gap-4 lg:grid-cols-3">
           {MEMBERSHIP_REASSURANCE.map((item) => (
             <article key={item} className="moon-orbit-card p-5 text-sm leading-7 text-[var(--app-copy)]">

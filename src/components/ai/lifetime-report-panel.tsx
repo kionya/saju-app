@@ -464,6 +464,7 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
         </div>
         <div className="mt-6">
           <GroundingKasiSummary
+            id="lifetime-evidence"
             grounding={data.grounding}
             kasiComparison={data.kasiComparison}
             title="이 평생 리포트가 참고한 실제 계산 근거"
