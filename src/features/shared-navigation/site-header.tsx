@@ -77,6 +77,10 @@ function getNavMeta(item: NavItem) {
   };
 }
 
+function findActiveItem(items: readonly NavItem[], pathname: string) {
+  return items.find((item) => matchesPath(item, pathname)) ?? null;
+}
+
 function DockIcon({ label }: { label: string }) {
   switch (label) {
     case '홈':
@@ -391,6 +395,15 @@ function MobileChrome({
   authHref: string;
   onSignOut: () => Promise<void>;
 }) {
+  const activePrimaryItem = findActiveItem(PRIMARY_NAV_ITEMS, pathname);
+  const activeShortcutItem = findActiveItem(HEADER_SECONDARY_NAV_ITEMS, pathname);
+  const activePrimaryMeta = activePrimaryItem ? getNavMeta(activePrimaryItem) : null;
+  const activeShortcutMeta = activeShortcutItem ? getNavMeta(activeShortcutItem) : null;
+  const contextDescription =
+    activeShortcutMeta?.description ??
+    activePrimaryMeta?.description ??
+    '프리미엄 명리 기준서';
+
   return (
     <>
       <header className="app-top-header sticky top-0 z-40 border-b border-[var(--app-line)] bg-[rgba(8,10,18,0.9)] backdrop-blur lg:hidden">
@@ -402,6 +415,33 @@ function MobileChrome({
               </div>
               <div className="truncate text-xl font-semibold tracking-tight text-[var(--app-ivory)]">
                 달빛선생
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                {activePrimaryItem ? (
+                  <span className="app-top-context-chip">
+                    <span
+                      className="font-[var(--font-heading)]"
+                      style={{ color: activePrimaryMeta?.accent ?? 'var(--app-gold)' }}
+                    >
+                      {activePrimaryMeta?.glyph}
+                    </span>
+                    <span>{activePrimaryItem.label}</span>
+                  </span>
+                ) : null}
+                {activeShortcutItem && activeShortcutItem.label !== activePrimaryItem?.label ? (
+                  <span className="app-top-context-chip app-top-context-chip-muted">
+                    <span
+                      className="font-[var(--font-heading)]"
+                      style={{ color: activeShortcutMeta?.accent ?? 'var(--app-copy-muted)' }}
+                    >
+                      {activeShortcutMeta?.glyph}
+                    </span>
+                    <span>{activeShortcutItem.label}</span>
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-1 truncate text-[11px] text-[var(--app-copy-soft)]">
+                {contextDescription}
               </div>
             </Link>
 
@@ -449,63 +489,75 @@ function MobileChrome({
                 <CreditCard className="h-3.5 w-3.5" />
                 {creditLabel(user, credits)}
               </Link>
-              <Link
-                href="/notifications"
-                className="app-top-icon-link inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-                aria-label="알림"
-              >
-                <Bell className="h-4 w-4" />
-              </Link>
-              <Link
-                href="/my/settings"
-                className="app-top-icon-link inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-                aria-label="설정"
-              >
-                <Settings2 className="h-4 w-4" />
-              </Link>
-              {user ? (
-                <button
-                  type="button"
-                  onClick={onSignOut}
-                  className="app-top-login inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface)] sm:w-auto sm:gap-1.5 sm:px-3 sm:text-xs"
-                  aria-label="로그아웃"
-                >
-                  <LogOut className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-                  <span className="hidden sm:inline">로그아웃</span>
-                </button>
-              ) : (
+              <div className="app-top-utility-cluster">
                 <Link
-                  href={authHref}
-                  className={cn(
-                    buttonVariants({ variant: 'outline', size: 'sm' }),
-                    'app-top-login border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]'
-                  )}
+                  href="/notifications"
+                  className="app-top-icon-link inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                  aria-label="알림"
                 >
-                  로그인
+                  <Bell className="h-4 w-4" />
                 </Link>
-              )}
+                <Link
+                  href="/my/settings"
+                  className="app-top-icon-link inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                  aria-label="설정"
+                >
+                  <Settings2 className="h-4 w-4" />
+                </Link>
+                {user ? (
+                  <button
+                    type="button"
+                    onClick={onSignOut}
+                    className="app-top-login inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface)] sm:w-auto sm:gap-1.5 sm:px-3 sm:text-xs"
+                    aria-label="로그아웃"
+                  >
+                    <LogOut className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+                    <span className="hidden sm:inline">로그아웃</span>
+                  </button>
+                ) : (
+                  <Link
+                    href={authHref}
+                    className={cn(
+                      buttonVariants({ variant: 'outline', size: 'sm' }),
+                      'app-top-login border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]'
+                    )}
+                  >
+                    로그인
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="mt-4 flex gap-2 overflow-x-auto pb-1 lg:hidden">
-            {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
-              const active = matchesPath(item, pathname);
+          <div className="mt-4 lg:hidden">
+            <div className="app-top-service-label">빠른 이동</div>
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+              {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
+                const active = matchesPath(item, pathname);
+                const meta = getNavMeta(item);
 
-              return (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className={cn(
-                    'shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors',
-                    active
-                      ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
-                      : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
-                  )}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className={cn(
+                      'app-top-service-chip shrink-0 rounded-full border px-3 py-2 text-sm transition-colors',
+                      active
+                        ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
+                        : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
+                    )}
+                  >
+                    <span
+                      className="app-top-service-glyph font-[var(--font-heading)]"
+                      style={{ color: meta.accent }}
+                    >
+                      {meta.glyph}
+                    </span>
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -544,10 +596,13 @@ function MobileChrome({
                 key={item.label}
                 href={item.href}
                 data-active={active}
-                className="app-mobile-dock-link flex flex-col items-center px-2 py-2 text-center"
+                aria-current={active ? 'page' : undefined}
+                className="app-mobile-dock-link flex flex-col items-center justify-center px-2 py-2 text-center"
               >
-                <DockIcon label={item.label} />
-                <span className="mt-1 text-[11px] font-medium">{item.label}</span>
+                <span className="app-mobile-dock-icon">
+                  <DockIcon label={item.label} />
+                </span>
+                <span className="app-mobile-dock-label mt-1 text-[11px] font-medium">{item.label}</span>
               </Link>
             );
           })}
