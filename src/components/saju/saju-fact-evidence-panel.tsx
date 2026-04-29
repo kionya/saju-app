@@ -11,10 +11,12 @@ export function SajuFactEvidencePanel({
   grounding,
   kasiComparison,
   primaryClassicItems = [],
+  showDecisionTrace = true,
 }: {
   grounding: SajuInterpretationGrounding;
   kasiComparison?: KasiSingleInputComparison | null;
   primaryClassicItems?: ClassicEvidenceItem[];
+  showDecisionTrace?: boolean;
 }) {
   const { factJson, evidenceJson } = grounding;
   const yongsinCandidates = evidenceJson.yongsin.candidates.slice(0, 3);
@@ -37,12 +39,14 @@ export function SajuFactEvidencePanel({
         </p>
       </div>
 
-      <div className="mt-6">
-        <GroundingDecisionTrace
-          grounding={grounding}
-          kasiComparison={kasiComparison}
-        />
-      </div>
+      {showDecisionTrace ? (
+        <div className="mt-6">
+          <GroundingDecisionTrace
+            grounding={grounding}
+            kasiComparison={kasiComparison}
+          />
+        </div>
+      ) : null}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <article className="moon-orbit-card p-5">

@@ -9,6 +9,9 @@ import type {
 } from '@/domain/saju/engine/saju-data-v1';
 import { SajuAiInterpretationPanel } from '@/components/ai/saju-ai-interpretation-panel';
 import { ClassicEvidencePanel } from '@/components/classics/classic-evidence-panel';
+import { ReportKeepsakeSection } from '@/components/report/report-keepsake-section';
+import { ReportOneMinuteSummary } from '@/components/report/report-one-minute-summary';
+import { GroundingDecisionTrace } from '@/components/saju/grounding-decision-trace';
 import { SajuFactEvidencePanel } from '@/components/saju/saju-fact-evidence-panel';
 import { Badge } from '@/components/ui/badge';
 import DetailUnlock from '@/components/detail-unlock';
@@ -113,6 +116,38 @@ function formatCurrentLuckTitle(currentLuck: SajuCurrentLuck | null) {
 
 function getTimelineItem(report: SajuReport, label: string) {
   return report.timeline.find((item) => item.label === label) ?? null;
+}
+
+function uniqueNonEmpty(items: Array<string | null | undefined>, max = 3) {
+  return [...new Set(items.filter((item): item is string => Boolean(item && item.trim().length > 0)))].slice(0, max);
+}
+
+function buildKeyThemes(report: SajuReport) {
+  return uniqueNonEmpty(report.summaryHighlights, 3);
+}
+
+function buildCautionPatterns(report: SajuReport) {
+  const cautionCards = report.evidenceCards.filter((card) =>
+    ['relations', 'gongmang', 'specialSals'].includes(card.key)
+  );
+
+  return uniqueNonEmpty(
+    [
+      report.cautionAction.description,
+      ...cautionCards.map((card) => card.plainSummary ?? card.body),
+    ],
+    3
+  );
+}
+
+function buildFavorableChoices(report: SajuReport) {
+  return uniqueNonEmpty(
+    [
+      report.primaryAction.description,
+      ...report.evidenceCards.flatMap((card) => card.practicalActions ?? []),
+    ],
+    3
+  );
 }
 
 const SCORE_CARD_VISUALS: Record<
@@ -390,6 +425,10 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
     }
   }
   const currentMajorFlow = getTimelineItem(report, '대운 흐름');
+  const keyThemes = buildKeyThemes(report);
+  const cautionPatterns = buildCautionPatterns(report);
+  const favorableChoices = buildFavorableChoices(report);
+  const isTimeUnknown = input.unknownTime === true || input.hour === undefined;
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -415,16 +454,6 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--app-copy-muted)] sm:text-base">
                 {report.dayMasterSummary}
               </p>
-              <div className="mt-5 grid max-w-2xl gap-3">
-                {report.summaryHighlights.map((summary) => (
-                  <p
-                    key={summary}
-                    className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-8 text-[var(--app-copy)] sm:text-base"
-                  >
-                    {summary}
-                  </p>
-                ))}
-              </div>
             </div>
 
             <div className="grid self-start gap-4 lg:border-l lg:border-[var(--app-line)] lg:pl-6">
@@ -501,6 +530,37 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="space-y-4">
+          <ReportOneMinuteSummary
+            headline={report.headline}
+            keyThemes={keyThemes}
+            cautionPatterns={cautionPatterns}
+            favorableChoices={favorableChoices}
+            isTimeUnknown={isTimeUnknown}
+          />
+
+          <GroundingDecisionTrace grounding={grounding} kasiComparison={kasiComparison} />
+
+          <ReportKeepsakeSection
+            actions={[
+              {
+                label: '심층 리포트로 이어보기',
+                href: `/saju/${slug}/premium`,
+                variant: 'primary',
+              },
+              {
+                label: 'PDF로 소장하기',
+                variant: 'muted',
+              },
+              {
+                label: '달빛선생에게 이어서 묻기',
+                href: '/dialogue',
+                variant: 'secondary',
+              },
+            ]}
+          />
         </section>
 
         <section className="app-panel p-6 sm:p-7">
@@ -649,6 +709,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           grounding={grounding}
           kasiComparison={kasiComparison}
           primaryClassicItems={primaryClassicItems}
+          showDecisionTrace={false}
         />
 
         <div>
