@@ -440,7 +440,7 @@ function MobileChrome({
                   </span>
                 ) : null}
               </div>
-              <div className="mt-1 truncate text-[11px] text-[var(--app-copy-soft)]">
+              <div className="app-top-context-note mt-1 truncate">
                 {contextDescription}
               </div>
             </Link>
@@ -530,7 +530,7 @@ function MobileChrome({
           </div>
 
           <div className="mt-4 lg:hidden">
-            <div className="app-top-service-label">빠른 이동</div>
+            <div className="app-top-service-label">바로가기</div>
             <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
               {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
                 const active = matchesPath(item, pathname);

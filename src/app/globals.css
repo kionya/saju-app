@@ -487,7 +487,7 @@
     background: rgba(255, 255, 255, 0.045);
     padding-inline: 0.55rem;
     color: var(--app-ivory);
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 600;
     letter-spacing: 0;
   }
@@ -496,6 +496,13 @@
     border-color: rgba(255, 255, 255, 0.08);
     background: rgba(255, 255, 255, 0.025);
     color: var(--app-copy-muted);
+  }
+
+  .app-top-context-note {
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 0.68rem;
+    line-height: 1.45;
+    letter-spacing: 0.01em;
   }
 
   .app-top-utility-cluster {
@@ -511,9 +518,9 @@
 
   .app-top-service-label {
     color: var(--app-copy-soft);
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     font-weight: 600;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
   }
 
@@ -582,14 +589,14 @@
   }
 
   .app-mobile-dock-link[data-active="true"] {
-    border-color: rgba(212, 176, 106, 0.18);
+    border-color: rgba(212, 176, 106, 0.24);
     background:
-      radial-gradient(circle at 50% 0%, rgba(212, 176, 106, 0.18), transparent 60%),
-      linear-gradient(180deg, rgba(212, 176, 106, 0.12), rgba(212, 176, 106, 0.04));
+      radial-gradient(circle at 50% 0%, rgba(212, 176, 106, 0.14), transparent 58%),
+      linear-gradient(180deg, rgba(212, 176, 106, 0.1), rgba(212, 176, 106, 0.035));
     color: var(--app-gold-text);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.04),
-      0 10px 22px rgba(0, 0, 0, 0.22);
+      0 8px 18px rgba(0, 0, 0, 0.2);
   }
 
   .app-mobile-dock-link[data-active="true"]::before {
@@ -611,12 +618,16 @@
   }
 
   .app-mobile-dock-link[data-active="true"] .app-mobile-dock-icon {
-    background: rgba(212, 176, 106, 0.14);
+    background: rgba(212, 176, 106, 0.18);
     transform: translateY(-1px);
   }
 
   .app-mobile-dock-label {
     letter-spacing: 0;
+  }
+
+  .app-mobile-dock-link[data-active="true"] .app-mobile-dock-label {
+    font-weight: 700;
   }
 
   .app-top-credit-chip {
