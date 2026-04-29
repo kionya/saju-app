@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import TossMembershipCheckout from '@/components/membership/toss-membership-checkout';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { BulletList } from '@/components/layout/bullet-list';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
 import { Badge } from '@/components/ui/badge';
 import {
   CHECKOUT_PLAN_GUIDE,
@@ -10,11 +17,17 @@ import {
 } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { getMembershipPackage } from '@/lib/payments/catalog';
-import { AppShell } from '@/shared/layout/app-shell';
+import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 interface Props {
   searchParams: Promise<{ plan?: string; slug?: string; error?: string; from?: string }>;
 }
+
+const CHECKOUT_FLOW_POINTS = [
+  '선택한 상품이 대화형 멤버십인지, 소장형 기준서인지 먼저 다시 확인합니다.',
+  '결제 방법은 카드와 계좌이체 중에서 고르실 수 있고, 승인 뒤 이용권이 바로 반영됩니다.',
+  '기준서 상품은 특정 결과 화면과 연결되기 때문에, 결과 식별자가 있는지 마지막으로 살펴봅니다.',
+] as const;
 
 function normalizePlanSlug(value?: string): PlanSlug {
   if (value === 'plus') return 'basic';
@@ -37,120 +50,168 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="moon-lunar-panel p-7 sm:p-8">
-          <div className="app-starfield" />
-          <div className="flex items-center justify-between gap-3">
-            <Link
-              href="/membership"
-              className="text-sm text-[var(--app-gold-soft)] transition-colors hover:text-[var(--app-ivory)]"
+      <AppPage className="space-y-6">
+        <PageHero
+          badges={[
+            <Badge
+              key="checkout"
+              className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]"
             >
-              ← 뒤로
-            </Link>
-            <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]">
               결제
-            </Badge>
-          </div>
-          <h1 className="mt-5 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
-            선택하신 결제를 마지막으로 한 번 더 살펴보세요
-          </h1>
-          <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            대화 멤버십인지, 소장형 명리 기준서인지에 따라 결제 뒤 열리는 구조가 다릅니다. 가격, 자동 갱신, 보관 방식까지 한 화면에 모아두었습니다.
-          </p>
+            </Badge>,
+            <Badge
+              key="plan"
+              className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
+            >
+              {selected.title}
+            </Badge>,
+          ]}
+          title="결제 전에 마지막 기준을 함께 확인합니다"
+          description="대화형 멤버십인지, 소장형 기준서인지에 따라 결제 뒤 열리는 흐름이 다릅니다. 가격, 반영 방식, 다시 여실 위치까지 한 번에 정리했습니다."
+        />
+
+        <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
+          <SectionSurface surface="lunar" size="lg">
+            <div className="app-starfield" />
+            <SectionHeader
+              eyebrow="선택한 상품"
+              title={selected.title}
+              titleClassName="text-3xl text-[var(--app-gold-text)]"
+              description={selected.reassurance}
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+              actions={
+                <ActionCluster>
+                  <Link
+                    href="/membership"
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                  >
+                    멤버십으로 돌아가기
+                  </Link>
+                </ActionCluster>
+              }
+            />
+
+            <ProductGrid columns={2} className="mt-6">
+              <FeatureCard
+                surface="soft"
+                eyebrow="가격"
+                title={selected.price}
+                description={selected.nextRange}
+              />
+              <FeatureCard
+                surface="soft"
+                eyebrow="결제 뒤 바로 열리는 것"
+                description={selected.opens[0] ?? '선택한 상품 안내를 먼저 확인하실 수 있습니다.'}
+              />
+            </ProductGrid>
+
+            <SectionHeader
+              className="mt-8"
+              eyebrow="결제 뒤 열리는 흐름"
+              title="이 상품을 고르면 먼저 이런 순서로 이어집니다"
+              titleClassName="text-2xl text-[var(--app-ivory)]"
+            />
+
+            <ProductGrid columns={3} className="mt-5">
+              {selected.opens.map((item, index) => (
+                <FeatureCard
+                  key={item}
+                  surface="soft"
+                  eyebrow={String(index + 1).padStart(2, '0')}
+                  description={item}
+                />
+              ))}
+            </ProductGrid>
+          </SectionSurface>
+
+          <SupportRail
+            surface="panel"
+            eyebrow="결제 전 체크"
+            title="지금 이 화면에서 함께 보실 기준"
+            description="결제 버튼을 누르기 전에 무엇을 다시 확인하면 좋은지, 한쪽에 짧게 정리했습니다."
+          >
+            <BulletList items={CHECKOUT_FLOW_POINTS} />
+            <FeatureCard
+              className="mt-5"
+              surface="soft"
+              eyebrow="안심 안내"
+              description={MEMBERSHIP_REASSURANCE.join(' ')}
+            />
+          </SupportRail>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-          <article className="moon-plan-card p-6" data-featured="true">
-            <div className="text-center">
-              <div className="app-caption">선택하신 플랜</div>
-              <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
-                {selected.title}
-              </div>
-              <div className="mt-3 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)]">
-                {selected.price}
-              </div>
-              <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                {selected.nextRange}
-              </p>
-              <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">{selected.reassurance}</p>
-            </div>
+        <section className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
+          <SectionSurface surface="panel" size="lg">
+            <SectionHeader
+              eyebrow="결제 방법"
+              title="카드와 계좌이체 중에서 고르실 수 있습니다"
+              titleClassName="text-3xl"
+              description="기본으로 가장 많이 쓰는 방법을 먼저 보여드리고, 결제창 안에서 다시 바꾸실 수도 있습니다."
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
 
-            <div className="mt-6 space-y-3">
-              {selected.opens.map((item, index) => (
-                <div
-                  key={item}
-                  className="moon-payment-row px-4 py-3 text-sm leading-7 text-[var(--app-copy)]"
-                  data-selected={index === 0 ? 'true' : 'false'}
-                >
-                  <span className="mr-2 text-[var(--app-gold-text)]">{index + 1}.</span>
-                  {item}
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="app-panel p-6">
-            <div className="app-caption">결제 방법</div>
-            <div className="mt-5 grid gap-3">
+            <ProductGrid columns={2} className="mt-6">
               {CHECKOUT_METHODS.map((method, index) => (
-                <div
+                <FeatureCard
                   key={method}
-                  className="moon-payment-row flex items-center gap-3 px-4 py-4"
-                  data-selected={index === 0 ? 'true' : 'false'}
-                >
-                  <div
-                    className={`flex h-5 w-5 items-center justify-center rounded-full text-xs ${
-                      index === 0
-                        ? 'bg-[var(--app-gold)] text-[var(--app-bg)]'
-                        : 'border border-[var(--app-line)] text-transparent'
-                    }`}
-                  >
-                    ✓
-                  </div>
-                  <div className="text-sm text-[var(--app-ivory)]">{method}</div>
-                </div>
+                  surface="soft"
+                  eyebrow={index === 0 ? '기본 선택' : '선택 가능'}
+                  title={method}
+                />
               ))}
-            </div>
+            </ProductGrid>
 
             {error === 'payment' ? (
-              <div className="mt-6 rounded-[1.2rem] border border-rose-400/25 bg-rose-400/10 px-5 py-4 text-sm leading-7 text-rose-100">
-                결제가 완료되지 않았습니다. 결제창을 닫으셨거나 승인에 실패했습니다.
-              </div>
+              <FeatureCard
+                className="mt-5 border-rose-400/25 bg-rose-400/10"
+                surface="soft"
+                eyebrow="다시 확인"
+                description="결제가 완료되지 않았습니다. 결제창을 닫으셨거나 승인에 실패했을 수 있습니다."
+              />
             ) : null}
 
-            <div className="mt-6 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5 text-sm leading-7 text-[var(--app-copy-muted)]">
-              {MEMBERSHIP_REASSURANCE.map((item) => (
-                <div key={item}>{item}</div>
-              ))}
-            </div>
+            <FeatureCard
+              className="mt-5"
+              surface="soft"
+              eyebrow="한 번 더 살펴보실 것"
+              description={
+                <BulletList
+                  items={selected.notices}
+                  className="mt-0"
+                  itemClassName="text-[var(--app-copy)]"
+                />
+              }
+            />
+          </SectionSurface>
 
-            <div className="mt-6 rounded-[1.2rem] border border-[var(--app-gold)]/18 bg-[rgba(255,255,255,0.02)] px-5 py-5">
-              <div className="app-caption">한 번 더 살펴보실 것</div>
-              <div className="mt-3 space-y-2">
-                {selected.notices.map((item) => (
-                  <div key={item} className="text-sm leading-7 text-[var(--app-copy)]">
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </div>
+          <SectionSurface surface="panel" size="lg">
+            <SectionHeader
+              eyebrow="결제 진행"
+              title="이제 결제를 열면 됩니다"
+              titleClassName="text-3xl"
+              description="기준서 상품은 특정 결과 화면과 연결되기 때문에, 필요한 식별자가 있는지 먼저 확인한 뒤 결제를 엽니다."
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
 
-            <div className="mt-6">
-              {paymentPackage?.kind === 'lifetime_report' && !slug ? (
-                <div className="rounded-[1.2rem] border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-5 py-5">
-                  <div className="app-caption">결과 식별자가 필요합니다</div>
-                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
-                    나의 명리 기준서는 특정 사주 결과에 붙는 소장권입니다. 먼저 사주 결과를 만든 뒤
-                    해당 결과의 “명리 기준서 열기” 버튼으로 결제하시면 결제 직후 바로 전체 기준서가 열립니다.
-                  </p>
-                  <Link
-                    href="/saju/new"
-                    className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
-                  >
-                    사주 결과 먼저 만들기
-                  </Link>
-                </div>
-              ) : paymentPackage ? (
+            {paymentPackage?.kind === 'lifetime_report' && !slug ? (
+              <FeatureCard
+                className="mt-6"
+                surface="soft"
+                eyebrow="결과 식별자가 필요합니다"
+                description="나의 명리 기준서는 특정 사주 결과에 붙는 소장권입니다. 먼저 사주 결과를 만든 뒤, 해당 결과의 ‘명리 기준서 열기’ 버튼으로 오시면 결제 직후 바로 전체 기준서가 열립니다."
+                footer={
+                  <ActionCluster>
+                    <Link
+                      href="/saju/new"
+                      className="moon-cta-primary"
+                    >
+                      사주 결과 먼저 만들기
+                    </Link>
+                  </ActionCluster>
+                }
+              />
+            ) : paymentPackage ? (
+              <div className="mt-6">
                 <TossMembershipCheckout
                   packageId={paymentPackage.id}
                   plan={selectedPlan}
@@ -159,15 +220,18 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
                   slug={slug}
                   entrySource={from ?? 'membership'}
                 />
-              ) : (
-                <div className="rounded-[1.2rem] border border-rose-400/25 bg-rose-400/10 px-5 py-4 text-sm leading-7 text-rose-100">
-                  선택한 플랜의 결제 정보를 찾지 못했습니다.
-                </div>
-              )}
-            </div>
-          </article>
+              </div>
+            ) : (
+              <FeatureCard
+                className="mt-6 border-rose-400/25 bg-rose-400/10"
+                surface="soft"
+                eyebrow="결제 정보를 찾지 못했습니다"
+                description="선택한 플랜의 결제 설정을 불러오지 못했습니다. 멤버십 화면으로 돌아가 다시 선택해 주세요."
+              />
+            )}
+          </SectionSurface>
         </section>
-      </div>
+      </AppPage>
     </AppShell>
   );
 }

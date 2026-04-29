@@ -1,6 +1,12 @@
-﻿import Link from 'next/link';
+import Link from 'next/link';
 import SubscriptionManager from '@/components/my/subscription-manager';
 import { Badge } from '@/components/ui/badge';
+import { BulletList } from '@/components/layout/bullet-list';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
 import { getAccountDashboardData } from '@/lib/account';
 import {
   getSubscriptionPlanLabel,
@@ -35,18 +41,6 @@ function getTransactionLabel(transaction: Awaited<ReturnType<typeof getAccountDa
   return TYPE_LABELS[transaction.type] ?? transaction.type;
 }
 
-function getStatusTone(status: 'active' | 'cancelled' | 'expired' | null) {
-  if (status === 'active') {
-    return 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200';
-  }
-
-  if (status === 'cancelled') {
-    return 'border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]';
-  }
-
-  return 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]';
-}
-
 function getSubscriptionNotice(
   subscription: Awaited<ReturnType<typeof getAccountDashboardData>>['subscription']
 ) {
@@ -76,158 +70,156 @@ export default async function MyBillingPage() {
     : '미가입';
 
   return (
-    <>
+    <div className="space-y-6">
       <PageHero
-        badges={
-          <>
-            <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]">
-              결제와 이용
-            </Badge>
-            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-              코인 · 멤버십 · 환불 안내
-            </Badge>
-          </>
-        }
+        badges={[
+          <Badge
+            key="billing"
+            className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]"
+          >
+            결제와 이용
+          </Badge>,
+          <Badge
+            key="status"
+            className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
+          >
+            코인 · 멤버십 · 환불 안내
+          </Badge>,
+        ]}
         title="결제와 이용 상태를 한눈에 살펴보세요"
-        description="지금 남은 코인, 멤버십 상태, 다음 결제일, 최근 이용 내역을 한곳에 모았습니다. 복잡하지 않게, 필요한 정보만 차분히 살펴보실 수 있습니다."
+        description="지금 남은 코인, 멤버십 상태, 다음 결제일, 최근 이용 내역을 한곳에 모았습니다. 필요한 정보만 같은 문법으로 차분히 읽을 수 있게 정리했습니다."
       />
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <article className="app-panel p-5">
-          <div className="app-caption">전체 코인</div>
-          <div className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
-            {dashboard.credits.total}
-          </div>
-        </article>
-        <article className="app-panel p-5">
-          <div className="app-caption">일반 코인</div>
-          <div className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
-            {dashboard.credits.balance}
-          </div>
-        </article>
-        <article className="app-panel p-5">
-          <div className="app-caption">월간 플랜 코인</div>
-          <div className="mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
-            {dashboard.credits.subscriptionBalance}
-          </div>
-        </article>
-      </section>
+      <SectionSurface surface="panel" size="lg">
+        <SectionHeader
+          eyebrow="남은 잔액"
+          title="코인과 멤버십 코인을 함께 관리합니다"
+          titleClassName="text-3xl"
+        />
+        <ProductGrid columns={3} className="mt-6">
+          <FeatureCard surface="soft" eyebrow="전체 코인" title={dashboard.credits.total} />
+          <FeatureCard surface="soft" eyebrow="일반 코인" title={dashboard.credits.balance} />
+          <FeatureCard surface="soft" eyebrow="월간 플랜 코인" title={dashboard.credits.subscriptionBalance} />
+        </ProductGrid>
+      </SectionSurface>
 
       <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
-        <article className="app-panel p-6">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-2xl font-semibold text-[var(--app-ivory)]">멤버십 상태</h2>
-            <Badge className={`border ${getStatusTone(dashboard.subscription?.status ?? null)}`}>
-              {subscriptionStatusLabel}
-            </Badge>
-          </div>
+        <SectionSurface surface="panel" size="lg">
+          <SectionHeader
+            eyebrow="멤버십 상태"
+            title={subscriptionStatusLabel}
+            titleClassName="text-3xl"
+            description={getSubscriptionNotice(dashboard.subscription)}
+            descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+          />
 
           {dashboard.subscription ? (
-            <div className="mt-5 space-y-4">
-              <div className="app-panel-muted p-4">
-                <div className="app-caption">플랜</div>
-                <div className="mt-2 text-lg font-semibold text-[var(--app-ivory)]">
-                  {getSubscriptionPlanLabel(dashboard.subscription.plan)}
-                </div>
-              </div>
-              <div className="app-panel-muted p-4">
-                <div className="app-caption">다음 결제일</div>
-                <div className="mt-2 text-lg font-semibold text-[var(--app-ivory)]">
-                  {dashboard.subscription.renewsAt
+            <ProductGrid columns={2} className="mt-6">
+              <FeatureCard
+                surface="soft"
+                eyebrow="플랜"
+                title={getSubscriptionPlanLabel(dashboard.subscription.plan)}
+              />
+              <FeatureCard
+                surface="soft"
+                eyebrow="다음 결제일"
+                title={
+                  dashboard.subscription.renewsAt
                     ? formatDate(dashboard.subscription.renewsAt)
-                    : '미정'}
-                </div>
-              </div>
-              <div className="rounded-2xl border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 p-4 text-sm leading-7 text-[var(--app-copy)]">
-                {getSubscriptionNotice(dashboard.subscription)}
-              </div>
-            </div>
+                    : '미정'
+                }
+              />
+            </ProductGrid>
           ) : (
-            <div className="app-panel-muted mt-5 border-dashed p-6 text-sm leading-7 text-[var(--app-copy-muted)]">
-              {getSubscriptionNotice(null)}
-            </div>
+            <FeatureCard className="mt-6" surface="soft" eyebrow="현재 상태" description={getSubscriptionNotice(null)} />
           )}
 
-          <SubscriptionManager subscription={dashboard.subscription} />
-        </article>
+          <div className="mt-6">
+            <SubscriptionManager subscription={dashboard.subscription} />
+          </div>
+        </SectionSurface>
 
-        <article className="app-panel p-6">
-          <h2 className="text-2xl font-semibold text-[var(--app-ivory)]">정책 안내</h2>
-          <div className="mt-5 space-y-3">
-            {[
+        <SupportRail
+          surface="lunar"
+          eyebrow="정책 안내"
+          title="결제와 환불은 이 기준으로 움직입니다"
+          description="복잡한 정책을 길게 늘어놓기보다, 실제로 확인할 가능성이 높은 기준만 짧게 남겨두었습니다."
+        >
+          <BulletList
+            items={[
               '정기 이용 상품은 가격과 갱신 시점, 열리는 혜택을 같은 화면에서 다시 확인하실 수 있습니다.',
               '해지 예약을 하셔도 이번 이용 기간이 끝날 때까지 혜택은 그대로 유지됩니다.',
               '디지털 해석은 열람 여부에 따라 환불 기준이 달라질 수 있어, 결제 전 안내를 먼저 보여드립니다.',
               '궁금한 점이 생기면 멤버십 페이지와 코인 센터에서 바로 이어서 살펴보실 수 있습니다.',
-            ].map((item) => (
-              <div
-                key={item}
-                className="app-panel-muted px-4 py-3 text-sm leading-7 text-[var(--app-copy)]"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-
-          <div className="app-panel-muted mt-6 p-4 text-sm leading-7 text-[var(--app-copy)]">
-            멤버십 구성과 이용 혜택은{' '}
-            <Link
-              href="/membership"
-              className="text-[var(--app-gold-soft)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-            >
-              멤버십 페이지
-            </Link>
-            에서, 코인 충전과 재시작은{' '}
-            <Link
-              href="/credits"
-              className="text-[var(--app-gold-soft)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-            >
-              코인 센터
-            </Link>
-            에서 바로 이어집니다.
-          </div>
-        </article>
+            ]}
+          />
+          <FeatureCard
+            className="mt-5"
+            surface="soft"
+            eyebrow="바로 가기"
+            description={
+              <>
+                멤버십 구성과 이용 혜택은{' '}
+                <Link
+                  href="/membership"
+                  className="text-[var(--app-gold-soft)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                >
+                  멤버십 페이지
+                </Link>
+                에서, 코인 충전과 재시작은{' '}
+                <Link
+                  href="/credits"
+                  className="text-[var(--app-gold-soft)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                >
+                  코인 센터
+                </Link>
+                에서 바로 이어집니다.
+              </>
+            }
+          />
+        </SupportRail>
       </section>
 
-      <section className="app-panel p-6">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-semibold text-[var(--app-ivory)]">최근 결제 및 코인 이력</h2>
-          <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-            최근 {dashboard.recentTransactions.length}건
-          </Badge>
-        </div>
-        <div className="mt-5 space-y-3">
+      <SectionSurface surface="panel" size="lg">
+        <SectionHeader
+          eyebrow="최근 결제 및 코인 이력"
+          title={`최근 ${dashboard.recentTransactions.length}건`}
+          titleClassName="text-3xl"
+        />
+        <ProductGrid columns={2} className="mt-6">
           {dashboard.recentTransactions.length > 0 ? (
             dashboard.recentTransactions.map((transaction) => (
-              <div key={transaction.id} className="app-panel-muted p-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="text-sm font-medium text-[var(--app-ivory)]">
-                      {getTransactionLabel(transaction)}
-                    </div>
-                    <div className="app-micro-copy mt-1">
-                      {formatDate(transaction.createdAt)}
-                      {transaction.feature ? ` · ${transaction.feature}` : ''}
-                    </div>
-                  </div>
-                  <div
-                    className={`text-sm font-semibold ${
-                      transaction.amount >= 0 ? 'text-emerald-200' : 'text-rose-200'
-                    }`}
-                  >
-                    {transaction.amount >= 0 ? '+' : ''}
-                    {transaction.amount} 코인
-                  </div>
-                </div>
-              </div>
+              <FeatureCard
+                key={transaction.id}
+                surface="soft"
+                eyebrow={formatDate(transaction.createdAt)}
+                title={getTransactionLabel(transaction)}
+                description={
+                  <>
+                    <span className="block text-[var(--app-copy-muted)]">
+                      {transaction.feature ? `${transaction.feature}` : '기본 이용 흐름'}
+                    </span>
+                    <span
+                      className={`mt-2 block font-semibold ${
+                        transaction.amount >= 0 ? 'text-emerald-200' : 'text-rose-200'
+                      }`}
+                    >
+                      {transaction.amount >= 0 ? '+' : ''}
+                      {transaction.amount} 코인
+                    </span>
+                  </>
+                }
+              />
             ))
           ) : (
-            <div className="app-panel-muted border-dashed p-6 text-sm leading-7 text-[var(--app-copy-muted)]">
-              아직 표시할 결제 또는 코인 사용 이력이 없습니다.
-            </div>
+            <FeatureCard
+              surface="soft"
+              eyebrow="아직 기록 없음"
+              description="표시할 결제 또는 코인 사용 이력이 아직 없습니다."
+            />
           )}
-        </div>
-      </section>
-    </>
+        </ProductGrid>
+      </SectionSurface>
+    </div>
   );
 }

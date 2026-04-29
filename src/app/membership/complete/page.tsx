@@ -1,10 +1,17 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { BulletList } from '@/components/layout/bullet-list';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
 import { Badge } from '@/components/ui/badge';
 import { COMPLETE_PLAN_GUIDE, type PlanSlug } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
-import { AppShell } from '@/shared/layout/app-shell';
+import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 interface Props {
   searchParams: Promise<{ plan?: string; slug?: string; payment?: string }>;
@@ -15,6 +22,12 @@ const PLAN_LABELS = {
   premium: 'Premium 대화 멤버십',
   lifetime: '나의 명리 기준서',
 } as const;
+
+const COMPLETE_FLOW_POINTS = [
+  '먼저 열린 결과나 멤버십 화면에서 오늘 바로 해보실 한 가지를 고릅니다.',
+  '기준서는 PDF와 보관함, 대화로 이어지고 멤버십은 질문을 계속 이어가는 데 맞춰집니다.',
+  '결제가 끝난 뒤에도 같은 기준 위에서 다시 펼쳐볼 수 있도록 흐름을 연결해 둡니다.',
+] as const;
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -42,62 +55,106 @@ export default async function MembershipCompletePage({ searchParams }: Props) {
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-        <section className="app-panel p-8 text-center sm:p-10">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[radial-gradient(circle,var(--app-gold-bright),var(--app-gold))] text-4xl text-[var(--app-bg)]">
-            ✓
-          </div>
+      <AppPage className="space-y-6">
+        <PageHero
+          badges={[
+            <Badge
+              key="status"
+              className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]"
+            >
+              {payment === 'confirmed' ? '결제 완료' : '이용 시작'}
+            </Badge>,
+            <Badge
+              key="plan"
+              className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
+            >
+              {planLabel}
+            </Badge>,
+          ]}
+          title="이제 달빛선생의 흐름 위에서 바로 이어가실 수 있습니다"
+          description={`${planLabel} 이용이 시작되었습니다. ${completeGuide.welcome}`}
+        />
 
-          <div className="mt-6 flex justify-center">
-            <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]">
-              {payment === 'confirmed' ? '결제 완료' : planLabel}
-            </Badge>
-          </div>
+        <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
+          <SectionSurface surface="lunar" size="lg">
+            <div className="app-starfield" />
+            <SectionHeader
+              eyebrow="이제 열리는 것"
+              title="결제 직후 가장 먼저 가져가실 흐름"
+              titleClassName="text-3xl text-[var(--app-gold-text)]"
+              description="한 번에 많은 기능을 나열하기보다, 지금 바로 해보시면 좋은 순서를 먼저 보여드립니다."
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
 
-          <h1 className="mt-5 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
-            달빛선생과의 인연이 시작되었습니다
-          </h1>
-          <p className="mt-4 text-base leading-8 text-[var(--app-copy)]">
-            {planLabel} 이용이 시작되었습니다. {completeGuide.welcome}
-          </p>
+            <FeatureCard
+              className="mt-6"
+              surface="soft"
+              eyebrow="환영 선물"
+              title={completeGuide.giftTitle}
+              description={completeGuide.giftBody}
+            />
 
-          <div className="mx-auto mt-8 max-w-md rounded-[1.5rem] border border-[var(--app-gold)]/24 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] px-6 py-6">
-            <div className="app-caption">환영 선물</div>
-            <div className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-gold-text)]">
-              {completeGuide.giftTitle}
-            </div>
-            <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-              {completeGuide.giftBody}
-            </p>
-          </div>
+            <SectionHeader
+              className="mt-8"
+              eyebrow="지금 바로 해보시면 좋은 것"
+              title="다음 한 걸음을 이렇게 권합니다"
+              titleClassName="text-2xl text-[var(--app-ivory)]"
+            />
 
-          <div className="mx-auto mt-6 max-w-2xl rounded-[1.4rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 py-6 text-left">
-            <div className="app-caption">지금 바로 해보시면 좋은 것</div>
-            <div className="mt-4 space-y-3">
-              {completeGuide.nextSteps.map((item) => (
-                <div key={item} className="text-sm leading-7 text-[var(--app-copy)]">
-                  {item}
-                </div>
+            <ProductGrid columns={3} className="mt-5">
+              {completeGuide.nextSteps.map((item, index) => (
+                <FeatureCard
+                  key={item}
+                  surface="soft"
+                  eyebrow={String(index + 1).padStart(2, '0')}
+                  description={item}
+                />
               ))}
-            </div>
-          </div>
+            </ProductGrid>
+          </SectionSurface>
 
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
-              href={primaryHref}
-              className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
-            >
-              {slug && planSlug === 'lifetime' ? '열린 명리 기준서 보기' : completeGuide.primaryLabel}
-            </Link>
-            <Link
-              href="/"
-              className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-            >
-              홈으로 돌아가기
-            </Link>
-          </div>
+          <SupportRail
+            surface="panel"
+            eyebrow="이용 방식"
+            title="결제는 끝났고, 이제 같은 기준 위에서 이어집니다"
+            description="기준서, 보관함, 대화가 서로 따로 노는 것이 아니라 한 흐름으로 이어진다는 점을 먼저 보여드립니다."
+          >
+            <BulletList items={COMPLETE_FLOW_POINTS} />
+            <FeatureCard
+              className="mt-5"
+              surface="soft"
+              eyebrow="열린 화면"
+              description={slug && planSlug === 'lifetime' ? '선택하신 사주 결과에 연결된 명리 기준서를 바로 열 수 있습니다.' : '지금 선택하신 상품에 맞는 다음 화면으로 자연스럽게 이어집니다.'}
+            />
+          </SupportRail>
         </section>
-      </div>
+
+        <SectionSurface surface="panel" size="lg">
+          <SectionHeader
+            eyebrow="다음으로 이동"
+            title="이제 한 가지를 골라 바로 이어가시면 됩니다"
+            titleClassName="text-3xl"
+            description="주 행동 하나와 보조 행동 하나만 남겨, 완료 화면에서 다시 길을 잃지 않도록 정리했습니다."
+            descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            actions={
+              <ActionCluster>
+                <Link
+                  href={primaryHref}
+                  className="moon-cta-primary"
+                >
+                  {slug && planSlug === 'lifetime' ? '열린 명리 기준서 보기' : completeGuide.primaryLabel}
+                </Link>
+                <Link
+                  href="/"
+                  className="moon-cta-secondary"
+                >
+                  홈으로 돌아가기
+                </Link>
+              </ActionCluster>
+            }
+          />
+        </SectionSurface>
+      </AppPage>
     </AppShell>
   );
 }

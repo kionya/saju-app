@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { loadTossPayments, ANONYMOUS } from '@tosspayments/tosspayments-sdk';
 import { createClient } from '@/lib/supabase/client';
@@ -14,7 +14,15 @@ import TossPaymentMethodPicker from '@/components/payments/toss-payment-method-p
 import SiteHeader from '@/features/shared-navigation/site-header';
 import LegalLinks from '@/components/legal-links';
 import { trackMoonlightEvent } from '@/lib/analytics';
-import { AppShell } from '@/shared/layout/app-shell';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { BulletList } from '@/components/layout/bullet-list';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
+import { Badge } from '@/components/ui/badge';
+import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 const hasSupabaseBrowserEnv = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -31,17 +39,23 @@ interface Package {
 }
 
 const PACKAGES: Package[] = [
-  { id: 'credit_1',        label: '체험',   price: 500,  credits: 1,  desc: '짧은 심화 풀이를 한 번 열어보기 좋은 입문 패키지' },
-  { id: 'credit_3',        label: '스타터', price: 990,  credits: 3,  desc: '연애·재물·직장 심화 리포트 첫 결제에 가장 잘 맞는 구간', highlight: true },
-  { id: 'credit_7',        label: '기본',   price: 2000, credits: 7,  desc: '주제 여러 개를 이어서 보는 사용자에게 가장 안정적인 묶음' },
+  { id: 'credit_1', label: '체험', price: 500, credits: 1, desc: '짧은 심화 풀이를 한 번 열어보기 좋은 입문 패키지' },
+  { id: 'credit_3', label: '스타터', price: 990, credits: 3, desc: '연애·재물·직장 심화 리포트 첫 결제에 가장 잘 맞는 구간', highlight: true },
+  { id: 'credit_7', label: '기본', price: 2000, credits: 7, desc: '주제 여러 개를 이어서 보는 사용자에게 가장 안정적인 묶음' },
   { id: 'subscription_30', label: '월간 코인팩', price: 9900, credits: 30, desc: '매달 자동 충전으로 넉넉하게 이어가는 코인 전용 플랜', isSubscription: true },
 ];
+
+const CREDIT_FLOW_POINTS = [
+  '코인은 필요한 심화 해석을 그때그때 여는 용도로 두고, 멤버십과 역할을 분리합니다.',
+  '무엇이 열리는지, 어떤 결과가 저장되는지, 자동 결제 여부를 결제 전에 먼저 보여드립니다.',
+  '결제 뒤에는 MY와 코인 센터에서 상태와 이용 흐름을 다시 확인하실 수 있습니다.',
+] as const;
 
 const UNLOCK_EXAMPLES = [
   '1코인 · 오늘의 심화 풀이 한 번 열기',
   '3코인 · 연애·재물·직장 세 주제를 이어서 보기',
   '7코인 · 월간 테마나 상세 해석을 넓게 펼쳐보기',
-];
+] as const;
 
 function CreditsPageContent() {
   const searchParams = useSearchParams();
@@ -49,9 +63,13 @@ function CreditsPageContent() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<TossPaymentMethodCode>(DEFAULT_TOSS_PAYMENT_METHOD);
   const entrySource = searchParams.get('from') ?? 'credits';
+  const hasPaymentError = searchParams.get('error') === 'fail';
 
   useEffect(() => {
-    if (!hasSupabaseBrowserEnv) { setIsLoggedIn(false); return; }
+    if (!hasSupabaseBrowserEnv) {
+      setIsLoggedIn(false);
+      return;
+    }
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user));
   }, []);
@@ -85,167 +103,205 @@ function CreditsPageContent() {
       } as const;
 
       if (paymentMethod === 'CARD') {
-        await payment.requestPayment({ ...paymentRequest, method: 'CARD', card: { flowMode: 'DEFAULT' } });
+        await payment.requestPayment({
+          ...paymentRequest,
+          method: 'CARD',
+          card: { flowMode: 'DEFAULT' },
+        });
         return;
       }
-      await payment.requestPayment({ ...paymentRequest, method: 'TRANSFER', transfer: { cashReceipt: { type: '소득공제' }, useEscrow: false } });
-    } catch (e) {
-      console.error(e);
+
+      await payment.requestPayment({
+        ...paymentRequest,
+        method: 'TRANSFER',
+        transfer: {
+          cashReceipt: { type: '소득공제' },
+          useEscrow: false,
+        },
+      });
+    } catch (error) {
+      console.error(error);
     } finally {
       setLoading(null);
     }
   }
 
   const selectedMethod = getTossPaymentMethodOption(paymentMethod);
+  const highlightedPackage = useMemo(
+    () => PACKAGES.find((item) => item.highlight) ?? PACKAGES[0],
+    []
+  );
 
   return (
-    <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
+      <AppPage className="space-y-6">
+        <PageHero
+          badges={[
+            <Badge
+              key="credits"
+              className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]"
+            >
+              코인 센터
+            </Badge>,
+            <Badge
+              key="usage"
+              className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
+            >
+              원하실 때만 조용히 여는 심화 해석
+            </Badge>,
+          ]}
+          title="필요한 만큼만 열고, 자주 보시면 넉넉하게 이어갑니다"
+          description="코인은 필요하실 때만 심화 해석을 여는 작은 열쇠입니다. 자주 찾는 주제는 가볍게 충전해서 쓰시고, 반복해서 읽는 분은 월간 코인팩으로 더 넉넉하게 이어가실 수 있게 준비했습니다."
+        />
 
-        {/* ─── HERO + INTRO ─── */}
-        <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-
-          <section className="moon-lunar-panel p-7">
+        <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
+          <SectionSurface surface="lunar" size="lg">
             <div className="app-starfield" />
-            <div className="relative z-10">
-              <div className="flex flex-wrap gap-2">
-                <span className="rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-3 py-1 text-xs text-[var(--app-gold-text)]">코인 센터</span>
-                <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs text-[var(--app-copy-muted)]">원하실 때만 조용히 여는 심화 해석</span>
-              </div>
-              <h1 className="mt-5 font-[var(--font-heading)] text-4xl font-semibold leading-tight tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-                코인 센터
-              </h1>
-              <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy-muted)]">
-                코인은 필요하실 때만 심화 해석을 여는 작은 열쇠입니다. 자주 찾는 주제는 가볍게 충전해서 쓰시고, 자주 여는 분은 월간 코인팩으로 더 넉넉하게 이어가실 수 있게 준비했습니다.
-              </p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                {[
-                  { title: '먼저 가볍게', body: '요약 카드와 기본 해석으로 오늘의 결을 먼저 살펴봅니다.' },
-                  { title: '마음 가는 만큼', body: '연애·재물·직장처럼 더 궁금한 주제만 결과 안에서 바로 엽니다.' },
-                  { title: '자주 찾으신다면', body: '반복해서 읽게 되는 분은 월간 코인팩으로 더 넉넉하게 이어가실 수 있습니다.' },
-                ].map((item) => (
-                  <div key={item.title} className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
-                    <div className="text-sm font-medium text-[var(--app-ivory)]">{item.title}</div>
-                    <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">{item.body}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+            <SectionHeader
+              eyebrow="코인 쓰는 방식"
+              title="무료 탐색 뒤에 필요한 심화 해석만 조용히 엽니다"
+              titleClassName="text-3xl text-[var(--app-gold-text)]"
+              description="코인은 멤버십과 달리, 필요하신 순간에만 결과 안쪽의 심화 해석을 여는 방식입니다. 과하게 밀지 않고, 필요한 장면에만 쓰이도록 역할을 분리했습니다."
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
 
-          <aside className="app-panel p-7">
-            <div className="app-caption">결제 전 안내</div>
-            <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">결제 전에 먼저 보시는 것</h2>
-            <div className="mt-5 space-y-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-              <p>무엇이 열리는지, 어떤 결과가 저장되는지, 자동 결제 여부는 결제 전에 먼저 보여드립니다.</p>
-              <p>코인은 필요한 해석을 그때그때 여는 용도이고, 월간 코인팩은 자주 다시 보는 분께 더 잘 맞는 방식입니다.</p>
-              <p>결제 뒤에는 마이 화면에서 상태와 이용 흐름을 다시 확인하실 수 있습니다.</p>
-            </div>
-            <div className="mt-6 rounded-[1.15rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/6 p-4 text-sm leading-7 text-[var(--app-copy-muted)]">
-              지원 결제: 토스페이먼츠 카드 결제 · 계좌이체
-              <br />
-              진행 시 <LegalLinks className="text-[var(--app-copy-soft)]" />에 동의한 것으로 봅니다.
-            </div>
-          </aside>
-        </div>
+            <ProductGrid columns={3} className="mt-6">
+              <FeatureCard
+                surface="soft"
+                eyebrow="먼저 가볍게"
+                description="요약 카드와 기본 해석으로 오늘의 결을 먼저 살펴봅니다."
+              />
+              <FeatureCard
+                surface="soft"
+                eyebrow="마음 가는 만큼"
+                description="연애·재물·직장처럼 더 궁금한 주제만 결과 안에서 바로 엽니다."
+              />
+              <FeatureCard
+                surface="soft"
+                eyebrow="자주 찾으신다면"
+                description="반복해서 읽게 되는 분은 월간 코인팩으로 더 넉넉하게 이어가실 수 있습니다."
+              />
+            </ProductGrid>
 
-        {/* ─── PACKAGES ─── */}
-        <div className="mt-6 grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+            <FeatureCard
+              className="mt-6"
+              surface="soft"
+              eyebrow="추천 시작점"
+              title={`${highlightedPackage.label} · ${highlightedPackage.credits}코인`}
+              description={highlightedPackage.desc}
+            />
+          </SectionSurface>
 
-          <section>
-            <div className="mb-5">
-              <div className="app-caption">코인 패키지</div>
-              <h2 className="mt-2 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">첫 결제부터 월간 코인팩까지</h2>
+          <SupportRail
+            surface="panel"
+            eyebrow="결제 전 기준"
+            title="무엇이 열리는지 먼저 확인하고 고르시면 됩니다"
+            description="무엇이 열리는지, 어떤 결과가 저장되는지, 자동 결제 여부는 결제 전에 먼저 보이도록 정리했습니다."
+          >
+            <BulletList items={CREDIT_FLOW_POINTS} />
+
+            <FeatureCard
+              className="mt-5"
+              surface="soft"
+              eyebrow="지원 결제"
+              description={
+                <>
+                  토스페이먼츠 카드 결제 · 계좌이체
+                  <br />
+                  진행 시 <LegalLinks className="text-[var(--app-copy-soft)]" />에 동의한 것으로 봅니다.
+                </>
+              }
+            />
+          </SupportRail>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+          <SectionSurface surface="panel" size="lg">
+            <SectionHeader
+              eyebrow="코인 패키지"
+              title="첫 결제부터 월간 코인팩까지"
+              titleClassName="text-3xl"
+              description="패키지는 가격보다 쓰임새가 먼저 보이도록 정리했습니다. 결제 수단을 고른 뒤, 각 카드에서 바로 구매하실 수 있습니다."
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
+
+            <div className="mt-6">
+              <TossPaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} />
             </div>
-            <TossPaymentMethodPicker value={paymentMethod} onChange={setPaymentMethod} className="mb-5" />
-            <div className="grid gap-4 md:grid-cols-2">
+
+            {hasPaymentError ? (
+              <FeatureCard
+                className="mt-5 border-rose-400/25 bg-rose-400/10"
+                surface="soft"
+                eyebrow="다시 확인"
+                description="결제가 완료되지 않았습니다. 결제창을 닫으셨거나 승인에 실패했을 수 있습니다."
+              />
+            ) : null}
+
+            <ProductGrid columns={2} className="mt-6">
               {PACKAGES.map((pkg) => (
-                <article
+                <FeatureCard
                   key={pkg.id}
-                  className={`moon-plan-card p-6 ${pkg.highlight ? '' : ''}`}
-                  data-featured={pkg.highlight ? 'true' : 'false'}
-                  style={pkg.isSubscription ? {
-                    borderColor: 'rgba(107,166,139,0.28)',
-                    background: 'linear-gradient(180deg,rgba(107,166,139,0.1),rgba(15,18,32,0.95))',
-                  } : pkg.highlight ? {} : {
-                    borderColor: 'rgba(42,48,82,0.92)',
-                    background: 'rgba(31,37,64,0.35)',
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-[var(--font-heading)] text-2xl font-semibold text-[var(--app-ivory)]">{pkg.label}</h3>
-                        {pkg.highlight && (
-                          <span className="rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 px-2.5 py-0.5 text-[10px] text-[var(--app-gold-text)]">첫 결제 추천</span>
-                        )}
-                        {pkg.isSubscription && (
-                          <span className="rounded-full border border-[var(--app-jade)]/28 bg-[var(--app-jade)]/10 px-2.5 py-0.5 text-[10px] text-[var(--app-jade)]">월간 코인팩</span>
-                        )}
-                      </div>
-                      <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">{pkg.desc}</p>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <div className="font-[var(--font-heading)] text-3xl font-semibold text-[var(--app-ivory)]">{pkg.credits}</div>
-                      <div className="text-xs text-[var(--app-copy-soft)]">코인</div>
-                    </div>
-                  </div>
-                  <div className="mt-6 flex items-center justify-between">
-                    <div className="text-sm font-medium text-[var(--app-gold-text)]">
-                      {pkg.price.toLocaleString()}원{pkg.isSubscription ? '/월' : ''}
-                    </div>
+                  surface="soft"
+                  eyebrow={pkg.isSubscription ? '월간 코인팩' : pkg.highlight ? '첫 결제 추천' : '코인 패키지'}
+                  title={`${pkg.label} · ${pkg.credits}코인`}
+                  description={
+                    <>
+                      <span className="block">{pkg.desc}</span>
+                      <span className="mt-2 block text-[var(--app-gold-text)]">
+                        {pkg.price.toLocaleString()}원{pkg.isSubscription ? '/월' : ''}
+                      </span>
+                    </>
+                  }
+                  footer={
                     <button
                       onClick={() => handlePurchase(pkg)}
                       disabled={loading === pkg.id}
-                      className="inline-flex h-9 min-w-[96px] items-center justify-center rounded-full bg-[var(--app-gold)] px-4 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)] disabled:opacity-60"
+                      className="inline-flex h-10 min-w-[112px] items-center justify-center rounded-full bg-[var(--app-gold)] px-4 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)] disabled:opacity-60"
                     >
                       {loading === pkg.id ? '처리중...' : `${selectedMethod.shortLabel} 구매`}
                     </button>
-                  </div>
-                </article>
+                  }
+                />
               ))}
-            </div>
-          </section>
+            </ProductGrid>
+          </SectionSurface>
 
-          <aside className="space-y-4">
-            <article className="app-panel p-6">
-              <div className="app-caption mb-4">이런 것이 열립니다</div>
-              <div className="space-y-2">
-                {UNLOCK_EXAMPLES.map((item) => (
-                  <div key={item} className="rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm text-[var(--app-copy)]">
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </article>
+          <SupportRail
+            surface="lunar"
+            eyebrow="이런 것이 열립니다"
+            title="코인은 어디에서 쓰이는지부터 분명히 보여드립니다"
+            description="코인 센터는 단순 결제창이 아니라, 어떤 해석을 여는 열쇠인지 먼저 이해시키는 역할을 합니다."
+          >
+            <ProductGrid columns={3} className="mt-0">
+              {UNLOCK_EXAMPLES.map((item, index) => (
+                <FeatureCard
+                  key={item}
+                  surface="soft"
+                  eyebrow={String(index + 1).padStart(2, '0')}
+                  description={item}
+                />
+              ))}
+            </ProductGrid>
 
-            <article className="moon-lunar-panel p-6">
-              <div className="app-starfield" />
-              <div className="relative z-10">
-                <div className="app-caption">멤버십 안내</div>
-                <h3 className="mt-3 font-[var(--font-heading)] text-xl font-semibold text-[var(--app-ivory)]">
-                  해석 한 번보다 오래 곁에 두는 흐름입니다
-                </h3>
-                <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                  멤버십은 결과 보관과 반복 열람 가치에 초점을 두고, 월간 코인팩은 심화풀이를 자주 여는 분을 위한 코인 전용 흐름으로 나누어두었습니다.
-                </p>
-                <div className="mt-5 flex flex-col gap-2 text-sm">
-                  <Link href="/membership" className="text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]">
-                    멤버십 자세히 보기
-                  </Link>
-                  <Link href="/my/billing" className="text-[var(--app-copy-muted)] underline underline-offset-4 hover:text-[var(--app-ivory)]">
-                    결제/구독 관리 열기
-                  </Link>
-                </div>
-              </div>
-            </article>
-          </aside>
-        </div>
+            <FeatureCard
+              className="mt-5"
+              surface="soft"
+              eyebrow="멤버십 안내"
+              description="멤버십은 결과 보관과 반복 열람 가치에 초점을 두고, 월간 코인팩은 심화풀이를 자주 여는 분을 위한 코인 전용 흐름으로 나누어두었습니다."
+            />
 
-        <p className="mt-8 text-center text-xs text-[var(--app-copy-soft)]">
-          토스페이먼츠 보안 결제 · 코인은 묶음 충전으로, 해석은 원하실 때만 조용히 열어보실 수 있습니다.
-        </p>
-      </div>
+            <ActionCluster className="mt-5">
+              <Link href="/membership" className="moon-cta-secondary">
+                멤버십 자세히 보기
+              </Link>
+              <Link href="/my/billing" className="moon-cta-secondary">
+                결제/구독 관리 열기
+              </Link>
+            </ActionCluster>
+          </SupportRail>
+        </section>
+      </AppPage>
     </AppShell>
   );
 }
@@ -254,10 +310,12 @@ export default function CreditsPage() {
   return (
     <Suspense
       fallback={
-        <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
-          <div className="mx-auto max-w-6xl px-4 py-12 text-center text-sm text-[var(--app-copy)] sm:px-6 lg:px-8 lg:py-16">
-            코인 센터를 불러오는 중입니다.
-          </div>
+        <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
+          <AppPage className="space-y-6">
+            <SectionSurface surface="panel" size="lg" className="text-center text-[var(--app-copy)]">
+              코인 센터를 불러오는 중입니다.
+            </SectionSurface>
+          </AppPage>
         </AppShell>
       }
     >

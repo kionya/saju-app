@@ -3,6 +3,13 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { BulletList } from '@/components/layout/bullet-list';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +19,6 @@ import {
   type BirthLocationSearchResultLike,
 } from '@/components/saju/shared/unified-birth-info-fields';
 import SiteHeader from '@/features/shared-navigation/site-header';
-import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
 import {
   ONBOARDING_CONSENTS,
   ONBOARDING_THOUGHTS,
@@ -34,25 +40,55 @@ import {
 } from './onboarding-storage';
 import { resolveUnifiedBirthInput, type UnifiedBirthEntryDraft } from '@/lib/saju/unified-birth-entry';
 import { trackMoonlightEvent } from '@/lib/analytics';
+import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
-export type OnboardingStep = 'splash' | 'empathy' | 'birth' | 'nickname' | 'consent';
+export type OnboardingStep = 'empathy' | 'birth' | 'nickname' | 'consent';
 
 const STEP_META: Record<
-  Exclude<OnboardingStep, 'splash' | 'empathy'>,
-  { count: string; active: 1 | 2 | 3; tone: 'single' | 'multi' }
+  Exclude<OnboardingStep, 'empathy'>,
+  { count: string }
 > = {
-  birth: { count: '1 / 1', active: 1, tone: 'single' },
-  nickname: { count: '2 / 3', active: 2, tone: 'multi' },
-  consent: { count: '3 / 3', active: 3, tone: 'multi' },
+  birth: { count: '1 / 3' },
+  nickname: { count: '2 / 3' },
+  consent: { count: '3 / 3' },
 };
 
 const STEP_PATHS: Record<OnboardingStep, string> = {
-  splash: '/saju/new',
   empathy: '/saju/new/empathy',
   birth: '/saju/new',
   nickname: '/saju/new/nickname',
   consent: '/saju/new/consent',
 };
+
+const EMPATHY_RAIL_POINTS = [
+  '질문이 아직 흐릿해도 괜찮습니다. 마음에 걸리는 장면부터 시작하시면 됩니다.',
+  '오늘의 흐름은 가볍게, 기준서는 오래 남는 질문을 위해 따로 열어 둡니다.',
+  '출생 정보부터 받고, 호칭과 동의는 뒤 단계에서 짧게 정리합니다.',
+] as const;
+
+const BIRTH_RAIL_POINTS = [
+  '태어난 시간을 모르셔도 기본 해석은 이어집니다.',
+  '출생지를 넣으면 진태양시와 절기 경계를 더 안정적으로 읽을 수 있습니다.',
+  '호칭과 말투, 필수 동의는 다음 단계에서 차분히 이어집니다.',
+] as const;
+
+const NICKNAME_RAIL_POINTS = [
+  '본명이 아니어도 괜찮습니다. 결과와 보관함에서 편하게 불릴 이름이면 충분합니다.',
+  '말투는 설명의 온도만 바꾸고, 명식과 판정 기준은 그대로 유지됩니다.',
+  '다음 단계에서는 필요한 동의만 확인하고 바로 결과를 엽니다.',
+] as const;
+
+const CONSENT_RAIL_POINTS = [
+  '결과 화면에서는 1분 요약, 판정 근거, 다음 행동 순서로 먼저 보게 됩니다.',
+  '저장된 결과는 MY 보관함과 대화 흐름에 연결되어 다시 읽고 질문할 수 있습니다.',
+  '시간이 불명확한 경우 시주 중심 해석은 보수적으로 낮춰 읽습니다.',
+] as const;
+
+const CONSENT_SUMMARY_POINTS = [
+  '입력하신 출생 정보는 결과 생성과 저장을 위해 사용됩니다.',
+  '의료·법률·투자·위기상황 판단은 전문 기준과 도움을 우선합니다.',
+  '결과는 MY 보관함과 이후 대화 흐름에 연결될 수 있습니다.',
+] as const;
 
 interface ProfileApiBirthFields {
   calendarType: 'solar' | 'lunar';
@@ -141,8 +177,6 @@ function getPrevPath(step: OnboardingStep) {
 
 function getNextPath(step: OnboardingStep) {
   switch (step) {
-    case 'splash':
-      return STEP_PATHS.empathy;
     case 'empathy':
       return STEP_PATHS.birth;
     case 'birth':
@@ -292,18 +326,6 @@ function buildSavedProfileOptions(data: ProfileApiResponse): SavedBirthProfile[]
   return options;
 }
 
-function StepIndicator({ active }: { active: 1 | 2 | 3 }) {
-  return (
-    <div className="flex items-center gap-2 text-xs tracking-[0.24em] text-[var(--app-gold)]/72">
-      <span className={cn('h-2.5 w-2.5 rounded-full', active >= 1 ? 'bg-[var(--app-gold)]' : 'bg-[var(--app-line)]')} />
-      <span className={cn('h-px w-8', active >= 2 ? 'bg-[var(--app-gold)]/60' : 'bg-[var(--app-line)]')} />
-      <span className={cn('h-2.5 w-2.5 rounded-full', active >= 2 ? 'bg-[var(--app-gold)]' : 'bg-[var(--app-line)]')} />
-      <span className={cn('h-px w-8', active >= 3 ? 'bg-[var(--app-gold)]/60' : 'bg-[var(--app-line)]')} />
-      <span className={cn('h-2.5 w-2.5 rounded-full', active >= 3 ? 'bg-[var(--app-gold)]' : 'bg-[var(--app-line)]')} />
-    </div>
-  );
-}
-
 export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
   const router = useRouter();
   const [form, setForm] = useState<SajuOnboardingDraft>(createInitialOnboardingDraft());
@@ -316,14 +338,9 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
   const [locationSearchStatus, setLocationSearchStatus] = useState<LocationSearchStatus>('idle');
   const [locationSearchMessage, setLocationSearchMessage] = useState('');
   const [locationSearchResults, setLocationSearchResults] = useState<BirthLocationSearchResult[]>([]);
-  const [showOptionalDetails, setShowOptionalDetails] = useState(false);
   const hasTrackedStartRef = useRef(false);
   const hasTrackedBirthStartRef = useRef(false);
   const honorific = useMemo(() => getHonorificLabel(form.nickname), [form.nickname]);
-  const selectedToneLabel = useMemo(
-    () => ONBOARDING_TONE_OPTIONS.find((option) => option.value === form.tone)?.label ?? '정중하게',
-    [form.tone]
-  );
   const tonePreview = useMemo(
     () => buildTonePreview(form.tone, form.nickname),
     [form.nickname, form.tone]
@@ -391,14 +408,6 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
         from: 'saju-new',
       });
       hasTrackedStartRef.current = true;
-    }
-
-    if (step === 'splash') {
-      const timer = window.setTimeout(() => {
-        router.replace(STEP_PATHS.empathy);
-      }, 2000);
-
-      return () => window.clearTimeout(timer);
     }
 
     if (step === 'nickname' && !hasValidBirth(form)) {
@@ -646,486 +655,443 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
   const nextPath = getNextPath(step);
 
   return (
-    <main className="saju-intake-shell min-h-screen bg-[var(--app-ink)] text-white">
-      <SiteHeader />
-
-      <div
-        className={cn(
-          step === 'splash'
-            ? 'wisdom-category-page'
-            : 'mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10'
-        )}
-      >
-        {step === 'splash' ? (
+    <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
+      <AppPage className="space-y-6">
+        {step === 'empathy' ? (
           <>
-            <WisdomCategoryHero slug="saju" />
-            <section className="wisdom-category-body mt-8">
-              <div className="mx-auto max-w-3xl app-panel px-8 py-14 text-center sm:px-10 sm:py-16">
-                <h1 className="font-[var(--font-heading)] text-3xl tracking-tight text-[var(--app-ivory)] sm:text-4xl">
-                  사주를 시작할 준비가 되었습니다
-                </h1>
-                <p className="mx-auto mt-5 max-w-xl text-sm leading-8 text-[var(--app-copy-muted)] sm:text-base">
-                  생년월일과 태어난 시간을 차근차근 여쭙고, 선생님만의 첫 해석으로 이어드리겠습니다.
-                  저장된 정보가 있다면 입력 단계에서 바로 불러오실 수 있습니다.
-                </p>
-                <div className="mt-8">
-                  <Button
-                    onClick={() => router.replace(STEP_PATHS.empathy)}
-                    className="h-12 rounded-[0.9rem] bg-[var(--app-gold)] px-8 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
-                  >
-                    사주 시작하기
-                  </Button>
-                </div>
-                <p className="mt-5 text-xs tracking-[0.22em] text-[var(--app-copy-soft)]">
-                  月光先生
-                </p>
-              </div>
+            <PageHero
+              badges={[
+                <Badge
+                  key="entry"
+                  className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]"
+                >
+                  사주 시작
+                </Badge>,
+                <Badge
+                  key="guide"
+                  className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
+                >
+                  입력 전 안내
+                </Badge>,
+              ]}
+              title="기준서를 열기 전, 지금 마음에 닿는 질문부터 가볍게 정리합니다"
+              description="문득 떠오른 걱정과 기대를 억지로 정리하지 않으셔도 됩니다. 달빛선생은 먼저 마음에 걸리는 장면을 확인하고, 그 다음에 기준서를 만드는 흐름으로 안내합니다."
+            />
+
+            <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
+              <SectionSurface surface="lunar" size="lg">
+                <div className="app-starfield" />
+                <SectionHeader
+                  eyebrow="이런 질문에서 시작합니다"
+                  title="문득 이런 생각이 드실 때, 사주는 더 또렷한 기준이 됩니다"
+                  titleClassName="text-3xl text-[var(--app-gold-text)]"
+                  description="옛 어른들은 이럴 때 하늘의 흐름을 읽었습니다. 달빛선생은 그 마음을 곧바로 큰 판단으로 몰아가지 않고, 출생 정보와 현재의 질문을 함께 받아 차분한 해석으로 이어갑니다."
+                  descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+                  actions={
+                    <ActionCluster>
+                      <Link href={STEP_PATHS.birth} className="moon-cta-primary">
+                        출생 정보 입력하기
+                      </Link>
+                      <Link
+                        href="/today-fortune"
+                        className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                      >
+                        오늘의 흐름 먼저 보기
+                      </Link>
+                    </ActionCluster>
+                  }
+                />
+
+                <ProductGrid columns={3} className="mt-6">
+                  {ONBOARDING_THOUGHTS.map((thought, index) => (
+                    <FeatureCard
+                      key={thought}
+                      surface="soft"
+                      eyebrow={`질문 ${String(index + 1).padStart(2, '0')}`}
+                      description={`“${thought}”`}
+                    />
+                  ))}
+                </ProductGrid>
+              </SectionSurface>
+
+              <SupportRail
+                surface="panel"
+                eyebrow="읽는 순서"
+                title="지금은 질문을 눌러 담고, 다음 단계에서 기준의 바탕을 받습니다"
+                description="입력은 출생 정보부터 시작하지만, 그 앞에서 무엇을 보려는지 잠깐 정리해 두면 결과 화면을 훨씬 덜 흔들리며 읽을 수 있습니다."
+              >
+                <BulletList items={EMPATHY_RAIL_POINTS} />
+                <FeatureCard
+                  className="mt-5"
+                  surface="soft"
+                  eyebrow="다음 단계"
+                  title="출생 정보 입력"
+                  description="양력·음력, 태어난 시간, 출생지를 받으면 결과 화면과 판정 근거, 이후 명리 기준서 흐름까지 자연스럽게 이어집니다."
+                />
+              </SupportRail>
             </section>
           </>
         ) : null}
 
-        {step === 'empathy' ? (
-          <section className="mx-auto max-w-3xl app-hero-card p-7 text-center sm:p-10">
-            <div className="font-[var(--font-heading)] text-[11px] tracking-[0.45em] text-[var(--app-gold)]/72">
-              月 光 先 生
-            </div>
-            <h1 className="mt-5 font-[var(--font-heading)] text-4xl leading-[1.35] text-[var(--app-ivory)] sm:text-5xl">
-              문득 이런 생각이 드실 때가 있으시죠
-            </h1>
-            <div className="mt-8 grid gap-3 text-left sm:grid-cols-3">
-              {ONBOARDING_THOUGHTS.map((thought) => (
-                <div key={thought} className="app-panel-muted p-5 text-sm leading-7 text-[var(--app-copy)]">
-                  “{thought}”
-                </div>
-              ))}
-            </div>
-            <p className="mx-auto mt-7 max-w-xl text-sm leading-7 text-[var(--app-copy-muted)]">
-              옛 어른들은 이럴 때 하늘의 뜻을 읽었습니다. 생년월일시를 차근차근 여쭙고, 선생님만을 위한 첫 해석으로 이어드리겠습니다.
-            </p>
-            <div className="mt-8 flex flex-col items-center gap-3">
-              <Button
-                onClick={() => router.push(STEP_PATHS.birth)}
-                className="h-12 rounded-full bg-[var(--app-gold)] px-8 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
-              >
-                시작하기
-              </Button>
-              <p className="text-xs text-[var(--app-copy-soft)]">
-                이미 계정이 있으시면 로그인 후 이어서 보실 수 있습니다.
-              </p>
-            </div>
-          </section>
-        ) : null}
-
         {stepMeta ? (
-          <section className="mx-auto max-w-3xl app-hero-card p-7 sm:p-8">
-            <div className="flex items-center justify-between gap-3">
-              {stepMeta.tone === 'single' ? (
-                <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-                  바로 시작
-                </Badge>
-              ) : (
-                <StepIndicator active={stepMeta.active} />
-              )}
-              <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-                {stepMeta.count}
-              </Badge>
-            </div>
+          <>
+            <PageHero
+              badges={[
+                <Badge
+                  key="count"
+                  className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]"
+                >
+                  {stepMeta.count}
+                </Badge>,
+                <Badge
+                  key="label"
+                  className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
+                >
+                  {step === 'birth' ? '출생 정보' : step === 'nickname' ? '호칭과 말투' : '마지막 확인'}
+                </Badge>,
+              ]}
+              title={
+                step === 'birth'
+                  ? '기준서의 바탕이 되는 출생 정보를 먼저 받습니다'
+                  : step === 'nickname'
+                    ? '결과와 보관함에서 선생님을 어떻게 불러드릴지 정합니다'
+                    : '필수 안내만 짧게 확인하고 바로 결과를 엽니다'
+              }
+              description={
+                step === 'birth'
+                  ? '시간과 출생지를 함께 받을수록 명식의 중심이 또렷해집니다. 시간이 정확하지 않으면 시주 판단을 줄이고 일간·월령·대운 중심으로 보수적으로 읽습니다.'
+                  : step === 'nickname'
+                    ? '본명이 아니어도 괜찮습니다. 익숙한 호칭과 편한 말투를 정해 두면 이후 결과와 대화 흐름이 더 자연스럽게 이어집니다.'
+                    : '법으로 정해진 안내와 해석 생성에 필요한 동의만 간단히 정리했습니다. 길게 읽지 않으셔도 핵심은 한눈에 보이게 두었습니다.'
+              }
+            />
 
             {step === 'birth' ? (
-              <>
-                <h1 className="mt-6 font-[var(--font-heading)] text-3xl leading-[1.35] text-[var(--app-ivory)] sm:text-4xl">
-                  내 사주를 보려면 출생 정보를 알려주세요
-                </h1>
-                <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
-                  정확한 출생시각을 모르셔도 괜찮습니다. 다만 시주와 절기 경계에서는 몇 분 차이로 해석의 중심이 달라질 수 있어, 양력·음력, 태어난 시간, 출생지를 함께 받을수록 명식 기준을 더 또렷하게 잡을 수 있습니다. 시간이 정확하지 않으면 시주 판단을 줄이고 일간·월령·대운 중심으로 안전하게 읽습니다.
-                </p>
-
-                <div className="mt-6 rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <div className="app-caption">저장된 정보</div>
-                      <h2 className="mt-2 text-lg font-semibold text-[var(--app-ivory)]">
-                        내 정보나 가족 프로필을 불러올 수 있습니다
-                      </h2>
-                      <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
-                        다른 분의 사주를 보실 때는 저장된 가족/지인 프로필을 선택해 주세요.
-                      </p>
-                    </div>
-                    <Link
-                      href="/my/profile"
-                      className="inline-flex h-10 shrink-0 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-4 text-sm text-[var(--app-copy)] transition-colors hover:text-[var(--app-ivory)]"
-                    >
-                      프로필 관리
-                    </Link>
-                  </div>
-
-                  <div className="mt-4">
-                    {profileLoadStatus === 'loading' ? (
-                      <div className="rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-[var(--app-copy-muted)]">
-                        저장된 정보를 확인하고 있습니다.
-                      </div>
-                    ) : null}
-
-                    {profileLoadStatus === 'anonymous' ? (
-                      <div className="flex flex-col gap-3 rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-6 text-[var(--app-copy-muted)] sm:flex-row sm:items-center sm:justify-between">
-                        <span>로그인하면 저장해 둔 내 정보와 가족 정보를 바로 불러올 수 있습니다.</span>
-                        <Link
-                          href="/login?next=/saju/new"
-                          className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-4 text-sm text-[var(--app-gold-text)]"
-                        >
-                          로그인
-                        </Link>
-                      </div>
-                    ) : null}
-
-                    {profileLoadStatus === 'empty' ? (
-                      <div className="rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-6 text-[var(--app-copy-muted)]">
-                        아직 생년월일이 저장된 프로필이 없습니다. 이번 입력을 마치면 내 프로필에 자동 저장됩니다.
-                      </div>
-                    ) : null}
-
-                    {profileLoadStatus === 'error' ? (
-                      <div className="rounded-2xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm leading-6 text-rose-100">
-                        {profileLoadMessage}
-                      </div>
-                    ) : null}
-
-                    {profileLoadStatus === 'ready' ? (
-                      <div className="grid gap-2 sm:grid-cols-2">
-                        {savedProfileOptions.map((profile) => (
-                          <button
-                            key={profile.id}
-                            type="button"
-                            onClick={() => applySavedProfile(profile)}
-                            className="rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-left transition-colors hover:border-[var(--app-gold)]/38 hover:bg-[var(--app-gold)]/8"
-                          >
-                            <span className="block text-sm font-medium text-[var(--app-ivory)]">{profile.label}</span>
-                            <span className="mt-1 block text-xs leading-5 text-[var(--app-copy-muted)]">{profile.detail}</span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    {profileLoadMessage && profileLoadStatus !== 'error' ? (
-                      <p className="mt-3 text-xs leading-6 text-[var(--app-gold-text)]">{profileLoadMessage}</p>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="mt-8">
-                  <UnifiedBirthInfoFields
-                    draft={buildUnifiedBirthDraft(form)}
-                    onChange={(patch) => setForm((current) => applyUnifiedBirthPatch(current, patch))}
-                    onStarted={() => markBirthStarted('manual')}
-                    locationLoading={locationSearchStatus === 'loading'}
-                    locationMessage={locationSearchMessage}
-                    locationResults={locationSearchResults}
-                    onLocationSearch={searchBirthLocationCoordinates}
-                    onPresetSelect={updateBirthLocation}
-                    onLocationResultSelect={applyBirthLocationSearchResult}
+              <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
+                <SectionSurface surface="panel" size="lg">
+                  <SectionHeader
+                    eyebrow="출생 정보"
+                    title="저장된 프로필을 불러오거나, 지금 직접 입력하실 수 있습니다"
+                    titleClassName="text-3xl"
+                    description="내 정보나 가족 프로필이 있으면 바로 불러올 수 있고, 처음이시면 이번 입력을 기준으로 이후 보관함과 결과 흐름이 정리됩니다."
+                    descriptionClassName="max-w-3xl text-[var(--app-copy)]"
                   />
-                </div>
 
-                <div className="mt-4 rounded-[1.15rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-sm leading-7 text-[var(--app-copy-muted)]">
-                  시주가 필요한 세부 해석은 태어난 시간이 있을수록 정밀해지고, 출생지를 넣으면 진태양시 판단까지 더 정확해집니다. 시간이 없더라도 일간, 월령, 현재 운을 중심으로 기본 해석은 계속 이어집니다.
-                </div>
-
-                <div className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-                  <div className="rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
-                    <div className="app-caption">선택 사항</div>
-                    <div className="mt-2 flex items-start justify-between gap-4">
+                  <div className="mt-6 rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <h2 className="text-lg font-semibold text-[var(--app-ivory)]">
-                          호칭과 말투는 지금 건너뛰셔도 됩니다
+                        <div className="app-caption">저장된 정보</div>
+                        <h2 className="mt-2 text-lg font-semibold text-[var(--app-ivory)]">
+                          내 정보나 가족 프로필을 바로 불러올 수 있습니다
                         </h2>
                         <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
-                          기본 해석을 먼저 보고, 마음에 드시면 MY나 대화에서 더 자연스럽게 이어갈 수 있게 저장해둘 수 있습니다.
+                          다른 분의 사주를 볼 때는 저장된 가족·지인 프로필을 선택해도, 내 정보는 바뀌지 않습니다.
                         </p>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowOptionalDetails((current) => !current)}
-                        className="inline-flex shrink-0 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface)] px-4 py-2 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-                      >
-                        {showOptionalDetails ? '접기' : '선택 설정 열기'}
-                      </button>
-                    </div>
-
-                    {showOptionalDetails ? (
-                      <div className="mt-5">
-                        <div>
-                          <Label htmlFor="nickname" className="mb-2 block text-sm text-[var(--app-copy)]">
-                            호칭
-                          </Label>
-                          <Input
-                            id="nickname"
-                            value={form.nickname}
-                            onChange={(event) => updateField('nickname', event.target.value)}
-                            placeholder="예: 김영희 선생님"
-                            className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
-                          />
-                          <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
-                            이렇게 불러드릴게요: <span className="text-[var(--app-gold-text)]">{honorific}</span>
-                          </p>
-                        </div>
-
-                        <div className="mt-5">
-                          <Label className="mb-2 block text-sm text-[var(--app-copy)]">말투 선택</Label>
-                          <div className="grid gap-3 sm:grid-cols-3">
-                            {ONBOARDING_TONE_OPTIONS.map((option) => (
-                              <button
-                                key={option.value}
-                                type="button"
-                                onClick={() => updateField('tone', option.value as OnboardingSpeechTone)}
-                                className={cn(
-                                  'rounded-[1.15rem] border px-4 py-4 text-left transition-colors',
-                                  form.tone === option.value
-                                    ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
-                                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
-                                )}
-                              >
-                                <div className="text-sm font-medium">{option.label}</div>
-                                <div className="mt-2 text-xs leading-6">{option.description}</div>
-                              </button>
-                            ))}
-                          </div>
-                          <div className="mt-4 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface)] px-4 py-4 text-sm leading-7 text-[var(--app-copy)]">
-                            “{tonePreview}”
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="mt-5 rounded-[1.15rem] border border-[var(--app-line)] bg-[var(--app-surface)] px-4 py-4 text-sm leading-7 text-[var(--app-copy-muted)]">
-                        {form.nickname.trim()
-                          ? `${honorific} 기준으로 ${selectedToneLabel} 말투가 준비돼 있습니다. 지금은 기본 해석을 먼저 열고, 필요하실 때 다시 다듬으셔도 됩니다.`
-                          : '지금은 기본 해석을 먼저 여는 데 집중하고, 나중에 필요하실 때 호칭과 말투를 편하게 정하셔도 됩니다.'}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
-                    <div className="app-caption">필수 확인</div>
-                    <h2 className="mt-2 text-lg font-semibold text-[var(--app-ivory)]">
-                      결과를 만들기 전 필요한 안내만 짧게 확인합니다
-                    </h2>
-                    <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
-                      기본 해석을 먼저 확인하고, 더 필요한 부분만 명리 기준서로 이어지는 구조입니다.
-                    </p>
-                    <div className="mt-5 space-y-3">
-                      {ONBOARDING_CONSENTS.map((item) => (
-                        <label
-                          key={item.title}
-                          className="flex items-start gap-3 rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface)] px-4 py-4"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={form.consents[item.title]}
-                            onChange={(event) =>
-                              setForm((current) => ({
-                                ...current,
-                                consents: {
-                                  ...current.consents,
-                                  [item.title]: event.target.checked,
-                                },
-                              }))
-                            }
-                            className="mt-1 h-4 w-4 rounded border-[var(--app-line)] bg-transparent accent-[var(--app-gold)]"
-                          />
-                          <span className="min-w-0">
-                            <span className="flex items-center gap-2 text-sm font-medium text-[var(--app-ivory)]">
-                              {item.title}
-                              <span
-                                className={cn(
-                                  'rounded-full border px-2 py-0.5 text-[10px]',
-                                  item.required
-                                    ? 'border-[var(--app-coral)]/28 bg-[var(--app-coral)]/10 text-[var(--app-coral)]'
-                                    : 'border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]'
-                                )}
-                              >
-                                {item.required ? '필수' : '선택'}
-                              </span>
-                            </span>
-                            <span className="mt-2 block text-xs leading-6 text-[var(--app-copy-muted)]">
-                              {item.detail}
-                            </span>
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-
-                    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                       <Link
-                        href="/today-fortune"
-                        className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                        href="/my/profile"
+                        className="inline-flex h-10 shrink-0 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-4 text-sm text-[var(--app-copy)] transition-colors hover:text-[var(--app-ivory)]"
                       >
-                        오늘운세 먼저 보기
+                        프로필 관리
                       </Link>
-                      <Button
-                        onClick={() => {
-                          if (validateBirthStep()) {
-                            void submit();
-                          }
-                        }}
-                        disabled={isSubmitting}
-                        className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
-                      >
-                        {isSubmitting ? '기본 해석 준비 중...' : '내 사주 기본 해석 보기'}
-                      </Button>
                     </div>
-                    <p className="mt-4 text-xs leading-6 text-[var(--app-copy-soft)]">
-                      입력하신 정보는 암호화 저장되며, 외부에 공유되지 않습니다.
-                    </p>
+
+                    <div className="mt-4">
+                      {profileLoadStatus === 'loading' ? (
+                        <div className="rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-[var(--app-copy-muted)]">
+                          저장된 정보를 확인하고 있습니다.
+                        </div>
+                      ) : null}
+
+                      {profileLoadStatus === 'anonymous' ? (
+                        <div className="flex flex-col gap-3 rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-6 text-[var(--app-copy-muted)] sm:flex-row sm:items-center sm:justify-between">
+                          <span>로그인하면 저장해 둔 내 정보와 가족 정보를 바로 불러올 수 있습니다.</span>
+                          <Link
+                            href="/login?next=/saju/new"
+                            className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-4 text-sm text-[var(--app-gold-text)]"
+                          >
+                            로그인
+                          </Link>
+                        </div>
+                      ) : null}
+
+                      {profileLoadStatus === 'empty' ? (
+                        <div className="rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-6 text-[var(--app-copy-muted)]">
+                          아직 생년월일이 저장된 프로필이 없습니다. 이번 입력을 마치면 내 프로필에 자동 저장됩니다.
+                        </div>
+                      ) : null}
+
+                      {profileLoadStatus === 'error' ? (
+                        <div className="rounded-2xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm leading-6 text-rose-100">
+                          {profileLoadMessage}
+                        </div>
+                      ) : null}
+
+                      {profileLoadStatus === 'ready' ? (
+                        <ProductGrid columns={2} className="mt-1">
+                          {savedProfileOptions.map((profile) => (
+                            <button
+                              key={profile.id}
+                              type="button"
+                              onClick={() => applySavedProfile(profile)}
+                              className="app-feature-card-soft text-left transition-colors hover:border-[var(--app-gold)]/38 hover:bg-[var(--app-gold)]/8"
+                            >
+                              <div className="text-sm font-medium text-[var(--app-ivory)]">{profile.label}</div>
+                              <div className="mt-2 text-xs leading-6 text-[var(--app-copy-muted)]">{profile.detail}</div>
+                            </button>
+                          ))}
+                        </ProductGrid>
+                      ) : null}
+
+                      {profileLoadMessage && profileLoadStatus !== 'error' ? (
+                        <p className="mt-3 text-xs leading-6 text-[var(--app-gold-text)]">{profileLoadMessage}</p>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-              </>
+
+                  <div className="mt-8">
+                    <UnifiedBirthInfoFields
+                      draft={buildUnifiedBirthDraft(form)}
+                      onChange={(patch) => setForm((current) => applyUnifiedBirthPatch(current, patch))}
+                      onStarted={() => markBirthStarted('manual')}
+                      locationLoading={locationSearchStatus === 'loading'}
+                      locationMessage={locationSearchMessage}
+                      locationResults={locationSearchResults}
+                      onLocationSearch={searchBirthLocationCoordinates}
+                      onPresetSelect={updateBirthLocation}
+                      onLocationResultSelect={applyBirthLocationSearchResult}
+                    />
+                  </div>
+
+                  <ActionCluster className="mt-8">
+                    <Link
+                      href={prevPath ?? STEP_PATHS.empathy}
+                      className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                    >
+                      이전 안내 보기
+                    </Link>
+                    <Button
+                      onClick={() => {
+                        if (validateBirthStep() && nextPath) router.push(nextPath);
+                      }}
+                      className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+                    >
+                      다음 단계로
+                    </Button>
+                  </ActionCluster>
+                </SectionSurface>
+
+                <SupportRail
+                  surface="lunar"
+                  eyebrow="입력 가이드"
+                  title="지금 단계에서는 기준의 바탕이 되는 정보만 정확히 받습니다"
+                  description="호칭과 말투, 필수 동의는 뒤 단계로 넘기고, 지금은 명식과 시간 규칙을 안정적으로 잡는 데 집중합니다."
+                >
+                  <BulletList items={BIRTH_RAIL_POINTS} />
+                  <FeatureCard
+                    className="mt-5"
+                    surface="soft"
+                    eyebrow="다음 단계"
+                    title="호칭과 말투 정리"
+                    description="결과 화면과 보관함, 이후 대화 흐름에서 선생님을 어떻게 부를지와 읽기 편한 말투를 가볍게 맞춥니다."
+                  />
+                </SupportRail>
+              </section>
             ) : null}
 
             {step === 'nickname' ? (
-              <>
-                <h1 className="mt-6 font-[var(--font-heading)] text-3xl leading-[1.35] text-[var(--app-ivory)] sm:text-4xl">
-                  어떻게 불러드릴까요?
-                </h1>
-                <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
-                  본명이 아니어도 괜찮습니다. 결과 화면과 보관함에서 선생님을 부를 호칭이며, 익숙하고 편한 이름이면 충분합니다.
-                </p>
-
-                <div className="mt-8">
-                  <Label htmlFor="nickname" className="mb-2 block text-sm text-[var(--app-copy)]">
-                    호칭
-                  </Label>
-                  <Input
-                    id="nickname"
-                    value={form.nickname}
-                    onChange={(event) => updateField('nickname', event.target.value)}
-                    placeholder="예: 김영희 선생님"
-                    className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+              <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+                <SectionSurface surface="panel" size="lg">
+                  <SectionHeader
+                    eyebrow="호칭과 말투"
+                    title="편한 이름과 설명의 온도만 정하면 됩니다"
+                    titleClassName="text-3xl"
+                    description="결과 화면, 보관함, 이후 대화에서 선생님을 어떻게 부를지 정하고, 읽기 좋은 말투를 골라 둡니다."
+                    descriptionClassName="max-w-3xl text-[var(--app-copy)]"
                   />
-                  <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
-                    이렇게 불러드릴게요: <span className="text-[var(--app-gold-text)]">{honorific}</span>
-                  </p>
-                </div>
 
-                <div className="mt-8">
-                  <Label className="mb-2 block text-sm text-[var(--app-copy)]">말투 선택</Label>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    {ONBOARDING_TONE_OPTIONS.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => updateField('tone', option.value as OnboardingSpeechTone)}
-                        className={cn(
-                          'rounded-[1.15rem] border px-4 py-4 text-left transition-colors',
-                          form.tone === option.value
-                            ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
-                            : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
-                        )}
-                      >
-                        <div className="text-sm font-medium">{option.label}</div>
-                        <div className="mt-2 text-xs leading-6">{option.description}</div>
-                      </button>
-                    ))}
+                  <div className="mt-6">
+                    <Label htmlFor="nickname" className="mb-2 block text-sm text-[var(--app-copy)]">
+                      호칭
+                    </Label>
+                    <Input
+                      id="nickname"
+                      value={form.nickname}
+                      onChange={(event) => updateField('nickname', event.target.value)}
+                      placeholder="예: 김영희 선생님"
+                      className="h-12 rounded-2xl border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)]"
+                    />
+                    <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
+                      이렇게 불러드릴게요: <span className="text-[var(--app-gold-text)]">{honorific}</span>
+                    </p>
                   </div>
-                  <div className="mt-4 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-sm leading-7 text-[var(--app-copy)]">
-                    “{tonePreview}”
-                  </div>
-                </div>
 
-                <div className="mt-8 flex gap-3">
-                  <Link
-                    href={prevPath ?? STEP_PATHS.birth}
-                    className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-                  >
-                    이전
-                  </Link>
-                  <Button
-                    onClick={() => {
-                      if (validateNicknameStep() && nextPath) router.push(nextPath);
-                    }}
-                    className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
-                  >
-                    다음
-                  </Button>
-                </div>
-              </>
+                  <div className="mt-8">
+                    <Label className="mb-2 block text-sm text-[var(--app-copy)]">말투 선택</Label>
+                    <ProductGrid columns={3}>
+                      {ONBOARDING_TONE_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => updateField('tone', option.value as OnboardingSpeechTone)}
+                          className={cn(
+                            'app-feature-card-soft text-left transition-colors',
+                            form.tone === option.value
+                              ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
+                              : 'hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
+                          )}
+                        >
+                          <div className="text-sm font-medium">{option.label}</div>
+                          <div className="mt-2 text-xs leading-6">{option.description}</div>
+                        </button>
+                      ))}
+                    </ProductGrid>
+
+                    <FeatureCard
+                      className="mt-5"
+                      surface="muted"
+                      eyebrow="미리 듣는 말투"
+                      description={`“${tonePreview}”`}
+                    />
+                  </div>
+
+                  <ActionCluster className="mt-8">
+                    <Link
+                      href={prevPath ?? STEP_PATHS.birth}
+                      className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                    >
+                      이전
+                    </Link>
+                    <Button
+                      onClick={() => {
+                        if (validateNicknameStep() && nextPath) router.push(nextPath);
+                      }}
+                      className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+                    >
+                      동의 확인으로
+                    </Button>
+                  </ActionCluster>
+                </SectionSurface>
+
+                <SupportRail
+                  surface="panel"
+                  eyebrow="설명 흐름"
+                  title="말투는 바뀌어도 기준은 그대로 유지됩니다"
+                  description="달빛선생은 명식과 판정 기준을 먼저 계산하고, 그 뒤에 선생님이 읽기 편한 말의 온도를 얹습니다."
+                >
+                  <BulletList items={NICKNAME_RAIL_POINTS} />
+                  <FeatureCard
+                    className="mt-5"
+                    surface="soft"
+                    eyebrow="현재 선택"
+                    title={`${honorific} 기준`}
+                    description={`${ONBOARDING_TONE_OPTIONS.find((option) => option.value === form.tone)?.label ?? '정중한'} 말투가 준비돼 있습니다.`}
+                  />
+                </SupportRail>
+              </section>
             ) : null}
 
             {step === 'consent' ? (
-              <>
-                <h1 className="mt-6 font-[var(--font-heading)] text-3xl leading-[1.35] text-[var(--app-ivory)] sm:text-4xl">
-                  마지막 한 가지만 여쭙겠습니다
-                </h1>
-                <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
-                  법으로 정해진 안내와 해석 생성에 필요한 동의만 간단히 정리했습니다. 길게 읽지 않으셔도 핵심은 한눈에 보이게 두었습니다.
-                </p>
+              <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+                <SectionSurface surface="panel" size="lg">
+                  <SectionHeader
+                    eyebrow="필수 안내"
+                    title="길게 읽지 않으셔도 핵심만 분명히 보이게 두었습니다"
+                    titleClassName="text-3xl"
+                    description="법으로 정해진 안내와 해석 생성에 필요한 동의만 간단히 정리했습니다. 필수 항목만 확인하면 바로 결과 화면으로 이어집니다."
+                    descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+                  />
 
-                <div className="mt-8 space-y-3">
-                  {ONBOARDING_CONSENTS.map((item) => (
-                    <label
-                      key={item.title}
-                      className="flex items-start gap-3 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={form.consents[item.title]}
-                        onChange={(event) =>
-                          setForm((current) => ({
-                            ...current,
-                            consents: {
-                              ...current.consents,
-                              [item.title]: event.target.checked,
-                            },
-                          }))
-                        }
-                        className="mt-1 h-4 w-4 rounded border-[var(--app-line)] bg-transparent accent-[var(--app-gold)]"
-                      />
-                      <span className="min-w-0">
-                        <span className="flex items-center gap-2 text-sm font-medium text-[var(--app-ivory)]">
-                          {item.title}
-                          <span
-                            className={cn(
-                              'rounded-full border px-2 py-0.5 text-[10px]',
-                              item.required
-                                ? 'border-[var(--app-coral)]/28 bg-[var(--app-coral)]/10 text-[var(--app-coral)]'
-                                : 'border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]'
-                            )}
-                          >
-                            {item.required ? '필수' : '선택'}
+                  <div className="mt-6 space-y-3">
+                    {ONBOARDING_CONSENTS.map((item) => (
+                      <label
+                        key={item.title}
+                        className="flex items-start gap-3 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={form.consents[item.title]}
+                          onChange={(event) =>
+                            setForm((current) => ({
+                              ...current,
+                              consents: {
+                                ...current.consents,
+                                [item.title]: event.target.checked,
+                              },
+                            }))
+                          }
+                          className="mt-1 h-4 w-4 rounded border-[var(--app-line)] bg-transparent accent-[var(--app-gold)]"
+                        />
+                        <span className="min-w-0">
+                          <span className="flex items-center gap-2 text-sm font-medium text-[var(--app-ivory)]">
+                            {item.title}
+                            <span
+                              className={cn(
+                                'rounded-full border px-2 py-0.5 text-[10px]',
+                                item.required
+                                  ? 'border-[var(--app-coral)]/28 bg-[var(--app-coral)]/10 text-[var(--app-coral)]'
+                                  : 'border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]'
+                              )}
+                            >
+                              {item.required ? '필수' : '선택'}
+                            </span>
+                          </span>
+                          <span className="mt-2 block text-xs leading-6 text-[var(--app-copy-muted)]">
+                            {item.detail}
                           </span>
                         </span>
-                        <span className="mt-2 block text-xs leading-6 text-[var(--app-copy-muted)]">
-                          {item.detail}
-                        </span>
-                      </span>
-                    </label>
-                  ))}
-                </div>
+                      </label>
+                    ))}
+                  </div>
 
-                <div className="mt-8 flex gap-3">
-                  <Link
-                    href={prevPath ?? STEP_PATHS.nickname}
-                    className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                  <ActionCluster className="mt-8">
+                    <Link
+                      href={prevPath ?? STEP_PATHS.nickname}
+                      className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                    >
+                      이전
+                    </Link>
+                    <Button
+                      onClick={submit}
+                      disabled={isSubmitting}
+                      className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+                    >
+                      {isSubmitting ? '결과 준비 중...' : '기본 해석 열기'}
+                    </Button>
+                  </ActionCluster>
+                </SectionSurface>
+
+                <SupportRail
+                  surface="lunar"
+                  eyebrow="결과 미리보기"
+                  title="이 단계가 끝나면 바로 보게 되는 흐름입니다"
+                  description="달빛선생 결과 화면은 긴 본문보다 먼저 핵심 요약과 판정 근거, 다음 행동을 보여주도록 정리되어 있습니다."
+                >
+                  <BulletList items={CONSENT_RAIL_POINTS} />
+                  <FeatureCard
+                    className="mt-5"
+                    surface="soft"
+                    eyebrow="짧은 확인"
+                    title="입력 정보와 결과 활용"
                   >
-                    이전
-                  </Link>
-                  <Button
-                    onClick={submit}
-                    disabled={isSubmitting}
-                    className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
-                  >
-                    {isSubmitting ? '결과 준비 중...' : '시작하기'}
-                  </Button>
-                </div>
-              </>
+                    <BulletList
+                      items={CONSENT_SUMMARY_POINTS}
+                      className="mt-0"
+                      itemClassName="text-sm leading-7 text-[var(--app-copy)]"
+                    />
+                  </FeatureCard>
+                </SupportRail>
+              </section>
             ) : null}
 
             {errorMessage ? (
-              <div className="mt-6 rounded-2xl border border-[var(--app-coral)]/28 bg-[var(--app-coral)]/10 px-4 py-3 text-sm text-[var(--app-ivory)]">
-                {errorMessage}
-              </div>
+              <SectionSurface surface="muted" className="border border-[var(--app-coral)]/28 bg-[var(--app-coral)]/10">
+                <p className="text-sm leading-7 text-[var(--app-ivory)]">{errorMessage}</p>
+              </SectionSurface>
             ) : null}
-          </section>
+          </>
         ) : null}
-      </div>
-    </main>
+      </AppPage>
+    </AppShell>
   );
 }

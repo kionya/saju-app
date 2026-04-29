@@ -1,17 +1,28 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { BulletList } from '@/components/layout/bullet-list';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   ZODIAC_BLUEPRINT,
   ZODIAC_META,
 } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
-import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
 import { ZODIAC_FORTUNES } from '@/lib/free-content-pages';
 import { getOptionalSignedInProfile } from '@/lib/profile';
 import { buildProfileReadingSlug, buildZodiacSlugFromProfile } from '@/lib/profile-personalization';
-import { AppShell } from '@/shared/layout/app-shell';
+import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
+
+const ZODIAC_POINTS = [
+  '띠운세는 익숙한 언어로 올해의 큰 방향과 오늘의 포인트를 먼저 읽는 데 잘 맞습니다.',
+  '큰 결정보다 생활 리듬, 관계, 소비의 우선순위를 고를 때 더 부드럽게 참고하실 수 있습니다.',
+  '더 깊은 개인 기준은 사주 결과와 기준서 흐름으로 이어집니다.',
+] as const;
 
 export const metadata: Metadata = {
   title: '띠별 운세',
@@ -36,126 +47,102 @@ export default async function ZodiacPage() {
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="wisdom-category-page">
-        <WisdomCategoryHero slug="zodiac" />
-        <div className="wisdom-category-body">
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-          <article className="app-panel p-6 text-center">
-            <div className="text-6xl">{featuredMeta.symbol}</div>
-            <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
-              {hasPersonalizedProfile ? `선생님은 ${featured.label}` : featured.label}
-            </div>
-            <div className="mt-2 text-sm tracking-[0.22em] text-[var(--app-copy-muted)]">
-              {featured.years}
-            </div>
-            <div className="mt-6 rounded-[1.35rem] border border-[var(--app-gold)]/24 bg-[var(--app-surface-muted)] px-5 py-5">
-              <div className="app-caption">{featured.label}의 2026년</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                {featuredMeta.yearlyMessage}. 봄에는 새로운 배움과 관계의 움직임이, 가을에는 그동안
-                준비한 결실이 차분히 드러나는 흐름입니다.
-              </p>
-            </div>
-          </article>
+      <AppPage className="space-y-6">
+        <PageHero
+          badges={[
+            <Badge
+              key="zodiac"
+              className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]"
+            >
+              띠운세
+            </Badge>,
+            <Badge
+              key="free"
+              className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
+            >
+              빠른 무료 탐색
+            </Badge>,
+          ]}
+          title="익숙한 띠의 언어로 올해의 흐름을 먼저 읽습니다"
+          description="띠운세는 큰 방향과 오늘의 포인트를 익숙한 언어로 먼저 보여주는 입구입니다. 생활 리듬을 부드럽게 참고하고, 더 깊은 개인 기준은 사주 해석으로 이어가실 수 있습니다."
+        />
 
-          <article className="app-panel p-6">
+        <section className="grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
+          <SectionSurface surface="panel" size="lg" className="text-center">
+            <SectionHeader
+              eyebrow={hasPersonalizedProfile ? 'MY 프로필 기준 띠' : '오늘 먼저 보는 띠'}
+              title={hasPersonalizedProfile ? `선생님은 ${featured.label}` : featured.label}
+              titleClassName="text-3xl text-[var(--app-gold-text)]"
+              description={featured.years}
+              descriptionClassName="mx-auto text-[var(--app-copy-muted)]"
+            />
+            <div className="mt-6 text-6xl">{featuredMeta.symbol}</div>
+            <FeatureCard
+              className="mt-6 text-left"
+              surface="soft"
+              eyebrow={`${featured.label}의 2026년`}
+              description={`${featuredMeta.yearlyMessage}. ${featured.todayFocus}`}
+            />
+          </SectionSurface>
+
+          <SupportRail
+            surface="lunar"
+            eyebrow="띠운세 읽는 방식"
+            title="큰 방향은 가볍게, 깊은 기준은 사주로 분리합니다"
+            description="띠운세는 연운과 생활 리듬을 익숙한 말로 먼저 보는 입구 역할에 두고, 더 깊은 질문은 사주 결과로 이어집니다."
+          >
             {hasPersonalizedProfile ? (
-              <div className="mb-6 rounded-[1.3rem] border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-5 py-5">
-                <div className="app-caption">MY 프로필 기준 띠</div>
-                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                  저장된 MY 프로필 생년을 기준으로 선생님의 띠를 먼저 보여드렸습니다. 띠운세는
-                  익숙한 언어로 흐름을 먼저 읽고, 더 깊은 바탕은 사주 결과로 이어보시면 좋습니다.
-                </p>
-              </div>
+              <FeatureCard
+                surface="soft"
+                eyebrow="약한 개인화 연결"
+                description="저장된 MY 프로필 생년 기준으로 선생님의 띠를 먼저 보여드렸습니다. 이 흐름은 빠른 탐색이고, 더 깊은 기준은 사주 결과로 이어집니다."
+              />
             ) : null}
-
-            <div className="app-caption">다른 띠 보기</div>
-            <div className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4">
-              {ZODIAC_FORTUNES.map((item) => {
-                const meta = ZODIAC_META[item.slug as keyof typeof ZODIAC_META];
-                const active = item.slug === featured.slug;
-                const currentYear = item.slug === 'horse';
-
-                return (
-                  <Link
-                    key={item.slug}
-                    href={`/zodiac/${item.slug}`}
-                    className="moon-zodiac-item"
-                    data-active={active ? 'true' : undefined}
-                    data-year={currentYear ? 'true' : undefined}
-                  >
-                    <div className="text-3xl">{meta.symbol}</div>
-                    <div className="mt-2 text-sm font-medium text-[var(--app-ivory)]">
-                      {item.label.replace('띠', '')}
-                    </div>
-                    <div className="mt-1 text-[11px] text-[var(--app-copy-muted)]">
-                      {currentYear ? '태세' : '보기'}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-
-            <div className="mt-6 rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
-              <div className="app-caption">오늘의 포인트</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{featured.todayFocus}</p>
-              <p className="mt-3 text-sm leading-8 text-[var(--app-copy-muted)]">
-                {featured.action}
-              </p>
-            </div>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href={`/zodiac/${featured.slug}`}>
-                <Button className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]">
-                  {hasPersonalizedProfile ? '내 띠 바로 보기' : `${featured.label} 자세히 보기`}
-                </Button>
+            <BulletList className={hasPersonalizedProfile ? 'mt-5' : ''} items={ZODIAC_POINTS} />
+            <ActionCluster className="mt-5">
+              <Link href={`/zodiac/${featured.slug}`} className="moon-cta-primary">
+                {hasPersonalizedProfile ? '내 띠 바로 보기' : `${featured.label} 자세히 보기`}
               </Link>
-              <Link href={readingSlug ? `/saju/${readingSlug}` : '/saju/new'}>
-                <Button
-                  variant="outline"
-                  className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-                >
-                  {readingSlug ? '내 사주로 이어보기' : '맞춤 사주 보기'}
-                </Button>
+              <Link href={readingSlug ? `/saju/${readingSlug}` : '/saju/new'} className="moon-cta-secondary">
+                {readingSlug ? '내 사주로 이어보기' : '맞춤 사주 보기'}
               </Link>
-            </div>
-          </article>
+            </ActionCluster>
+          </SupportRail>
         </section>
 
-        <section className="mt-8 app-panel p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-              12띠 연운 한 줄
-            </h2>
-            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-              2026년 총운
-            </Badge>
-          </div>
+        <SectionSurface surface="panel" size="lg">
+          <SectionHeader
+            eyebrow="12띠"
+            title="각 띠의 연운 한 줄"
+            titleClassName="text-3xl"
+            description="무료 탐색군 내부에서도 같은 카드 폭과 문장 밀도를 유지해, 어떤 띠를 눌러도 같은 리듬으로 읽히게 정리했습니다."
+            descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+          />
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <ProductGrid columns={3} className="mt-6">
             {ZODIAC_FORTUNES.map((item) => {
               const meta = ZODIAC_META[item.slug as keyof typeof ZODIAC_META];
-
               return (
-                <article
+                <FeatureCard
                   key={item.slug}
-                  className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="text-3xl">{meta.symbol}</div>
-                    <div className="font-[var(--font-heading)] text-xl text-[var(--app-ivory)]">
-                      {item.label}
-                    </div>
-                  </div>
-                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                    {meta.yearlyMessage}
-                  </p>
-                </article>
+                  surface="soft"
+                  eyebrow={`${meta.symbol} ${item.years}`}
+                  title={item.label}
+                  description={meta.yearlyMessage}
+                  footer={
+                    <Link
+                      href={`/zodiac/${item.slug}`}
+                      className="inline-flex items-center gap-2 text-sm text-[var(--app-gold-soft)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                    >
+                      이 띠 흐름 읽기
+                    </Link>
+                  }
+                />
               );
             })}
-          </div>
-        </section>
-        </div>
-      </div>
+          </ProductGrid>
+        </SectionSurface>
+      </AppPage>
     </AppShell>
   );
 }

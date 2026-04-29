@@ -1,6 +1,12 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { TarotCardArtwork } from '@/components/tarot/tarot-card-artwork';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
 import { Badge } from '@/components/ui/badge';
 import { TAROT_CARD_KEYWORDS, TAROT_TO_SAJU_BRIDGE } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
@@ -11,7 +17,7 @@ import {
   getTarotSpreadForQuestion,
   normalizeQuestion,
 } from '@/lib/tarot-api';
-import { AppShell } from '@/shared/layout/app-shell';
+import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 interface Props {
   searchParams: Promise<{
@@ -46,217 +52,194 @@ export default async function TarotResultPage({ searchParams }: Props) {
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-hero-card p-7 sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Link
-              href={{
-                pathname: '/tarot/daily/pick',
-                query: { question: currentQuestion },
-              }}
-              className="text-sm text-[var(--app-plum)] transition-colors hover:text-[var(--app-ivory)]"
+      <AppPage className="space-y-6">
+        <PageHero
+          badges={[
+            <Badge
+              key="result"
+              className="border-[var(--app-plum)]/25 bg-[var(--app-plum)]/10 text-[var(--app-plum)]"
             >
-              ← 다시 뽑기
-            </Link>
-            <Badge className="border-[var(--app-plum)]/25 bg-[var(--app-plum)]/10 text-[var(--app-plum)]">
-              T03 · READING
-            </Badge>
-          </div>
-          <div className="mt-6 max-w-3xl">
-            <div className="app-caption">오늘의 질문</div>
-            <h1 className="mt-3 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
-              {currentQuestion}
-            </h1>
-            <p className="mt-4 text-base leading-8 text-[var(--app-copy)]">
-              카드가 전하는 순간의 메시지와 사주 흐름을 한 문장으로 겹쳐 읽어드립니다.
-            </p>
-          </div>
+              타로 결과
+            </Badge>,
+            <Badge
+              key="source"
+              className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
+            >
+              {sourceLabel}
+            </Badge>,
+          ]}
+          title={currentQuestion}
+          description="카드가 전하는 순간의 메시지를 먼저 짚고, 필요하면 그 질문이 사주 흐름과 어디에서 만나는지까지 이어서 읽습니다."
+        />
+
+        <section className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
+          <SectionSurface surface="panel" size="lg" className="text-center">
+            <SectionHeader
+              eyebrow="오늘 뽑으신 카드"
+              title={reading.displayName}
+              titleClassName="text-3xl"
+              description={`${reading.arcanaLabel} · ${reading.subtitle}`}
+              descriptionClassName="mx-auto max-w-xl text-[var(--app-copy-muted)]"
+            />
+            <div className="mt-6">
+              <TarotCardArtwork
+                cardId={reading.card.name_short}
+                shortName={reading.shortName}
+                displayName={reading.displayName}
+                cardMarker={reading.cardMarker}
+                arcanaLabel={reading.arcanaLabel}
+                className="mx-auto"
+                priority
+              />
+            </div>
+            <FeatureCard
+              className="mt-6 text-left"
+              surface="soft"
+              eyebrow="원문 카드 의미"
+              description={reading.meaningExcerpt}
+            />
+          </SectionSurface>
+
+          <SupportRail
+            surface="lunar"
+            eyebrow="먼저 짚어드리는 핵심"
+            title={reading.answer}
+            description="긴 설명보다 먼저, 지금 질문에 가장 가까운 한 줄과 오늘 바로 붙잡을 포인트를 먼저 드립니다."
+          >
+            <FeatureCard
+              surface="soft"
+              eyebrow="이번 주 마음에 두실 한 가지"
+              description={reading.action}
+            />
+            <FeatureCard
+              className="mt-4"
+              surface="soft"
+              eyebrow="카드가 건네는 말"
+              description={reading.guidance}
+            />
+            <FeatureCard
+              className="mt-4"
+              surface="panel"
+              eyebrow="선생님의 사주와 만나면"
+              description={reading.sajuBlend}
+            />
+          </SupportRail>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
-          <article className="app-panel p-6 text-center">
-            <TarotCardArtwork
-              cardId={reading.card.name_short}
-              shortName={reading.shortName}
-              displayName={reading.displayName}
-              cardMarker={reading.cardMarker}
-              arcanaLabel={reading.arcanaLabel}
-              priority
+        <SectionSurface surface="panel" size="lg">
+          <SectionHeader
+            eyebrow="질문을 읽는 두 층"
+            title="마음의 표면과 속뜻을 함께 봅니다"
+            titleClassName="text-3xl"
+            description="타로는 단답으로 끝내기보다, 질문의 속뜻과 지금 움직이는 감정선을 함께 읽을 때 더 또렷해집니다."
+            descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+          />
+
+          <ProductGrid columns={2} className="mt-6">
+            <FeatureCard
+              surface="soft"
+              eyebrow="질문의 속뜻"
+              description={reading.questionInsight}
             />
-            <div className="mt-5 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
-              {reading.displayName}
-            </div>
-            <p className="mt-2 text-sm text-[var(--app-copy-muted)]">
-              {reading.arcanaLabel} · {reading.subtitle}
-            </p>
-            <div className="mt-4 rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-sm leading-7 text-[var(--app-copy)]">
-              {reading.keyword}
-            </div>
-            <div className="mt-4 text-xs tracking-[0.18em] text-[var(--app-copy-soft)]">
-              {sourceLabel}
-            </div>
-          </article>
+            <FeatureCard
+              surface="soft"
+              eyebrow={reading.psychologyLabel}
+              description={reading.psychology}
+            />
+          </ProductGrid>
+        </SectionSurface>
 
-          <article className="space-y-4">
-            <div className="rounded-[1.45rem] border border-[var(--app-plum)]/28 bg-[linear-gradient(135deg,rgba(166,124,181,0.14),rgba(10,18,36,0.94))] px-5 py-5">
-              <div className="app-caption">질문에 대한 한마디</div>
-              <p className="mt-4 font-[var(--font-heading)] text-2xl leading-9 text-[var(--app-ivory)]">
-                {reading.answer}
-              </p>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
-                <div className="app-caption">질문의 속뜻</div>
-                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                  {reading.questionInsight}
-                </p>
-              </div>
-
-              <div className="rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
-                <div className="app-caption">{reading.psychologyLabel}</div>
-                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                  {reading.psychology}
-                </p>
-              </div>
-            </div>
-
-            <div className="app-panel p-6">
-              <div className="app-caption">카드가 건네는 말</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{reading.guidance}</p>
-            </div>
-
-            <div className="rounded-[1.45rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(10,18,36,0.94))] px-5 py-5">
-              <div className="app-caption">선생님의 사주와 만나면</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                {reading.sajuBlend}
-              </p>
-            </div>
-
-            {readingSlug ? (
-              <div className="rounded-[1.35rem] border border-[var(--app-sky)]/24 bg-[var(--app-sky)]/10 px-5 py-5">
-                <div className="app-caption">MY 프로필 기준 사주 브리지</div>
-                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                  저장된 MY 프로필이 있어 이 카드의 질문을 선생님의 사주 흐름과 바로 겹쳐 볼 수
-                  있습니다. 타로는 지금 마음을 읽고, 사주는 같은 질문이 왜 반복되는지를 더 길게
-                  설명해 줍니다.
-                </p>
-              </div>
-            ) : null}
-
-            <div className="rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
-              <div className="app-caption">이번 주 마음에 두실 한 가지</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{reading.action}</p>
-            </div>
-
-            <div className="rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
-              <div className="app-caption">원문 카드 의미</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy-muted)]">
-                {reading.meaningExcerpt}
-              </p>
-            </div>
-
-            <div className="rounded-[1.45rem] border border-[var(--app-plum)]/24 bg-[linear-gradient(135deg,rgba(166,124,181,0.12),rgba(10,18,36,0.92))] px-5 py-5">
-              <div className="app-caption">타로 뒤에 사주를 붙이면</div>
-              <div className="mt-4 space-y-3">
-                {TAROT_TO_SAJU_BRIDGE.map((item) => (
-                  <p key={item} className="text-sm leading-7 text-[var(--app-copy)]">
-                    {item}
-                  </p>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
+        <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+          <SectionSurface surface="panel" size="lg">
+            <SectionHeader
+              eyebrow="타로 뒤에 사주를 붙이면"
+              title="질문이 왜 반복되는지 더 길게 읽을 수 있습니다"
+              titleClassName="text-3xl"
+              description="무료 타로는 오늘 마음을 빠르게 비추고, 사주 흐름은 그 질문이 오래 반복되는 이유를 더 길게 설명해 줍니다."
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
+            <ProductGrid columns={3} className="mt-6">
+              {TAROT_TO_SAJU_BRIDGE.map((item, index) => (
+                <FeatureCard
+                  key={item}
+                  surface="soft"
+                  eyebrow={String(index + 1).padStart(2, '0')}
+                  description={item}
+                />
+              ))}
+            </ProductGrid>
+            <ActionCluster className="mt-6">
               <Link
                 href={readingSlug ? `/saju/${readingSlug}` : '/saju/new'}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                className="moon-cta-primary"
               >
                 {readingSlug ? '내 사주 흐름과 함께 보기' : '내 사주와 겹쳐 읽기'}
-              </Link>
-              <Link
-                href="/membership"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-plum)]/35 bg-[var(--app-plum)]/12 px-6 text-sm text-[var(--app-plum)] transition-colors hover:bg-[var(--app-plum)]/18"
-              >
-                심층 해석 플랜 보기
               </Link>
               <Link
                 href={{
                   pathname: '/dialogue',
                   query: {
                     from: 'tarot',
-                    question:
-                      '방금 본 타로 결과를 제 사주 흐름까지 함께 놓고 보면 어떻게 읽어야 하나요?',
+                    question: '방금 본 타로 결과를 제 사주 흐름까지 함께 놓고 보면 어떻게 읽어야 하나요?',
                   },
                 }}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                className="moon-cta-secondary"
               >
                 달빛선생께 더 여쭙기
               </Link>
-            </div>
-          </article>
+            </ActionCluster>
+          </SectionSurface>
+
+          <SectionSurface surface="panel" size="lg">
+            <SectionHeader
+              eyebrow="프리미엄 3장 확장 흐름"
+              title="한 장 뒤에 숨은 층을 더 열어보면"
+              titleClassName="text-3xl"
+              description="현재 흐름, 숨은 원인, 오늘의 조언을 3장 구조로 더 펼쳐보는 확장 리딩입니다."
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
+
+            <ProductGrid columns={3} className="mt-6">
+              {premiumSpread.map(({ position, reading: spreadReading }) => (
+                <FeatureCard
+                  key={position}
+                  surface="soft"
+                  eyebrow={position}
+                  title={spreadReading.displayName}
+                  description={spreadReading.answer}
+                />
+              ))}
+            </ProductGrid>
+
+            <ActionCluster className="mt-6">
+              <Link href="/membership" className="moon-cta-secondary">
+                심층 해석 플랜 보기
+              </Link>
+            </ActionCluster>
+          </SectionSurface>
         </section>
 
-        <section className="mt-8 app-panel p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-              프리미엄 3장 확장 흐름
-            </h2>
-            <Badge className="border-[var(--app-plum)]/25 bg-[var(--app-plum)]/10 text-[var(--app-plum)]">
-              사주 + 타로 통합
-            </Badge>
-          </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
-                {premiumSpread.map(({ position, reading: spreadReading }) => (
-                  <article
-                    key={position}
-                    className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
-                  >
-                <div className="text-xs tracking-[0.22em] text-[var(--app-copy-soft)]">
-                  {position}
-                </div>
-                <div className="mt-3 flex items-center gap-3">
-                  <div className="flex h-12 w-9 shrink-0 items-center justify-center rounded-[0.65rem] border border-[var(--app-gold)]/45 bg-[rgba(166,124,181,0.22)] font-[var(--font-heading)] text-[var(--app-gold)]">
-                    {spreadReading.cardMarker}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="truncate font-[var(--font-heading)] text-lg text-[var(--app-ivory)]">
-                      {spreadReading.displayName}
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                  {spreadReading.answer}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
+        <SectionSurface surface="panel" size="lg">
+          <SectionHeader
+            eyebrow="카드 키워드"
+            title="강한 단어는 생활 언어로 다시 풀어 읽습니다"
+            titleClassName="text-3xl"
+            description="무료 탐색에서도 공포를 부추기지 않고, 오래 남는 문장으로 다시 풀어 읽는 원칙을 유지합니다."
+            descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+          />
 
-        <section className="mt-8 app-panel p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-              타로 카드 주요 키워드
-            </h2>
-            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-              긍정적 재해석 유지
-            </Badge>
-          </div>
-          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <ProductGrid columns={3} className="mt-6">
             {TAROT_CARD_KEYWORDS.map(([name, copy]) => (
-              <article
+              <FeatureCard
                 key={name}
-                className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
-              >
-                <div className="font-[var(--font-heading)] text-lg text-[var(--app-ivory)]">
-                  {name}
-                </div>
-                <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">{copy}</p>
-              </article>
+                surface="soft"
+                eyebrow={name}
+                description={copy}
+              />
             ))}
-          </div>
-        </section>
-      </div>
+          </ProductGrid>
+        </SectionSurface>
+      </AppPage>
     </AppShell>
   );
 }

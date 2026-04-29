@@ -1,9 +1,12 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { Badge } from '@/components/ui/badge';
-import { AppPage, AppShell } from '@/shared/layout/app-shell';
+import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 import {
   DEFAULT_CLASSICS_AUDIT_CONCEPT,
   getClassicsVerificationAudit,
@@ -313,25 +316,38 @@ export default async function VerificationPage({ searchParams }: VerificationPag
   return (
     <AppShell header={<SiteHeader />}>
       <AppPage className="space-y-6">
-        <section className="app-hero-card p-6 sm:p-7">
-          <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge ok={classicsAudit.status === 'ready'}>고전 {classicsAudit.status}</StatusBadge>
-            <StatusBadge ok={todayFortuneAudit.status === 'ready'}>오늘운세 {todayFortuneAudit.status}</StatusBadge>
-            <StatusBadge ok={sajuAudit.status === 'ready'}>사주 {sajuAudit.status}</StatusBadge>
-            <StatusBadge ok={lifetimeAudit.status === 'ready'}>평생 {lifetimeAudit.status}</StatusBadge>
-            <StatusBadge ok={yearlyAudit.status === 'ready'}>연간 {yearlyAudit.status}</StatusBadge>
-            <StatusBadge ok={profileLinkageAudit.status === 'ready'}>연동지도 {profileLinkageAudit.status}</StatusBadge>
-            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-              검색 제외
-            </Badge>
-          </div>
-          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-[var(--app-ivory)] sm:text-4xl">
-            검증 대시보드
-          </h1>
-          <p className="app-body-copy mt-4 max-w-3xl">
-            원문 DB 적재, evidence API 게이트, 사주 계산 중간값을 한 화면에서 확인합니다. 이 화면은
-            “실제 데이터가 들어왔는지”와 “해석 문장이 어떤 계산값에서 나왔는지”를 추적하기 위한 내부 점검용입니다.
-          </p>
+        <PageHero
+          badges={
+            <>
+              <StatusBadge ok={classicsAudit.status === 'ready'}>고전 {classicsAudit.status}</StatusBadge>
+              <StatusBadge ok={todayFortuneAudit.status === 'ready'}>오늘운세 {todayFortuneAudit.status}</StatusBadge>
+              <StatusBadge ok={sajuAudit.status === 'ready'}>사주 {sajuAudit.status}</StatusBadge>
+              <StatusBadge ok={lifetimeAudit.status === 'ready'}>평생 {lifetimeAudit.status}</StatusBadge>
+              <StatusBadge ok={yearlyAudit.status === 'ready'}>연간 {yearlyAudit.status}</StatusBadge>
+              <StatusBadge ok={profileLinkageAudit.status === 'ready'}>연동지도 {profileLinkageAudit.status}</StatusBadge>
+              <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                검색 제외
+              </Badge>
+            </>
+          }
+          title="검증 대시보드"
+          description="원문 DB 적재, evidence API 게이트, 사주 계산 중간값을 한 화면에서 확인합니다. 이 화면은 실제 데이터가 들어왔는지와, 해석 문장이 어떤 계산값에서 나왔는지를 추적하기 위한 내부 점검용입니다."
+        />
+
+        <SectionSurface surface="panel" size="lg">
+          <SectionHeader
+            eyebrow="검증 기준"
+            title="필터를 바꾸면 같은 대시보드 안에서 다시 점검합니다"
+            description="내부 운영 화면이지만 입력 필터와 상태 배지를 위에서 먼저 보여, 어떤 대상을 보고 있는지 한눈에 확인할 수 있게 정리했습니다."
+            titleClassName="text-3xl"
+            actions={
+              <ActionCluster>
+                <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                  slug · topic · concern · year · counselor
+                </Badge>
+              </ActionCluster>
+            }
+          />
 
           <form action="/verification" className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1.3fr_0.9fr_0.9fr_0.8fr_0.8fr_auto]">
             <label className="grid gap-2 text-sm text-[var(--app-copy)]">
@@ -405,18 +421,15 @@ export default async function VerificationPage({ searchParams }: VerificationPag
               새로고침
             </button>
           </form>
-        </section>
+        </SectionSurface>
 
-        <section className="app-panel p-6">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <div className="app-caption">프로필 연동 지도</div>
-              <h2 className="mt-2 text-2xl font-semibold text-[var(--app-ivory)]">
-                어떤 서비스가 내 기본정보를 실제로 쓰는지 한눈에 확인
-              </h2>
-            </div>
-            <JsonLink href={profileLinkageApiHref} />
-          </div>
+        <SectionSurface surface="panel" size="lg">
+          <SectionHeader
+            eyebrow="프로필 연동 지도"
+            title="어떤 서비스가 내 기본정보를 실제로 쓰는지 한눈에 확인"
+            titleClassName="text-3xl"
+            actions={<JsonLink href={profileLinkageApiHref} />}
+          />
           <div className="mt-5 grid gap-3 lg:grid-cols-4">
             <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
               <div className="app-caption">linked</div>
@@ -452,7 +465,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
               {profileLinkageAudit.warnings.join(' ')}
             </div>
           ) : null}
-        </section>
+        </SectionSurface>
 
         <section className="app-panel p-6">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">

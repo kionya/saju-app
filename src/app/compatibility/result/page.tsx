@@ -1,5 +1,11 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
 import { Badge } from '@/components/ui/badge';
 import {
   COMPATIBILITY_PREMIUM_EXPANSION,
@@ -17,7 +23,7 @@ import {
   toBirthInputFromProfile,
   type BirthProfileFields,
 } from '@/lib/profile';
-import { AppShell } from '@/shared/layout/app-shell';
+import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 interface Props {
   searchParams: Promise<{ relationship?: string; familyId?: string }>;
@@ -73,29 +79,45 @@ function SetupState({
 }) {
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-panel p-7 sm:p-8">
-          <div className="app-caption">궁합 준비가 더 필요합니다</div>
-          <h1 className="mt-4 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)]">
-            먼저 두 사람의 정보를 갖춰 주세요
-          </h1>
-          <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{body}</p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href={relationshipHref}
-              className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
+      <AppPage className="space-y-6">
+        <PageHero
+          badges={[
+            <Badge
+              key="setup"
+              className="border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 text-[var(--app-jade)]"
             >
-              입력 화면으로 돌아가기
-            </Link>
-            <Link
-              href="/my/profile"
-              className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
-            >
-              MY 프로필 열기
-            </Link>
-          </div>
-        </section>
-      </div>
+              궁합 준비
+            </Badge>,
+          ]}
+          title="먼저 두 사람의 정보를 갖춰 주세요"
+          description={body}
+        />
+        <SectionSurface surface="panel" size="lg">
+          <SectionHeader
+            eyebrow="다음 단계"
+            title="준비가 끝나면 바로 결과 화면으로 이어집니다"
+            titleClassName="text-3xl"
+            description="내 정보와 저장된 사람의 생년월일이 갖춰지면, 두 사람의 결을 비교한 궁합 결과와 프리미엄 확장 흐름을 바로 읽을 수 있습니다."
+            descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            actions={
+              <ActionCluster>
+                <Link
+                  href={relationshipHref}
+                  className="moon-cta-primary"
+                >
+                  입력 화면으로 돌아가기
+                </Link>
+                <Link
+                  href="/my/profile"
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                >
+                  MY 프로필 열기
+                </Link>
+              </ActionCluster>
+            }
+          />
+        </SectionSurface>
+      </AppPage>
     </AppShell>
   );
 }
@@ -165,109 +187,128 @@ export default async function CompatibilityResultPage({ searchParams }: Props) {
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="moon-lunar-panel p-7 sm:p-8">
-          <div className="app-starfield" />
-          <div className="relative z-10 text-center">
-            <div className="text-sm text-[var(--app-jade)]">
-              {displayName} 선생님 & {selectedFamily.label}
-            </div>
-            <h1 className="mt-4 font-[var(--font-heading)] text-4xl text-[var(--app-ivory)] sm:text-5xl">
-              {compatibility.headline}
-            </h1>
-            <div className="mt-5 inline-flex rounded-full border border-[var(--app-jade)]/35 bg-[var(--app-jade)]/10 px-4 py-2 text-sm text-[var(--app-jade)]">
-              {compatibility.label}
-            </div>
-            <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">
-              {selected.title} 관계를 기준으로 두 사람의 일간, 일지, 오행 보완축을 함께 비교해 읽었습니다.
-            </p>
-            {compatibility.dataNote ? (
-              <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
-                {compatibility.dataNote}
-              </p>
-            ) : null}
-          </div>
-        </section>
+      <AppPage className="space-y-6">
+        <PageHero
+          badges={[
+            <Badge
+              key="result"
+              className="border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 text-[var(--app-jade)]"
+            >
+              궁합 결과
+            </Badge>,
+            <Badge
+              key="relationship"
+              className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
+            >
+              {selected.title}
+            </Badge>,
+          ]}
+          title={compatibility.headline}
+          description={`${selected.title} 관계를 기준으로 두 사람의 일간, 일지, 오행 보완축을 함께 비교해 읽었습니다.`}
+        />
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.94fr_1.06fr]">
-          <article className="app-panel p-6">
-            <div className="app-caption">두 분의 기본 결</div>
+        <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
+          <SectionSurface surface="lunar" size="lg">
+            <div className="app-starfield" />
+            <SectionHeader
+              eyebrow={`${displayName} 선생님 · ${selectedFamily.label}`}
+              title={compatibility.label}
+              titleClassName="text-3xl text-[var(--app-gold-text)]"
+              description={compatibility.dataNote ?? compatibility.summary}
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
+
             <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-              <div className="text-center">
-                <div className="font-[var(--font-heading)] text-5xl text-[var(--app-coral)]">
-                  {compatibility.selfData.dayMaster.stem}
-                </div>
-                <div className="mt-2 text-sm text-[var(--app-copy)]">{displayName} 선생님</div>
-                <div className="text-xs text-[var(--app-copy-muted)]">
-                  {compatibility.selfData.dayMaster.metaphor ?? '일간 해석 준비 중'}
-                </div>
-              </div>
+              <FeatureCard
+                surface="soft"
+                className="text-center"
+                eyebrow="내 기준"
+                title={compatibility.selfData.dayMaster.stem}
+                titleClassName="text-5xl text-[var(--app-coral)]"
+                description={
+                  <>
+                    <span className="block text-[var(--app-copy)]">{displayName} 선생님</span>
+                    <span className="mt-2 block text-xs leading-6 text-[var(--app-copy-muted)]">
+                      {compatibility.selfData.dayMaster.metaphor ?? '일간 해석 준비 중'}
+                    </span>
+                  </>
+                }
+              />
               <div className="text-center text-3xl text-[var(--app-gold-soft)]">↔</div>
-              <div className="text-center">
-                <div className="font-[var(--font-heading)] text-5xl text-[var(--app-jade)]">
-                  {compatibility.partnerData.dayMaster.stem}
-                </div>
-                <div className="mt-2 text-sm text-[var(--app-copy)]">{selectedFamily.label}</div>
-                <div className="text-xs text-[var(--app-copy-muted)]">
-                  {compatibility.partnerData.dayMaster.metaphor ?? '일간 해석 준비 중'}
-                </div>
-              </div>
-            </div>
-            <div className="mt-6 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5 text-sm leading-7 text-[var(--app-copy)]">
-              {compatibility.summary}
-            </div>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4">
-                <div className="text-xs tracking-[0.18em] text-[var(--app-copy-soft)]">내 정보</div>
-                <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">
-                  {formatBirthSummary(data.profile)}
-                </p>
-              </div>
-              <div className="rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4">
-                <div className="text-xs tracking-[0.18em] text-[var(--app-copy-soft)]">상대 정보</div>
-                <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">
-                  {formatBirthSummary(selectedFamily)}
-                </p>
-              </div>
-            </div>
-          </article>
-
-          <article className="space-y-4">
-            <div className="rounded-[1.35rem] border-l-[3px] border-[var(--app-jade)] bg-[var(--app-surface-muted)] px-5 py-5">
-              <div className="app-caption">잘 맞는 지점</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                {compatibility.supportiveSummary}
-              </p>
+              <FeatureCard
+                surface="soft"
+                className="text-center"
+                eyebrow="상대 결"
+                title={compatibility.partnerData.dayMaster.stem}
+                titleClassName="text-5xl text-[var(--app-jade)]"
+                description={
+                  <>
+                    <span className="block text-[var(--app-copy)]">{selectedFamily.label}</span>
+                    <span className="mt-2 block text-xs leading-6 text-[var(--app-copy-muted)]">
+                      {compatibility.partnerData.dayMaster.metaphor ?? '일간 해석 준비 중'}
+                    </span>
+                  </>
+                }
+              />
             </div>
 
-            <div className="rounded-[1.35rem] border-l-[3px] border-[var(--app-coral)] bg-[var(--app-surface-muted)] px-5 py-5">
-              <div className="app-caption">조심하실 지점</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                {compatibility.cautionSummary}
-              </p>
-            </div>
+            <FeatureCard
+              className="mt-6"
+              surface="soft"
+              eyebrow="두 분의 기본 결"
+              description={compatibility.summary}
+            />
 
-            <div className="rounded-[1.35rem] border border-[var(--app-gold)]/24 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(10,18,36,0.92))] px-5 py-5">
-              <div className="app-caption">지금 관계를 살리는 방식</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                {compatibility.currentFlowSummary}
-              </p>
-            </div>
-          </article>
+            <ProductGrid columns={2} className="mt-5">
+              <FeatureCard
+                surface="soft"
+                eyebrow="내 정보"
+                description={formatBirthSummary(data.profile)}
+              />
+              <FeatureCard
+                surface="soft"
+                eyebrow="상대 정보"
+                description={formatBirthSummary(selectedFamily)}
+              />
+            </ProductGrid>
+          </SectionSurface>
+
+          <SupportRail
+            surface="panel"
+            eyebrow="1분 요약"
+            title="먼저 같이 맞는 지점과 조심할 지점을 짚어드립니다"
+            description="긴 설명보다 먼저 관계의 결이 어디에서 맞고, 어디에서 어긋나기 쉬운지를 빠르게 읽을 수 있게 정리했습니다."
+          >
+            <FeatureCard
+              surface="soft"
+              eyebrow="잘 맞는 지점"
+              description={compatibility.supportiveSummary}
+            />
+            <FeatureCard
+              className="mt-4"
+              surface="soft"
+              eyebrow="조심하실 지점"
+              description={compatibility.cautionSummary}
+            />
+            <FeatureCard
+              className="mt-4"
+              surface="panel"
+              eyebrow="지금 관계를 살리는 방식"
+              description={compatibility.currentFlowSummary}
+            />
+          </SupportRail>
         </section>
 
-        <section className="mt-8">
-          <div className="px-1">
-            <div className="app-caption">실전 궁합 포인트</div>
-            <h2 className="mt-3 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-              같이 지낼수록 바로 체감되는 네 가지
-            </h2>
-            <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
-              단순히 잘 맞는지보다, 어디서 부딪히고 어떻게 풀어야 오래 편한지를 중심으로 정리했습니다.
-            </p>
-          </div>
+        <SectionSurface surface="panel" size="lg">
+          <SectionHeader
+            eyebrow="실전 궁합 포인트"
+            title="같이 지낼수록 바로 체감되는 네 가지"
+            titleClassName="text-3xl"
+            description="단순히 잘 맞는지보다, 어디서 부딪히고 어떻게 풀어야 오래 편한지를 중심으로 정리했습니다."
+            descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+          />
 
-          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          <ProductGrid columns={2} className="mt-6">
             {compatibility.practicalCards.map((card) => {
               const styles = PRACTICAL_CARD_STYLES[card.tone];
 
@@ -290,82 +331,101 @@ export default async function CompatibilityResultPage({ searchParams }: Props) {
                 </article>
               );
             })}
-          </div>
-        </section>
+          </ProductGrid>
+        </SectionSurface>
 
-        <section className="mt-8 grid gap-4 lg:grid-cols-2">
-          <article className="app-panel p-6">
-            <div className="app-caption">이 관계를 보는 렌즈</div>
-            <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
-              {compatibility.relationshipLensTitle}
-            </h2>
-            <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-              {compatibility.relationshipLensBody}
-            </p>
-            <p className="mt-4 text-sm leading-8 text-[var(--app-copy-muted)]">
-              {compatibility.practiceSummary}
-            </p>
-          </article>
+        <section className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+          <SectionSurface surface="panel" size="lg">
+            <SectionHeader
+              eyebrow="이 관계를 보는 렌즈"
+              title={compatibility.relationshipLensTitle}
+              titleClassName="text-3xl"
+              description={compatibility.relationshipLensBody}
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
+            <FeatureCard
+              className="mt-6"
+              surface="soft"
+              eyebrow="관계를 다루는 방식"
+              description={compatibility.practiceSummary}
+            />
+          </SectionSurface>
 
-          <article className="app-panel p-6">
-            <div className="app-caption">왜 이렇게 읽었나</div>
-            <div className="mt-5 space-y-3">
+          <SectionSurface surface="panel" size="lg">
+            <SectionHeader
+              eyebrow="왜 이렇게 읽었나"
+              title="이 결과를 만든 근거"
+              titleClassName="text-3xl"
+              description="두 사람의 일간과 관계 축, 표현 리듬, 오행 보완 흐름을 중심으로 실제 비교 근거를 모았습니다."
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
+            <ProductGrid columns={2} className="mt-6">
               {compatibility.evidence.map((item) => (
-                <div
+                <FeatureCard
                   key={item.title}
-                  className="rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
-                >
-                  <div className="text-sm font-semibold text-[var(--app-ivory)]">{item.title}</div>
-                  <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
-                </div>
+                  surface="soft"
+                  title={item.title}
+                  titleClassName="text-xl"
+                  description={item.body}
+                />
               ))}
-            </div>
-          </article>
+            </ProductGrid>
+          </SectionSurface>
         </section>
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
-          <article className="app-panel p-6">
-            <div className="app-caption">프리미엄에서 더 읽는 내용</div>
-            <div className="mt-5 space-y-4">
+        <section className="grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
+          <SectionSurface surface="panel" size="lg">
+            <SectionHeader
+              eyebrow="프리미엄에서 더 읽는 내용"
+              title="이 관계를 더 길게 읽고 싶다면"
+              titleClassName="text-3xl"
+              description="기본 궁합 결과 위에, 갈등 구조와 보완점, 관계 전략을 더 길고 차분하게 이어서 볼 수 있도록 준비했습니다."
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
+            <ProductGrid columns={2} className="mt-6">
               {premiumExpansion.preview.map((item) => (
-                <div
+                <FeatureCard
                   key={item.title}
-                  className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5"
-                >
-                  <div className="font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
-                    {item.title}
-                  </div>
-                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
-                </div>
+                  surface="soft"
+                  title={item.title}
+                  titleClassName="text-xl"
+                  description={item.body}
+                />
               ))}
-            </div>
-          </article>
+            </ProductGrid>
+          </SectionSurface>
 
-          <article className="rounded-[1.75rem] border border-[var(--app-jade)]/28 bg-[linear-gradient(180deg,rgba(107,166,139,0.12),rgba(10,18,36,0.96))] p-6">
-            <div className="app-caption">이 관계를 더 깊게 보고 싶다면</div>
-            <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-              {premiumExpansion.ctaTitle}
-            </div>
-            <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-              {premiumExpansion.ctaBody}
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                href="/membership/checkout?plan=premium"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
-              >
-                프리미엄으로 이 관계 이어보기
-              </Link>
-              <Link
-                href={`/compatibility/input?relationship=${selected.slug}`}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
-              >
-                다른 사람 선택하기
-              </Link>
-            </div>
-          </article>
+          <SectionSurface
+            surface="lunar"
+            size="lg"
+            className="border-[var(--app-jade)]/28 bg-[linear-gradient(180deg,rgba(107,166,139,0.12),rgba(10,18,36,0.96))]"
+          >
+            <SectionHeader
+              eyebrow="이 관계를 더 깊게 보고 싶다면"
+              title={premiumExpansion.ctaTitle}
+              titleClassName="text-3xl text-[var(--app-ivory)]"
+              description={premiumExpansion.ctaBody}
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+              actions={
+                <ActionCluster>
+                  <Link
+                    href="/membership/checkout?plan=premium"
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
+                  >
+                    프리미엄으로 이 관계 이어보기
+                  </Link>
+                  <Link
+                    href={`/compatibility/input?relationship=${selected.slug}`}
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                  >
+                    다른 사람 선택하기
+                  </Link>
+                </ActionCluster>
+              }
+            />
+          </SectionSurface>
         </section>
-      </div>
+      </AppPage>
     </AppShell>
   );
 }

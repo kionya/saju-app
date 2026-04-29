@@ -11,8 +11,14 @@ import {
   Smartphone,
   Sparkles,
 } from 'lucide-react';
+import { ActionCluster } from '@/components/layout/action-cluster';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
 import {
   HOME_WIDGET_BLUEPRINT,
   NOTIFICATION_SCHEDULE_BLUEPRINT,
@@ -27,7 +33,7 @@ import {
 import type { NotificationSnapshot } from '@/lib/notifications';
 import { createClient as createSupabaseClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
-import { AppShell } from '@/shared/layout/app-shell';
+import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 export type NotificationPageMode = 'center' | 'schedule' | 'widget';
 
@@ -496,40 +502,35 @@ export default function NotificationCenterPage({
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="app-hero-card p-7 sm:p-8">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]">
-              알림 센터
-            </Badge>
-            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-              푸시 · 위젯 · 리텐션
-            </Badge>
-            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-              {isCurrentDeviceSubscribed ? '브라우저 연결됨' : '브라우저 미연결'}
-            </Badge>
-          </div>
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-            {honorific}께 다시 말을 거는 모든 장치를 한곳에 모았습니다
-          </h1>
-          <p className="app-body-copy mt-4 max-w-3xl text-base sm:text-lg">
-            아침과 저녁 푸시, 주간 세운, 홈 위젯, 미접속 리마인더까지 한 흐름으로 관리합니다.
-            단순 공지판이 아니라 다시 열어보게 만드는 재방문 엔진입니다.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-              다음 예정 · {nextUpcoming}
-            </Badge>
-            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-              최근 방문 · {retentionCopy}
-            </Badge>
-            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
-              권한 상태 · {permission}
-            </Badge>
-          </div>
-        </section>
+      <AppPage className="space-y-6">
+        <PageHero
+          badges={
+            <>
+              <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]">
+                알림 센터
+              </Badge>
+              <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                푸시 · 위젯 · 리텐션
+              </Badge>
+              <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                {isCurrentDeviceSubscribed ? '브라우저 연결됨' : '브라우저 미연결'}
+              </Badge>
+              <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                다음 예정 · {nextUpcoming}
+              </Badge>
+              <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                최근 방문 · {retentionCopy}
+              </Badge>
+              <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                권한 상태 · {permission}
+              </Badge>
+            </>
+          }
+          title={`${honorific}께 다시 말을 거는 모든 장치를 한곳에 모았습니다`}
+          description="아침과 저녁 푸시, 주간 세운, 홈 위젯, 미접속 리마인더까지 한 흐름으로 관리합니다. 단순 공지판이 아니라 다시 열어보게 만드는 재방문 엔진입니다."
+        />
 
-        <nav className="app-subnav mt-6">
+        <nav className="app-subnav">
           <Link
             href="/notifications"
             className={cn(
@@ -566,18 +567,23 @@ export default function NotificationCenterPage({
         </nav>
 
         {statusMessage ? (
-          <section className="mt-6 rounded-[1.3rem] border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-4 py-4 text-sm leading-7 text-[var(--app-ivory)]">
+          <SectionSurface
+            surface="muted"
+            className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-sm leading-7 text-[var(--app-ivory)]"
+          >
             {statusMessage}
-          </section>
+          </SectionSurface>
         ) : null}
 
         {(mode === 'center' || mode === 'schedule') ? (
-          <section className="mt-6 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-            <article className="app-panel p-6">
-              <div className="flex items-center gap-3">
-                <BellRing className="h-5 w-5 text-[var(--app-gold)]" />
-                <div className="app-caption">오늘의 알림 보관함</div>
-              </div>
+          <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+            <SectionSurface surface="panel" size="lg">
+              <SectionHeader
+                eyebrow="오늘의 알림 보관함"
+                title="언제 다시 말을 걸지, 여기서 조용히 고릅니다"
+                description="주요 시간대별 메시지를 먼저 훑고, 필요한 시간만 켜 두는 방식으로 관리합니다."
+                titleClassName="text-3xl"
+              />
               <div className="mt-5 space-y-3">
                 {notificationCards.map((slot) => (
                   <div
@@ -623,15 +629,20 @@ export default function NotificationCenterPage({
                   </div>
                 ))}
               </div>
-            </article>
+            </SectionSurface>
 
-            <aside className="space-y-4">
-              <article className="app-panel p-6">
-                <div className="flex items-center gap-3">
-                  <Clock3 className="h-5 w-5 text-[var(--app-gold)]" />
-                  <div className="app-caption">알림 스타일</div>
-                </div>
-                <div className="mt-5 grid gap-3">
+            <SupportRail
+              surface="panel"
+              eyebrow="보조 설정"
+              title="스타일, 기기 연결, 재방문 간격을 한 축에서 관리합니다"
+              description="설정을 흩어 놓지 않고, 실제 알림 시간대 오른쪽에서 함께 조절할 수 있게 정리했습니다."
+            >
+              <FeatureCard
+                surface="soft"
+                eyebrow="알림 스타일"
+                icon={<Clock3 className="h-5 w-5 text-[var(--app-gold)]" />}
+              >
+                <div className="grid gap-3">
                   {[
                     { value: 'quiet', label: '조용히' },
                     { value: 'normal', label: '보통' },
@@ -668,14 +679,15 @@ export default function NotificationCenterPage({
                 >
                   {preferences.enabled ? '알림 전체 끄기' : '알림 전체 켜기'}
                 </Button>
-              </article>
+              </FeatureCard>
 
-              <article className="app-panel p-6">
-                <div className="flex items-center gap-3">
-                  <Send className="h-5 w-5 text-[var(--app-gold)]" />
-                  <div className="app-caption">브라우저 푸시 연결</div>
-                </div>
-                <div className="mt-4 space-y-3 text-sm leading-7 text-[var(--app-copy)]">
+              <FeatureCard
+                className="mt-4"
+                surface="soft"
+                eyebrow="브라우저 푸시 연결"
+                icon={<Send className="h-5 w-5 text-[var(--app-gold)]" />}
+              >
+                <div className="space-y-3 text-sm leading-7 text-[var(--app-copy)]">
                   <p>
                     {pushSupported
                       ? '이 브라우저에서 실제 푸시 알림을 받아보실 수 있습니다.'
@@ -708,14 +720,15 @@ export default function NotificationCenterPage({
                     {isSendingTest ? '테스트 발송 중...' : '테스트 알림 보내기'}
                   </Button>
                 </div>
-              </article>
+              </FeatureCard>
 
-              <article className="app-panel p-6">
-                <div className="flex items-center gap-3">
-                  <CalendarDays className="h-5 w-5 text-[var(--app-gold)]" />
-                  <div className="app-caption">리텐션 상태</div>
-                </div>
-                <div className="mt-4 space-y-3 text-sm leading-7 text-[var(--app-copy)]">
+              <FeatureCard
+                className="mt-4"
+                surface="soft"
+                eyebrow="리텐션 상태"
+                icon={<CalendarDays className="h-5 w-5 text-[var(--app-gold)]" />}
+              >
+                <div className="space-y-3 text-sm leading-7 text-[var(--app-copy)]">
                   <p>{retentionCopy}</p>
                   <p>
                     미접속 {preferences.inactivityReminderDays}일째가 되면 재방문 리마인더를
@@ -744,18 +757,20 @@ export default function NotificationCenterPage({
                     ))}
                   </div>
                 </div>
-              </article>
-            </aside>
+              </FeatureCard>
+            </SupportRail>
           </section>
         ) : null}
 
         {(mode === 'center' || mode === 'widget') ? (
-          <section className="mt-6 grid gap-4 lg:grid-cols-[0.96fr_1.04fr]">
-            <article className="app-panel p-6">
-              <div className="flex items-center gap-3">
-                <Smartphone className="h-5 w-5 text-[var(--app-gold)]" />
-                <div className="app-caption">홈 위젯 미리보기</div>
-              </div>
+          <section className="grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
+            <SectionSurface surface="panel" size="lg">
+              <SectionHeader
+                eyebrow="홈 위젯 미리보기"
+                title="무료 탐색 이후의 한 줄 요약이 어떻게 남는지 먼저 봅니다"
+                description="오늘의 흐름, 최근 저장 결과, 요약 포인트가 어떤 비율로 보이는지 실제 미리보기 안에서 확인할 수 있습니다."
+                titleClassName="text-3xl"
+              />
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <div className="rounded-[1.6rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
                   <div className="text-[10px] tracking-[0.2em] text-[var(--app-gold)]/70">
@@ -824,19 +839,24 @@ export default function NotificationCenterPage({
                   </button>
                 ))}
               </div>
-            </article>
+            </SectionSurface>
 
-            <aside className="space-y-4">
-              <article className="app-panel p-6">
-                <div className="flex items-center gap-3">
-                  <MoonStar className="h-5 w-5 text-[var(--app-gold)]" />
-                  <div className="app-caption">위젯 설계</div>
-                </div>
+            <SupportRail
+              surface="panel"
+              eyebrow="보조 설명"
+              title="위젯 문법과 저장 결과 연동을 따로 읽을 수 있게 둡니다"
+              description="미리보기는 왼쪽에서 바로 보고, 설계 원칙과 최근 저장 결과 연결은 오른쪽에서 보조 정보로 읽는 구조입니다."
+            >
+              <FeatureCard
+                surface="soft"
+                eyebrow="위젯 설계"
+                icon={<MoonStar className="h-5 w-5 text-[var(--app-gold)]" />}
+              >
                 {widgetBlueprint ? (
                   <>
-                    <h2 className="mt-4 text-2xl font-semibold text-[var(--app-ivory)]">
+                    <h3 className="text-2xl font-semibold text-[var(--app-ivory)]">
                       {widgetBlueprint.title}
-                    </h2>
+                    </h3>
                     <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
                       {widgetBlueprint.summary}
                     </p>
@@ -852,18 +872,19 @@ export default function NotificationCenterPage({
                     </div>
                   </>
                 ) : null}
-              </article>
+              </FeatureCard>
 
-              <article className="app-panel p-6">
-                <div className="flex items-center gap-3">
-                  <Sparkles className="h-5 w-5 text-[var(--app-gold)]" />
-                  <div className="app-caption">최근 저장 결과 연동</div>
-                </div>
+              <FeatureCard
+                className="mt-4"
+                surface="soft"
+                eyebrow="최근 저장 결과 연동"
+                icon={<Sparkles className="h-5 w-5 text-[var(--app-gold)]" />}
+              >
                 {snapshot.latestReading ? (
                   <>
-                    <h2 className="mt-4 text-2xl font-semibold text-[var(--app-ivory)]">
+                    <h3 className="text-2xl font-semibold text-[var(--app-ivory)]">
                       {snapshot.latestReading.dayPillarLabel}
-                    </h2>
+                    </h3>
                     <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
                       강한 오행은 {snapshot.latestReading.dominantElement}, 보완 포인트는{' '}
                       {snapshot.latestReading.weakestElement}입니다. 위젯에도 이 요약이 반영됩니다.
@@ -880,35 +901,41 @@ export default function NotificationCenterPage({
                     첫 사주를 저장하면 위젯에 일주, 오행 균형, 현재 운 흐름이 함께 나타납니다.
                   </p>
                 )}
-              </article>
-            </aside>
+              </FeatureCard>
+            </SupportRail>
           </section>
         ) : null}
 
         {(mode === 'center' || mode === 'schedule') ? (
-          <section className="mt-6 app-panel p-6">
-            <div className="app-caption">리텐션 설계 원칙</div>
-            <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SectionSurface surface="panel" size="lg">
+            <SectionHeader
+              eyebrow="리텐션 설계 원칙"
+              title="어떤 계기로 다시 열어보게 만드는지"
+              description="시나리오별 재방문 목적을 짧게 비교해서, 알림이 단순 공지가 아니라 다시 읽게 만드는 연결 장치라는 점을 분명히 둡니다."
+              titleClassName="text-3xl"
+            />
+            <ProductGrid columns={4} className="mt-5">
               {RETENTION_SCENARIOS.map((scenario) => (
-                <article
+                <FeatureCard
                   key={scenario.trigger}
-                  className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-5"
-                >
-                  <div className="text-sm font-medium text-[var(--app-ivory)]">
-                    {scenario.trigger}
-                  </div>
-                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
-                    {scenario.action}
-                  </p>
-                  <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
-                    {scenario.purpose}
-                  </p>
-                </article>
+                  surface="soft"
+                  eyebrow={scenario.trigger}
+                  description={
+                    <>
+                      <span className="block text-sm leading-7 text-[var(--app-copy)]">
+                        {scenario.action}
+                      </span>
+                      <span className="mt-3 block text-xs leading-6 text-[var(--app-copy-soft)]">
+                        {scenario.purpose}
+                      </span>
+                    </>
+                  }
+                />
               ))}
-            </div>
-          </section>
+            </ProductGrid>
+          </SectionSurface>
         ) : null}
-      </div>
+      </AppPage>
     </AppShell>
   );
 }
