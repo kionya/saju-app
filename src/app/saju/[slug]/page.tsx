@@ -9,6 +9,7 @@ import type {
 } from '@/domain/saju/engine/saju-data-v1';
 import { SajuAiInterpretationPanel } from '@/components/ai/saju-ai-interpretation-panel';
 import { ClassicEvidencePanel } from '@/components/classics/classic-evidence-panel';
+import { SafetyNotice } from '@/components/common/safety-notice';
 import { ReportKeepsakeSection } from '@/components/report/report-keepsake-section';
 import { ReportOneMinuteSummary } from '@/components/report/report-one-minute-summary';
 import { GroundingDecisionTrace } from '@/components/saju/grounding-decision-trace';
@@ -1135,6 +1136,8 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             </section>
           </DetailUnlock>
         </div>
+
+        <SafetyNotice variant="health" />
 
         <div className="text-center">
           <Link

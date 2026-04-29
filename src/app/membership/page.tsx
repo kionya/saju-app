@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import { SafetyNotice } from '@/components/common/safety-notice';
 import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { AppShell } from '@/shared/layout/app-shell';
@@ -376,6 +377,10 @@ export default async function MembershipPage({
               </Link>
             </div>
           </article>
+        </section>
+
+        <section className="mt-8">
+          <SafetyNotice variant="finance" />
         </section>
       </div>
     </AppShell>

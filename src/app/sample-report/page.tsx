@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { SafetyNotice } from '@/components/common/safety-notice';
 import Link from 'next/link';
 import { SpecialistMentorGrid } from '@/components/counselor/specialist-mentor-grid';
 import { DecisionTracePanel } from '@/components/report/decision-trace-panel';
@@ -194,6 +195,8 @@ export default function SampleReportPage() {
             description="샘플 리포트는 결과물의 구조를 보여드리는 페이지이고, 아래 전문 선생 카드는 어떤 고민을 어떤 리포트로 먼저 이어보면 좋은지 정리해드립니다."
           />
         </section>
+
+        <SafetyNotice variant="general" />
 
         <section className="app-hero-card p-6 sm:p-7">
           <div className="app-caption">마지막 확인</div>

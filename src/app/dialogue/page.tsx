@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { SafetyNotice } from '@/components/common/safety-notice';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { AppShell } from '@/shared/layout/app-shell';
 import { DIALOGUE_GUARDRAILS, DIALOGUE_PRESETS } from '@/content/moonlight';
@@ -152,6 +153,10 @@ export default async function DialoguePage({
               </div>
             </article>
           </div>
+        </section>
+
+        <section className="mt-6">
+          <SafetyNotice variant="crisis" />
         </section>
 
       </div>
