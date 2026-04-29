@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Gowun_Batang, Noto_Serif_KR } from "next/font/google";
 import "./globals.css";
 import { DEFAULT_DESCRIPTION, SITE_NAME, getSiteUrl } from "@/lib/site";
+import { Analytics } from "@vercel/analytics/next";
 
 const brandSerif = Noto_Serif_KR({
   weight: ["400", "500", "600", "700"],
@@ -74,6 +75,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <script dangerouslySetInnerHTML={{ __html: layoutModeScript }} />
         {children}
+        <Analytics />
       </body>
     </html>
   );
