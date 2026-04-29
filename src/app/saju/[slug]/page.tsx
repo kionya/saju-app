@@ -550,15 +550,21 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 label: '심층 리포트로 이어보기',
                 href: `/saju/${slug}/premium`,
                 variant: 'primary',
+                eventName: 'report_deep_report_click',
+                eventParams: { slug, from: 'result_summary' },
               },
               {
                 label: 'PDF로 소장하기',
                 variant: 'muted',
+                eventName: 'report_pdf_click',
+                eventParams: { slug, from: 'result_summary', status: 'pending' },
               },
               {
                 label: '달빛선생에게 이어서 묻기',
                 href: '/dialogue',
                 variant: 'secondary',
+                eventName: 'report_dialogue_continue_click',
+                eventParams: { slug, from: 'result_summary' },
               },
             ]}
           />

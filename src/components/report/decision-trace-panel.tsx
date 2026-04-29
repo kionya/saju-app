@@ -1,3 +1,7 @@
+'use client';
+
+import { useCallback, useRef, type SyntheticEvent } from 'react';
+import { trackMoonlightEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import type {
   DecisionTraceConfidence,
@@ -124,6 +128,7 @@ export function DecisionTracePanel({
   description = '아래 내용은 달빛선생 엔진이 어떤 순서로 명식과 운의 구조를 검토했는지 요약한 것입니다.',
   compact = false,
 }: DecisionTracePanelProps) {
+  const hasTrackedOpenRef = useRef(false);
   const resolvedItems =
     items.length > 0
       ? items
@@ -132,9 +137,28 @@ export function DecisionTracePanel({
         : FALLBACK_DECISION_TRACE;
   const resolvedEngineVersion = engineVersion ?? metadata?.engineVersion;
   const resolvedRuleSetVersion = ruleSetVersion ?? metadata?.ruleSetVersion;
+  const handleToggle = useCallback(
+    (event: SyntheticEvent<HTMLDetailsElement>) => {
+      const nextOpen = event.currentTarget.open;
+      if (nextOpen && !hasTrackedOpenRef.current) {
+        hasTrackedOpenRef.current = true;
+        trackMoonlightEvent('report_decision_trace_open', {
+          title,
+          engineVersion: resolvedEngineVersion,
+          ruleSetVersion: resolvedRuleSetVersion,
+          timeRule,
+          itemCount: resolvedItems.length,
+        });
+      }
+    },
+    [resolvedEngineVersion, resolvedItems.length, resolvedRuleSetVersion, timeRule, title]
+  );
 
   return (
-    <details className="rounded-[20px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
+    <details
+      className="rounded-[20px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4"
+      onToggle={handleToggle}
+    >
       <summary className="cursor-pointer list-none">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>

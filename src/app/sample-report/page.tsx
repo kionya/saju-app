@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { SafetyNotice } from '@/components/common/safety-notice';
 import Link from 'next/link';
+import { TrackedLink } from '@/components/common/tracked-link';
 import { SpecialistMentorGrid } from '@/components/counselor/specialist-mentor-grid';
 import { DecisionTracePanel } from '@/components/report/decision-trace-panel';
 import { Badge } from '@/components/ui/badge';
@@ -87,18 +88,22 @@ export default function SampleReportPage() {
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <Link
+              <TrackedLink
                 href="/saju/new"
+                eventName="sample_report_start_click"
+                eventParams={{ from: 'sample_report_hero' }}
                 className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
               >
                 내 명리 기준서 만들기
-              </Link>
-              <Link
+              </TrackedLink>
+              <TrackedLink
                 href="/about-engine"
+                eventName="sample_report_engine_click"
+                eventParams={{ from: 'sample_report_hero' }}
                 className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
               >
                 엔진 기준서 보기
-              </Link>
+              </TrackedLink>
             </div>
           </article>
         </section>

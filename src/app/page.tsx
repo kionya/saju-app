@@ -274,12 +274,25 @@ export default function HomePage() {
           </div>
 
           <div className="moon-hero-actions flex w-full max-w-xl flex-col justify-center gap-3 sm:flex-row">
-            <Link href="/saju/new" className="moon-cta-primary">
+            <Link
+              href="/saju/new"
+              className="moon-cta-primary"
+              onClick={() =>
+                trackMoonlightEvent('premium_home_hero_primary_click', {
+                  from: 'home_hero',
+                })
+              }
+            >
               내 명리 기준서 만들기
             </Link>
             <Link
               href={REPORT_SAMPLE_HREF}
               className="moon-cta-secondary"
+              onClick={() =>
+                trackMoonlightEvent('premium_home_sample_click', {
+                  from: 'home_hero',
+                })
+              }
             >
               샘플 리포트 보기
             </Link>

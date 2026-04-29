@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { SafetyNotice } from '@/components/common/safety-notice';
+import { TrackedLink } from '@/components/common/tracked-link';
 import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { AppShell } from '@/shared/layout/app-shell';
@@ -188,12 +189,18 @@ export default async function MembershipPage({
                     <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{report.checks}</p>
                   </div>
                   <div className="mt-6 flex flex-wrap gap-3">
-                    <Link
+                    <TrackedLink
                       href={report.href}
+                      eventName="membership_report_card_click"
+                      eventParams={{
+                        reportSlug: report.slug,
+                        href: report.href,
+                        status: report.status,
+                      }}
                       className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
                     >
                       {isReady ? '이 리포트 흐름 보기' : '준비 중인 흐름 보기'}
-                    </Link>
+                    </TrackedLink>
                     <Link
                       href={REPORT_SAMPLE_HREF}
                       className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"

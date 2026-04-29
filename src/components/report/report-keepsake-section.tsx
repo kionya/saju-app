@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import { TrackedButton } from '@/components/common/tracked-button';
+import { TrackedLink } from '@/components/common/tracked-link';
+import type { MoonlightAnalyticsEvent } from '@/lib/analytics-events';
 import { Archive, FileText, MessageCircleMore, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -7,6 +10,8 @@ type ReportKeepsakeAction = {
   href?: string;
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'muted';
+  eventName?: MoonlightAnalyticsEvent;
+  eventParams?: Record<string, unknown>;
 };
 
 type ReportKeepsakeSectionProps = {
@@ -125,12 +130,40 @@ export function ReportKeepsakeSection({
 
       {actions && actions.length > 0 ? (
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-          {actions.map((action) =>
-            action.href && !action.disabled ? (
-              <Link key={action.label} href={action.href} className={actionClassName(action.variant)}>
-                {action.label}
-              </Link>
-            ) : (
+          {actions.map((action) => {
+            if (action.href && !action.disabled) {
+              return action.eventName ? (
+                <TrackedLink
+                  key={action.label}
+                  href={action.href}
+                  eventName={action.eventName}
+                  eventParams={action.eventParams}
+                  className={actionClassName(action.variant)}
+                >
+                  {action.label}
+                </TrackedLink>
+              ) : (
+                <Link key={action.label} href={action.href} className={actionClassName(action.variant)}>
+                  {action.label}
+                </Link>
+              );
+            }
+
+            if (action.eventName) {
+              return (
+                <TrackedButton
+                  key={action.label}
+                  type="button"
+                  eventName={action.eventName}
+                  eventParams={action.eventParams}
+                  className={cn(actionClassName(action.variant), 'opacity-70')}
+                >
+                  {action.label}
+                </TrackedButton>
+              );
+            }
+
+            return (
               <button
                 key={action.label}
                 type="button"
@@ -143,8 +176,8 @@ export function ReportKeepsakeSection({
               >
                 {action.label}
               </button>
-            )
-          )}
+            );
+          })}
         </div>
       ) : null}
     </section>
