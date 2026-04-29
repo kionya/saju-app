@@ -1,4 +1,5 @@
 import type { Element } from '@/lib/saju/types';
+import type { ReportMetadata } from '@/lib/saju/report-contract';
 import type {
   ReportEvidenceCard,
   ReportScore,
@@ -135,4 +136,5 @@ export interface SajuYearlyReport {
   evidenceCards: ReportEvidenceCard[];
   scores: ReportScore[];
   referenceReports: Record<YearlyReferenceTopic, YearlyReferenceReport>;
+  metadata?: ReportMetadata;
 }

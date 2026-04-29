@@ -3,6 +3,10 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
 import { BirthInfoStepper } from '@/components/today-fortune/birth-info-stepper';
 import { FollowUpQuestionChips } from '@/components/today-fortune/follow-up-question-chips';
 import { HitMemoWidget } from '@/components/today-fortune/hit-memo-widget';
@@ -73,6 +77,21 @@ const RELATED_LINKS: Record<ConcernId, Array<{ label: string; href: string; body
     { label: '상세 사주 보기', href: '/saju/new', body: '오늘 흐름을 넘어서 내 명식의 큰 바탕까지 이어집니다.' },
   ],
 };
+
+const TODAY_FORTUNE_GUIDE = [
+  {
+    eyebrow: '빠른 무료 결과',
+    body: '오늘 가장 걸리는 고민 한 가지를 먼저 고르면, 무료 결과로 짧고 분명하게 확인할 수 있습니다.',
+  },
+  {
+    eyebrow: '오늘 고민 중심',
+    body: '원국 전체를 길게 읽기보다 연락, 돈, 미팅, 관계, 컨디션처럼 지금 가장 급한 흐름을 먼저 짚습니다.',
+  },
+  {
+    eyebrow: '더 깊게는 기준서',
+    body: '오늘의 흐름이 마음에 걸리면, 원국과 대운까지 이어지는 명리 기준서로 자연스럽게 확장하실 수 있습니다.',
+  },
+] as const;
 
 interface TodayFortuneApiResponse {
   ok?: boolean;
@@ -267,24 +286,24 @@ export function TodayFortuneExperience({
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-      <section className="moon-lunar-panel p-7 sm:p-8">
+      <SectionSurface surface="lunar" size="lg">
         <div className="app-starfield" />
         <div className="relative z-10">
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 px-3 py-1 text-xs text-[var(--app-gold-text)]">
-              오늘 운세 무료 결과
+              빠른 무료 체크
             </span>
             <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs text-[var(--app-copy-muted)]">
-              오늘 고민 기반 진입
+              오늘 고민 기준
             </span>
           </div>
-          <h1 className="mt-5 font-[var(--font-heading)] text-4xl leading-tight text-[var(--app-ivory)] sm:text-5xl">
-            오늘, 무엇을 먼저 확인하시겠습니까?
-          </h1>
-          <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            연락, 돈, 미팅, 말실수처럼 오늘 가장 걸리는 한 가지를 먼저 고르시면 무료 결과로 짧고 분명하게 보여드리고,
-            더 깊은 판단은 1코인 심화풀이로 이어드리겠습니다.
-          </p>
+          <SectionHeader
+            className="mt-5"
+            title="오늘의 흐름을 가볍게 먼저 확인해보세요"
+            titleClassName="text-4xl sm:text-5xl"
+            description="연락, 돈, 미팅, 관계, 컨디션처럼 오늘 가장 걸리는 한 가지를 먼저 고르시면 무료 결과로 짧고 분명하게 보여드립니다. 더 깊은 판단이 필요할 때만 심화풀이와 기준서로 이어지는 구조입니다."
+            descriptionClassName="max-w-3xl text-base sm:text-lg"
+          />
 
           <div className="mt-6">
             <TodayConcernSelector
@@ -304,8 +323,19 @@ export function TodayFortuneExperience({
               onToggleExpanded={() => setExpanded((current) => !current)}
             />
           </div>
+
+          <ProductGrid columns={3} className="mt-6">
+            {TODAY_FORTUNE_GUIDE.map((item) => (
+              <FeatureCard
+                key={item.eyebrow}
+                surface="soft"
+                eyebrow={item.eyebrow}
+                description={item.body}
+              />
+            ))}
+          </ProductGrid>
         </div>
-      </section>
+      </SectionSurface>
 
       <div className="mt-6 grid gap-6">
         {pendingHitMemo ? (
@@ -356,22 +386,32 @@ export function TodayFortuneExperience({
               />
             </section>
 
-            <section className="grid gap-4 lg:grid-cols-2">
-              {relatedLinks.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="group rounded-[1.45rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--app-gold)]/28"
-                >
-                  <div className="app-caption">다른 기능으로 이어보기</div>
-                  <div className="mt-3 flex items-center justify-between gap-3">
-                    <h3 className="text-xl font-semibold text-[var(--app-ivory)]">{item.label}</h3>
-                    <ArrowRight className="h-4 w-4 text-[var(--app-gold)] transition-transform duration-200 group-hover:translate-x-1" />
-                  </div>
-                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
-                </Link>
-              ))}
-            </section>
+            <SectionSurface surface="panel">
+              <SectionHeader
+                eyebrow="다음으로 이어보기"
+                title="오늘의 흐름이 더 궁금해지셨다면, 이 방향으로 이어보실 수 있습니다"
+                titleClassName="text-2xl"
+                description="오늘 운세는 빠른 체크에 가깝고, 아래 동선은 같은 질문을 더 긴 호흡으로 이어보는 입구입니다."
+                descriptionClassName="text-[var(--app-copy)]"
+              />
+
+              <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                {relatedLinks.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    className="group rounded-[1.45rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--app-gold)]/28"
+                  >
+                    <div className="app-caption">다른 기능으로 이어보기</div>
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <h3 className="text-xl font-semibold text-[var(--app-ivory)]">{item.label}</h3>
+                      <ArrowRight className="h-4 w-4 text-[var(--app-gold)] transition-transform duration-200 group-hover:translate-x-1" />
+                    </div>
+                    <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
+                  </Link>
+                ))}
+              </div>
+            </SectionSurface>
           </>
         ) : null}
       </div>

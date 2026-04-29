@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { parseFamilyProfile } from './route';
+import { parseFamilyProfile } from './route-helpers';
 
 declare const test: (name: string, fn: () => void) => void;
 

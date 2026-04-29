@@ -1,4 +1,5 @@
 import type { ReportEvidenceCard } from './types';
+import type { ReportMetadata } from '@/lib/saju/report-contract';
 
 export interface LifetimeKeyword {
   label: string;
@@ -152,4 +153,5 @@ export interface SajuLifetimeReport {
   lifetimeStrategy: LifetimeStrategySection;
   yearlyAppendix: LifetimeYearlyAppendix;
   evidenceCards: ReportEvidenceCard[];
+  metadata?: ReportMetadata;
 }

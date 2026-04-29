@@ -8,7 +8,7 @@ import {
   isYearlyDialogueIntent,
   normalizeDialogueAnswer,
   parseAiRequest,
-} from './route';
+} from './route-helpers';
 import {
   AI_CHAT_BUNDLE_COST,
   AI_CHAT_BUNDLE_SIZE,

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { parseProfile } from './route';
+import { parseProfile } from './route-helpers';
 
 declare const test: (name: string, fn: () => void) => void;
 

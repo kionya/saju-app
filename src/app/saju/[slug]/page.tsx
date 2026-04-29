@@ -9,6 +9,17 @@ import type {
 } from '@/domain/saju/engine/saju-data-v1';
 import { SajuAiInterpretationPanel } from '@/components/ai/saju-ai-interpretation-panel';
 import { ClassicEvidencePanel } from '@/components/classics/classic-evidence-panel';
+import { SafetyNotice } from '@/components/common/safety-notice';
+import { TrackedButton } from '@/components/common/tracked-button';
+import { TrackedLink } from '@/components/common/tracked-link';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { ReportKeepsakeSection } from '@/components/report/report-keepsake-section';
+import { ReportOneMinuteSummary } from '@/components/report/report-one-minute-summary';
+import { GroundingDecisionTrace } from '@/components/saju/grounding-decision-trace';
 import { SajuFactEvidencePanel } from '@/components/saju/saju-fact-evidence-panel';
 import { Badge } from '@/components/ui/badge';
 import DetailUnlock from '@/components/detail-unlock';
@@ -113,6 +124,38 @@ function formatCurrentLuckTitle(currentLuck: SajuCurrentLuck | null) {
 
 function getTimelineItem(report: SajuReport, label: string) {
   return report.timeline.find((item) => item.label === label) ?? null;
+}
+
+function uniqueNonEmpty(items: Array<string | null | undefined>, max = 3) {
+  return [...new Set(items.filter((item): item is string => Boolean(item && item.trim().length > 0)))].slice(0, max);
+}
+
+function buildKeyThemes(report: SajuReport) {
+  return uniqueNonEmpty(report.summaryHighlights, 3);
+}
+
+function buildCautionPatterns(report: SajuReport) {
+  const cautionCards = report.evidenceCards.filter((card) =>
+    ['relations', 'gongmang', 'specialSals'].includes(card.key)
+  );
+
+  return uniqueNonEmpty(
+    [
+      report.cautionAction.description,
+      ...cautionCards.map((card) => card.plainSummary ?? card.body),
+    ],
+    3
+  );
+}
+
+function buildFavorableChoices(report: SajuReport) {
+  return uniqueNonEmpty(
+    [
+      report.primaryAction.description,
+      ...report.evidenceCards.flatMap((card) => card.practicalActions ?? []),
+    ],
+    3
+  );
 }
 
 const SCORE_CARD_VISUALS: Record<
@@ -390,6 +433,10 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
     }
   }
   const currentMajorFlow = getTimelineItem(report, '대운 흐름');
+  const keyThemes = buildKeyThemes(report);
+  const cautionPatterns = buildCautionPatterns(report);
+  const favorableChoices = buildFavorableChoices(report);
+  const isTimeUnknown = input.unknownTime === true || input.hour === undefined;
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -397,7 +444,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
         <SajuResultViewTracker slug={slug} />
         <SajuScreenNav slug={slug} current="result" />
 
-        <section className="moon-result-hero p-6 sm:p-7">
+        <SectionSurface surface="lunar" size="lg" className="moon-result-hero">
           <div className="grid gap-8 lg:grid-cols-[1.18fr_0.82fr] lg:items-start">
             <div className="self-start">
               <div className="flex flex-wrap items-center gap-2">
@@ -409,22 +456,13 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 </Badge>
               </div>
               <p className="app-caption mt-5">{formatBirthSummary(input)}</p>
-              <h1 className="mt-3 max-w-2xl text-3xl font-semibold leading-tight tracking-tight text-[var(--app-ivory)] sm:text-4xl">
-                {report.headline}
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--app-copy-muted)] sm:text-base">
-                {report.dayMasterSummary}
-              </p>
-              <div className="mt-5 grid max-w-2xl gap-3">
-                {report.summaryHighlights.map((summary) => (
-                  <p
-                    key={summary}
-                    className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-8 text-[var(--app-copy)] sm:text-base"
-                  >
-                    {summary}
-                  </p>
-                ))}
-              </div>
+              <SectionHeader
+                className="mt-3"
+                title={report.headline}
+                titleClassName="max-w-2xl text-3xl font-semibold leading-tight tracking-tight sm:text-4xl"
+                description={report.dayMasterSummary}
+                descriptionClassName="max-w-2xl sm:text-base"
+              />
             </div>
 
             <div className="grid self-start gap-4 lg:border-l lg:border-[var(--app-line)] lg:pl-6">
@@ -501,6 +539,96 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               </div>
             </div>
           </div>
+        </SectionSurface>
+
+        <section className="space-y-4">
+          <ReportOneMinuteSummary
+            headline={report.headline}
+            keyThemes={keyThemes}
+            cautionPatterns={cautionPatterns}
+            favorableChoices={favorableChoices}
+            isTimeUnknown={isTimeUnknown}
+          />
+
+          <GroundingDecisionTrace grounding={grounding} kasiComparison={kasiComparison} />
+
+          <SectionSurface surface="panel">
+            <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
+              <div>
+                <SectionHeader
+                  eyebrow="다음 단계"
+                  title="핵심과 근거를 확인하셨다면, 필요한 깊이만 바로 이어보실 수 있습니다"
+                  titleClassName="text-3xl"
+                  description="심층 리포트는 더 긴 기준서로, 대화는 지금 막 확인한 결과를 이어 묻는 흐름으로 연결됩니다. PDF는 기능 준비 전이라도 관심도를 먼저 확인할 수 있게 남겨두었습니다."
+                />
+                <ActionCluster className="mt-6">
+                  <TrackedLink
+                    href={`/saju/${slug}/premium`}
+                    eventName="report_deep_report_click"
+                    eventParams={{ slug, from: 'result_next_actions' }}
+                    className="moon-cta-primary"
+                  >
+                    심층 리포트로 이어보기
+                  </TrackedLink>
+                  <TrackedButton
+                    type="button"
+                    eventName="report_pdf_click"
+                    eventParams={{ slug, from: 'result_next_actions', status: 'coming_soon' }}
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                  >
+                    PDF로 소장하기
+                  </TrackedButton>
+                  <TrackedLink
+                    href="/dialogue"
+                    eventName="report_dialogue_continue_click"
+                    eventParams={{ slug, from: 'result_next_actions' }}
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                  >
+                    달빛선생에게 이어서 묻기
+                  </TrackedLink>
+                </ActionCluster>
+              </div>
+
+              <ProductGrid columns={2}>
+                <FeatureCard
+                  surface="soft"
+                  eyebrow="심층 리포트"
+                  title="기준서를 더 길게"
+                  titleClassName="text-2xl"
+                  description="원국, 격국, 용신, 대운과 주제별 해석을 한 권의 구조로 더 길게 확인합니다."
+                />
+                <FeatureCard
+                  surface="soft"
+                  eyebrow="PDF 소장"
+                  title="다시 읽을 기준 남기기"
+                  titleClassName="text-2xl"
+                  description="표지, 요약, 판정 근거, 본문을 묶은 형태로 다시 볼 수 있도록 준비하고 있습니다."
+                />
+                <FeatureCard
+                  surface="soft"
+                  eyebrow="대화 연결"
+                  title="지금 결과에서 바로 질문"
+                  titleClassName="text-2xl"
+                  description="방금 읽은 기준 위에서, 생활 질문이나 선택 고민을 이어서 묻는 흐름으로 연결됩니다."
+                />
+                <FeatureCard
+                  surface="soft"
+                  eyebrow="연간 전략"
+                  title="올해 흐름까지 확장"
+                  titleClassName="text-2xl"
+                  description="월별 리듬, 기회 달, 조심할 달은 연간 리포트에서 같은 명리 기준 위로 이어집니다."
+                  footer={
+                    <Link
+                      href={`/saju/${slug}/premium#yearly-report`}
+                      className="text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                    >
+                      연간 리포트 바로 보기
+                    </Link>
+                  }
+                />
+              </ProductGrid>
+            </div>
+          </SectionSurface>
         </section>
 
         <section className="app-panel p-6 sm:p-7">
@@ -649,7 +777,10 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           grounding={grounding}
           kasiComparison={kasiComparison}
           primaryClassicItems={primaryClassicItems}
+          showDecisionTrace={false}
         />
+
+        <ReportKeepsakeSection />
 
         <div>
           <DetailUnlock
@@ -1074,6 +1205,8 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             </section>
           </DetailUnlock>
         </div>
+
+        <SafetyNotice variant="health" />
 
         <div className="text-center">
           <Link

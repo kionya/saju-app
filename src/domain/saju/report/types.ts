@@ -1,4 +1,5 @@
 ﻿import type { Element } from '@/lib/saju/types';
+import type { ReportMetadata } from '@/lib/saju/report-contract';
 
 export type FocusTopic = 'today' | 'love' | 'wealth' | 'career' | 'relationship';
 
@@ -114,4 +115,5 @@ export interface SajuReport {
   luckyDates: string[];
   cautionDates: string[];
   supportElements: Element[];
+  metadata?: ReportMetadata;
 }
