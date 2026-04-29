@@ -1,8 +1,13 @@
 import Link from 'next/link';
+import { Archive, FileText, MessageCircleMore, RefreshCw } from 'lucide-react';
 import { TrackedButton } from '@/components/common/tracked-button';
 import { TrackedLink } from '@/components/common/tracked-link';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
 import type { MoonlightAnalyticsEvent } from '@/lib/analytics-events';
-import { Archive, FileText, MessageCircleMore, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type ReportKeepsakeAction = {
@@ -88,31 +93,37 @@ export function ReportKeepsakeSection({
   ] as const;
 
   return (
-    <section className={cn('app-panel p-6 sm:p-7', className)}>
-      <div className="app-caption">리포트 소장 가치</div>
-      <h2 className="mt-3 font-display text-3xl text-[var(--app-ivory)]">{title}</h2>
-      <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{description}</p>
+    <SectionSurface surface="panel" className={className}>
+      <SectionHeader
+        eyebrow="리포트 소장 가치"
+        title={title}
+        description={description}
+        titleClassName="text-3xl"
+        descriptionClassName="text-[var(--app-copy)]"
+      />
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <ProductGrid columns={4} className="mt-6">
         {items.map((item) => {
           const Icon = item.icon;
           return (
-            <article
+            <FeatureCard
               key={item.title}
-              className="rounded-[20px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5"
-            >
-              <div className="flex items-center justify-between gap-3">
+              surface="soft"
+              icon={
                 <div className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--app-gold)]/20 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
                   <Icon className="h-4 w-4" />
                 </div>
+              }
+              badge={
                 <span className={cn('rounded-full border px-2.5 py-1 text-[11px]', item.statusTone)}>
                   {item.ctaLabel}
                 </span>
-              </div>
-              <h3 className="mt-4 font-display text-xl text-[var(--app-ivory)]">{item.title}</h3>
-              <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
-              <div className="mt-4">
-                {item.href ? (
+              }
+              title={item.title}
+              titleClassName="text-xl"
+              description={item.body}
+              footer={
+                item.href ? (
                   <Link
                     href={item.href}
                     className="text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
@@ -121,15 +132,16 @@ export function ReportKeepsakeSection({
                   </Link>
                 ) : (
                   <span className="text-sm text-[var(--app-copy-soft)]">{item.ctaLabel}</span>
-                )}
-              </div>
-            </article>
+                )
+              }
+            >
+            </FeatureCard>
           );
         })}
-      </div>
+      </ProductGrid>
 
       {actions && actions.length > 0 ? (
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <ActionCluster className="mt-6">
           {actions.map((action) => {
             if (action.href && !action.disabled) {
               return action.eventName ? (
@@ -143,7 +155,11 @@ export function ReportKeepsakeSection({
                   {action.label}
                 </TrackedLink>
               ) : (
-                <Link key={action.label} href={action.href} className={actionClassName(action.variant)}>
+                <Link
+                  key={action.label}
+                  href={action.href}
+                  className={actionClassName(action.variant)}
+                >
                   {action.label}
                 </Link>
               );
@@ -178,8 +194,8 @@ export function ReportKeepsakeSection({
               </button>
             );
           })}
-        </div>
+        </ActionCluster>
       ) : null}
-    </section>
+    </SectionSurface>
   );
 }

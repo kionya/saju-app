@@ -639,6 +639,40 @@
     gap: 1.5rem;
   }
 
+  .app-section-frame {
+    padding: 1.25rem;
+  }
+
+  .app-section-frame-lg {
+    padding: 1.5rem;
+  }
+
+  .app-section-header {
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  .app-section-copy {
+    color: var(--app-copy-muted);
+    font-size: 0.9rem;
+    line-height: 1.8;
+  }
+
+  .app-section-actions {
+    padding-top: 0.25rem;
+  }
+
+  .app-action-cluster {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .app-card-grid {
+    display: grid;
+    gap: 1rem;
+  }
+
   .app-subnav {
     display: flex;
     gap: 0.5rem;
@@ -690,6 +724,114 @@
   .app-body-copy {
     color: var(--app-copy);
     line-height: 1.9;
+  }
+
+  .app-feature-card,
+  .app-feature-card-muted,
+  .app-feature-card-soft {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.2rem;
+    padding: 1rem;
+  }
+
+  .app-feature-card {
+    border: 1px solid var(--app-line);
+    background: linear-gradient(180deg, rgba(22, 26, 46, 0.84), rgba(15, 18, 32, 0.9));
+  }
+
+  .app-feature-card-muted {
+    border: 1px solid var(--app-line);
+    background: linear-gradient(180deg, rgba(31, 37, 64, 0.28), rgba(15, 18, 32, 0.48));
+  }
+
+  .app-feature-card-soft {
+    border: 1px solid var(--app-line);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .app-feature-title {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    line-height: 1.5;
+    color: var(--app-ivory);
+  }
+
+  .app-feature-copy {
+    color: var(--app-copy);
+    font-size: 0.9rem;
+    line-height: 1.78;
+  }
+
+  .app-bullet-list {
+    display: grid;
+    gap: 0.55rem;
+  }
+
+  .app-bullet-item {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    line-height: 1.8;
+  }
+
+  .app-bullet-marker {
+    color: var(--app-gold);
+    margin-top: 0.1rem;
+    flex-shrink: 0;
+  }
+
+  .app-reading-layout {
+    display: grid;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .app-reading-stack {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .app-reading-rail {
+    display: grid;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .app-reading-nav {
+    border: 1px solid var(--app-line);
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1rem;
+  }
+
+  .app-reading-nav-list {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .app-reading-nav-link {
+    display: block;
+    border-radius: 0.95rem;
+    border: 1px solid transparent;
+    padding: 0.8rem 0.9rem;
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--app-copy);
+    transition:
+      border-color 160ms ease,
+      background-color 160ms ease,
+      color 160ms ease;
+  }
+
+  .app-reading-nav-link:hover {
+    border-color: rgba(212, 176, 106, 0.2);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--app-ivory);
+  }
+
+  .app-reading-prose {
+    max-width: 52rem;
   }
 
   .app-micro-copy {
@@ -976,6 +1118,21 @@
     transform: translateX(4px);
     border-color: rgba(212, 176, 106, 0.26);
     background: rgba(31, 37, 64, 0.64);
+  }
+
+  @media (min-width: 640px) {
+    .app-section-frame {
+      padding: 1.75rem;
+    }
+
+    .app-section-frame-lg {
+      padding: 2rem;
+    }
+
+    .app-action-cluster {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
   }
 
   .moon-form-control {
@@ -1786,6 +1943,34 @@
 }
 
 @media (min-width: 640px) {
+  .app-section-frame {
+    padding: 1.5rem;
+  }
+
+  .app-section-frame-lg {
+    padding: 1.75rem;
+  }
+
+  .app-section-copy {
+    font-size: 0.95rem;
+    line-height: 1.9;
+  }
+
+  .app-feature-card,
+  .app-feature-card-muted,
+  .app-feature-card-soft {
+    padding: 1.1rem;
+  }
+
+  .app-feature-title {
+    font-size: 1.35rem;
+  }
+
+  .app-feature-copy {
+    font-size: 0.9375rem;
+    line-height: 1.85;
+  }
+
   .app-page {
     padding-inline: 1.5rem;
   }
@@ -1799,6 +1984,15 @@
   html {
     scroll-padding-top: 7rem;
     scroll-padding-bottom: 2rem;
+  }
+
+  .app-reading-layout {
+    grid-template-columns: minmax(0, 0.74fr) minmax(18rem, 0.26fr);
+  }
+
+  .app-reading-rail {
+    position: sticky;
+    top: 6.5rem;
   }
 
   .app-page {

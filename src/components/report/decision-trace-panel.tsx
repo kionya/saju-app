@@ -1,13 +1,9 @@
 'use client';
 
-import { useCallback, useRef, type SyntheticEvent } from 'react';
-import { trackMoonlightEvent } from '@/lib/analytics';
+import { useCallback, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import type {
-  DecisionTraceConfidence,
-  DecisionTraceItem,
-  ReportMetadata,
-} from '@/lib/saju/report-contract';
+import { trackMoonlightEvent } from '@/lib/analytics';
+import type { DecisionTraceConfidence, DecisionTraceItem, ReportMetadata } from '@/lib/saju/report-contract';
 
 export type DecisionTracePanelProps = {
   items?: DecisionTraceItem[];
@@ -78,23 +74,19 @@ const CONFIDENCE_META: Record<
 > = {
   orthodox: {
     label: '정통 기준',
-    className:
-      'border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]',
+    className: 'border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]',
   },
   disputed: {
     label: '논쟁 기준',
-    className:
-      'border-[var(--app-coral)]/24 bg-[var(--app-coral)]/10 text-[var(--app-coral)]',
+    className: 'border-[var(--app-coral)]/24 bg-[var(--app-coral)]/10 text-[var(--app-coral)]',
   },
   reference: {
     label: '참고 기준',
-    className:
-      'border-[var(--app-jade)]/24 bg-[var(--app-jade)]/10 text-[var(--app-jade)]',
+    className: 'border-[var(--app-jade)]/24 bg-[var(--app-jade)]/10 text-[var(--app-jade)]',
   },
   input_limited: {
     label: '입력 제한',
-    className:
-      'border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] text-[var(--app-copy-soft)]',
+    className: 'border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] text-[var(--app-copy-soft)]',
   },
 };
 
@@ -107,18 +99,22 @@ function buildMetaLine({
   DecisionTracePanelProps,
   'engineVersion' | 'ruleSetVersion' | 'timeRule' | 'isTimeUnknown'
 >) {
-  const parts: string[] = [];
+  const parts = [];
 
   if (engineVersion) parts.push(`engine ${engineVersion}`);
   if (ruleSetVersion) parts.push(`rules ${ruleSetVersion}`);
   if (timeRule) parts.push(timeRule);
   if (isTimeUnknown) parts.push('출생시각 미입력 기준');
 
-  return parts.length > 0 ? parts.join(' · ') : '현재 리포트 기준으로 표시합니다.';
+  if (parts.length === 0) {
+    return '현재 리포트 기준으로 표시합니다.';
+  }
+
+  return parts.join(' · ');
 }
 
 export function DecisionTracePanel({
-  items = [],
+  items = FALLBACK_DECISION_TRACE,
   metadata,
   engineVersion,
   ruleSetVersion,
@@ -130,29 +126,22 @@ export function DecisionTracePanel({
 }: DecisionTracePanelProps) {
   const hasTrackedOpenRef = useRef(false);
   const resolvedItems =
-    items.length > 0
-      ? items
-      : metadata?.decisionTrace && metadata.decisionTrace.length > 0
-        ? metadata.decisionTrace
-        : FALLBACK_DECISION_TRACE;
+    items.length > 0 ? items : metadata?.decisionTrace && metadata.decisionTrace.length > 0 ? metadata.decisionTrace : FALLBACK_DECISION_TRACE;
   const resolvedEngineVersion = engineVersion ?? metadata?.engineVersion;
   const resolvedRuleSetVersion = ruleSetVersion ?? metadata?.ruleSetVersion;
-  const handleToggle = useCallback(
-    (event: SyntheticEvent<HTMLDetailsElement>) => {
-      const nextOpen = event.currentTarget.open;
-      if (nextOpen && !hasTrackedOpenRef.current) {
-        hasTrackedOpenRef.current = true;
-        trackMoonlightEvent('report_decision_trace_open', {
-          title,
-          engineVersion: resolvedEngineVersion,
-          ruleSetVersion: resolvedRuleSetVersion,
-          timeRule,
-          itemCount: resolvedItems.length,
-        });
-      }
-    },
-    [resolvedEngineVersion, resolvedItems.length, resolvedRuleSetVersion, timeRule, title]
-  );
+  const handleToggle = useCallback((event: React.SyntheticEvent<HTMLDetailsElement>) => {
+    const nextOpen = event.currentTarget.open;
+    if (nextOpen && !hasTrackedOpenRef.current) {
+      hasTrackedOpenRef.current = true;
+      trackMoonlightEvent('report_decision_trace_open', {
+        title,
+        engineVersion: resolvedEngineVersion,
+        ruleSetVersion: resolvedRuleSetVersion,
+        timeRule,
+        itemCount: resolvedItems.length,
+      });
+    }
+  }, [resolvedEngineVersion, resolvedItems.length, resolvedRuleSetVersion, timeRule, title]);
 
   return (
     <details

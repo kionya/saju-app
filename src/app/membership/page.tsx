@@ -2,8 +2,14 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { SafetyNotice } from '@/components/common/safety-notice';
 import { TrackedLink } from '@/components/common/tracked-link';
-import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { BulletList } from '@/components/layout/bullet-list';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { ReportKeepsakeSection } from '@/components/report/report-keepsake-section';
 import { AppShell } from '@/shared/layout/app-shell';
 import {
   INTERPRETATION_JOURNEY,
@@ -19,7 +25,6 @@ const COLLECTIBLE_REPORTS = [
     price: '49,000원~79,000원',
     summary: '원국·격국·용신·대운 종합',
     recommendation: '내 사주의 바탕과 평생 흐름을 한 번의 결과물로 남기고 싶은 분',
-    checks: '원국 구조, 격국 후보, 용신 판단, 대운 흐름',
     href: '/saju/new?product=life-standard',
     badge: '핵심',
     status: '지금 시작 가능',
@@ -30,7 +35,6 @@ const COLLECTIBLE_REPORTS = [
     price: '39,000원~69,000원',
     summary: '월별 흐름·주의 달·기회 달',
     recommendation: '올해의 달별 전략과 timing을 미리 보고 싶은 분',
-    checks: '월별 흐름, 강한 달, 조심할 달, 바로 쓰는 행동 기준',
     href: '/saju/new?product=yearly-2026',
     badge: '시즌',
     status: '기준서 흐름으로 연결',
@@ -41,7 +45,6 @@ const COLLECTIBLE_REPORTS = [
     price: '59,000원~89,000원',
     summary: '관계 구조·갈등·보완점',
     recommendation: '두 사람의 맞물림과 부딪히는 지점을 관계 구조로 정리하고 싶은 분',
-    checks: '기본 결, 갈등 지점, 보완 방식, 오래 가는 대화법',
     href: '/compatibility?product=relationship-standard',
     badge: '관계',
     status: '궁합 흐름으로 연결',
@@ -52,7 +55,6 @@ const COLLECTIBLE_REPORTS = [
     price: '99,000원~129,000원',
     summary: '부모·자녀·배우자 구조',
     recommendation: '가족 안에서 반복되는 역할과 충돌 지점을 함께 정리하고 싶은 분',
-    checks: '가족 관계 구조, 기대 역할, 부딪히는 패턴, 조율 포인트',
     href: '/membership?focus=family-report',
     badge: '가족',
     status: '준비 중',
@@ -107,6 +109,52 @@ const COMPARISON_ROWS = [
   },
 ] as const;
 
+const CATALOG_PROOF_GROUPS = [
+  {
+    eyebrow: '계산 기준',
+    title: 'AI가 명식을 추측하지 않는 구조',
+    points: [
+      COMPARISON_ROWS[0].moonlight,
+      COMPARISON_ROWS[1].moonlight,
+      COMPARISON_ROWS[2].moonlight,
+    ],
+  },
+  {
+    eyebrow: '보관과 근거',
+    title: '읽고 끝나는 결과가 아니라 남는 기준서',
+    points: [
+      COMPARISON_ROWS[3].moonlight,
+      COMPARISON_ROWS[4].moonlight,
+    ],
+  },
+  {
+    eyebrow: '대화 연결',
+    title: '질문은 리포트 기준 위에서 이어집니다',
+    points: [
+      COMPARISON_ROWS[5].moonlight,
+      '샘플 리포트와 판정 근거 예시를 먼저 보고 결정하셔도 됩니다.',
+    ],
+  },
+] as const;
+
+const PRE_PURCHASE_LINKS = [
+  {
+    title: '샘플 기준서 보기',
+    body: '결제 전에 결과물의 구조와 깊이를 먼저 확인합니다.',
+    href: REPORT_SAMPLE_HREF,
+  },
+  {
+    title: '엔진 기준서 보기',
+    body: '달빛선생이 어떤 계산 기준과 판정 순서를 쓰는지 정리해둔 문서입니다.',
+    href: '/about-engine',
+  },
+  {
+    title: '판정 근거 예시 보기',
+    body: '격국 후보, 용신 판단, 시간 기준이 화면에서 어떻게 보이는지 먼저 확인합니다.',
+    href: '/about-engine#decision-trace',
+  },
+] as const;
+
 export const metadata: Metadata = {
   title: '멤버십',
   description: '대화 멤버십과 소장형 명리 기준서를 나누어, 달빛선생의 플랜과 보관형 리포트를 함께 살펴보세요.',
@@ -127,18 +175,33 @@ export default async function MembershipPage({
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <section className="moon-lunar-panel p-7 sm:p-8">
+        <SectionSurface surface="lunar" size="lg">
           <div className="app-starfield" />
           <div className="grid gap-6 lg:grid-cols-[1fr_16rem] lg:items-center">
             <div>
-              <div className="app-caption">소장형 리포트 · 대화형 멤버십</div>
-              <h1 className="mt-4 font-display text-4xl leading-[1.3] tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-                구독은 대화용, 리포트는 소장용입니다
-              </h1>
-              <p className="mt-5 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-                달빛선생은 한 번 보고 사라지는 운세보다, 명식·격국·용신·대운의 기준을 오래 남기는 리포트를 중심에 둡니다.
-                월간 플랜은 질문을 계속 이어가는 대화용으로, 소장형 리포트는 PDF와 MY 보관함에 남기는 결과물로 나누어 보실 수 있습니다.
-              </p>
+              <SectionHeader
+                eyebrow="소장형 리포트 · 대화형 멤버십"
+                title="구독은 대화용, 리포트는 소장용입니다"
+                titleClassName="text-4xl leading-[1.3] sm:text-5xl"
+                description="달빛선생은 한 번 보고 사라지는 운세보다, 명식·격국·용신·대운의 기준을 오래 남기는 리포트를 중심에 둡니다. 월간 플랜은 질문을 계속 이어가는 대화용으로, 소장형 리포트는 PDF와 MY 보관함에 남기는 결과물로 나누어 보실 수 있습니다."
+                descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+                actions={
+                  <ActionCluster>
+                    <Link
+                      href="/saju/new"
+                      className="moon-cta-primary"
+                    >
+                      내 명리 기준서 만들기
+                    </Link>
+                    <Link
+                      href={REPORT_SAMPLE_HREF}
+                      className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                    >
+                      샘플 리포트 보기
+                    </Link>
+                  </ActionCluster>
+                }
+              />
             </div>
             <div className="hidden justify-self-end lg:block">
               <div className="app-moon-orb h-28 w-28" />
@@ -147,31 +210,44 @@ export default async function MembershipPage({
               </div>
             </div>
           </div>
-        </section>
+        </SectionSurface>
 
         <section className="mt-8">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <div className="app-caption">1. 소장형 리포트</div>
-            <div className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs text-[var(--app-copy-muted)]">
-              한 권의 기준서처럼 오래 남기는 결과물
-            </div>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
+          <SectionHeader
+            eyebrow="1. 소장형 리포트"
+            title="먼저, 어떤 기준서를 남기고 싶은지 고르실 수 있습니다"
+            titleClassName="text-3xl"
+            description="같은 사주라도 목적에 따라 결과물의 구조가 달라집니다. 원국 기준서는 바탕을, 연간 전략서는 올해의 흐름을, 궁합과 가족 리포트는 관계 구조를 중심으로 정리합니다."
+            descriptionClassName="max-w-3xl"
+            actions={
+              <ActionCluster>
+                <Link
+                  href={REPORT_SAMPLE_HREF}
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                >
+                  샘플 기준서 확인
+                </Link>
+              </ActionCluster>
+            }
+          />
+          <ProductGrid columns={2}>
             {COLLECTIBLE_REPORTS.map((report) => {
               const isFocused = focus === report.slug;
               const isReady = report.slug !== 'family-report';
 
               return (
-                <article
+                <SectionSurface
+                  as="article"
                   key={report.slug}
-                  className={`moon-plan-card p-6 ${isFocused ? 'moon-glow-border' : ''}`}
+                  surface="panel"
+                  className={`moon-plan-card ${isFocused ? 'moon-glow-border' : ''}`}
                   data-featured={isFocused ? 'true' : 'false'}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <div className="app-caption">{report.badge}</div>
                       <div className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs text-[var(--app-copy-muted)]">
-                        {report.status}
+                        {isReady ? '지금 흐름 보기' : '준비 중'}
                       </div>
                     </div>
                     <div className="rounded-full border border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 px-3 py-1 text-xs text-[var(--app-gold-text)]">
@@ -180,15 +256,19 @@ export default async function MembershipPage({
                   </div>
                   <h2 className="mt-4 font-display text-3xl text-[var(--app-gold-text)]">{report.title}</h2>
                   <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{report.summary}</p>
-                  <div className="mt-5 rounded-[1.15rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
-                    <div className="app-caption">추천 대상</div>
-                    <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{report.recommendation}</p>
-                  </div>
-                  <div className="mt-5 rounded-[1.15rem] border border-[var(--app-gold)]/18 bg-[var(--app-surface-muted)] px-4 py-4">
-                    <div className="app-caption">확인 내용</div>
-                    <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{report.checks}</p>
-                  </div>
-                  <div className="mt-6 flex flex-wrap gap-3">
+                  <FeatureCard
+                    className="mt-5"
+                    surface="soft"
+                    eyebrow="추천 대상"
+                    description={report.recommendation}
+                  />
+                  <FeatureCard
+                    className="mt-5"
+                    surface="soft"
+                    eyebrow="확인 내용"
+                    description={report.status}
+                  />
+                  <ActionCluster className="mt-6">
                     <TrackedLink
                       href={report.href}
                       eventName="membership_report_card_click"
@@ -201,34 +281,31 @@ export default async function MembershipPage({
                     >
                       {isReady ? '이 리포트 흐름 보기' : '준비 중인 흐름 보기'}
                     </TrackedLink>
-                    <Link
-                      href={REPORT_SAMPLE_HREF}
-                      className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
-                    >
-                      샘플 리포트 보기
-                    </Link>
-                  </div>
-                </article>
+                  </ActionCluster>
+                </SectionSurface>
               );
             })}
-          </div>
+          </ProductGrid>
         </section>
 
         <section className="mt-8">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <div className="app-caption">2. 대화형 멤버십</div>
-            <div className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs text-[var(--app-copy-muted)]">
-              질문을 계속 이어가는 월간 플랜
-            </div>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
+          <SectionHeader
+            eyebrow="2. 대화형 멤버십"
+            title="기준서를 오래 붙잡고 싶을 때는, 월간 대화 플랜을 고르시면 됩니다"
+            titleClassName="text-3xl"
+            description="멤버십은 결과물을 대신하는 상품이 아니라, 이미 읽은 기준서와 오늘의 질문을 계속 이어가는 보조 레이어입니다."
+            descriptionClassName="max-w-3xl"
+          />
+          <ProductGrid columns={2} className="lg:items-start">
             {subscriptionPlans.map((plan, index) => {
               const guide = DIALOGUE_PLAN_GUIDES[plan.slug];
 
               return (
-                <article
+                <SectionSurface
+                  as="article"
                   key={plan.title}
-                  className={`moon-plan-card p-6 ${index === 1 ? 'lg:-translate-y-3 moon-glow-border' : ''}`}
+                  surface="panel"
+                  className={`moon-plan-card ${index === 1 ? 'lg:-translate-y-3 moon-glow-border' : ''}`}
                   data-featured={index === 1 ? 'true' : 'false'}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -248,27 +325,22 @@ export default async function MembershipPage({
                   <p className="mt-4 max-w-sm text-sm leading-7 text-[var(--app-copy)]">{plan.summary}</p>
                   <p className="mt-3 text-sm text-[var(--app-copy-muted)]">{plan.fit}</p>
 
-                  <ul className="mt-5 space-y-2 text-sm text-[var(--app-copy)]">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex gap-2">
-                        <span className="mt-[0.38rem] h-1.5 w-1.5 rounded-full bg-[var(--app-gold)]/70" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <BulletList className="mt-5 text-sm text-[var(--app-copy)]" items={[...plan.features]} />
 
-                  <div className="mt-5 rounded-[1.15rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
-                    <div className="app-caption">리포트와 이어지는 방식</div>
-                    <div className="mt-3 space-y-2">
-                      {plan.opens.map((item) => (
-                        <div key={item} className="text-sm leading-7 text-[var(--app-copy-muted)]">
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <FeatureCard
+                    className="mt-5"
+                    surface="soft"
+                    eyebrow="리포트와 이어지는 방식"
+                    children={
+                      <BulletList
+                        className="text-sm text-[var(--app-copy-muted)]"
+                        markerClassName="text-[var(--app-gold)]/62"
+                        items={[...plan.opens]}
+                      />
+                    }
+                  />
 
-                  <div className="mt-6 flex flex-wrap gap-3">
+                  <ActionCluster className="mt-6">
                     <Link
                       href={guide.href}
                       className={
@@ -279,111 +351,131 @@ export default async function MembershipPage({
                     >
                       {guide.cta}
                     </Link>
+                  </ActionCluster>
+                </SectionSurface>
+              );
+            })}
+          </ProductGrid>
+        </section>
+
+        <section className="mt-8">
+          <SectionSurface surface="panel" size="lg">
+            <div className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr] lg:items-start">
+              <div>
+                <SectionHeader
+                  eyebrow="3. 결정 전에 확인할 것"
+                  title="비교와 읽을거리도 상품 결정에 필요한 만큼만 남겼습니다"
+                  titleClassName="text-3xl"
+                  description="일반 AI 사주와 다른 지점, 결제 전에 먼저 봐도 좋은 샘플/엔진 기준서, 그리고 어떤 순서로 고르면 덜 흔들리는지를 한곳에 모았습니다."
+                  descriptionClassName="max-w-3xl"
+                />
+
+                <ProductGrid columns={3} className="mt-6">
+                  {CATALOG_PROOF_GROUPS.map((group) => (
+                    <FeatureCard
+                      key={group.title}
+                      surface="soft"
+                      eyebrow={group.eyebrow}
+                      title={group.title}
+                      titleClassName="text-2xl"
+                      children={<BulletList className="text-sm text-[var(--app-copy)]" items={group.points} />}
+                    />
+                  ))}
+                </ProductGrid>
+
+                <FeatureCard
+                  className="mt-6"
+                  surface="soft"
+                  eyebrow="플랜을 고르는 순서"
+                  children={
+                    <div className="grid gap-3">
+                      {INTERPRETATION_JOURNEY.map((step) => (
+                        <div
+                          key={step.title}
+                          className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.02)] px-4 py-4"
+                        >
+                          <div className="text-sm font-medium text-[var(--app-ivory)]">{step.title}</div>
+                          <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">{step.body}</p>
+                        </div>
+                      ))}
+                    </div>
+                  }
+                />
+              </div>
+
+              <div className="space-y-4">
+                <SectionSurface surface="lunar">
+                  <div className="app-starfield" />
+                  <SectionHeader
+                    eyebrow="결제 전 확인"
+                    title="샘플과 기준서를 먼저 보셔도 괜찮습니다"
+                    titleClassName="text-3xl text-[var(--app-gold-text)]"
+                    description="리포트를 먼저 만들면 무엇이 내 바탕인지가 남고, 이후의 대화는 그 기준 위에서 훨씬 덜 흔들립니다. 아직 망설이신다면 아래 세 가지부터 보셔도 좋습니다."
+                    descriptionClassName="text-[var(--app-copy)]"
+                  />
+                  <div className="mt-6 grid gap-3">
+                    {PRE_PURCHASE_LINKS.map((item) => (
+                      <FeatureCard
+                        key={item.title}
+                        surface="soft"
+                        title={item.title}
+                        titleClassName="text-xl"
+                        description={item.body}
+                        footer={
+                          <Link
+                            href={item.href}
+                            className="text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                          >
+                            바로 보기
+                          </Link>
+                        }
+                      />
+                    ))}
+                  </div>
+                  <ActionCluster className="mt-6">
+                    <Link
+                      href="/saju/new"
+                      className="moon-cta-primary"
+                    >
+                      내 명리 기준서 만들기
+                    </Link>
                     <Link
                       href={REPORT_SAMPLE_HREF}
-                      className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                      className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/14 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/20"
                     >
                       샘플 리포트 보기
                     </Link>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </section>
+                  </ActionCluster>
+                </SectionSurface>
 
-        <section className="mt-8">
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <div className="app-caption">3. 비교</div>
-            <div className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs text-[var(--app-copy-muted)]">
-              일반 AI 사주와 달빛선생 리포트의 차이
-            </div>
-          </div>
-          <div className="overflow-hidden rounded-[1.6rem] border border-[var(--app-line)] bg-[var(--app-surface)]/85">
-            <div className="hidden grid-cols-[10rem_1fr_1fr] border-b border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] text-sm text-[var(--app-copy-muted)] md:grid">
-              <div className="px-5 py-4">항목</div>
-              <div className="px-5 py-4">일반 AI 사주</div>
-              <div className="px-5 py-4 text-[var(--app-gold-text)]">달빛선생 리포트</div>
-            </div>
-            {COMPARISON_ROWS.map((row) => (
-              <div
-                key={row.label}
-                className="grid gap-3 border-t border-[var(--app-line)] px-5 py-5 first:border-t-0 md:grid-cols-[10rem_1fr_1fr] md:gap-5"
-              >
-                <div className="text-sm font-semibold text-[var(--app-ivory)]">{row.label}</div>
-                <div className="text-sm leading-7 text-[var(--app-copy)]">{row.ai}</div>
-                <div className="text-sm leading-7 text-[var(--app-gold-text)]">{row.moonlight}</div>
+                <ProductGrid columns={2}>
+                  {MEMBERSHIP_REASSURANCE.map((item) => (
+                    <FeatureCard
+                      key={item}
+                      surface="soft"
+                      description={item}
+                    />
+                  ))}
+                </ProductGrid>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
+          </SectionSurface>
 
-        <section className="mt-8">
-          <EngineMethodLinks
-            title="결제 전에도, 왜 구독과 기준서를 나누었는지 먼저 보셔도 됩니다"
-            description="멤버십은 계속 묻기 위한 플랜이고, 명리 기준서는 오래 남기기 위한 상품입니다. 아래 글들은 그 차이를 납득시키는 데 가장 직접적인 읽을거리입니다."
-            slugs={[
-              'why-pattern-judgments-diverge',
-              'why-yongsin-is-hard',
-              'why-ai-saju-differs-from-calendar-apps',
-              'how-to-read-daewoon-and-sewoon-together',
+          <ReportKeepsakeSection
+            className="mt-8"
+            actions={[
+              {
+                label: '내 명리 기준서 만들기',
+                href: '/saju/new',
+                variant: 'primary',
+              },
+              {
+                label: '샘플 리포트 보기',
+                href: REPORT_SAMPLE_HREF,
+                variant: 'secondary',
+              },
             ]}
-            ctaHref="/about-engine"
-            ctaLabel="엔진 기준서와 함께 보기"
           />
-        </section>
-
-        <section className="mt-8 grid gap-4 lg:grid-cols-3">
-          {MEMBERSHIP_REASSURANCE.map((item) => (
-            <article key={item} className="moon-orbit-card p-5 text-sm leading-7 text-[var(--app-copy)]">
-              {item}
-            </article>
-          ))}
-        </section>
-
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.96fr_1.04fr] lg:items-start">
-          <article className="app-panel p-6">
-            <div className="app-caption">플랜을 고르는 기준</div>
-            <div className="mt-5 space-y-4">
-              {INTERPRETATION_JOURNEY.map((step) => (
-                <div
-                  key={step.title}
-                  className="rounded-[1.15rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
-                >
-                  <div className="text-sm font-medium text-[var(--app-ivory)]">{step.title}</div>
-                  <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">{step.body}</p>
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="moon-lunar-panel p-6 lg:mt-1">
-            <div className="app-starfield" />
-            <div className="app-caption">마지막 안내</div>
-            <div className="mt-4 font-display text-3xl text-[var(--app-gold-text)]">
-              기준은 오래 남기고,
-              <br />
-              질문은 그 위에서 이어갑니다
-            </div>
-            <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-              먼저 소장형 리포트로 원국과 대운의 축을 남겨두고, 생활에 붙는 질문은 대화 멤버십으로 이어가는 방식이 가장 자연스럽습니다.
-              샘플 기준서를 먼저 보신 뒤, 지금 나에게 맞는 시작점을 골라보셔도 좋습니다.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                href="/saju/new"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
-              >
-                내 명리 기준서 만들기
-              </Link>
-              <Link
-                href={REPORT_SAMPLE_HREF}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/14 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/20"
-              >
-                샘플 리포트 보기
-              </Link>
-            </div>
-          </article>
         </section>
 
         <section className="mt-8">

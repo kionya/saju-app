@@ -7,6 +7,12 @@ import { CounselorSelector } from '@/components/counselor/counselor-selector';
 import { SpecialistMentorGrid } from '@/components/counselor/specialist-mentor-grid';
 import { TodayConcernSelector } from '@/components/today-fortune/today-concern-selector';
 import { ProductReportCard } from '@/components/home/product-report-card';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { EvidenceStrip } from '@/components/layout/evidence-strip';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SupportRail } from '@/components/layout/support-rail';
+import { ReportKeepsakeSection } from '@/components/report/report-keepsake-section';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { MoonlightHeroVideo } from '@/components/home/moonlight-hero-video';
 import { EngineMethodLinks } from '@/components/content/engine-method-links';
@@ -87,23 +93,29 @@ const TRUST_PILLARS = [
   {
     label: '기준',
     title: 'AI가 명식을 추측하지 않습니다',
-    body: '명식, 격국, 용신, 대운은 엔진이 먼저 계산하고, 선생의 말투는 그 결과를 풀어주는 역할만 맡습니다.',
+    body: '명식과 운의 구조는 먼저 계산하고, 설명은 그 결과를 이해하기 쉽게 풀어드립니다.',
   },
   {
     label: '정밀',
-    title: '출생시각과 출생지를 함께 반영합니다',
-    body: '분 단위 시간, 출생지, 진태양시, 야자시, 조자시를 분리해 적용해 경계 시간의 흔들림을 줄입니다.',
+    title: '출생시각·출생지·절기 기준을 반영합니다',
+    body: '분 단위 시간과 출생지를 함께 보고, 절기와 시간 경계가 가까운 경우는 더 보수적으로 읽습니다.',
   },
   {
     label: '근거',
-    title: '왜 그렇게 판정했는지 함께 보여드립니다',
-    body: '강약, 격국 후보, 용신 후보, KASI 대조까지 결과 화면에서 직접 확인할 수 있도록 남깁니다.',
+    title: '격국·용신 판정 근거를 보여드립니다',
+    body: '강약, 격국 후보, 용신 후보, KASI 대조를 결과 화면에서 직접 확인할 수 있도록 남깁니다.',
   },
   {
     label: '소장',
-    title: '한 번 읽고 사라지지 않게 남깁니다',
+    title: 'PDF와 보관함으로 오래 남깁니다',
     body: '명리 기준서는 PDF와 MY 보관함으로 이어지고, 이후 월운과 대화도 같은 기준 위에서 계속 이어집니다.',
   },
+] as const;
+
+const PREMIUM_PROOF_POINTS = [
+  '핵심 한 줄 · 올해 강한 주제 · 조심할 패턴부터 먼저 보입니다.',
+  '판정 근거, 시간 보정, KASI 대조 상태를 함께 펼쳐볼 수 있습니다.',
+  '명리 기준서 저장, PDF 소장, 대화 이어보기까지 한 줄로 연결됩니다.',
 ] as const;
 
 export default function HomePage() {
@@ -260,8 +272,9 @@ export default function HomePage() {
             <div className="app-caption mb-4">프리미엄 명리 리포트</div>
             <h1 className="moon-hero-h1">당신의 사주를 한 권의 기준서로 남깁니다.</h1>
             <p className="moon-hero-sub">
-              명식, 격국, 용신, 대운은 엔진이 먼저 계산합니다. 달빛선생은 그 구조를 고급 리포트와
-              대화로 풀어드립니다.
+              명식, 격국, 용신, 대운은 엔진이 먼저 계산합니다.
+              <br className="hidden sm:block" />
+              달빛선생은 그 구조를 고급 리포트와 대화로 풀어드립니다.
             </p>
           </div>
 
@@ -273,10 +286,13 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="moon-hero-actions flex w-full max-w-xl flex-col justify-center gap-3 sm:flex-row">
+          <ActionCluster
+            align="center"
+            className="moon-hero-actions w-full max-w-sm sm:max-w-none"
+          >
             <Link
               href="/saju/new"
-              className="moon-cta-primary"
+              className="moon-cta-primary w-full sm:w-auto"
               onClick={() =>
                 trackMoonlightEvent('premium_home_hero_primary_click', {
                   from: 'home_hero',
@@ -287,7 +303,7 @@ export default function HomePage() {
             </Link>
             <Link
               href={REPORT_SAMPLE_HREF}
-              className="moon-cta-secondary"
+              className="moon-cta-secondary w-full sm:w-auto"
               onClick={() =>
                 trackMoonlightEvent('premium_home_sample_click', {
                   from: 'home_hero',
@@ -295,6 +311,22 @@ export default function HomePage() {
               }
             >
               샘플 리포트 보기
+            </Link>
+          </ActionCluster>
+
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-[var(--app-copy-muted)]">
+            <Link
+              href="/about-engine#decision-trace"
+              className="inline-flex items-center gap-2 text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+            >
+              판정 근거 먼저 보기
+            </Link>
+            <span className="hidden h-1 w-1 rounded-full bg-[var(--app-copy-soft)] md:block" />
+            <Link
+              href={`/today-fortune?concern=${selectedConcern}`}
+              className="inline-flex items-center gap-2 hover:text-[var(--app-ivory)]"
+            >
+              오늘의 흐름은 가볍게 먼저 보기
             </Link>
           </div>
 
@@ -315,7 +347,7 @@ export default function HomePage() {
                 className="rounded-[1.45rem] border border-[var(--app-line)] bg-[rgba(7,13,28,0.6)] px-5 py-5 text-left backdrop-blur"
               >
                 <div className="app-caption text-[var(--app-gold-text)]">{item.label}</div>
-                <h2 className="mt-3 text-lg font-semibold leading-7 text-[var(--app-ivory)]">
+                <h2 className="font-display mt-3 text-lg font-semibold leading-7 text-[var(--app-ivory)]">
                   {item.title}
                 </h2>
                 <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
@@ -323,10 +355,34 @@ export default function HomePage() {
             ))}
           </div>
 
-          <p className="text-sm text-[var(--app-copy-soft)]">
-            안녕하세요,{' '}
-            <span className="text-[var(--app-gold-text)]">{displayName}</span> 선생님
-          </p>
+          <div className="w-full max-w-4xl">
+            <article className="rounded-[1.7rem] border border-[var(--app-gold)]/22 bg-[linear-gradient(135deg,rgba(210,176,114,0.1),rgba(8,15,30,0.9))] px-6 py-6 text-left backdrop-blur">
+              <SectionHeader
+                eyebrow="샘플 기준서 미리보기"
+                title="한 번의 해석이 오래 남도록, 기준과 근거를 먼저 보여드립니다"
+                titleClassName="text-2xl"
+                descriptionClassName="hidden"
+              />
+              <EvidenceStrip
+                className="mt-5"
+                items={PREMIUM_PROOF_POINTS.map((item) => ({ body: item }))}
+              />
+              <ActionCluster className="mt-5">
+                <Link
+                  href={REPORT_SAMPLE_HREF}
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                >
+                  샘플 리포트 펼쳐보기
+                </Link>
+                <Link
+                  href="/about-engine"
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                >
+                  엔진 기준서 보기
+                </Link>
+              </ActionCluster>
+            </article>
+          </div>
         </div>
 
         <div className="moon-scroll-hint" aria-hidden>
@@ -338,54 +394,63 @@ export default function HomePage() {
 
       {/* ─── CONTENT ─── */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-        <section className="reveal-on-scroll mb-12 grid gap-5 lg:grid-cols-[1.02fr_0.98fr]">
-          <article className="app-panel p-6 sm:p-8">
-            <div className="app-caption">오늘의 흐름도 가볍게 확인해보세요</div>
-            <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
-              오늘의 고민은 빠르게, 기준서는 길게 이어보실 수 있습니다
-            </h2>
-            <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
-              무료 결과와 오늘 고민 선택은 그대로 열어두었습니다. 다만 달빛선생의 중심 가치는
-              한 번 보고 지나가는 운세보다, 오래 남는 기준서와 판정 근거에 있습니다.
-            </p>
+
+        <section className="reveal-on-scroll mb-12 space-y-5">
+          <article className="moon-lunar-panel p-6 sm:p-7">
+            <div className="app-starfield" />
+            <SectionHeader
+              eyebrow="오늘의 흐름도 가볍게 확인해보세요"
+              title="오늘 운세와 오늘 고민 빠른 선택은 아래에서 이어집니다"
+              titleClassName="text-2xl"
+              description="오늘 고민 선택, 무료 결과, 1코인 심화풀이로 이어지는 빠른 동선은 그대로 열어두었습니다. 다만 달빛선생의 중심 가치는 오늘의 운세보다, 오래 남는 명리 기준서와 판정 근거에 있습니다."
+              actions={
+                <Link
+                  href={`/today-fortune?concern=${selectedConcern}`}
+                  className="shrink-0 text-xs text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                >
+                  오늘 운세 열기
+                </Link>
+              }
+            />
             <div className="mt-4 rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]">
               {todayLine.title} {todayLine.subtitle}
             </div>
-            <div className="mt-5">
-              <TodayConcernSelector
-                value={selectedConcern}
-                onChange={(next) => {
-                  setSelectedConcern(next);
-                  trackMoonlightEvent('today_concern_selected', {
-                    from: 'home',
-                    concern: next,
-                  });
-                }}
-                expanded={concernExpanded}
-                onToggleExpanded={() => setConcernExpanded((current) => !current)}
-                compact
-              />
-            </div>
-            <div className="mt-5">
-              <Link
-                href={`/today-fortune?concern=${selectedConcern}`}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-              >
-                오늘의 흐름 먼저 보기
-              </Link>
+            <div className="mt-5 rounded-[1.3rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
+              <div className="text-xs tracking-[0.22em] text-[var(--app-gold)]/72">오늘 고민 빠른 선택</div>
+              <div className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">
+                무료 결과로 지금 가장 먼저 확인할 질문을 고르실 수 있습니다. 심층 기준서와는 별개로, 오늘의 흐름만 빠르게 확인하는 짧은 입구입니다.
+              </div>
+              <div className="mt-3">
+                <TodayConcernSelector
+                  value={selectedConcern}
+                  onChange={(next) => {
+                    setSelectedConcern(next);
+                    trackMoonlightEvent('today_concern_selected', {
+                      from: 'home',
+                      concern: next,
+                    });
+                  }}
+                  expanded={concernExpanded}
+                  onToggleExpanded={() => setConcernExpanded((current) => !current)}
+                  compact
+                />
+              </div>
             </div>
           </article>
 
-          <article className="app-panel-muted p-6 sm:p-8">
-            <div className="app-caption">같은 기준, 다른 말투</div>
-            <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
-              지금 묻고 싶은 결에 맞춰 선생을 먼저 고르실 수 있습니다
-            </h2>
-            <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
-              여선생은 관계와 마음의 맥락을, 남선생은 재물과 직업의 기준을 좀 더 선명하게
-              풀어드립니다. 해석의 바탕이 되는 명식과 운의 구조는 같은 기준으로 유지됩니다.
-            </p>
-            <div className="mt-5 rounded-[1.4rem] border border-[var(--app-line)] bg-[rgba(7,13,28,0.42)] p-4">
+          <article className="app-panel p-6 sm:p-7">
+            <SectionHeader
+              eyebrow="같은 기준, 다른 말투"
+              title="해석 엔진은 같고, 선생의 설명 결만 달라집니다"
+              titleClassName="text-2xl"
+              description={
+                <>
+                  안녕하세요, <span className="text-[var(--app-gold-text)]">{displayName}</span> 선생님.
+                  달빛선생은 명식과 운의 구조를 같은 계산 기준으로 먼저 잡고, 선생의 말투는 그 결과를 이해하기 쉽게 풀어드립니다.
+                </>
+              }
+            />
+            <div className="moon-counselor-selector-wrap mt-5">
               <CounselorSelector
                 value={counselorId}
                 onChange={(nextCounselor) => void selectCounselor(nextCounselor)}
@@ -393,28 +458,34 @@ export default function HomePage() {
                 title="같은 기준을 다른 말투로 읽는 선생을 골라보세요"
                 description="명식과 운의 구조는 같은 계산 기준으로 먼저 잡고, 선생의 말투는 그 결과를 이해하기 쉽게 풀어드립니다."
               />
-            </div>
-            <p className="mt-4 text-xs leading-6 text-[var(--app-copy-soft)]">
-              지금은{' '}
-              <span className={cn('font-semibold', counselor.accentClassName)}>
-                {counselor.label}
-              </span>
-              {' '}기준으로 읽도록 맞춰집니다.
-              {persistState === 'saved'
-                ? ' 로그인 계정에도 저장했습니다.'
-                : persistState === 'local_only'
-                  ? ' 이 기기에는 바로 반영했고, 로그인 저장은 환경에 따라 나중에 이어질 수 있습니다.'
-                  : counselorReady
+              <p className="mt-3 text-center text-xs leading-6 text-[var(--app-copy-soft)]">
+                지금은{' '}
+                <span className={cn('font-semibold', counselor.accentClassName)}>
+                  {counselor.label}
+                </span>
+                {' '}기준으로 읽도록 맞춰집니다.
+                {persistState === 'saved'
+                  ? ' 로그인 계정에도 저장했습니다.'
+                  : persistState === 'local_only'
+                    ? ' 이 기기에는 바로 반영했고, 로그인 저장은 환경에 따라 나중에 이어질 수 있습니다.'
+                    : counselorReady
                     ? ` ${counselor.signature}`
                     : ''}
-            </p>
-            <div className="mt-6 rounded-[1.5rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.02)] px-5 py-5">
-              <SpecialistMentorGrid
-                title="질문이 분명할 때는, 전문 선생이 먼저 정리해드리는 리포트로 들어가셔도 좋습니다"
-                description="기존 여선생과 남선생은 말투와 설명 결을 고르는 선택입니다. 그와 별개로, 아래 전문 선생들은 어떤 고민을 어떤 리포트로 먼저 보는 편이 좋은지 안내하는 역할을 맡습니다."
-              />
+              </p>
             </div>
           </article>
+
+          <SupportRail
+            surface="muted"
+            className="reveal-on-scroll"
+            eyebrow="전문 선생"
+            title="질문이 분명할 때는, 전문 선생이 먼저 정리해드리는 리포트로 들어가셔도 좋습니다"
+            description="기존 여선생과 남선생은 말투와 설명 결을 고르는 선택입니다. 그와 별개로, 아래 전문 선생들은 어떤 고민을 어떤 리포트로 먼저 보는 편이 좋은지 안내하는 역할을 맡습니다."
+          >
+            <SpecialistMentorGrid
+              showHeader={false}
+            />
+          </SupportRail>
         </section>
 
         {/* TODAY + SETUP */}
@@ -543,21 +614,36 @@ export default function HomePage() {
         </section>
 
         <section className="reveal-on-scroll mb-12">
-          <div className="mb-8 text-center">
-            <div className="app-caption mb-3">고민별 리포트</div>
-            <h2 className="moon-section-title mx-auto max-w-3xl">
-              고민별로 깊이가 다른 리포트를 선택하세요
-            </h2>
-            <p className="mx-auto mt-4 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
-              원국 기준서는 나의 바탕을, 연간 전략서는 올해의 흐름을, 궁합과 가족 리포트는 관계의 구조를 따로 정리합니다.
-            </p>
-          </div>
+          <SectionHeader
+            align="center"
+            eyebrow="고민별 리포트"
+            title="고민별로 깊이가 다른 리포트를 선택하세요"
+            description="원국 기준서는 나의 바탕을, 연간 전략서는 올해의 흐름을, 궁합과 가족 리포트는 관계의 구조를 따로 정리합니다."
+            className="mb-8 max-w-3xl"
+          />
 
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <ProductGrid columns={4}>
             {PRODUCT_REPORT_CATALOG.map((item) => (
               <ProductReportCard key={item.slug} item={item} />
             ))}
-          </div>
+          </ProductGrid>
+        </section>
+
+        <section className="reveal-on-scroll mb-12">
+          <ReportKeepsakeSection
+            actions={[
+              {
+                label: '내 명리 기준서 만들기',
+                href: '/saju/new',
+                variant: 'primary',
+              },
+              {
+                label: '샘플 리포트 보기',
+                href: REPORT_SAMPLE_HREF,
+                variant: 'secondary',
+              },
+            ]}
+          />
         </section>
 
         {/* WISDOM GRID */}

@@ -258,20 +258,53 @@ export function createDialoguePrompt(
       'recentFeedbackSummary가 있으면 최근 반응을 참고해 단정 표현 강도만 조절하고, 계산 근거보다 앞세우지 않습니다.',
       '의료, 법률, 투자 판단은 해석으로 대신하지 않습니다.',
       '출생 정보나 명식 데이터가 없는 경우 빈말로 얼버무리지 말고, 어떤 정보가 필요한지 짧게 요청합니다.',
-      '고전 원문이나 출처는 제공된 근거가 없으면 인용하지 않습니다.',
-      '다음과 같은 표현은 피합니다: 결론적으로, 분석해보면, 참고로, AI로서, 표로 정리하면, 1번 2번 3번.',
-      ...buildDialogueCounselorInstructions(counselorId),
-    ].join('\n'),
-    input: [
+      buildDialogueCounselorInstructions(counselorId),
+      '',
       profileGrounding
-        ? `기본 사용자 명식 JSON:\n${JSON.stringify(profileGrounding, null, 2)}`
-        : '기본 사용자 명식 없음. 저장 프로필이 비어 있으면 필요한 출생 정보를 짧게 요청합니다.',
+        ? [
+            '[저장 프로필 기준]',
+            profileGrounding.profileSummary,
+            `기본 초점: ${profileGrounding.focusLabel}`,
+            `오행/강약: ${profileGrounding.saju.dayMaster} / ${profileGrounding.saju.strength}`,
+            `격국·구조: ${profileGrounding.saju.pattern}`,
+            `용신 보완축: ${profileGrounding.saju.yongsin}`,
+            profileGrounding.saju.currentLuck
+              ? `현재 운 흐름: ${profileGrounding.saju.currentLuck}`
+              : null,
+            `오늘 리포트 핵심: ${profileGrounding.reports.today.headline}`,
+            `오늘 리포트 요약: ${profileGrounding.reports.today.summary}`,
+            `주제 리포트 핵심: ${profileGrounding.reports.focus.headline}`,
+            `주제 리포트 요약: ${profileGrounding.reports.focus.summary}`,
+            `주제 리포트 행동 제안: ${profileGrounding.reports.focus.action}`,
+            `주제 리포트 주의점: ${profileGrounding.reports.focus.caution}`,
+            profileGrounding.reports.focus.evidence.length > 0
+              ? `핵심 근거: ${profileGrounding.reports.focus.evidence
+                  .map((item) => `${item.label} ${item.title}`)
+                  .join(' · ')}`
+              : null,
+            profileGrounding.missing.birthTime
+              ? '태어난 시간이 빠져 있어 시주 해석은 보수적으로만 다룹니다.'
+              : null,
+            profileGrounding.missing.birthLocation
+              ? '출생지가 없어 진태양시 보정은 적용하지 않았습니다.'
+              : null,
+            profileGrounding.missing.gender
+              ? '성별 정보가 없어 일부 표현은 중성적으로 정리합니다.'
+              : null,
+          ]
+            .filter(Boolean)
+            .join('\n')
+        : '[저장 프로필 기준]\n현재 연결된 명식 프로필이 없습니다.',
       recentFeedbackSummary
-        ? `최근 사용자 피드백 요약:\n${recentFeedbackSummary}`
+        ? `\n[최근 리포트 반응 요약]\n${recentFeedbackSummary}`
         : null,
-      `사용자 질문:\n${message}`,
+      '',
+      '[답변 방식]',
+      '질문에 대한 결론을 첫 문단에서 먼저 말합니다.',
+      '그다음 근거가 되는 명식 구조, 현재 운의 흐름, 행동 제안을 차례로 붙입니다.',
+      '짧은 문단으로 답하고, 사족을 길게 붙이지 않습니다.',
     ]
       .filter(Boolean)
-      .join('\n\n'),
+      .join('\n'),
   };
 }

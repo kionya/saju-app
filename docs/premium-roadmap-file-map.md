@@ -315,3 +315,4 @@
 - Tailwind 설정 파일은 별도로 보이지 않으며, 실제 디자인 토큰/폰트 역할은 [src/app/globals.css](/Users/kionya/saju-app/src/app/globals.css)의 `@theme inline`에 모여 있습니다.
 - 폰트 로딩은 [src/app/layout.tsx](/Users/kionya/saju-app/src/app/layout.tsx) 의 `next/font` 설정이 기준입니다.
 - 따라서 고급화 작업은 **tailwind.config 수정형이 아니라 globals.css + route/component 조정형**으로 접근하는 편이 자연스럽습니다.
+

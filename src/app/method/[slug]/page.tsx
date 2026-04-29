@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import SiteHeader from '@/features/shared-navigation/site-header';
 import { Badge } from '@/components/ui/badge';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { BulletList } from '@/components/layout/bullet-list';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
+import SiteHeader from '@/features/shared-navigation/site-header';
 import { AppPage, AppShell } from '@/shared/layout/app-shell';
 import {
   ENGINE_METHOD_ENTRIES,
@@ -72,6 +79,14 @@ function buildMethodFaqs(item: EngineMethodEntry) {
   ];
 }
 
+function toSectionId(title: string) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9가-힣\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
 export default async function MethodDetailPage({ params }: Props) {
   const { slug } = await params;
   const item = getEngineMethodEntry(slug);
@@ -122,6 +137,10 @@ export default async function MethodDetailPage({ params }: Props) {
       },
     })),
   };
+  const sectionAnchors = item.sections.map((section) => ({
+    href: `#${toSectionId(section.title)}`,
+    label: section.title,
+  }));
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -134,146 +153,201 @@ export default async function MethodDetailPage({ params }: Props) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
         />
-        <section className="app-panel px-6 py-7 sm:px-8 sm:py-8">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-              {item.eyebrow}
-            </Badge>
-            <Badge className="border-white/10 bg-white/5 text-white/68">엔진 기준서 연계 글</Badge>
-          </div>
-          <h1 className="font-display mt-5 text-4xl font-semibold tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-            {item.title}
-          </h1>
-          <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">{item.summary}</p>
 
-          <div className="mt-6 rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] p-5">
-            <div className="text-sm text-[var(--app-copy-soft)]">이 글이 답하려는 질문</div>
-            <p className="font-display mt-3 text-lg font-semibold text-[var(--app-ivory)]">{item.question}</p>
-            <p className="mt-3 text-sm leading-8 text-[var(--app-copy)]">{item.lead}</p>
-          </div>
+        <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+          <SectionSurface surface="panel">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+                {item.eyebrow}
+              </Badge>
+              <Badge className="border-white/10 bg-white/5 text-white/68">엔진 기준서 연계 글</Badge>
+            </div>
+
+            <SectionHeader
+              className="mt-5"
+              title={item.title}
+              titleClassName="text-4xl sm:text-5xl"
+              description={<span className="app-reading-prose">{item.summary}</span>}
+              descriptionClassName="text-[var(--app-copy)]"
+            />
+
+            <div className="mt-6 rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] p-5">
+              <div className="text-sm text-[var(--app-copy-soft)]">이 글이 답하려는 질문</div>
+              <p className="font-display mt-3 text-lg font-semibold text-[var(--app-ivory)]">{item.question}</p>
+              <p className="mt-3 text-sm leading-8 text-[var(--app-copy)]">{item.lead}</p>
+            </div>
+          </SectionSurface>
+
+          <SupportRail
+            surface="muted"
+            eyebrow="읽기 길잡이"
+            title="이 글은 이런 순서로 읽으시면 좋습니다"
+            description="본문은 하나의 질문을 몇 개의 큰 단락으로 나누어 설명하고, 옆 레일에서는 체크 포인트와 다음 글로 이어지는 흐름만 짧게 정리합니다."
+          >
+            <nav className="app-reading-nav">
+              <div className="app-caption mb-3">본문 이동</div>
+              <div className="app-reading-nav-list">
+                {sectionAnchors.map((section) => (
+                  <Link key={section.href} href={section.href} className="app-reading-nav-link">
+                    {section.label}
+                  </Link>
+                ))}
+                <Link href="#faq" className="app-reading-nav-link">
+                  자주 이어지는 질문
+                </Link>
+              </div>
+            </nav>
+
+            <ActionCluster>
+              <Link
+                href="/about-engine"
+                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+              >
+                엔진 기준서 보기
+              </Link>
+              <Link
+                href="/sample-report"
+                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+              >
+                샘플 리포트 보기
+              </Link>
+            </ActionCluster>
+          </SupportRail>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
-          <article className="space-y-4">
+        <div className="app-reading-layout">
+          <article className="app-reading-stack">
             {item.sections.map((section) => (
-              <section key={section.title} className="app-panel p-6 sm:p-7">
-                <h2 className="font-display text-3xl font-semibold text-[var(--app-ivory)]">
-                  {section.title}
-                </h2>
-                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{section.body}</p>
-              </section>
+              <SectionSurface
+                key={section.title}
+                id={toSectionId(section.title)}
+                surface="panel"
+                className="scroll-mt-28"
+              >
+                <SectionHeader
+                  title={section.title}
+                  titleClassName="text-3xl"
+                  description={<span className="app-reading-prose">{section.body}</span>}
+                  descriptionClassName="text-[var(--app-copy)]"
+                />
+              </SectionSurface>
             ))}
-          </article>
 
-          <aside className="space-y-4">
-            <section className="moon-lunar-panel p-6 sm:p-7">
-              <div className="app-starfield" />
-              <div className="app-caption">체크 포인트</div>
-              <h2 className="font-display mt-3 text-3xl font-semibold text-[var(--app-ivory)]">
-                달빛선생에서는 이 기준이 실제로 보입니다
-              </h2>
-              <div className="mt-5 space-y-3">
-                {item.checklist.map((check) => (
-                  <div
-                    key={check}
-                    className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4 text-sm leading-7 text-[var(--app-copy)]"
-                  >
-                    {check}
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="app-panel p-6 sm:p-7">
-              <div className="app-caption">자주 이어지는 질문</div>
-              <div className="mt-4 space-y-4">
+            <SectionSurface id="faq" surface="panel" className="scroll-mt-28">
+              <SectionHeader
+                eyebrow="자주 이어지는 질문"
+                title="본문을 읽고 나면 보통 이 질문들로 이어집니다"
+                titleClassName="text-3xl"
+              />
+              <div className="mt-6 space-y-4">
                 {faqs.map((faq) => (
                   <div
                     key={faq.question}
                     className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4"
                   >
-                <h2 className="font-display text-sm font-semibold text-[var(--app-ivory)]">
-                  {faq.question}
-                </h2>
+                    <h2 className="font-display text-sm font-semibold text-[var(--app-ivory)]">
+                      {faq.question}
+                    </h2>
                     <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{faq.answer}</p>
                   </div>
                 ))}
               </div>
-            </section>
+            </SectionSurface>
 
-            <section className="app-panel p-6 sm:p-7">
-              <div className="app-caption">마무리 문장</div>
-              <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">{item.closing}</p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  href="/about-engine"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
-                >
-                  엔진 기준서 보기
-                </Link>
-                <Link
-                  href="/membership"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-white/12 bg-white/6 px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-white/10 hover:text-[var(--app-ivory)]"
-                >
-                  멤버십 기준 보기
-                </Link>
-                <Link
-                  href="/saju/new"
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
-                >
-                  사주 시작하기
-                </Link>
+            <SectionSurface surface="hero">
+              <SectionHeader
+                eyebrow="마무리 문장"
+                title="읽은 기준을 실제 결과와 연결할 때 비로소 이 문서의 역할이 완성됩니다"
+                titleClassName="text-3xl"
+                description={<span className="app-reading-prose">{item.closing}</span>}
+                descriptionClassName="text-[var(--app-copy)]"
+                actions={
+                  <ActionCluster>
+                    <Link
+                      href="/saju/new"
+                      className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                    >
+                      사주 시작하기
+                    </Link>
+                    <Link
+                      href="/membership"
+                      className="inline-flex h-11 items-center justify-center rounded-full border border-white/12 bg-white/6 px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-white/10 hover:text-[var(--app-ivory)]"
+                    >
+                      멤버십 기준 보기
+                    </Link>
+                  </ActionCluster>
+                }
+              />
+            </SectionSurface>
+          </article>
+
+          <aside className="app-reading-rail">
+            <SupportRail
+              surface="lunar"
+              eyebrow="체크 포인트"
+              title="달빛선생에서는 이 기준이 실제로 보입니다"
+              description="결과 화면에서 사용자가 직접 확인할 수 있는 지점만 짧게 모았습니다."
+            >
+              <BulletList items={item.checklist} />
+            </SupportRail>
+
+            <SectionSurface surface="panel">
+              <SectionHeader
+                eyebrow="다음 글 추천"
+                title="이 글 다음에는 보통 이런 질문으로 이어집니다"
+                titleClassName="text-2xl"
+              />
+              <div className="mt-5 space-y-3">
+                {guidedItems.map((entry) => (
+                  <FeatureCard
+                    key={entry.slug}
+                    surface="soft"
+                    eyebrow={entry.eyebrow}
+                    title={entry.title}
+                    titleClassName="text-xl"
+                    description={entry.summary}
+                    footer={
+                      <Link
+                        href={`/method/${entry.slug}`}
+                        className="text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                      >
+                        이어 읽기
+                      </Link>
+                    }
+                  />
+                ))}
               </div>
-            </section>
+            </SectionSurface>
           </aside>
-        </section>
+        </div>
 
-        <section className="app-panel p-6 sm:p-7">
-          <div className="app-caption">다음으로 읽으면 좋은 글</div>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy)]">
-            이 글을 읽고 보통 이어지는 질문만 먼저 골라 두었습니다. 비슷한 말만 반복되는 목록보다,
-            판정 흐름이 자연스럽게 이어지는 순서로 읽는 편이 이해가 훨씬 쉬워집니다.
-          </p>
-          <div className="mt-5 grid gap-4 lg:grid-cols-3">
-            {guidedItems.map((entry) => (
-              <Link
-                key={entry.slug}
-                href={`/method/${entry.slug}`}
-                className="rounded-[22px] border border-[var(--app-gold)]/20 bg-[rgba(255,255,255,0.03)] p-5 transition-colors hover:bg-[rgba(255,255,255,0.05)]"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="text-sm text-[var(--app-gold-text)]">{entry.eyebrow}</div>
-                  <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-                    이어 읽기
-                  </Badge>
-                </div>
-                <h2 className="font-display mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
-                  {entry.title}
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{entry.summary}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="app-panel p-6 sm:p-7">
-          <div className="app-caption">넓게 이어보기</div>
-          <div className="mt-5 grid gap-4 lg:grid-cols-3">
+        <SectionSurface surface="panel">
+          <SectionHeader
+            eyebrow="넓게 이어보기"
+            title="같은 기준 위에서 더 넓게 읽어볼 만한 글들입니다"
+            titleClassName="text-3xl"
+          />
+          <ProductGrid columns={3} className="mt-6">
             {secondaryItems.map((entry) => (
-              <Link
+              <FeatureCard
                 key={entry.slug}
-                href={`/method/${entry.slug}`}
-                className="rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] p-5 transition-colors hover:bg-[rgba(255,255,255,0.05)]"
-              >
-                <div className="text-sm text-[var(--app-gold-text)]">{entry.eyebrow}</div>
-                <h2 className="font-display mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
-                  {entry.title}
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{entry.summary}</p>
-              </Link>
+                surface="soft"
+                eyebrow={entry.eyebrow}
+                title={entry.title}
+                titleClassName="text-2xl"
+                description={entry.summary}
+                footer={
+                  <Link
+                    href={`/method/${entry.slug}`}
+                    className="text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                  >
+                    상세 읽기
+                  </Link>
+                }
+              />
             ))}
-          </div>
-        </section>
+          </ProductGrid>
+        </SectionSurface>
       </AppPage>
     </AppShell>
   );

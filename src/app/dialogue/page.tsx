@@ -1,7 +1,14 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { SafetyNotice } from '@/components/common/safety-notice';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
 import SiteHeader from '@/features/shared-navigation/site-header';
-import { AppShell } from '@/shared/layout/app-shell';
+import { AppPage, AppShell } from '@/shared/layout/app-shell';
 import { DIALOGUE_GUARDRAILS, DIALOGUE_PRESETS } from '@/content/moonlight';
 import { DialogueChatPanel } from '@/components/dialogue/dialogue-chat-panel';
 
@@ -32,24 +39,41 @@ export default async function DialoguePage({
   }>;
 }) {
   const params = await searchParams;
+  const usageItems = [
+    ['처음 3회', '무료'],
+    ['이후 3회 묶음', '코인 3개'],
+    ['MY 프로필 등록', '명식 자동 적용'],
+  ] as const;
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-
-        {/* ─── HERO ─── */}
-        <section className="app-hero-card p-7 sm:p-9">
+      <AppPage className="space-y-6">
+        <SectionSurface surface="hero" size="lg">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <div className="app-caption mb-4">달빛선생과 대화</div>
-              <h1 className="font-[var(--font-heading)] text-3xl leading-[1.32] tracking-tight text-[var(--app-ivory)] sm:text-4xl">
-                대화 중에도 명식 기준은 바뀌지 않습니다
-              </h1>
-              <p className="mt-4 max-w-2xl text-sm leading-8 text-[var(--app-copy-muted)]">
-                달빛선생과의 대화는 이미 계산된 명식과 운의 구조를 바탕으로 이어집니다. AI가 대화 중에 격국이나 용신을 새로 추측하지 않으며, 질문에 맞춰 설명의 우선순위만 다시 정리합니다. 처음 3회 대화는 무료로 이어지고, MY 프로필에 출생 정보가 있으면 명식을 바로 불러옵니다.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 lg:shrink-0">
+            <SectionHeader
+              eyebrow="달빛선생과 대화"
+              title="기준은 고정한 채, 질문은 계속 이어갑니다"
+              titleClassName="text-3xl sm:text-4xl"
+              description="달빛선생과의 대화는 이미 계산된 명식과 운의 구조를 바탕으로 이어집니다. AI가 대화 중에 격국이나 용신을 새로 추측하지 않으며, 질문에 맞춰 설명의 우선순위만 다시 정리합니다."
+              descriptionClassName="text-[var(--app-copy)]"
+              actions={
+                <ActionCluster>
+                  <Link
+                    href="/saju/new"
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                  >
+                    기준서 먼저 만들기
+                  </Link>
+                  <Link
+                    href="/sample-report"
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                  >
+                    샘플 리포트 보기
+                  </Link>
+                </ActionCluster>
+              }
+            />
+            <div className="flex flex-wrap gap-2 lg:max-w-sm lg:justify-end">
               {['재물', '가족', '이동', '마음', '생활'].map((cat) => (
                 <span
                   key={cat}
@@ -60,10 +84,27 @@ export default async function DialoguePage({
               ))}
             </div>
           </div>
-        </section>
 
-        {/* ─── CHAT PANEL ─── */}
-        <section className="mt-6">
+          <ProductGrid columns={3} className="mt-6">
+            <FeatureCard
+              surface="soft"
+              eyebrow="명식 기준"
+              description="대화 중에도 이미 계산된 명식과 운의 구조를 바꾸지 않고, 질문에 맞춰 설명의 층만 다시 정리합니다."
+            />
+            <FeatureCard
+              surface="soft"
+              eyebrow="가벼운 시작"
+              description="처음 3회 대화는 무료로 이어지고, 자주 묻는 질문을 바로 불러와 시작하실 수 있습니다."
+            />
+            <FeatureCard
+              surface="soft"
+              eyebrow="더 깊은 질문"
+              description="MY 프로필이나 기준서가 있으면, 원국과 운의 흐름을 이미 불러온 상태에서 더 구체적으로 이어갈 수 있습니다."
+            />
+          </ProductGrid>
+        </SectionSurface>
+
+        <section>
           <DialogueChatPanel
             presets={DIALOGUE_PRESETS.map((p) => ({
               category: p.category,
@@ -77,89 +118,101 @@ export default async function DialoguePage({
           />
         </section>
 
-        {/* ─── PRESETS + GUARDRAILS ─── */}
-        <section className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
+          <SectionSurface surface="panel">
+            <SectionHeader
+              eyebrow="자주 여쭙는 이야기"
+              title="질문이 막막하실 때는, 먼저 이런 결로 시작하셔도 좋습니다"
+              titleClassName="text-3xl"
+              description="대화는 크게 재물, 가족, 이동, 마음, 생활 같은 생활 질문에서 시작하고, 필요하면 기준서와 관계 리포트로 자연스럽게 이어집니다."
+              descriptionClassName="text-[var(--app-copy)]"
+            />
 
-          <article className="app-panel p-6">
-            <div className="app-caption mb-5">자주 여쭙는 이야기</div>
-            <div className="grid gap-2.5">
+            <ProductGrid columns={2} className="mt-6">
               {DIALOGUE_PRESETS.map((preset, index) => {
-                const badgeCls = CATEGORY_COLORS[preset.category] ?? 'border-[var(--app-line)] text-[var(--app-copy-muted)]';
+                const badgeCls =
+                  CATEGORY_COLORS[preset.category] ??
+                  'border-[var(--app-line)] text-[var(--app-copy-muted)]';
+
                 return (
-                  <article key={preset.question} className="moon-preset-row">
-                    <div className="flex items-start gap-3">
-                      <span className="mt-0.5 shrink-0 font-[var(--font-heading)] text-sm text-[var(--app-gold)]/50">
-                        {String(index + 1).padStart(2, '0')}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-2 flex flex-wrap items-center gap-2">
-                          <span className={`rounded-full border px-2 py-0.5 text-[10px] tracking-[0.12em] ${badgeCls}`}>
-                            {preset.category}
-                          </span>
-                          <span className="text-sm font-medium text-[var(--app-ivory)]">
-                            {preset.question}
-                          </span>
-                        </div>
-                        <p className="text-sm leading-7 text-[var(--app-copy)]">{preset.previewAnswer}</p>
-                        <p className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">{preset.followUp}</p>
+                  <FeatureCard
+                    key={preset.question}
+                    surface="soft"
+                    eyebrow={
+                      <div className="flex items-center gap-2">
+                        <span className="font-hanja text-xs text-[var(--app-gold)]/65">
+                          {String(index + 1).padStart(2, '0')}
+                        </span>
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] tracking-[0.12em] ${badgeCls}`}
+                        >
+                          {preset.category}
+                        </span>
                       </div>
-                    </div>
-                  </article>
+                    }
+                    title={preset.question}
+                    titleClassName="text-xl"
+                    description={preset.previewAnswer}
+                    footer={
+                      <p className="text-xs leading-6 text-[var(--app-copy-soft)]">
+                        {preset.followUp}
+                      </p>
+                    }
+                  />
                 );
               })}
-            </div>
-          </article>
+            </ProductGrid>
+          </SectionSurface>
 
           <div className="flex flex-col gap-4">
-            <article className="moon-lunar-panel p-6">
-              <div className="app-starfield" />
-              <div className="relative z-10">
-                <div className="app-caption mb-4">이런 결로 답해드립니다</div>
-                <div className="space-y-3">
-                  {DIALOGUE_GUARDRAILS.map((rail) => (
-                    <div
-                      key={rail.title}
-                      className="rounded-[1.15rem] border border-[var(--app-gold)]/14 bg-[var(--app-surface-muted)] px-4 py-4"
-                    >
-                      <div className="flex items-start gap-2.5">
-                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--app-gold)]/60" />
-                        <div>
-                          <div className="text-sm font-medium text-[var(--app-ivory)]">{rail.title}</div>
-                          <p className="mt-1.5 text-sm leading-7 text-[var(--app-copy-muted)]">{rail.body}</p>
-                        </div>
+            <SupportRail
+              surface="lunar"
+              eyebrow="대화 원칙"
+              title="이런 결로 답해드립니다"
+              description="길흉을 단정하기보다, 이미 계산된 구조를 생활 언어로 다시 정리하고 다음 질문이 생기도록 돕는 쪽에 더 가깝습니다."
+            >
+              <div className="space-y-3">
+                {DIALOGUE_GUARDRAILS.map((rail) => (
+                  <div
+                    key={rail.title}
+                    className="rounded-[1.15rem] border border-[var(--app-gold)]/14 bg-[var(--app-surface-muted)] px-4 py-4"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--app-gold)]/60" />
+                      <div>
+                        <div className="text-sm font-medium text-[var(--app-ivory)]">{rail.title}</div>
+                        <p className="mt-1.5 text-sm leading-7 text-[var(--app-copy-muted)]">{rail.body}</p>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </article>
-
-            <article className="app-panel p-5">
-              <div className="app-caption mb-3">이용 방식</div>
-              <div className="space-y-2">
-                {[
-                  ['✦', '처음 3회', '무료'],
-                  ['○', '이후 3회 묶음', '코인 3개'],
-                  ['◎', 'MY 프로필 등록', '명식 자동 적용'],
-                ].map(([icon, label, value]) => (
-                  <div key={label} className="flex items-center justify-between rounded-[0.9rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <span className="font-[var(--font-heading)] text-sm text-[var(--app-gold)]/60">{icon}</span>
-                      <span className="text-sm text-[var(--app-copy)]">{label}</span>
-                    </div>
-                    <span className="text-sm font-medium text-[var(--app-ivory)]">{value}</span>
                   </div>
                 ))}
               </div>
-            </article>
+            </SupportRail>
+
+            <SectionSurface surface="panel">
+              <SectionHeader
+                eyebrow="이용 방식"
+                title="대화는 가볍게 시작하고, 기준서가 있으면 더 깊어집니다"
+                titleClassName="text-2xl"
+              />
+              <ProductGrid columns={2} className="mt-5">
+                {usageItems.map(([label, value]) => (
+                  <FeatureCard
+                    key={label}
+                    surface="soft"
+                    eyebrow={label}
+                    description={<span className="text-base font-medium text-[var(--app-ivory)]">{value}</span>}
+                  />
+                ))}
+              </ProductGrid>
+            </SectionSurface>
           </div>
         </section>
 
-        <section className="mt-6">
+        <section>
           <SafetyNotice variant="crisis" />
         </section>
-
-      </div>
+      </AppPage>
     </AppShell>
   );
 }
