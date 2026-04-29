@@ -461,21 +461,7 @@ export default async function MembershipPage({
             </div>
           </SectionSurface>
 
-          <ReportKeepsakeSection
-            className="mt-8"
-            actions={[
-              {
-                label: '내 명리 기준서 만들기',
-                href: '/saju/new',
-                variant: 'primary',
-              },
-              {
-                label: '샘플 리포트 보기',
-                href: REPORT_SAMPLE_HREF,
-                variant: 'secondary',
-              },
-            ]}
-          />
+          <ReportKeepsakeSection className="mt-8" />
         </section>
 
         <section className="mt-8">

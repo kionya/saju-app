@@ -376,7 +376,7 @@ export default function HomePage() {
                 </Link>
                 <Link
                   href="/about-engine"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                  className="inline-flex items-center gap-2 px-1 py-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
                 >
                   엔진 기준서 보기
                 </Link>
@@ -630,20 +630,7 @@ export default function HomePage() {
         </section>
 
         <section className="reveal-on-scroll mb-12">
-          <ReportKeepsakeSection
-            actions={[
-              {
-                label: '내 명리 기준서 만들기',
-                href: '/saju/new',
-                variant: 'primary',
-              },
-              {
-                label: '샘플 리포트 보기',
-                href: REPORT_SAMPLE_HREF,
-                variant: 'secondary',
-              },
-            ]}
-          />
+          <ReportKeepsakeSection />
         </section>
 
         {/* WISDOM GRID */}
