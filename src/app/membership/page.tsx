@@ -175,7 +175,7 @@ export default async function MembershipPage({
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <SectionSurface surface="lunar" size="lg">
+        <SectionSurface surface="lunar" size="lg" className="app-mobile-safe-section">
           <div className="app-starfield" />
           <div className="grid gap-6 lg:grid-cols-[1fr_16rem] lg:items-center">
             <div>
@@ -183,7 +183,7 @@ export default async function MembershipPage({
                 eyebrow="소장형 리포트 · 대화형 멤버십"
                 title="구독은 대화용, 리포트는 소장용입니다"
                 titleClassName="text-4xl leading-[1.3] sm:text-5xl"
-                description="달빛선생은 한 번 보고 사라지는 운세보다, 명식·격국·용신·대운의 기준을 오래 남기는 리포트를 중심에 둡니다. 월간 플랜은 질문을 계속 이어가는 대화용으로, 소장형 리포트는 PDF와 MY 보관함에 남기는 결과물로 나누어 보실 수 있습니다."
+                description="달빛선생은 한 번 보고 사라지는 운세보다, 명식·격국·용신·대운의 기준을 오래 남기는 리포트를 중심에 둡니다. 월간 플랜은 질문을 이어가는 대화용으로, 소장형 리포트는 오래 다시 보는 결과물로 나누어 보시면 됩니다."
                 descriptionClassName="max-w-3xl text-[var(--app-copy)]"
                 actions={
                   <ActionCluster>
@@ -193,10 +193,7 @@ export default async function MembershipPage({
                     >
                       내 명리 기준서 만들기
                     </Link>
-                    <Link
-                      href={REPORT_SAMPLE_HREF}
-                      className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
-                    >
+                    <Link href={REPORT_SAMPLE_HREF} className="app-top-action-link">
                       샘플 리포트 보기
                     </Link>
                   </ActionCluster>
@@ -217,18 +214,8 @@ export default async function MembershipPage({
             eyebrow="1. 소장형 리포트"
             title="먼저, 어떤 기준서를 남기고 싶은지 고르실 수 있습니다"
             titleClassName="text-3xl"
-            description="같은 사주라도 목적에 따라 결과물의 구조가 달라집니다. 원국 기준서는 바탕을, 연간 전략서는 올해의 흐름을, 궁합과 가족 리포트는 관계 구조를 중심으로 정리합니다."
+            description="원국 기준서는 바탕을, 연간 전략서는 올해의 흐름을, 궁합과 가족 리포트는 관계 구조를 중심으로 정리합니다."
             descriptionClassName="max-w-3xl"
-            actions={
-              <ActionCluster>
-                <Link
-                  href={REPORT_SAMPLE_HREF}
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-                >
-                  샘플 기준서 확인
-                </Link>
-              </ActionCluster>
-            }
           />
           <ProductGrid columns={2}>
             {COLLECTIBLE_REPORTS.map((report) => {

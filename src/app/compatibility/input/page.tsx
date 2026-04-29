@@ -109,11 +109,11 @@ export default async function CompatibilityInputPage({ searchParams }: Props) {
             </Badge>,
           ]}
           title="내 사람과의 궁합을 준비합니다"
-          description="이제 궁합은 고정 예시가 아니라, 로그인된 내 프로필과 저장된 사람의 생년월일을 바탕으로 실제 두 명식을 비교해서 읽습니다."
+          description="저장된 내 프로필과 가까운 사람의 생년월일을 바탕으로, 실제 두 명식을 비교해 관계의 결을 읽습니다."
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
-          <SectionSurface surface="lunar" size="lg">
+          <SectionSurface surface="lunar" size="lg" className="app-mobile-safe-section">
             <div className="app-starfield" />
             <SectionHeader
               eyebrow="관계 렌즈"
@@ -139,7 +139,7 @@ export default async function CompatibilityInputPage({ searchParams }: Props) {
               }
             />
 
-            <ProductGrid columns={4} className="mt-6">
+            <ProductGrid columns={4} className="mt-5 grid-cols-2 md:grid-cols-2 xl:grid-cols-4">
               {COMPATIBILITY_RELATIONSHIPS.map((item) => (
                 <FeatureCard
                   key={item.slug}
@@ -157,7 +157,7 @@ export default async function CompatibilityInputPage({ searchParams }: Props) {
                       href={`/compatibility/input?relationship=${item.slug}`}
                       className="inline-flex items-center gap-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
                     >
-                      이 렌즈로 보기
+                      선택하기
                     </Link>
                   }
                 />
@@ -177,10 +177,78 @@ export default async function CompatibilityInputPage({ searchParams }: Props) {
               surface="soft"
               eyebrow="필요한 데이터"
               title="왜 생년월일이 필요한가요?"
-              description="일간, 일지, 오행 보완축과 표현 속도를 함께 비교하기 위해 두 사람 모두의 생년월일과 가능한 범위의 출생 시간이 필요합니다."
+              description="일간과 표현 속도, 관계의 보완축을 함께 비교하기 위해 두 사람 모두의 생년월일과 가능한 범위의 출생 시간이 필요합니다."
             />
           </SupportRail>
         </section>
+
+        <SectionSurface surface="panel" size="lg">
+          <SectionHeader
+            eyebrow="저장된 사람"
+            title="이제 실제로 궁합을 볼 사람을 고르세요"
+            titleClassName="text-3xl"
+            description="관계 렌즈를 고른 뒤에는 저장된 사람을 바로 선택해 결과 화면으로 이어갈 수 있습니다."
+            descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+          />
+
+          {sortedProfiles.length === 0 ? (
+            <FeatureCard
+              className="mt-6"
+              surface="muted"
+              description="아직 저장된 사람이 없습니다. 먼저 가까운 사람 한 분을 저장해 두면 궁합 결과 화면에서 실제 두 명식을 바로 비교할 수 있습니다."
+              footer={
+                <Link
+                  href="/my/profile"
+                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
+                >
+                  가까운 사람 저장하러 가기
+                </Link>
+              }
+            />
+          ) : (
+            <ProductGrid columns={2} className="mt-6">
+              {sortedProfiles.map((profile) => {
+                const ready = hasCoreBirthProfile(profile);
+                const matched = inferCompatibilityRelationshipSlug(profile.relationship) === selected.slug;
+
+                return (
+                  <FeatureCard
+                    key={profile.id}
+                    surface="soft"
+                    className={matched ? 'border-[var(--app-gold)]/28 bg-[var(--app-gold)]/8' : undefined}
+                    eyebrow={profile.relationship}
+                    title={profile.label}
+                    badge={
+                      matched ? (
+                        <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+                          이 렌즈와 잘 맞음
+                        </Badge>
+                      ) : null
+                    }
+                    description={formatBirthSummary(profile)}
+                    footer={
+                      ready && selfReady ? (
+                        <Link
+                          href={`/compatibility/result?relationship=${selected.slug}&familyId=${profile.id}`}
+                          className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
+                        >
+                          {profile.label}님과 궁합 보기
+                        </Link>
+                      ) : (
+                        <Link
+                          href="/my/profile"
+                          className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface)]"
+                        >
+                          정보 먼저 보완하기
+                        </Link>
+                      )
+                    }
+                  />
+                );
+              })}
+            </ProductGrid>
+          )}
+        </SectionSurface>
 
         <section className="grid gap-6 lg:grid-cols-[0.98fr_1.02fr]">
           <SectionSurface surface="panel" size="lg">
@@ -247,73 +315,6 @@ export default async function CompatibilityInputPage({ searchParams }: Props) {
           </SectionSurface>
         </section>
 
-        <SectionSurface surface="panel" size="lg">
-          <SectionHeader
-            eyebrow="저장된 사람"
-            title="이제 실제로 궁합을 볼 사람을 고르세요"
-            titleClassName="text-3xl"
-            description="가족, 연인, 친구, 동료 프로필을 저장해두면 관계 유형에 맞는 렌즈로 바로 읽을 수 있습니다."
-            descriptionClassName="max-w-3xl text-[var(--app-copy)]"
-          />
-
-          {sortedProfiles.length === 0 ? (
-            <FeatureCard
-              className="mt-6"
-              surface="muted"
-              description="아직 저장된 사람이 없습니다. 먼저 가까운 사람 한 분을 저장해 두면 궁합 결과 화면에서 실제 두 명식을 바로 비교할 수 있습니다."
-              footer={
-                <Link
-                  href="/my/profile"
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
-                >
-                  가까운 사람 저장하러 가기
-                </Link>
-              }
-            />
-          ) : (
-            <ProductGrid columns={2} className="mt-6">
-              {sortedProfiles.map((profile) => {
-                const ready = hasCoreBirthProfile(profile);
-                const matched = inferCompatibilityRelationshipSlug(profile.relationship) === selected.slug;
-
-                return (
-                  <FeatureCard
-                    key={profile.id}
-                    surface="soft"
-                    className={matched ? 'border-[var(--app-gold)]/28 bg-[var(--app-gold)]/8' : undefined}
-                    eyebrow={profile.relationship}
-                    title={profile.label}
-                    badge={
-                      matched ? (
-                        <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-                          이 렌즈와 잘 맞음
-                        </Badge>
-                      ) : null
-                    }
-                    description={formatBirthSummary(profile)}
-                    footer={
-                      ready && selfReady ? (
-                        <Link
-                          href={`/compatibility/result?relationship=${selected.slug}&familyId=${profile.id}`}
-                          className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
-                        >
-                          {profile.label}님과 궁합 보기
-                        </Link>
-                      ) : (
-                        <Link
-                          href="/my/profile"
-                          className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface)]"
-                        >
-                          정보 먼저 보완하기
-                        </Link>
-                      )
-                    }
-                  />
-                );
-              })}
-            </ProductGrid>
-          )}
-        </SectionSurface>
       </AppPage>
     </AppShell>
   );

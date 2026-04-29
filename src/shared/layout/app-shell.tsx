@@ -36,13 +36,11 @@ export function AppPage({ children, className }: AppPageProps) {
 
 export function PageHero({ title, description, badges, className }: PageHeroProps) {
   return (
-    <section className={cn('app-hero-card p-7 sm:p-8', className)}>
+    <section className={cn('app-hero-card p-6 sm:p-8', className)}>
       {badges ? <div className="flex flex-wrap items-center gap-2">{badges}</div> : null}
-      <h1 className="mt-5 font-display text-4xl font-semibold tracking-tight text-[var(--app-ivory)] sm:text-5xl">
-        {title}
-      </h1>
+      <h1 className="app-hero-title mt-5">{title}</h1>
       {description ? (
-        <p className="app-body-copy mt-4 max-w-3xl text-base sm:text-lg">{description}</p>
+        <p className="app-hero-description mt-4 max-w-3xl">{description}</p>
       ) : null}
     </section>
   );

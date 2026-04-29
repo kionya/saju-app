@@ -580,7 +580,29 @@
 
   .app-page-spacious {
     padding-top: 2.5rem;
-    padding-bottom: 5rem;
+    padding-bottom: max(5rem, calc(var(--app-mobile-dock-clearance) + 1rem));
+  }
+
+  .app-mobile-safe-section {
+    padding-bottom: max(1.5rem, calc(env(safe-area-inset-bottom) + 4.25rem));
+  }
+
+  .app-hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.05rem, 7vw, 2.75rem);
+    line-height: 1.16;
+    letter-spacing: -0.03em;
+    color: #f5eedc;
+    text-wrap: balance;
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.04),
+      0 14px 30px rgba(0, 0, 0, 0.34);
+  }
+
+  .app-hero-description {
+    color: rgba(236, 229, 212, 0.86);
+    font-size: 0.97rem;
+    line-height: 1.78;
   }
 
   .app-hero-card {
@@ -861,8 +883,11 @@
     font-size: clamp(1.6rem, 2vw, 2.4rem);
     line-height: 1.42;
     letter-spacing: -0.02em;
-    color: var(--app-ivory);
+    color: #f5eedc;
     text-wrap: balance;
+    text-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.03),
+      0 10px 24px rgba(0, 0, 0, 0.28);
   }
 
   .moon-wisdom-card {
@@ -1943,6 +1968,24 @@
 }
 
 @media (min-width: 640px) {
+  .app-page-spacious {
+    padding-bottom: 5rem;
+  }
+
+  .app-mobile-safe-section {
+    padding-bottom: 1.75rem;
+  }
+
+  .app-hero-title {
+    font-size: clamp(2.6rem, 4vw, 3.5rem);
+    line-height: 1.12;
+  }
+
+  .app-hero-description {
+    font-size: 1.05rem;
+    line-height: 1.82;
+  }
+
   .app-section-frame {
     padding: 1.5rem;
   }

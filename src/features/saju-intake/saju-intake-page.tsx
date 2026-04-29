@@ -759,7 +759,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
               }
               description={
                 step === 'birth'
-                  ? '시간과 출생지를 함께 받을수록 명식의 중심이 또렷해집니다. 시간이 정확하지 않으면 시주 판단을 줄이고 일간·월령·대운 중심으로 보수적으로 읽습니다.'
+                  ? '시간과 출생지를 함께 받을수록 명식의 바탕이 또렷해집니다. 시간이 불명확하면 시주 판단은 줄이고, 일간·월령·대운 중심으로 보수적으로 읽습니다.'
                   : step === 'nickname'
                     ? '본명이 아니어도 괜찮습니다. 익숙한 호칭과 편한 말투를 정해 두면 이후 결과와 대화 흐름이 더 자연스럽게 이어집니다.'
                     : '법으로 정해진 안내와 해석 생성에 필요한 동의만 간단히 정리했습니다. 길게 읽지 않으셔도 핵심은 한눈에 보이게 두었습니다.'
@@ -768,30 +768,38 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
 
             {step === 'birth' ? (
               <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
-                <SectionSurface surface="panel" size="lg">
+                <SectionSurface surface="panel" size="lg" className="app-mobile-safe-section">
                   <SectionHeader
                     eyebrow="출생 정보"
                     title="저장된 프로필을 불러오거나, 지금 직접 입력하실 수 있습니다"
                     titleClassName="text-3xl"
-                    description="내 정보나 가족 프로필이 있으면 바로 불러올 수 있고, 처음이시면 이번 입력을 기준으로 이후 보관함과 결과 흐름이 정리됩니다."
+                    description="처음이시면 바로 입력하셔도 되고, 저장된 프로필이 있으면 한 번에 불러와 더 빨리 시작하실 수 있습니다."
                     descriptionClassName="max-w-3xl text-[var(--app-copy)]"
                   />
 
-                  <div className="mt-6 rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="mt-6">
+                    <UnifiedBirthInfoFields
+                      draft={buildUnifiedBirthDraft(form)}
+                      onChange={(patch) => setForm((current) => applyUnifiedBirthPatch(current, patch))}
+                      onStarted={() => markBirthStarted('manual')}
+                      locationLoading={locationSearchStatus === 'loading'}
+                      locationMessage={locationSearchMessage}
+                      locationResults={locationSearchResults}
+                      onLocationSearch={searchBirthLocationCoordinates}
+                      onPresetSelect={updateBirthLocation}
+                      onLocationResultSelect={applyBirthLocationSearchResult}
+                    />
+                  </div>
+
+                  <div className="mt-6 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 sm:px-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <div className="app-caption">저장된 정보</div>
-                        <h2 className="mt-2 text-lg font-semibold text-[var(--app-ivory)]">
-                          내 정보나 가족 프로필을 바로 불러올 수 있습니다
-                        </h2>
+                        <div className="app-caption">저장된 정보로 빠르게 채우기</div>
                         <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
-                          다른 분의 사주를 볼 때는 저장된 가족·지인 프로필을 선택해도, 내 정보는 바뀌지 않습니다.
+                          이미 저장된 내 정보나 가족 프로필이 있으면 아래에서 바로 불러오실 수 있습니다.
                         </p>
                       </div>
-                      <Link
-                        href="/my/profile"
-                        className="inline-flex h-10 shrink-0 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-4 text-sm text-[var(--app-copy)] transition-colors hover:text-[var(--app-ivory)]"
-                      >
+                      <Link href="/my/profile" className="app-top-action-link shrink-0">
                         프로필 관리
                       </Link>
                     </div>
@@ -817,7 +825,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
 
                       {profileLoadStatus === 'empty' ? (
                         <div className="rounded-2xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-6 text-[var(--app-copy-muted)]">
-                          아직 생년월일이 저장된 프로필이 없습니다. 이번 입력을 마치면 내 프로필에 자동 저장됩니다.
+                          아직 저장된 프로필이 없습니다. 이번 입력을 마치면 내 프로필에 자동 저장됩니다.
                         </div>
                       ) : null}
 
@@ -849,21 +857,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                     </div>
                   </div>
 
-                  <div className="mt-8">
-                    <UnifiedBirthInfoFields
-                      draft={buildUnifiedBirthDraft(form)}
-                      onChange={(patch) => setForm((current) => applyUnifiedBirthPatch(current, patch))}
-                      onStarted={() => markBirthStarted('manual')}
-                      locationLoading={locationSearchStatus === 'loading'}
-                      locationMessage={locationSearchMessage}
-                      locationResults={locationSearchResults}
-                      onLocationSearch={searchBirthLocationCoordinates}
-                      onPresetSelect={updateBirthLocation}
-                      onLocationResultSelect={applyBirthLocationSearchResult}
-                    />
-                  </div>
-
-                  <ActionCluster className="mt-8">
+                  <ActionCluster className="mt-6 sm:mt-8">
                     <Link
                       href={prevPath ?? STEP_PATHS.empathy}
                       className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
@@ -885,7 +879,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                   surface="lunar"
                   eyebrow="입력 가이드"
                   title="지금 단계에서는 기준의 바탕이 되는 정보만 정확히 받습니다"
-                  description="호칭과 말투, 필수 동의는 뒤 단계로 넘기고, 지금은 명식과 시간 규칙을 안정적으로 잡는 데 집중합니다."
+                  description="호칭과 필수 동의는 뒤 단계로 넘기고, 지금은 명식과 시간 기준을 안정적으로 잡는 데 집중합니다."
                 >
                   <BulletList items={BIRTH_RAIL_POINTS} />
                   <FeatureCard
