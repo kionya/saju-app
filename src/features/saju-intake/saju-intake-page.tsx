@@ -786,6 +786,7 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
                       draft={buildUnifiedBirthDraft(form)}
                       onChange={(patch) => setForm((current) => applyUnifiedBirthPatch(current, patch))}
                       onStarted={() => markBirthStarted('manual')}
+                      dateInputVariant="select"
                       locationLoading={locationSearchStatus === 'loading'}
                       locationMessage={locationSearchMessage}
                       locationResults={locationSearchResults}

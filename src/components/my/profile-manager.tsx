@@ -383,6 +383,7 @@ export default function ProfileManager({
               draft={profileForm}
               onChange={(patch) => setProfileForm((current) => ({ ...current, ...patch }))}
               helperText="시간을 모르셔도 저장할 수 있고, 양력·음력 구분과 출생지는 그대로 보관됩니다. 진태양시를 쓰고 싶으면 출생지를 함께 넣어 두는 편이 좋습니다."
+              dateInputVariant="select"
             />
 
             <div>
