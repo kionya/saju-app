@@ -106,6 +106,7 @@ const MONTH_DECISION_GUIDE: Record<
   number,
   {
     question: string;
+    summaryLead: string;
     opportunityLead: string;
     cautionLead: string;
     actionLead: string;
@@ -113,72 +114,84 @@ const MONTH_DECISION_GUIDE: Record<
 > = {
   1: {
     question: '올해 초반에 사람과 생활 리듬 중 무엇부터 바로잡아야 할까?',
+    summaryLead: '사람과 생활 리듬의 기준을 먼저 바로잡을수록 뒤가 편해집니다.',
     opportunityLead: '생활 리듬과 가까운 관계의 온도를 먼저 정리하는 움직임에 힘이 붙습니다.',
     cautionLead: '서운함을 바로 결론으로 말하거나 무리하게 일정을 넓히는 선택은 피하는 편이 좋습니다.',
     actionLead: '안부, 수면, 약속처럼 기본 리듬을 먼저 고정하는 방식으로 시작하세요.',
   },
   2: {
     question: '돈과 일의 기준을 새로 세운다면 어떤 순서로 봐야 할까?',
+    summaryLead: '예산과 역할처럼 기준표를 다시 쓰기 좋은 달입니다.',
     opportunityLead: '예산, 일정, 역할처럼 판을 다시 짜는 선택에 힘이 붙습니다.',
     cautionLead: '조건을 덜 본 채 서둘러 확정하면 뒤에서 다시 조정할 일이 커질 수 있습니다.',
     actionLead: '정산과 우선순위를 먼저 적고 움직이면 시행착오가 줄어듭니다.',
   },
   3: {
     question: '실행과 표현이 함께 움직일 때 무엇을 먼저 꺼내야 할까?',
+    summaryLead: '준비해 둔 제안과 표현을 밖으로 꺼내기 좋은 달입니다.',
     opportunityLead: '제안, 발표, 호감 표현처럼 밖으로 드러나는 장면에 기회가 생깁니다.',
     cautionLead: '말의 속도가 앞서면 기대보다 오해가 먼저 붙을 수 있습니다.',
     actionLead: '준비한 한 가지를 분명하게 꺼내고, 반응을 본 뒤 넓히세요.',
   },
   4: {
     question: '가까운 관계에서 지금 확인해야 할 거리는 어디일까?',
+    summaryLead: '관계의 거리와 기대치를 조정해야 말이 덜 어긋납니다.',
     opportunityLead: '관계의 속도와 기대치를 맞추는 대화가 의외로 잘 풀릴 수 있습니다.',
     cautionLead: '서운함을 오래 참고 있다가 한 번에 터뜨리면 거리감이 더 커질 수 있습니다.',
     actionLead: '감정 결론보다 요청과 확인을 먼저 말하는 편이 좋습니다.',
   },
   5: {
     question: '표현과 변화 욕구가 커질 때 바로 움직여도 될까?',
+    summaryLead: '바꾸고 싶은 마음이 커지지만 시험 운전이 먼저인 달입니다.',
     opportunityLead: '움직이고 싶은 마음을 새로운 만남이나 환경 정비로 쓰기 좋습니다.',
     cautionLead: '충동적으로 방향을 바꾸면 기대보다 피로가 크게 남을 수 있습니다.',
     actionLead: '바꾸고 싶은 이유를 적고, 작게 시험한 뒤 확정하세요.',
   },
   6: {
     question: '속도를 줄여야 할지, 리듬을 다시 세워야 할지 어디가 먼저일까?',
+    summaryLead: '무리해서 밀기보다 생활 리듬을 다시 맞추는 편이 이득입니다.',
     opportunityLead: '생활 패턴과 일정 구조를 다시 맞추는 움직임이 체감 회복으로 이어집니다.',
     cautionLead: '체력이 흔들릴 때 의지만으로 밀어붙이면 만족도보다 피로가 먼저 커집니다.',
     actionLead: '휴식과 일정의 간격부터 다시 조정하세요.',
   },
   7: {
     question: '성과와 계산이 현실화될 때 무엇을 밀고 무엇을 남겨야 할까?',
+    summaryLead: '성과와 숫자를 정리해 보여줄수록 실속이 생기는 달입니다.',
     opportunityLead: '실적, 정산, 결과 확인처럼 숫자로 남는 장면에서 진도가 납니다.',
     cautionLead: '성과를 급히 키우려다 기준 없는 확장을 하면 수고만 커질 수 있습니다.',
     actionLead: '이미 준비된 일부터 끝내고, 새 일은 한 단계 늦게 붙이세요.',
   },
   8: {
     question: '돈의 흐름을 손볼 때 어디서 새고 어디서 붙는지 먼저 봐야 할까?',
+    summaryLead: '수익보다 새는 구조를 막는 쪽이 체감이 큰 달입니다.',
     opportunityLead: '고정비, 정산, 수익 구조를 다시 짜는 선택이 실속으로 이어집니다.',
     cautionLead: '기분 따라 쓰는 돈이나 막연한 기대 수익은 만족도보다 후회를 남기기 쉽습니다.',
     actionLead: '들어오는 돈보다 남는 구조를 먼저 정리하세요.',
   },
   9: {
     question: '평가와 협업이 겹칠 때 지금 무엇을 분명히 해야 할까?',
+    summaryLead: '평가와 협업의 기준을 문장으로 남길수록 흔들림이 줄어듭니다.',
     opportunityLead: '역할 분리, 성과 정리, 협업 기준 제시에 강점이 살아납니다.',
     cautionLead: '말하지 않아도 알겠지 하는 기대가 오히려 평판 손실로 번질 수 있습니다.',
     actionLead: '내 역할과 상대 역할을 문장으로 남기세요.',
   },
   10: {
     question: '사람과 자리의 변화가 올 때 먼저 조정해야 할 건 무엇일까?',
+    summaryLead: '사람 문제와 자리 문제를 섞지 말아야 덜 흔들립니다.',
     opportunityLead: '이동, 협업 변화, 관계 재배치처럼 판이 바뀌는 장면을 정리하기 좋습니다.',
     cautionLead: '감정이 흔들린 날 바로 자리를 바꾸거나 관계를 끊는 결정은 길게 남을 수 있습니다.',
     actionLead: '사람 문제와 자리 문제를 나눠서 판단하세요.',
   },
   11: {
     question: '체력과 지출이 같이 흔들릴 때 무엇부터 줄여야 할까?',
+    summaryLead: '피로와 지출을 함께 줄여야 한 달 전체가 안정됩니다.',
     opportunityLead: '무리한 소비와 생활 피로를 함께 정리하면 체감 안정이 빨리 옵니다.',
     cautionLead: '피곤한 상태에서 결정한 소비나 약속은 뒤늦게 부담으로 돌아오기 쉽습니다.',
     actionLead: '휴식과 지출 점검을 같은 날에 함께 묶어 보세요.',
   },
   12: {
     question: '올해를 닫고 내년을 열기 전에 무엇을 정리해야 할까?',
+    summaryLead: '무엇을 끝내고 무엇을 넘길지 정리해야 다음 해가 가벼워집니다.',
     opportunityLead: '미완료 일과 생활 리듬을 정리하면서 다음 해 기준을 세우기 좋습니다.',
     cautionLead: '마무리해야 한다는 압박 때문에 무리하게 결론을 내면 오히려 정리가 늦어질 수 있습니다.',
     actionLead: '정리할 것, 넘길 것, 버릴 것을 세 칸으로 나눠 적으세요.',
@@ -529,15 +542,15 @@ function getMonthlyMomentum(
   const strongestAreaScore = areaScores[0] ?? 68;
   const weakestAreaScore = areaScores[areaScores.length - 1] ?? 68;
 
-  if (supportMatch && strongestAreaScore >= 72) {
+  if (supportMatch && strongestAreaScore >= 70) {
     return 'rise';
   }
 
-  if (cautionMatch || weakestAreaScore <= 62) {
+  if (cautionMatch || weakestAreaScore <= 64) {
     return 'caution';
   }
 
-  if (strongestAreaScore >= 78) {
+  if (strongestAreaScore >= 75) {
     return 'rise';
   }
 
@@ -564,10 +577,10 @@ function createMonthlyFlow(
 
   const summary =
     momentum === 'rise'
-      ? `${monthly.month}월은 ${theme}이 전면으로 올라와 ${focusLabel}에서 미뤄둔 결정을 움직이기 좋은 달입니다. 다만 선택지를 한꺼번에 넓히기보다 이미 준비된 한두 가지를 앞으로 꺼낼 때 체감 성과가 더 분명합니다.`
+      ? `${monthly.month}월은 ${theme}이 강해 ${focusLabel}에서 준비한 것을 앞으로 꺼내기 좋습니다. ${guide.summaryLead}`
       : momentum === 'caution'
-        ? `${monthly.month}월은 ${theme}이 예민하게 작동해 ${focusLabel}에서 조급함이 실수로 이어지기 쉬운 달입니다. 큰돈, 큰말, 큰확정처럼 되돌리기 어려운 선택은 한 번 더 확인 절차를 거치는 편이 낫습니다.`
-        : `${monthly.month}월은 ${theme}을 크게 흔들기보다 정리와 조율에 힘이 실리는 달입니다. 결과를 급히 내기보다 약속, 리듬, 지출 구조처럼 이미 잡혀 있는 기준을 다시 맞추는 쪽에서 만족도가 높습니다.`;
+        ? `${monthly.month}월은 ${theme}이 예민하게 작동해 ${focusLabel}에서 속도 조절이 필요합니다. ${guide.summaryLead}`
+        : `${monthly.month}월은 ${theme}을 과하게 흔들기보다 정리와 조율이 우선입니다. ${guide.summaryLead}`;
 
   return {
     month: monthly.month,

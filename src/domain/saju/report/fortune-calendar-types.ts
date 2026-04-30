@@ -22,6 +22,8 @@ export interface FortuneCalendarMonthSummary {
   toneCounts: Record<FortuneCalendarTone, number>;
   keyStrength: string;
   cautionLine: string;
+  decisionDays: string[];
+  goodDays: string[];
   bestDays: string[];
   cautionDays: string[];
 }

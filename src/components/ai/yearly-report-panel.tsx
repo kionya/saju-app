@@ -174,9 +174,9 @@ function buildMonthlyFallback(flow: SajuYearlyAiMonthlyFlow): YearlyMonthFlow {
     theme: `${flow.month}월 흐름`,
     focusQuestion: `${flow.month}월에는 무엇을 먼저 확인해야 할까요?`,
     summary: flow.summary,
-    opportunity: '이미 준비된 선택 한두 가지를 먼저 꺼내 보세요.',
-    caution: '확정 전에 한 번 더 비교하고 확인하는 편이 좋습니다.',
-    action: '욕심을 넓히기보다 기준을 먼저 세우고 움직이세요.',
+    opportunity: flow.focus || '이미 준비된 선택 한두 가지를 먼저 꺼내 보세요.',
+    caution: flow.caution || '확정 전에 한 번 더 비교하고 확인하는 편이 좋습니다.',
+    action: flow.action || '욕심을 넓히기보다 기준을 먼저 세우고 움직이세요.',
     relatedAreas: ['work', 'wealth'],
     basis: [],
   };

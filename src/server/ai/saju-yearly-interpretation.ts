@@ -5,7 +5,7 @@ import {
 } from '@/lib/counselors';
 import type { ReadingRecord } from '@/lib/saju/readings';
 
-export const SAJU_YEARLY_INTERPRETATION_PROMPT_VERSION = 'saju-yearly-interpret-v3';
+export const SAJU_YEARLY_INTERPRETATION_PROMPT_VERSION = 'saju-yearly-interpret-v4';
 
 const YEARLY_CATEGORY_ORDER: YearlyCategoryKey[] = [
   'work',
@@ -28,6 +28,9 @@ const YEARLY_CATEGORY_LABEL: Record<YearlyCategoryKey, string> = {
 export interface SajuYearlyAiMonthlyFlow {
   month: number;
   summary: string;
+  focus?: string;
+  caution?: string;
+  action?: string;
 }
 
 export interface SajuYearlyAiInterpretation {
@@ -80,6 +83,7 @@ const MAX_KEYWORD_LENGTH = 180;
 const MAX_HALF_LENGTH = 1100;
 const MAX_CATEGORY_LENGTH = 900;
 const MAX_MONTHLY_LENGTH = 420;
+const MAX_MONTHLY_DETAIL_LENGTH = 160;
 const MAX_PERIOD_LENGTH = 260;
 const MAX_ACTION_LENGTH = 240;
 const MAX_SUMMARY_LENGTH = 220;
@@ -107,26 +111,30 @@ function normalizeStringArray(
 function normalizeMonthlyFlows(value: unknown) {
   if (!Array.isArray(value)) return [];
 
-  const flows = value
-    .map((item) => {
-      if (!item || typeof item !== 'object') return null;
-      const row = item as Record<string, unknown>;
-      const month =
-        typeof row.month === 'number'
-          ? row.month
-          : typeof row.month === 'string'
-            ? Number.parseInt(row.month, 10)
-            : NaN;
-      const summary = cleanText(row.summary, MAX_MONTHLY_LENGTH);
+  const flows: SajuYearlyAiMonthlyFlow[] = [];
 
-      if (!Number.isInteger(month) || month < 1 || month > 12 || !summary) {
-        return null;
-      }
+  for (const item of value) {
+    if (!item || typeof item !== 'object') continue;
+    const row = item as Record<string, unknown>;
+    const month =
+      typeof row.month === 'number'
+        ? row.month
+        : typeof row.month === 'string'
+          ? Number.parseInt(row.month, 10)
+          : NaN;
+    const summary = cleanText(row.summary, MAX_MONTHLY_LENGTH);
+    const focus = cleanText(row.focus, MAX_MONTHLY_DETAIL_LENGTH);
+    const caution = cleanText(row.caution, MAX_MONTHLY_DETAIL_LENGTH);
+    const action = cleanText(row.action, MAX_MONTHLY_DETAIL_LENGTH);
 
-      return { month, summary } satisfies SajuYearlyAiMonthlyFlow;
-    })
-    .filter((item): item is SajuYearlyAiMonthlyFlow => Boolean(item))
-    .sort((a, b) => a.month - b.month);
+    if (!Number.isInteger(month) || month < 1 || month > 12 || !summary) {
+      continue;
+    }
+
+    flows.push({ month, summary, focus, caution, action });
+  }
+
+  flows.sort((a, b) => a.month - b.month);
 
   const deduped = flows.filter(
     (flow, index) => index === flows.findIndex((candidate) => candidate.month === flow.month)
@@ -179,7 +187,17 @@ function renderPeriodLines(lines: string[]) {
 function renderMonthlyLines(flows: SajuYearlyAiMonthlyFlow[]) {
   return flows
     .sort((a, b) => a.month - b.month)
-    .map((flow) => `### ${flow.month}월\n${flow.summary}`)
+    .map((flow) =>
+      [
+        `### ${flow.month}월`,
+        flow.summary,
+        flow.focus ? `- 먼저 볼 것: ${flow.focus}` : null,
+        flow.caution ? `- 조심할 것: ${flow.caution}` : null,
+        flow.action ? `- 행동 기준: ${flow.action}` : null,
+      ]
+        .filter(Boolean)
+        .join('\n')
+    )
     .join('\n\n');
 }
 
@@ -254,7 +272,10 @@ export function buildFallbackYearlyInterpretation(
   }, {} as Record<YearlyCategoryKey, string>);
   const monthlyFlows = report.monthlyFlows.map((flow) => ({
     month: flow.month,
-    summary: `${flow.summary} 이번 달 질문은 ${flow.focusQuestion}입니다. 밀어볼 것은 ${flow.opportunity} 조심할 것은 ${flow.caution} 행동 기준은 ${flow.action}`,
+    summary: flow.summary,
+    focus: `${flow.focusQuestion} ${flow.opportunity}`,
+    caution: flow.caution,
+    action: flow.action,
   }));
   const actionAdvice = [
     ...report.actionGuide.useWhenStrong,
@@ -607,17 +628,18 @@ export function createYearlyInterpretationPrompt(
 
   const schemaLine =
     section === 'monthly'
-      ? '{"monthlyFlows":[{"month":1,"summary":"1월 장문"},...,{"month":12,"summary":"12월 장문"}]}'
+      ? '{"monthlyFlows":[{"month":1,"summary":"1월 핵심 장면","focus":"먼저 볼 질문과 기회","caution":"조심할 장면","action":"행동 기준"},...,{"month":12,"summary":"12월 핵심 장면","focus":"먼저 볼 질문과 기회","caution":"조심할 장면","action":"행동 기준"}]}'
       : section === 'narrative'
         ? '{"opening":"첫 문단 장문","keywords":["키워드: 설명","..."],"firstHalf":"상반기 장문","secondHalf":"하반기 장문","categories":{"work":"일·직업운 장문","wealth":"재물운 장문","love":"연애·결혼운 장문","relationship":"인간관계운 장문","health":"건강운 장문","move":"이동·변화운 장문"},"goodPeriods":["좋은 시기 설명","..."],"cautionPeriods":["주의 시기 설명","..."],"actionAdvice":["행동 조언","..."],"oneLineSummary":"마지막 한 줄 요약"}'
-        : '{"opening":"첫 문단 장문","keywords":["키워드: 설명","..."],"firstHalf":"상반기 장문","secondHalf":"하반기 장문","categories":{"work":"일·직업운 장문","wealth":"재물운 장문","love":"연애·결혼운 장문","relationship":"인간관계운 장문","health":"건강운 장문","move":"이동·변화운 장문"},"monthlyFlows":[{"month":1,"summary":"1월 장문"},...,{"month":12,"summary":"12월 장문"}],"goodPeriods":["좋은 시기 설명","..."],"cautionPeriods":["주의 시기 설명","..."],"actionAdvice":["행동 조언","..."],"oneLineSummary":"마지막 한 줄 요약"}';
+        : '{"opening":"첫 문단 장문","keywords":["키워드: 설명","..."],"firstHalf":"상반기 장문","secondHalf":"하반기 장문","categories":{"work":"일·직업운 장문","wealth":"재물운 장문","love":"연애·결혼운 장문","relationship":"인간관계운 장문","health":"건강운 장문","move":"이동·변화운 장문"},"monthlyFlows":[{"month":1,"summary":"1월 핵심 장면","focus":"먼저 볼 질문과 기회","caution":"조심할 장면","action":"행동 기준"},...,{"month":12,"summary":"12월 핵심 장면","focus":"먼저 볼 질문과 기회","caution":"조심할 장면","action":"행동 기준"}],"goodPeriods":["좋은 시기 설명","..."],"cautionPeriods":["주의 시기 설명","..."],"actionAdvice":["행동 조언","..."],"oneLineSummary":"마지막 한 줄 요약"}';
 
   const sectionSpecificInstructions =
     section === 'monthly'
       ? [
           '이번 응답에서는 monthlyFlows만 작성합니다.',
           'monthlyFlows 외의 키는 출력하지 않습니다.',
-          '1월부터 12월까지 반드시 모두 채우고, 각 달의 체감 변화·기회·주의·행동 기준이 자연스럽게 드러나야 합니다.',
+          '1월부터 12월까지 반드시 모두 채우고, 각 달마다 summary, focus, caution, action을 모두 넣습니다.',
+          'summary는 1~2문장으로 짧게, focus/caution/action은 각각 한 문장으로 씁니다.',
         ]
       : section === 'narrative'
         ? [
@@ -649,7 +671,7 @@ export function createYearlyInterpretationPrompt(
       'categories의 6개 분야는 각 분야마다 "무슨 장면이 핵심인지 / 무엇을 조심할지 / 어떻게 행동할지"가 바로 읽히게 3~5문장 안에서 정리합니다.',
       'monthlyFlows는 1월부터 12월까지 서로 다른 질문을 던져야 합니다. 같은 문장 구조, 같은 도입, 같은 결론을 반복하지 않습니다.',
       'monthlyFlows는 사용자가 실제로 궁금해하는 선택 장면, 돈과 일의 판단, 관계 조율, 달력에 표시해 둘 만한 포인트를 우선해서 씁니다.',
-      'monthlyFlows는 체감 가능한 변화 중심으로 쓰고, 설명보다 판단 기준이 먼저 보이게 씁니다.',
+      'monthlyFlows는 체감 가능한 변화 중심으로 쓰고, 설명보다 판단 기준이 먼저 보이게 씁니다. 한 달 설명을 장문 단락 하나로 늘리지 않습니다.',
       'goodPeriods와 cautionPeriods는 시기와 이유, 활용 또는 방어 전략이 함께 드러나야 합니다.',
       'actionAdvice는 3~6개로 작성하고, 한 해를 잘 보내기 위한 실제 행동 기준을 줍니다.',
       'oneLineSummary는 단정하고 기억에 남게 마무리합니다.',

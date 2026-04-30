@@ -31,10 +31,16 @@ test('buildFortuneCalendarMonth returns a complete month grid with tone counts',
       report.summary.toneCounts.caution,
     31
   );
+  assert.ok(report.summary.decisionDays.length > 0);
+  assert.ok(report.summary.goodDays.length > 0);
   assert.ok(report.summary.bestDays.length > 0);
   assert.ok(report.summary.cautionDays.length > 0);
   assert.equal(
     report.summary.bestDays.filter((day) => report.summary.cautionDays.includes(day)).length,
+    0
+  );
+  assert.equal(
+    report.summary.decisionDays.filter((day) => report.summary.cautionDays.includes(day)).length,
     0
   );
 });

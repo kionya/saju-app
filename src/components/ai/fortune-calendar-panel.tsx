@@ -375,10 +375,18 @@ export default function FortuneCalendarPanel({
                   <p className="text-sm leading-8 text-[var(--app-copy)]">{data.report.summary.cautionLine}</p>
                 </div>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-[18px] border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/10 px-4 py-4">
+                    <div className="app-caption text-[var(--app-gold-text)]">결정일</div>
+                    <p className="mt-3 text-sm leading-7 text-[var(--app-ivory)]">
+                      {data.report.summary.decisionDays.join(' · ')}
+                    </p>
+                  </div>
                   <div className="rounded-[18px] border border-emerald-400/20 bg-emerald-400/10 px-4 py-4">
                     <div className="app-caption text-emerald-100">밀어도 되는 날</div>
-                    <p className="mt-3 text-sm leading-7 text-emerald-50">{data.report.summary.bestDays.join(' · ')}</p>
+                    <p className="mt-3 text-sm leading-7 text-emerald-50">
+                      {data.report.summary.goodDays.join(' · ')}
+                    </p>
                   </div>
                   <div className="rounded-[18px] border border-rose-400/20 bg-rose-400/10 px-4 py-4">
                     <div className="app-caption text-rose-100">한 번 더 확인할 날</div>
@@ -399,7 +407,8 @@ export default function FortuneCalendarPanel({
                   <div className="app-caption text-[var(--app-gold-soft)]">열리면 보이는 것</div>
                   <ul className="mt-3 space-y-2 text-sm leading-7 text-[var(--app-copy)]">
                     <li>• 날짜별 결정일 / 좋은 날 / 주의 날 분류</li>
-                    <li>• 그 달에 밀어도 되는 날 4개</li>
+                    <li>• 그 달에 바로 밀어도 되는 결정일 4개</li>
+                    <li>• 그 달에 가볍게 밀어도 되는 좋은 날 4개</li>
                     <li>• 한 번 더 확인해야 할 날 4개</li>
                     <li>• 날짜별 짧은 행동 힌트</li>
                   </ul>
