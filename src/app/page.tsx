@@ -9,8 +9,10 @@ import { TodayConcernSelector } from '@/components/today-fortune/today-concern-s
 import { ProductReportCard } from '@/components/home/product-report-card';
 import { ActionCluster } from '@/components/layout/action-cluster';
 import { EvidenceStrip } from '@/components/layout/evidence-strip';
+import { FeatureCard } from '@/components/layout/feature-card';
 import { ProductGrid } from '@/components/layout/product-grid';
 import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
 import { SupportRail } from '@/components/layout/support-rail';
 import { ReportKeepsakeSection } from '@/components/report/report-keepsake-section';
 import SiteHeader from '@/features/shared-navigation/site-header';
@@ -355,34 +357,64 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="w-full max-w-4xl">
-            <article className="rounded-[1.7rem] border border-[var(--app-gold)]/22 bg-[linear-gradient(135deg,rgba(210,176,114,0.1),rgba(8,15,30,0.9))] px-6 py-6 text-left backdrop-blur">
-              <SectionHeader
-                eyebrow="샘플 기준서 미리보기"
-                title="한 번의 해석이 오래 남도록, 기준과 근거를 먼저 보여드립니다"
-                titleClassName="text-2xl"
-                descriptionClassName="hidden"
-              />
-              <EvidenceStrip
-                className="mt-5"
-                items={PREMIUM_PROOF_POINTS.map((item) => ({ body: item }))}
-              />
-              <ActionCluster className="mt-5">
-                <Link
-                  href={REPORT_SAMPLE_HREF}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
-                >
-                  샘플 리포트 펼쳐보기
-                </Link>
-                <Link
-                  href="/about-engine"
-                  className="inline-flex items-center gap-2 px-1 py-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-                >
-                  엔진 기준서 보기
-                </Link>
-              </ActionCluster>
-            </article>
-          </div>
+          <SectionSurface
+            surface="hero"
+            size="lg"
+            className="w-full max-w-5xl border-[var(--app-gold)]/22 bg-[linear-gradient(135deg,rgba(210,176,114,0.1),rgba(8,15,30,0.9))] text-left backdrop-blur"
+          >
+            <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
+              <div className="space-y-5">
+                <SectionHeader
+                  eyebrow="샘플 기준서 미리보기"
+                  title="한 번의 해석이 오래 남도록, 기준과 근거를 먼저 보여드립니다"
+                  titleClassName="text-2xl"
+                  description="샘플 리포트는 실제 명리 기준서가 어떤 순서로 읽히는지, 무엇이 먼저 보이고 어디서 판정 근거를 확인하는지를 짧게 훑어보는 입구입니다."
+                  descriptionClassName="max-w-2xl text-[var(--app-copy)]"
+                />
+                <ActionCluster>
+                  <Link
+                    href={REPORT_SAMPLE_HREF}
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                  >
+                    샘플 리포트 펼쳐보기
+                  </Link>
+                  <Link
+                    href="/about-engine"
+                    className="inline-flex items-center gap-2 px-1 py-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                  >
+                    엔진 기준서 보기
+                  </Link>
+                </ActionCluster>
+                <div className="rounded-[1.05rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]">
+                  결과를 보기 전에 <span className="text-[var(--app-gold-text)]">1분 요약</span>과{' '}
+                  <span className="text-[var(--app-gold-text)]">판정 근거</span>, 그리고{' '}
+                  <span className="text-[var(--app-gold-text)]">소장 흐름</span>이 어떻게 이어지는지 먼저 확인하실 수 있습니다.
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <ProductGrid columns={2} className="gap-3">
+                  {PREMIUM_PROOF_POINTS.map((item, index) => (
+                    <FeatureCard
+                      key={item}
+                      surface="soft"
+                      className={cn(index === PREMIUM_PROOF_POINTS.length - 1 && 'md:col-span-2')}
+                      eyebrow={`미리보기 ${index + 1}`}
+                      description={item}
+                    />
+                  ))}
+                </ProductGrid>
+                <EvidenceStrip
+                  items={[
+                    {
+                      title: '미리보기 범위',
+                      body: '샘플 페이지는 계산 정확도 자체를 과장하지 않고, 실제로 어떤 구조의 리포트를 받게 되는지 먼저 보여주는 브로셔 역할을 맡습니다.',
+                    },
+                  ]}
+                />
+              </div>
+            </div>
+          </SectionSurface>
         </div>
 
         <div className="moon-scroll-hint" aria-hidden>
