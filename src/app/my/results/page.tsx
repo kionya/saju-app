@@ -40,11 +40,11 @@ export default async function MyResultsPage() {
             eyebrow="저장된 결과"
             title="같은 기준을 다시 펼쳐볼 수 있도록 보관합니다"
             titleClassName="text-3xl"
-            description="보관함은 단순 목록이 아니라, 이미 만든 결과를 비교하고 다시 질문을 이어갈 수 있는 기준서 창고 역할을 합니다."
+            description={`전체 ${dashboard.readingCount}개 결과를 다시 열고 비교할 수 있도록 보관합니다. 삭제는 보관함 목록과 개수에 바로 반영됩니다.`}
             descriptionClassName="max-w-3xl text-[var(--app-copy)]"
           />
           <div className="mt-6">
-            <SavedReadingsList readings={dashboard.recentReadings} />
+            <SavedReadingsList readings={dashboard.recentReadings} totalCount={dashboard.readingCount} />
           </div>
         </SectionSurface>
 

@@ -29,6 +29,14 @@ const TYPE_LABELS: Record<string, string> = {
   signup_bonus: '가입 보너스',
 };
 
+const FEATURE_LABELS: Record<string, string> = {
+  detail_report: '상세 해석 열기',
+  calendar: '월간 달력 열기',
+  lifetime_report: '명리 기준서 열람',
+  yearly_report: '연간 전략 부록 열람',
+  ai_chat_bundle: '대화 묶음 사용',
+};
+
 function getTransactionLabel(transaction: Awaited<ReturnType<typeof getAccountDashboardData>>['recentTransactions'][number]) {
   if (transaction.feature === 'lifetime_report') {
     return '평생 리포트 권한';
@@ -197,7 +205,9 @@ export default async function MyBillingPage() {
                 description={
                   <>
                     <span className="block text-[var(--app-copy-muted)]">
-                      {transaction.feature ? `${transaction.feature}` : '기본 이용 흐름'}
+                      {transaction.feature
+                        ? (FEATURE_LABELS[transaction.feature] ?? transaction.feature)
+                        : '기본 이용 흐름'}
                     </span>
                     <span
                       className={`mt-2 block font-semibold ${

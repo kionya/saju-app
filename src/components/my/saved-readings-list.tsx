@@ -8,6 +8,7 @@ import type { AccountReading } from '@/lib/account';
 
 interface SavedReadingsListProps {
   readings: AccountReading[];
+  totalCount: number;
 }
 
 function formatCreatedAt(value: string) {
@@ -32,9 +33,10 @@ function formatBirthLabel(reading: AccountReading) {
   return `${reading.birthYear}.${reading.birthMonth}.${reading.birthDay} · ${hourLabel} · ${genderLabel}`;
 }
 
-export default function SavedReadingsList({ readings }: SavedReadingsListProps) {
+export default function SavedReadingsList({ readings, totalCount }: SavedReadingsListProps) {
   const router = useRouter();
   const [items, setItems] = useState(readings);
+  const [count, setCount] = useState(totalCount);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
 
@@ -59,7 +61,8 @@ export default function SavedReadingsList({ readings }: SavedReadingsListProps) 
       }
 
       setItems((current) => current.filter((reading) => reading.id !== id));
-      setMessage('결과보관함에서 삭제했습니다.');
+      setCount((current) => Math.max(0, current - 1));
+      setMessage('결과보관함에서 삭제했습니다. 상단 저장 개수에도 바로 반영됩니다.');
       router.refresh();
     } catch {
       setMessage('삭제 중 네트워크 오류가 발생했습니다.');
@@ -78,6 +81,11 @@ export default function SavedReadingsList({ readings }: SavedReadingsListProps) 
 
   return (
     <div className="space-y-4">
+      <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm text-[var(--app-copy)]">
+        전체 <span className="font-semibold text-[var(--app-gold-text)]">{count}개</span>를 보관 중입니다.
+        이미 만든 결과는 다시 열어 비교할 수 있고, 삭제하면 이 숫자도 즉시 줄어듭니다.
+      </div>
+
       {message ? (
         <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm text-[var(--app-gold-text)]">
           {message}
