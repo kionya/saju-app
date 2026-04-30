@@ -431,13 +431,28 @@ function createCategorySectionFromReport(
   key: YearlyCategoryKey,
   report: SajuReport
 ): YearlyCategorySection {
+  const majorLuckAction = report.timeline[2]?.points?.find((point) =>
+    point.startsWith('장기 실행:')
+  );
+  const monthlyAction = report.timeline[1]?.points?.find((point) =>
+    point.startsWith('이번 달 실행:')
+  );
+  const normalizedAction = [majorLuckAction, monthlyAction]
+    .find(Boolean)
+    ?.replace(/^(장기 실행|이번 달 실행):\s*/, '')
+    .trim();
+
   return {
     key,
     headline: report.headline,
     summary: report.summary,
     opportunity: report.primaryAction.description,
     caution: report.cautionAction.description,
-    action: report.primaryAction.description,
+    action:
+      normalizedAction ||
+      report.summaryHighlights[1] ||
+      report.timeline[2]?.headline ||
+      report.primaryAction.description,
     score: getFocusedScore(report) ?? undefined,
     relatedMonths: CATEGORY_MONTH_MAP[key],
     basis: compactStrings([

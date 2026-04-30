@@ -5,7 +5,7 @@ import {
 } from '@/lib/counselors';
 import type { ReadingRecord } from '@/lib/saju/readings';
 
-export const SAJU_YEARLY_INTERPRETATION_PROMPT_VERSION = 'saju-yearly-interpret-v4';
+export const SAJU_YEARLY_INTERPRETATION_PROMPT_VERSION = 'saju-yearly-interpret-v5';
 
 const YEARLY_CATEGORY_ORDER: YearlyCategoryKey[] = [
   'work',

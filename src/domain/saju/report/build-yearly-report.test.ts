@@ -64,6 +64,19 @@ test('buildYearlyReport fills all 12 months with actual monthly ganji evidence',
   );
 });
 
+test('buildYearlyReport keeps yearly category opportunity and action distinct for core cards', () => {
+  const data = normalizeToSajuDataV1(birthInput, null);
+  const report = buildYearlyReport(birthInput, data, 2026);
+
+  for (const key of ['work', 'wealth', 'love', 'relationship'] as const) {
+    assert.notEqual(
+      report.categories[key].opportunity,
+      report.categories[key].action,
+      `${key} yearly card should not reuse the same text for opportunity and action`
+    );
+  }
+});
+
 test('buildYearlyReport actually respects the requested target year', () => {
   const data = normalizeToSajuDataV1(birthInput, null);
   const report2026 = buildYearlyReport(birthInput, data, 2026);
