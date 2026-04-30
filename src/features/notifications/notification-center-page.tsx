@@ -528,7 +528,7 @@ export default function NotificationCenterPage({
             </>
           }
           title={`${honorific}께 다시 말을 거는 모든 장치를 한곳에 모았습니다`}
-          description="아침과 저녁 푸시, 주간 세운, 홈 위젯, 미접속 리마인더까지 한 흐름으로 관리합니다. 단순 공지판이 아니라 다시 열어보게 만드는 재방문 엔진입니다."
+          description="아침과 저녁 푸시, 주간 세운, 홈 위젯, 미접속 리마인더까지 한 흐름으로 관리합니다. 단순 공지판이 아니라 다시 열어보게 만드는 재방문 흐름입니다."
         />
 
         <nav className="app-subnav">

@@ -68,7 +68,7 @@ const SERVICES: ProfileLinkageServiceAudit[] = [
     usesSharedBirthSchema: false,
     usesSajuEngine: false,
     detail:
-      '홈은 프로필 생년월일과 선생 선택을 읽어 개인화 카피와 오늘 흐름 미리보기를 만듭니다. 다만 실제 사주 엔진이 아니라 홈 전용 간단 개인화 계산을 씁니다.',
+      '홈은 프로필 생년월일과 선생 선택을 읽어 개인화 카피와 오늘 흐름 미리보기를 만듭니다. 다만 실제 사주 계산 흐름이 아니라 홈 전용 간단 개인화 계산을 씁니다.',
     continuity: '프로필 기반 미리보기만 연결됨',
     sourceRefs: ['/src/app/page.tsx', '/src/features/home/personalized-today.ts'],
   },
@@ -81,8 +81,8 @@ const SERVICES: ProfileLinkageServiceAudit[] = [
     usesSharedBirthSchema: true,
     usesSajuEngine: true,
     detail:
-      '로그인 사용자는 MY 프로필을 자동 기본값 또는 불러오기 버튼으로 가져오고, 공통 birth schema를 거쳐 실제 사주 엔진으로 무료/유료 결과를 만듭니다.',
-    continuity: '공통 입력 → 공통 엔진 → 오늘운세 결과',
+      '로그인 사용자는 MY 프로필을 자동 기본값 또는 불러오기 버튼으로 가져오고, 공통 birth schema를 거쳐 실제 사주 계산 흐름으로 무료/유료 결과를 만듭니다.',
+    continuity: '공통 입력 → 공통 계산 → 오늘운세 결과',
     sourceRefs: [
       '/src/components/today-fortune/birth-info-stepper.tsx',
       '/src/features/today-fortune/today-fortune-experience.tsx',
@@ -235,7 +235,7 @@ export function getProfileLinkageVerificationAudit(): ProfileLinkageAudit {
       },
       {
         key: 'shared-birth-engine',
-        label: '공통 입력이 기존 사주 엔진으로 그대로 들어가는가',
+        label: '공통 입력이 기존 사주 계산 흐름으로 그대로 들어가는가',
         ok: true,
         detail:
           'today-fortune와 /saju/new는 unified birth schema를 resolve한 뒤 기존 BirthInput과 calculateSajuDataV1 경로를 계속 사용합니다.',
@@ -245,7 +245,7 @@ export function getProfileLinkageVerificationAudit(): ProfileLinkageAudit {
         label: '타로/별자리/띠운세/명리 탐구의 개인화 수준을 정확히 구분했는가',
         ok: true,
         detail:
-          '이 기능들은 전체 해석을 사주 엔진으로 다시 만드는 구조는 아니지만, MY 프로필이 있으면 약한 개인화나 사주 브리지 CTA를 제공합니다.',
+          '이 기능들은 전체 해석을 사주 계산 흐름으로 다시 만드는 구조는 아니지만, MY 프로필이 있으면 약한 개인화나 사주 브리지 CTA를 제공합니다.',
       },
     ],
     services: SERVICES,
