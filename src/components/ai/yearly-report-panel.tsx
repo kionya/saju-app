@@ -67,6 +67,39 @@ const CATEGORY_ORDER = [
   { key: 'move', label: '이동·변화운', color: '#60a5fa' },
 ] as const;
 
+const CORE_CATEGORY_ORDER = ['work', 'wealth', 'love', 'relationship'] as const;
+
+const CORE_CATEGORY_GUIDE = {
+  work: {
+    label: '직장운',
+    eyebrow: '일과 평가',
+    opportunityLabel: '평가가 붙는 장면',
+    cautionLabel: '한 번 더 확인할 장면',
+    actionLabel: '올해 행동 기준',
+  },
+  wealth: {
+    label: '재물운',
+    eyebrow: '돈의 흐름',
+    opportunityLabel: '돈이 붙는 장면',
+    cautionLabel: '새기 쉬운 장면',
+    actionLabel: '올해 돈 기준',
+  },
+  love: {
+    label: '연애운',
+    eyebrow: '가까운 관계',
+    opportunityLabel: '마음이 통하는 장면',
+    cautionLabel: '오해가 커지는 장면',
+    actionLabel: '올해 표현 기준',
+  },
+  relationship: {
+    label: '관계운',
+    eyebrow: '사람과 거리',
+    opportunityLabel: '사람을 살리는 장면',
+    cautionLabel: '마찰이 커지는 장면',
+    actionLabel: '올해 관계 기준',
+  },
+} as const;
+
 const MOMENTUM_META: Record<
   YearlyMonthFlow['momentum'],
   { label: string; badgeClassName: string }
@@ -110,6 +143,16 @@ function renderParagraphs(text: string) {
   ));
 }
 
+function renderCompactParagraphs(text: string, limit = 2) {
+  return splitParagraphs(text)
+    .slice(0, limit)
+    .map((paragraph, index) => (
+      <p key={`${paragraph.slice(0, 24)}-${index}`} className="text-sm leading-7 text-[var(--app-copy)]">
+        {paragraph}
+      </p>
+    ));
+}
+
 function formatUpdatedAt(value?: string) {
   if (!value) return null;
 
@@ -129,6 +172,7 @@ function buildMonthlyFallback(flow: SajuYearlyAiMonthlyFlow): YearlyMonthFlow {
     monthlyGanji: null,
     momentum: 'steady',
     theme: `${flow.month}월 흐름`,
+    focusQuestion: `${flow.month}월에는 무엇을 먼저 확인해야 할까요?`,
     summary: flow.summary,
     opportunity: '이미 준비된 선택 한두 가지를 먼저 꺼내 보세요.',
     caution: '확정 전에 한 번 더 비교하고 확인하는 편이 좋습니다.',
@@ -158,10 +202,14 @@ function MonthlyFlowCard({ flow }: { flow: YearlyMonthFlow }) {
       </div>
 
       <p className="mt-3 text-sm leading-7 text-[var(--app-ivory)]">{flow.summary}</p>
+      <div className="mt-4 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
+        <div className="app-caption text-[var(--app-gold-soft)]">이번 달 질문</div>
+        <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{flow.focusQuestion}</p>
+      </div>
 
       <div className="mt-4 grid gap-3">
         <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
-          <div className="app-caption text-[var(--app-gold-soft)]">이번 달 먼저 볼 것</div>
+          <div className="app-caption text-[var(--app-gold-soft)]">먼저 밀어볼 것</div>
           <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{flow.opportunity}</p>
         </div>
         <div className="rounded-[18px] border border-rose-400/18 bg-rose-400/6 px-4 py-3">
@@ -182,6 +230,97 @@ function MonthlyFlowCard({ flow }: { flow: YearlyMonthFlow }) {
           {areaLabel}
         </Badge>
       </div>
+    </article>
+  );
+}
+
+function CoreAreaCard({
+  item,
+  prose,
+}: {
+  item: {
+    key: (typeof CORE_CATEGORY_ORDER)[number];
+    label: string;
+    eyebrow: string;
+    scoreLabel: string | null;
+    summary: string;
+    opportunity: string;
+    caution: string;
+    action: string;
+  };
+  prose: string;
+}) {
+  const meta = CORE_CATEGORY_GUIDE[item.key];
+
+  return (
+    <article className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="app-caption text-[var(--app-gold-soft)]">{meta.eyebrow}</div>
+        {item.scoreLabel ? (
+          <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]">
+            {item.scoreLabel}
+          </Badge>
+        ) : null}
+      </div>
+      <h3 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{item.label}</h3>
+      <div className="mt-4 grid gap-3">
+        <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
+          <div className="app-caption text-[var(--app-gold-soft)]">올해 핵심</div>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.summary}</p>
+        </div>
+        <div className="rounded-[18px] border border-emerald-400/18 bg-emerald-400/6 px-4 py-3">
+          <div className="app-caption text-emerald-100">{meta.opportunityLabel}</div>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.opportunity}</p>
+        </div>
+        <div className="rounded-[18px] border border-rose-400/18 bg-rose-400/6 px-4 py-3">
+          <div className="app-caption text-rose-100">{meta.cautionLabel}</div>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.caution}</p>
+        </div>
+        <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
+          <div className="app-caption text-[var(--app-gold-soft)]">{meta.actionLabel}</div>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.action}</p>
+        </div>
+      </div>
+      <details className="group mt-4">
+        <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
+          선생 풀이 전문 보기
+        </summary>
+        <div className="mt-3 space-y-3 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-4">
+          {renderCompactParagraphs(prose, 3)}
+        </div>
+      </details>
+    </article>
+  );
+}
+
+function SupportAreaCard({
+  label,
+  eyebrow,
+  section,
+  prose,
+}: {
+  label: string;
+  eyebrow: string;
+  section: SajuYearlyReport['categories']['health'];
+  prose: string;
+}) {
+  return (
+    <article className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
+      <div className="app-caption text-[var(--app-gold-soft)]">{eyebrow}</div>
+      <h3 className="mt-3 text-lg font-semibold text-[var(--app-ivory)]">{label}</h3>
+      <div className="mt-4 space-y-3">
+        <p className="text-sm leading-7 text-[var(--app-copy)]">{section.summary}</p>
+        <p className="text-sm leading-7 text-[var(--app-copy-muted)]">{section.caution}</p>
+        <p className="text-sm leading-7 text-[var(--app-copy)]">{section.action}</p>
+      </div>
+      <details className="group mt-4">
+        <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
+          선생 풀이 전문 보기
+        </summary>
+        <div className="mt-3 space-y-3 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-4">
+          {renderCompactParagraphs(prose, 2)}
+        </div>
+      </details>
     </article>
   );
 }
@@ -394,6 +533,23 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
   }
 
   const interpretation = data.interpretation;
+  const coreCards = CORE_CATEGORY_ORDER.map((key) => {
+    const section = data.report.categories[key];
+    const referenceTopic = key === 'work' ? 'career' : key;
+    const reference = data.report.referenceReports[referenceTopic];
+    const scoreLabel = reference.score !== null ? `${reference.focusLabel} ${reference.score}점` : null;
+
+    return {
+      key,
+      label: CORE_CATEGORY_GUIDE[key].label,
+      eyebrow: CORE_CATEGORY_GUIDE[key].eyebrow,
+      scoreLabel,
+      summary: section.summary,
+      opportunity: section.opportunity,
+      caution: section.caution,
+      action: section.action,
+    };
+  });
 
   return (
     <section id="yearly-report" className="moon-lunar-panel p-6 sm:p-7">
@@ -438,7 +594,11 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
       </div>
 
       <div className="mt-6 rounded-[24px] border border-[var(--app-gold)]/18 bg-[rgba(210,176,114,0.08)] px-5 py-5">
-        <div className="space-y-3">{renderParagraphs(interpretation.opening)}</div>
+        <div className="app-caption text-[var(--app-gold-soft)]">올해 한 줄 먼저</div>
+        <p className="font-display mt-4 text-lg font-semibold leading-8 text-[var(--app-ivory)]">
+          {interpretation.oneLineSummary}
+        </p>
+        <div className="mt-4 space-y-3">{renderCompactParagraphs(interpretation.opening, 2)}</div>
       </div>
 
       <div className="mt-6">
@@ -484,27 +644,46 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
 
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <article className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
-          <div className="app-caption text-[var(--app-gold-soft)]">상반기 흐름 분석</div>
-          <div className="mt-4 space-y-3">{renderParagraphs(interpretation.firstHalf)}</div>
+          <div className="app-caption text-[var(--app-gold-soft)]">상반기 먼저 볼 것</div>
+          <div className="mt-4 space-y-3">{renderCompactParagraphs(interpretation.firstHalf, 3)}</div>
         </article>
         <article className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
-          <div className="app-caption text-[var(--app-gold-soft)]">하반기 흐름 분석</div>
-          <div className="mt-4 space-y-3">{renderParagraphs(interpretation.secondHalf)}</div>
+          <div className="app-caption text-[var(--app-gold-soft)]">하반기 먼저 볼 것</div>
+          <div className="mt-4 space-y-3">{renderCompactParagraphs(interpretation.secondHalf, 3)}</div>
         </article>
       </div>
 
+      <div className="mt-6">
+        <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
+          올해 사람들이 가장 많이 묻는 4가지
+        </div>
+        <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
+          직장운, 재물운, 연애운, 관계운은 긴 총평보다 “무슨 장면이 핵심인지 / 무엇을 조심할지 / 어떻게 움직일지”가 먼저 보이게 정리했습니다.
+        </p>
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          {coreCards.map((item) => (
+            <CoreAreaCard
+              key={item.key}
+              item={item}
+              prose={interpretation.categories[item.key]}
+            />
+          ))}
+        </div>
+      </div>
+
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        {CATEGORY_ORDER.map((item) => (
-          <article
-            key={item.key}
-            className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5"
-          >
-            <div className="app-caption" style={{ color: item.color }}>
-              {item.label}
-            </div>
-            <div className="mt-4 space-y-3">{renderParagraphs(interpretation.categories[item.key])}</div>
-          </article>
-        ))}
+        <SupportAreaCard
+          label="건강·생활 리듬"
+          eyebrow="리듬 관리"
+          section={data.report.categories.health}
+          prose={interpretation.categories.health}
+        />
+        <SupportAreaCard
+          label="이동·변화"
+          eyebrow="자리와 이동"
+          section={data.report.categories.move}
+          prose={interpretation.categories.move}
+        />
       </div>
 
       <YearlyMonthlySection report={data.report} interpretation={interpretation} />
@@ -516,19 +695,12 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
           <div className="app-caption text-[var(--app-gold-soft)]">행동 조언</div>
           <div className="mt-4 space-y-3">
             {data.interpretation.actionAdvice.map((item) => (
-              <p key={item} className="text-sm leading-8 text-[var(--app-copy)]">
+              <p key={item} className="text-sm leading-7 text-[var(--app-copy)]">
                 {item}
               </p>
             ))}
           </div>
         </article>
-      </div>
-
-      <div className="mt-6 rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
-        <div className="app-caption text-[var(--app-gold-soft)]">올해의 한 줄 요약</div>
-        <p className="font-display mt-4 text-lg font-semibold leading-8 text-[var(--app-ivory)]">
-          {interpretation.oneLineSummary}
-        </p>
       </div>
     </section>
   );

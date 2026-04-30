@@ -73,6 +73,7 @@ export interface YearlyMonthFlow {
   monthlyGanji: string | null;
   momentum: YearlyMomentum;
   theme: string;
+  focusQuestion: string;
   summary: string;
   opportunity: string;
   caution: string;

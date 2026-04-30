@@ -5,7 +5,7 @@ import {
 } from '@/lib/counselors';
 import type { ReadingRecord } from '@/lib/saju/readings';
 
-export const SAJU_YEARLY_INTERPRETATION_PROMPT_VERSION = 'saju-yearly-interpret-v2';
+export const SAJU_YEARLY_INTERPRETATION_PROMPT_VERSION = 'saju-yearly-interpret-v3';
 
 const YEARLY_CATEGORY_ORDER: YearlyCategoryKey[] = [
   'work',
@@ -77,8 +77,8 @@ export interface ParsedSajuYearlyAiMonthlyFlows {
 
 const MAX_OPENING_LENGTH = 1400;
 const MAX_KEYWORD_LENGTH = 180;
-const MAX_HALF_LENGTH = 1500;
-const MAX_CATEGORY_LENGTH = 1600;
+const MAX_HALF_LENGTH = 1100;
+const MAX_CATEGORY_LENGTH = 900;
 const MAX_MONTHLY_LENGTH = 420;
 const MAX_PERIOD_LENGTH = 260;
 const MAX_ACTION_LENGTH = 240;
@@ -254,7 +254,7 @@ export function buildFallbackYearlyInterpretation(
   }, {} as Record<YearlyCategoryKey, string>);
   const monthlyFlows = report.monthlyFlows.map((flow) => ({
     month: flow.month,
-    summary: `${flow.summary} 먼저 ${flow.opportunity} 다만 ${flow.caution} 이번 달 기준은 ${flow.action}`,
+    summary: `${flow.summary} 이번 달 질문은 ${flow.focusQuestion}입니다. 밀어볼 것은 ${flow.opportunity} 조심할 것은 ${flow.caution} 행동 기준은 ${flow.action}`,
   }));
   const actionAdvice = [
     ...report.actionGuide.useWhenStrong,
@@ -639,17 +639,17 @@ export function createYearlyInterpretationPrompt(
       '무조건, 반드시, 100% 같은 단정 표현은 쓰지 않습니다.',
       'recentFeedbackSummary가 있으면 최근 실제 반응을 참고해 표현 강도만 미세 조정하고, 세운·월운·원국 근거보다 앞세우지 않습니다.',
       '연애, 일, 재물, 관계, 건강, 이동의 현실 주제를 우선하고, 왜 이런 흐름이 오는지 세운·월운·강약·용신 근거를 자연스럽게 녹여냅니다.',
-      '총 글자 수는 렌더 시 3,000자 이상이 되도록 충분히 밀도 있게 작성합니다.',
+      '길게 늘어놓기보다 읽기 쉽게 씁니다. 한 문단은 2~3문장을 넘기지 않고, 같은 접속어와 같은 결론 구조를 반복하지 않습니다.',
       '응답은 반드시 JSON 객체 하나만 반환합니다. Markdown, 설명 문장, 코드블록을 붙이지 않습니다.',
       'JSON 스키마:',
       schemaLine,
       'opening은 제목 없이 바로 시작되는 첫 문단이며, 흡입력 있게 시작해야 합니다.',
       'keywords는 3~5개입니다. 각 항목은 한 해의 핵심 키워드와 그 이유를 함께 담습니다.',
-      'firstHalf와 secondHalf는 각각 충분한 분량으로 작성하고, 기회와 리스크를 함께 설명합니다.',
-      'categories의 6개 분야는 각각 충분한 분량으로 자세히 씁니다. 현실적인 행동 장면과 조정 포인트를 꼭 넣습니다.',
-      'monthlyFlows는 1월부터 12월까지 서로 다른 질문을 던져야 합니다. 같은 문장 구조나 같은 결론을 반복하지 않습니다.',
+      'firstHalf와 secondHalf는 각각 2~4개의 짧은 문단 감각으로 쓰고, 기회와 리스크를 함께 설명합니다.',
+      'categories의 6개 분야는 각 분야마다 "무슨 장면이 핵심인지 / 무엇을 조심할지 / 어떻게 행동할지"가 바로 읽히게 3~5문장 안에서 정리합니다.',
+      'monthlyFlows는 1월부터 12월까지 서로 다른 질문을 던져야 합니다. 같은 문장 구조, 같은 도입, 같은 결론을 반복하지 않습니다.',
       'monthlyFlows는 사용자가 실제로 궁금해하는 선택 장면, 돈과 일의 판단, 관계 조율, 달력에 표시해 둘 만한 포인트를 우선해서 씁니다.',
-      'monthlyFlows는 체감 가능한 변화 중심으로 씁니다.',
+      'monthlyFlows는 체감 가능한 변화 중심으로 쓰고, 설명보다 판단 기준이 먼저 보이게 씁니다.',
       'goodPeriods와 cautionPeriods는 시기와 이유, 활용 또는 방어 전략이 함께 드러나야 합니다.',
       'actionAdvice는 3~6개로 작성하고, 한 해를 잘 보내기 위한 실제 행동 기준을 줍니다.',
       'oneLineSummary는 단정하고 기억에 남게 마무리합니다.',
