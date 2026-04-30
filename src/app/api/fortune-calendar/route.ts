@@ -3,6 +3,7 @@ import { buildFortuneCalendarMonth } from '@/domain/saju/report';
 import { hasFortuneCalendarMonthAccess } from '@/lib/credits/calendar-access';
 import { getFeatureCost } from '@/lib/credits/deduct';
 import { getLifetimeReportEntitlement } from '@/lib/report-entitlements';
+import { toSlug } from '@/lib/saju/pillars';
 import { resolveReading } from '@/lib/saju/readings';
 import { createClient, hasSupabaseServerEnv, hasSupabaseServiceEnv } from '@/lib/supabase/server';
 
@@ -37,7 +38,7 @@ function parseMonth(value: string | null) {
 }
 
 async function resolveCalendarAccess(
-  slug: string,
+  readingKey: string,
   targetYear: number,
   month: number
 ): Promise<{
@@ -57,12 +58,17 @@ async function resolveCalendarAccess(
     return { access: 'locked', userId: null };
   }
 
-  const entitlement = await getLifetimeReportEntitlement(user.id, slug);
+  const entitlement = await getLifetimeReportEntitlement(user.id, readingKey);
   if (entitlement) {
     return { access: 'lifetime', userId: user.id };
   }
 
-  const hasMonthAccess = await hasFortuneCalendarMonthAccess(user.id, slug, targetYear, month);
+  const hasMonthAccess = await hasFortuneCalendarMonthAccess(
+    user.id,
+    readingKey,
+    targetYear,
+    month
+  );
 
   return {
     access: hasMonthAccess ? 'month_unlock' : 'locked',
@@ -86,7 +92,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: '사주 결과를 찾지 못했습니다.' }, { status: 404 });
   }
 
-  const { access, userId } = await resolveCalendarAccess(slug, targetYear, month);
+  const readingKey = toSlug(reading.input);
+  const { access, userId } = await resolveCalendarAccess(readingKey, targetYear, month);
 
   if (reading.userId && userId && reading.userId !== userId) {
     return NextResponse.json({ error: '본인의 결과만 열 수 있습니다.' }, { status: 403 });
