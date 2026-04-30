@@ -1045,6 +1045,154 @@
     text-wrap: pretty;
   }
 
+  .app-element-orbit {
+    position: relative;
+    margin-inline: auto;
+    width: min(100%, 24rem);
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+  }
+
+  .app-element-orbit::before {
+    content: "";
+    position: absolute;
+    inset: 6%;
+    border-radius: 9999px;
+    background:
+      radial-gradient(circle at 50% 35%, rgba(236, 201, 133, 0.18), transparent 34%),
+      radial-gradient(circle at 20% 18%, rgba(123, 163, 204, 0.14), transparent 22%),
+      radial-gradient(circle at 78% 24%, rgba(224, 131, 112, 0.14), transparent 20%),
+      radial-gradient(circle at 52% 82%, rgba(212, 176, 106, 0.16), transparent 24%);
+    filter: blur(2px);
+    opacity: 0.9;
+  }
+
+  .app-element-orbit::after {
+    content: "";
+    position: absolute;
+    inset: 12%;
+    border-radius: 9999px;
+    border: 1px solid rgba(236, 201, 133, 0.1);
+    box-shadow:
+      inset 0 0 0 1px rgba(236, 201, 133, 0.04),
+      0 24px 48px rgba(0, 0, 0, 0.26);
+  }
+
+  .app-element-orbit-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .app-element-orbit-ring {
+    fill: none;
+    stroke: rgba(236, 201, 133, 0.18);
+    stroke-width: 1.3;
+  }
+
+  .app-element-orbit-ring--outer {
+    stroke: rgba(236, 201, 133, 0.32);
+    stroke-width: 1.9;
+  }
+
+  .app-element-orbit-frame {
+    fill: rgba(255, 255, 255, 0.015);
+    stroke: rgba(236, 201, 133, 0.12);
+    stroke-width: 1.2;
+  }
+
+  .app-element-orbit-data {
+    fill: rgba(236, 201, 133, 0.08);
+    stroke: rgba(236, 201, 133, 0.58);
+    stroke-width: 2;
+  }
+
+  .app-element-orbit-spoke {
+    stroke: rgba(236, 201, 133, 0.1);
+    stroke-width: 1;
+  }
+
+  .app-element-orbit-core {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 8.25rem;
+    aspect-ratio: 1;
+    border-radius: 9999px;
+    border: 1px solid rgba(236, 201, 133, 0.22);
+    background:
+      radial-gradient(circle at 50% 35%, rgba(236, 201, 133, 0.18), transparent 48%),
+      linear-gradient(180deg, rgba(20, 24, 42, 0.96), rgba(10, 12, 22, 0.98));
+    box-shadow:
+      0 20px 40px rgba(0, 0, 0, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .app-element-orbit-node {
+    position: absolute;
+    z-index: 3;
+    transform: translate(-50%, -50%);
+    border-radius: 9999px;
+    border: 1px solid color-mix(in srgb, var(--element-accent) 45%, rgba(255, 255, 255, 0.14));
+    background:
+      radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--element-accent) 28%, rgba(255, 255, 255, 0.06)), transparent 46%),
+      linear-gradient(180deg, rgba(18, 22, 38, 0.97), rgba(8, 10, 18, 0.99));
+    box-shadow:
+      0 18px 32px rgba(0, 0, 0, 0.24),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    display: grid;
+    place-items: center;
+    text-align: center;
+    padding: 0.55rem;
+  }
+
+  .app-element-orbit-node[data-dominant="true"] {
+    box-shadow:
+      0 0 0 1px rgba(236, 201, 133, 0.16),
+      0 22px 36px rgba(0, 0, 0, 0.28),
+      0 0 34px color-mix(in srgb, var(--element-accent) 32%, transparent);
+  }
+
+  .app-element-orbit-node[data-weakest="true"] {
+    border-style: dashed;
+  }
+
+  .app-element-orbit-node-hanja {
+    font-family: var(--font-heading);
+    font-size: 1.45rem;
+    line-height: 1;
+    color: color-mix(in srgb, var(--element-accent) 72%, #f5eedc);
+  }
+
+  .app-element-orbit-node-label {
+    margin-top: 0.2rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--app-copy-muted);
+  }
+
+  .app-element-orbit-node-value {
+    margin-top: 0.18rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--app-ivory);
+  }
+
+  .app-element-orbit-node-tag {
+    margin-top: 0.3rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(236, 201, 133, 0.18);
+    background: rgba(236, 201, 133, 0.08);
+    padding: 0.12rem 0.5rem;
+    font-size: 0.62rem;
+    color: var(--app-gold-text);
+  }
+
   .app-bullet-list {
     display: grid;
     gap: 0.55rem;
