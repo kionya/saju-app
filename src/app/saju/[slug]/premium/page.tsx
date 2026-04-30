@@ -18,6 +18,7 @@ import {
   getLuckyElementsFromSajuData,
   getPersonalityFromSajuData,
 } from '@/lib/saju/elements';
+import { toSlug } from '@/lib/saju/pillars';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { getLifetimeReportEntitlement } from '@/lib/report-entitlements';
@@ -304,6 +305,7 @@ export default async function SajuPremiumPage({ params }: Props) {
   if (!reading) notFound();
 
   const { sajuData } = reading;
+  const readingKey = toSlug(reading.input);
   const encodedSlug = encodeURIComponent(slug);
   let hasLifetimeAccess = false;
   let yearlyAccessLabel: string | null = null;
@@ -316,7 +318,7 @@ export default async function SajuPremiumPage({ params }: Props) {
 
     if (user) {
       const [entitlement, subscription] = await Promise.all([
-        getLifetimeReportEntitlement(user.id, slug),
+        getLifetimeReportEntitlement(user.id, readingKey, [slug]),
         getManagedSubscription(user.id),
       ]);
 

@@ -39,6 +39,7 @@ function parseMonth(value: string | null) {
 
 async function resolveCalendarAccess(
   readingKey: string,
+  legacyReadingKey: string,
   targetYear: number,
   month: number
 ): Promise<{
@@ -58,7 +59,7 @@ async function resolveCalendarAccess(
     return { access: 'locked', userId: null };
   }
 
-  const entitlement = await getLifetimeReportEntitlement(user.id, readingKey);
+  const entitlement = await getLifetimeReportEntitlement(user.id, readingKey, [legacyReadingKey]);
   if (entitlement) {
     return { access: 'lifetime', userId: user.id };
   }
@@ -93,7 +94,7 @@ export async function GET(req: NextRequest) {
   }
 
   const readingKey = toSlug(reading.input);
-  const { access, userId } = await resolveCalendarAccess(readingKey, targetYear, month);
+  const { access, userId } = await resolveCalendarAccess(readingKey, slug, targetYear, month);
 
   if (reading.userId && userId && reading.userId !== userId) {
     return NextResponse.json({ error: '본인의 결과만 열 수 있습니다.' }, { status: 403 });

@@ -21,6 +21,20 @@ interface EntitlementTransactionRow {
   created_at: string;
 }
 
+export function normalizeEntitlementReadingKeys(
+  primaryKey: string,
+  legacyKeys: Array<string | null | undefined> = []
+) {
+  return [...new Set([primaryKey, ...legacyKeys].map((key) => key?.trim() ?? '').filter(Boolean))];
+}
+
+export function matchesEntitlementReadingKey(
+  candidate: unknown,
+  acceptedKeys: string[]
+) {
+  return typeof candidate === 'string' && acceptedKeys.includes(candidate.trim());
+}
+
 function mapEntitlement(row: EntitlementTransactionRow): LifetimeReportEntitlement {
   const metadata = row.metadata ?? {};
 
@@ -37,10 +51,12 @@ function mapEntitlement(row: EntitlementTransactionRow): LifetimeReportEntitleme
 
 export async function getLifetimeReportEntitlement(
   userId: string | null | undefined,
-  readingKey: string
+  readingKey: string,
+  legacyKeys: Array<string | null | undefined> = []
 ): Promise<LifetimeReportEntitlement | null> {
   if (!userId || !hasSupabaseServiceEnv) return null;
 
+  const acceptedKeys = normalizeEntitlementReadingKeys(readingKey, legacyKeys);
   const service = await createServiceClient();
   const { data, error } = await service
     .from('credit_transactions')
@@ -48,16 +64,21 @@ export async function getLifetimeReportEntitlement(
     .eq('user_id', userId)
     .eq('type', 'purchase')
     .eq('feature', 'lifetime_report')
-    .contains('metadata', { kind: 'lifetime_report', readingKey })
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order('created_at', { ascending: false });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return data ? mapEntitlement(data as EntitlementTransactionRow) : null;
+  const matched = (data as EntitlementTransactionRow[] | null)?.find((row) => {
+    const metadata = row.metadata ?? {};
+    return (
+      metadata.kind === 'lifetime_report' &&
+      matchesEntitlementReadingKey(metadata.readingKey, acceptedKeys)
+    );
+  });
+
+  return matched ? mapEntitlement(matched) : null;
 }
 
 export async function grantLifetimeReportEntitlement(
@@ -67,9 +88,10 @@ export async function grantLifetimeReportEntitlement(
     orderId?: string | null;
     paymentKey?: string | null;
     amount?: number | null;
-  } = {}
+  } = {},
+  legacyKeys: Array<string | null | undefined> = []
 ) {
-  const existing = await getLifetimeReportEntitlement(userId, readingKey);
+  const existing = await getLifetimeReportEntitlement(userId, readingKey, legacyKeys);
   if (existing) return existing;
 
   const service = await createServiceClient();

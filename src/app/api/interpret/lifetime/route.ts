@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
   }
 
   const readingKey = toSlug(reading.input);
-  const entitlement = await getLifetimeReportEntitlement(user.id, readingKey);
+  const entitlement = await getLifetimeReportEntitlement(user.id, readingKey, [parsed.readingId]);
 
   if (!entitlement) {
     return NextResponse.json(

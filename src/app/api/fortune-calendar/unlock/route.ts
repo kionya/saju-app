@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
   const readingKey = toSlug(reading.input);
 
-  const entitlement = await getLifetimeReportEntitlement(user.id, readingKey);
+  const entitlement = await getLifetimeReportEntitlement(user.id, readingKey, [parsed.slug]);
   if (entitlement) {
     const report = buildFortuneCalendarMonth(
       reading.input,

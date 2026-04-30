@@ -5,6 +5,8 @@ import { confirmPayment } from '@/lib/payments/toss';
 import { validatePaymentConfirmationPayload } from '@/lib/payments/confirmation';
 import { addCredits, getCredits } from '@/lib/credits/deduct';
 import { grantLifetimeReportEntitlement } from '@/lib/report-entitlements';
+import { toSlug } from '@/lib/saju/pillars';
+import { resolveReading } from '@/lib/saju/readings';
 import { activateMembershipSubscription } from '@/lib/subscription';
 
 export async function POST(req: NextRequest) {
@@ -48,13 +50,25 @@ export async function POST(req: NextRequest) {
       })
     : null;
 
+  let lifetimeReadingKey: string | null = null;
+  let lifetimeLegacyKeys: string[] = [];
+
+  if (pkg.kind === 'lifetime_report' && slug) {
+    const reading = await resolveReading(slug);
+    lifetimeReadingKey = reading ? toSlug(reading.input) : slug;
+
+    if (reading && slug !== lifetimeReadingKey) {
+      lifetimeLegacyKeys = [slug];
+    }
+  }
+
   const entitlement =
-    pkg.kind === 'lifetime_report' && slug
-      ? await grantLifetimeReportEntitlement(user.id, slug, {
+    pkg.kind === 'lifetime_report' && lifetimeReadingKey
+      ? await grantLifetimeReportEntitlement(user.id, lifetimeReadingKey, {
           orderId,
           paymentKey,
           amount: parsedAmount,
-        })
+        }, lifetimeLegacyKeys)
       : null;
 
   return NextResponse.json({
