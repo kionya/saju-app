@@ -129,10 +129,8 @@ test('today fortune one-line body does not repeat the same grounding sentence tw
     timeRule: 'standard',
   });
 
-  const needle = '이 명식은 가장 먼저 火 (화) 기운을 보완 후보로 봅니다.';
-  const count = result.oneLine.body.split(needle).length - 1;
-
-  assert.equal(count, 1);
+  assert.doesNotMatch(result.oneLine.body, /용신 메모:/);
+  assert.doesNotMatch(result.oneLine.body, /보완 후보로 봅니다/);
 });
 
 test('today fortune relationship one-line body does not repeat the same 합충 snippet twice', () => {
@@ -145,7 +143,7 @@ test('today fortune relationship one-line body does not repeat the same 합충 s
     timeRule: 'standard',
   });
 
-  const needle = '합충은 관계가 묶이거나 부딪히는 지점입니다.';
+  const needle = '관계와 이동의 압력이 함께 들어옵니다.';
   const count = result.oneLine.body.split(needle).length - 1;
 
   assert.ok(count <= 1);

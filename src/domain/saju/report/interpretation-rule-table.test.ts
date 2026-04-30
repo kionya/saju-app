@@ -23,7 +23,7 @@ const cards: ReportEvidenceCard[] = [
     label: '강약',
     title: '중화 · 66점',
     body: '밀고 당기는 힘이 크게 한쪽으로 치우치지 않습니다.',
-    plainSummary: '쉽게 말하면 중화는 균형 감각이 살아 있다는 뜻입니다.',
+    plainSummary: '강약 메모: 중화 · 66점',
     details: [],
     computed: {},
     source: ['계산값'],
@@ -35,7 +35,7 @@ const cards: ReportEvidenceCard[] = [
     label: '용신',
     title: '1순위 火',
     body: '희기신 보정 기준으로 火를 먼저 봅니다.',
-    plainSummary: '쉽게 말하면 火 기운을 보완하면 표현과 체온이 살아납니다.',
+    plainSummary: '용신 메모: 火',
     details: [],
     computed: {},
     source: ['계산값'],
@@ -47,7 +47,7 @@ const cards: ReportEvidenceCard[] = [
     label: '합충',
     title: '충 · 반합',
     body: '관계와 이동의 압력이 함께 들어옵니다.',
-    plainSummary: '쉽게 말하면 합충은 관계가 묶이거나 부딪히는 지점입니다.',
+    plainSummary: '합충 메모: 충 · 반합',
     details: [],
     computed: {},
     source: ['계산값'],
@@ -75,6 +75,6 @@ test('evidence helpers pick priority cards and normalize readable snippets', () 
   const snippet = toEvidenceSnippet(selected);
 
   assert.equal(selected?.key, 'relations');
-  assert.match(snippet ?? '', /합충은 관계가 묶이거나 부딪히는 지점입니다/);
-  assert.doesNotMatch(snippet ?? '', /쉽게 말하면/);
+  assert.match(snippet ?? '', /관계와 이동의 압력이 함께 들어옵니다/);
+  assert.doesNotMatch(snippet ?? '', /메모:/);
 });

@@ -143,7 +143,7 @@ function buildCautionPatterns(report: SajuReport) {
   return uniqueNonEmpty(
     [
       report.cautionAction.description,
-      ...cautionCards.map((card) => card.plainSummary ?? card.body),
+      ...cautionCards.map((card) => card.body),
     ],
     3
   );
@@ -818,7 +818,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                       </div>
                       <h3 className="mt-3 text-xl font-semibold leading-8 text-[var(--app-ivory)]">{card.title}</h3>
                       <p className="mt-3 text-sm leading-8 text-[var(--app-copy)]">
-                        {card.plainSummary || card.body}
+                        {card.body}
                       </p>
 
                       <details className="mt-4 rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3">
@@ -827,8 +827,20 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                         </summary>
 
                         <div className="mt-4 space-y-4">
-                          {card.technicalSummary ? (
-                            <p className="text-sm leading-7 text-[var(--app-copy-muted)]">{card.technicalSummary}</p>
+                          {card.plainSummary || card.technicalSummary ? (
+                            <div className="rounded-2xl border border-[var(--app-line)] bg-[rgba(8,10,18,0.32)] px-3 py-3">
+                              <div className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--app-gold-soft)]">
+                                기준 메모
+                              </div>
+                              <div className="mt-2 space-y-2">
+                                {card.plainSummary ? (
+                                  <p className="text-sm leading-7 text-[var(--app-copy)]">{card.plainSummary}</p>
+                                ) : null}
+                                {card.technicalSummary ? (
+                                  <p className="text-sm leading-7 text-[var(--app-copy-muted)]">{card.technicalSummary}</p>
+                                ) : null}
+                              </div>
+                            </div>
                           ) : null}
 
                           <p className="app-body-copy text-sm">{card.body}</p>

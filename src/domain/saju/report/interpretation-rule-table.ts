@@ -197,8 +197,9 @@ export function selectEvidenceCard(
 
 export function toEvidenceSnippet(card: ReportEvidenceCard | null) {
   if (!card) return null;
-  const candidate = card.plainSummary ?? card.body ?? card.title;
+  const candidate = card.body ?? card.plainSummary ?? card.title;
   const normalized = candidate
+    .replace(/^(강약|격국|용신|합충|공망|신살)\s*메모:\s*/u, '')
     .replace(/^쉽게 말하면\s*/, '')
     .replace(/^전문적으로는\s*/, '')
     .replace(/\s+/g, ' ')

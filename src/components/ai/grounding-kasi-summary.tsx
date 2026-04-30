@@ -57,7 +57,7 @@ export function GroundingKasiSummary({
   const factLines = buildFactLines(grounding);
   const evidenceLines = grounding.evidenceJson.classics.cards
     .slice(0, 3)
-    .map((card) => `${card.label} · ${card.plainSummary}`);
+    .map((card) => `${card.label} · ${card.title}`);
 
   return (
     <section

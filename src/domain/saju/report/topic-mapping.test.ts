@@ -95,7 +95,8 @@ test('yongsin evidence card balances plain Korean, hanja glossary, and technical
   const yongsinCard = report.evidenceCards.find((card) => card.key === 'yongsin');
 
   assert.ok(yongsinCard);
-  assert.match(yongsinCard.body, /쉽게 말하면/);
+  assert.doesNotMatch(yongsinCard.body, /메모:/);
+  assert.match(yongsinCard.plainSummary ?? '', /용신 메모:/);
   assert.ok(yongsinCard.explainers?.some((item) => item.term === '용신' && item.hanja === '用神'));
   assert.ok((yongsinCard.practicalActions?.length ?? 0) >= 2);
   assert.ok(yongsinCard.details.some((detail) => detail.includes('후보')));

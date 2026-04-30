@@ -151,7 +151,7 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
       eyebrow: '균형 진단',
       title: '2. 오행 분포와 강약',
       lead: `${dominant} 기운이 가장 앞에 있고, ${weakest} 기운을 어떻게 보완하느냐가 평생 균형의 핵심입니다.`,
-      decision: strength?.plainSummary ?? `${dominant}은 쓰기 쉬운 장점이고, ${weakest}은 의식적으로 보완해야 하는 약한 축입니다.`,
+      decision: strength?.body ?? `${dominant}은 쓰기 쉬운 장점이고, ${weakest}은 의식적으로 보완해야 하는 약한 축입니다.`,
       paragraphs: compactStrings([
         strength?.title ? `강약 기준은 ${strength.title}입니다.` : null,
         todayReport.summaryHighlights[1],
@@ -173,9 +173,9 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
         pattern ? `${pattern.title}을 기준으로 삶의 역할과 관계 패턴을 먼저 읽습니다.` : null,
         yongsinLabel ? `보완 축은 ${yongsinLabel}입니다.` : null,
       ]).join(' '),
-      decision: yongsin?.plainSummary ?? `이 명식은 ${supportLabels} 기운을 어떻게 쓰느냐가 균형의 핵심입니다.`,
+      decision: yongsin?.body ?? `이 명식은 ${supportLabels} 기운을 어떻게 쓰느냐가 균형의 핵심입니다.`,
       paragraphs: compactStrings([
-        pattern?.plainSummary,
+        pattern?.title ? `격국 기준은 ${pattern.title}입니다.` : null,
         yongsin?.title ? `보완 축 메모: ${yongsin.title}` : null,
         `평생 운을 볼 때는 타고난 구조를 고정값으로 단정하기보다, ${supportLabels} 기운을 생활 환경과 선택 안에 얼마나 안정적으로 들이는지가 중요합니다.`,
       ]),
@@ -264,9 +264,9 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
       lead: `좋은 운은 ${supportLabels} 기운을 현실의 루틴으로 만들 때 오래 갑니다.`,
       decision: '합충·공망·신살은 겁을 주는 장식이 아니라, 어디서 속도가 붙고 어디서 확인 절차가 필요한지 알려주는 보조 신호입니다.',
       paragraphs: compactStrings([
-        relations?.plainSummary ?? relations?.body,
-        gongmang?.plainSummary ?? gongmang?.body,
-        specialSals?.plainSummary ?? specialSals?.body,
+        relations?.body,
+        gongmang?.body,
+        specialSals?.body,
         '운의 강한 구간에서는 속도를 내되, 약한 축이 드러나는 시기에는 결정을 늦추고 확인 절차를 늘리는 방식이 가장 현실적인 보완책입니다.',
       ]),
       keyPoints: compactList([

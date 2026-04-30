@@ -60,7 +60,7 @@ test('calculateSajuDataV1 exposes yongsin candidates and explanation layers', ()
   assert.ok(data.yongsin?.primary);
   assert.ok((data.yongsin?.candidates?.length ?? 0) >= 2);
   assert.ok(data.yongsin?.confidence);
-  assert.match(data.yongsin?.plainSummary ?? '', /쉽게 말하면/);
+  assert.match(data.yongsin?.plainSummary ?? '', /용신 메모:/);
   assert.match(data.yongsin?.technicalSummary ?? '', /전문적으로는/);
   assert.ok((data.yongsin?.practicalActions?.length ?? 0) >= 2);
   assert.ok(data.yongsin?.terms?.some((term) => term.term === '용신' && term.hanja === '用神'));

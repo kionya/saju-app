@@ -462,7 +462,7 @@ function buildStrengthEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     details: strength.rationale.length > 0
       ? strength.rationale.slice(0, 3)
       : ['강약 점수는 계산되었고, 세부 근거 문장은 다음 단계에서 보강됩니다.'],
-    plainSummary: `쉽게 말하면 ${withParticle(strength.level, '은', '는')} 내 기운을 밀고 나가는 힘과 외부 압력을 받아내는 힘의 균형입니다. 이 명식은 ${strength.score}점으로 계산되어 ${STRENGTH_INTERPRETATION[strength.level]}`,
+    plainSummary: `강약 메모: ${strength.level} · ${strength.score}점`,
     technicalSummary: '전문적으로는 월령의 계절 보정, 일간을 돕는 오행, 일간을 소모시키는 오행, 지지의 뿌리를 함께 계산합니다.',
     practicalActions: EVIDENCE_ACTIONS.strength[strength.level],
     explainers: CORE_TERM_EXPLAINERS.strength,
@@ -503,8 +503,8 @@ function buildPatternEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
       ? pattern.rationale.slice(0, 3)
       : ['격국명은 준비되었고 상세 근거 문장은 다음 단계에서 보강됩니다.'],
     plainSummary: pattern.tenGod
-      ? `${pattern.name}은 ${pattern.tenGod}의 성격이 두드러진 구조입니다. 이 말은 삶에서 어떤 역할을 맡고 어떤 방식으로 인정받으려 하는지를 읽는 기준입니다.`
-      : '격국은 명식 전체의 역할 구조를 읽는 기준입니다.',
+      ? `격국 메모: ${pattern.name} · ${pattern.tenGod}`
+      : `격국 메모: ${pattern.name}`,
     technicalSummary: '전문적으로는 월지의 주기운과 지장간을 일간 기준 십신으로 환산해 격국명을 정합니다.',
     practicalActions: EVIDENCE_ACTIONS.pattern,
     explainers: CORE_TERM_EXPLAINERS.pattern,
@@ -543,7 +543,11 @@ function buildYongsinEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
     key,
     label: '용신',
     title: `1순위 ${yongsin.primary.label}${yongsin.secondary.length > 0 ? ` · 보조 ${formatSymbolList(yongsin.secondary)}` : ''}`,
-    body: yongsin.plainSummary ?? `${yongsin.method} 기준으로 ${yongsinLabel}을 보완 축으로 보고, 기신은 ${kiyshinLabel}입니다.`,
+    body: `${yongsinLabel} 기운을 생활 리듬과 선택 기준에 안정적으로 들일수록 균형을 잡기 쉬운 명식입니다. ${
+      kiyshinLabel !== '기신 미기재'
+        ? `${kiyshinLabel} 기운은 과해질 때 속도와 감정, 체력 배분을 한 번 더 조절하는 편이 좋습니다.`
+        : '과속하거나 한쪽으로 치우친 선택은 한 번 더 조절하는 편이 좋습니다.'
+    }`,
     details: [
       yongsin.technicalSummary ?? `${yongsin.method} 기준으로 ${yongsinLabel}을 보완 축으로 봅니다.`,
       `주의해서 볼 기운: ${kiyshinLabel}. 이 기운은 무조건 나쁘다는 뜻이 아니라, 이미 과하거나 균형을 흐릴 때 조절이 필요하다는 뜻입니다.`,
@@ -574,7 +578,7 @@ function mapYongsinConfidence(confidence: YongsinConfidence): ReportEvidenceCard
 function formatYongsinCandidateDetail(candidate: SajuYongsinCandidate) {
   const roleLabel = candidate.role === 'primary' ? '1순위' : candidate.role === 'support' ? '보조' : '참고';
   const secondary = candidate.secondary.length > 0 ? `, 보조 ${formatSymbolList(candidate.secondary)}` : '';
-  return `${roleLabel} 후보: ${candidate.method} ${candidate.primary.label}${secondary} · ${candidate.score}점. ${candidate.plainSummary}`;
+  return `${roleLabel} 후보: ${candidate.method} ${candidate.primary.label}${secondary} · ${candidate.score}점`;
 }
 
 function formatRelationEvidenceLine(relation: OrreryRelation) {
@@ -612,8 +616,8 @@ function buildRelationEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
       ? selected.map(formatRelationEvidenceLine)
       : ['합충 데이터가 들어오면 어떤 글자끼리 작용하는지 이 카드에 분리해 표시됩니다.'],
     plainSummary: selected.length > 0
-      ? `${labels.join(' · ')} 흐름은 관계나 선택이 가만히 머물기보다 묶이거나 움직이는 지점을 보여줍니다.`
-      : '합충은 글자 사이의 끌림과 부딪힘을 보는 보조 근거입니다.',
+      ? `합충 메모: ${labels.join(' · ')}`
+      : '합충 메모: 확인된 흐름 없음',
     technicalSummary: '전문적으로는 천간합, 천간충, 육합, 삼합, 방합, 충·형·해·파를 분리해 봅니다.',
     practicalActions: EVIDENCE_ACTIONS.relations,
     explainers: CORE_TERM_EXPLAINERS.relations,
@@ -660,8 +664,8 @@ function buildGongmangEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
       ? [`작용 위치: ${slots.join(' · ')}`]
       : ['공망 글자가 특정 주에 닿으면 이곳에 작용 위치가 함께 표시됩니다.'],
     plainSummary: branches
-      ? `${branches} 공망은 해당 글자가 상징하는 일에서 공백, 지연, 재확인이 필요할 수 있음을 뜻합니다.`
-      : '공망은 빈자리와 지연 가능성을 보는 보조 근거입니다.',
+      ? `공망 메모: ${branches} 공망`
+      : '공망 메모: 확인된 흐름 없음',
     technicalSummary: '전문적으로는 일주 기준 공망 글자를 잡고, 그 글자가 년·월·일·시 어느 자리에 닿는지 확인합니다.',
     practicalActions: EVIDENCE_ACTIONS.gongmang,
     explainers: CORE_TERM_EXPLAINERS.gongmang,
@@ -694,8 +698,8 @@ function buildSpecialSalsEvidenceCard(data: SajuDataV1): ReportEvidenceCard {
       : '현재 명식에서 우선 표시할 주요 신살은 아직 확인되지 않았습니다.',
     details: details.length > 0 ? details : ['신살 데이터가 들어오면 도움/주의 흐름을 나누어 표시합니다.'],
     plainSummary: names.length > 0
-      ? `${names.slice(0, 5).join(' · ')}은 명식의 성향을 보조적으로 설명하는 표지입니다. 이것만으로 길흉을 단정하지 않고 원국과 함께 봅니다.`
-      : '신살은 원국 해석을 보완하는 부가 표지입니다.',
+      ? `신살 메모: ${names.slice(0, 5).join(' · ')}`
+      : '신살 메모: 주요 표지 없음',
     technicalSummary: '전문적으로는 일간·일지·연지 등을 기준으로 귀인, 도화, 양인, 백호 같은 보조 표지를 대조합니다.',
     practicalActions: EVIDENCE_ACTIONS.specialSals,
     explainers: CORE_TERM_EXPLAINERS.specialSals,

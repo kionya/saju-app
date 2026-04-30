@@ -107,7 +107,9 @@ export function SajuFactEvidencePanel({
                 <div className="font-hanja text-sm font-medium text-[var(--app-ivory)]">
                   {candidate.primary} · {candidate.method} · {candidate.score}점
                 </div>
-                <div className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{candidate.plainSummary}</div>
+                {candidate.plainSummary ? (
+                  <div className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">{candidate.plainSummary}</div>
+                ) : null}
               </div>
             ))}
           </div>

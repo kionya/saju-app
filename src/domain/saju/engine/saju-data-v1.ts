@@ -1143,10 +1143,10 @@ function getYongsinConfidence(candidates: SajuYongsinCandidate[]): YongsinConfid
 
 function buildYongsinPlainSummary(primaryElement: Element, secondary: SajuSymbolRef[] = []) {
   const secondaryLabel = secondary.length > 0
-    ? ` 보조로는 ${secondary.map((symbol) => symbol.label).join(' · ')}을(를) 함께 봅니다.`
+    ? ` · 보조 ${secondary.map((symbol) => symbol.label).join(' · ')}`
     : '';
 
-  return `이 명식은 가장 먼저 ${formatElementLabel(primaryElement)} 기운을 보완 후보로 봅니다. 쉽게 말하면 ${ELEMENT_PLAIN_EFFECT[primaryElement]} 힘이 균형을 잡는 데 필요하다는 뜻입니다.${secondaryLabel}`;
+  return `용신 메모: ${formatElementLabel(primaryElement)}${secondaryLabel}`;
 }
 
 function buildYongsinTechnicalSummary(

@@ -204,9 +204,9 @@ export function buildLifetimeReport(
       lifetimeRule: `${sajuData.dayMaster.stem} 일간의 추진력과 ${dominant} 기운의 장점은 이미 충분합니다. 평생 운을 살리는 기준은 더 세게 밀어붙이는 것이 아니라, ${supportLabels} 보완 축을 반복 가능한 습관과 선택 기준으로 만드는 데 있습니다.`,
       basis: compactStrings([
         `원국: ${[pillars.year, pillars.month, pillars.day, pillars.hour ?? '시주 미입력'].join(' · ')}`,
-        strength?.plainSummary,
-        pattern?.plainSummary,
-        yongsin?.plainSummary,
+        strength?.title ? `강약 기준: ${strength.title}` : null,
+        pattern?.title ? `격국 기준: ${pattern.title}` : null,
+        yongsin?.title ? `용신 기준: ${yongsin.title}` : null,
       ]),
     },
     coreIdentity: {
@@ -227,7 +227,7 @@ export function buildLifetimeReport(
     strengthBalance: {
       headline: '강약 / 오행 균형',
       summary:
-        strength?.plainSummary ??
+        strength?.body ??
         `${dominant} 기운이 앞에 서고 ${weakest} 기운은 의식적으로 보완해야 하는 구조입니다.`,
       strongAxis: `${dominant} 기운은 타고난 장점이자 즉시 반응하는 힘입니다. 이 축이 살아나면 추진력, 존재감, 판단 속도가 자연스럽게 드러납니다.`,
       weakAxis: `${weakest} 기운은 몸과 마음의 균형을 잡는 약한 축입니다. 방치하면 피로가 누적되고, 감정이나 재정, 생활 리듬에서 빈틈이 생기기 쉽습니다.`,
@@ -251,13 +251,12 @@ export function buildLifetimeReport(
     patternAndYongsin: {
       headline: '격국 / 용신',
       summary:
-        yongsin?.plainSummary ??
+        yongsin?.body ??
         `이 명식은 ${yongsinLabels} 기운을 보완 축으로 쓰는 것이 평생 선택의 기준입니다.`,
       patternRole:
-        pattern?.plainSummary ??
+        pattern?.body ??
         '격국은 이 사람이 어떤 역할 구조에서 실력이 붙는지, 어디에서 책임과 반응이 반복되는지를 읽는 기준입니다.',
       yongsinDirection:
-        yongsin?.plainSummary ??
         yongsin?.body ??
         `${yongsinLabels} 기운을 꾸준히 들이면 명식의 장점이 균형 있게 살아납니다.`,
       choiceRule: `${supportLabels} 보완 축이 살아나는 선택은 길게 보면 명식을 살리고, ${kiyshinLabels} 기운이 과해지는 선택은 짧게는 편해도 오래 가면 균형을 흐릴 가능성이 큽니다.`,
@@ -304,7 +303,7 @@ export function buildLifetimeReport(
         relationshipReport.headline,
         relationshipReport.summary,
         loveReport.summary,
-        relations?.plainSummary ?? relations?.body,
+        relations?.title ? `합충 기준: ${relations.title}` : relations?.body,
       ]),
     },
     wealthStyle: {
@@ -327,7 +326,7 @@ export function buildLifetimeReport(
       basis: compactStrings([
         wealthReport.headline,
         formatSymbolList(sajuData.yongsin ? [sajuData.yongsin.primary, ...sajuData.yongsin.secondary] : []),
-        strength?.plainSummary,
+        strength?.title ? `강약 기준: ${strength.title}` : null,
       ]),
     },
     careerDirection: {
@@ -342,7 +341,7 @@ export function buildLifetimeReport(
         careerReport.summaryHighlights[1] ??
         '버티는 일과 빛나는 일의 차이는 속도보다 역할의 적합도에서 갈립니다.',
       independenceStyle:
-        pattern?.plainSummary ??
+        pattern?.body ??
         '독립과 조직 중 무엇이 맞느냐보다, 기준을 스스로 세울 수 있는 권한이 있는지가 더 중요합니다.',
       recognitionStyle:
         careerReport.cautionAction.description ||
@@ -367,8 +366,8 @@ export function buildLifetimeReport(
         ...(gongmang?.practicalActions ?? []),
       ].slice(0, 4),
       basis: compactStrings([
-        strength?.plainSummary,
-        gongmang?.plainSummary ?? gongmang?.body,
+        strength?.title ? `강약 기준: ${strength.title}` : null,
+        gongmang?.title ? `공망 기준: ${gongmang.title}` : gongmang?.body,
         monthTimeline?.headline,
       ]),
     },
@@ -402,8 +401,8 @@ export function buildLifetimeReport(
       ]).slice(0, 4),
       rememberRules,
       basis: compactStrings([
-        specialSals?.plainSummary ?? specialSals?.body,
-        relations?.plainSummary ?? relations?.body,
+        specialSals?.title ? `신살 기준: ${specialSals.title}` : specialSals?.body,
+        relations?.title ? `합충 기준: ${relations.title}` : relations?.body,
         majorTimeline?.body,
       ]),
     },

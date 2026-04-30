@@ -326,7 +326,7 @@ function formatEvidencePoint(
   const card = report.evidenceCards.find((item) => item.key === key);
   if (!card) return '';
 
-  return `${card.label} 기준 · ${card.title}. ${card.plainSummary ?? card.body}`;
+  return `${card.label} 기준 · ${card.title}. ${card.body ?? card.plainSummary}`;
 }
 
 function flattenDetailTopic(topic: DetailTopicReportContent) {
