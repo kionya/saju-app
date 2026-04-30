@@ -8,12 +8,14 @@ import {
   Bell,
   BookOpenText,
   CreditCard,
+  Grid2x2,
   LogOut,
   MessageCircleMore,
   MoonStar,
   Settings2,
   Sparkles,
   UserRound,
+  X,
 } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { LayoutModeControl } from '@/features/layout-preference/layout-mode-control';
@@ -395,6 +397,7 @@ function MobileChrome({
   authHref: string;
   onSignOut: () => Promise<void>;
 }) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const activePrimaryItem = findActiveItem(PRIMARY_NAV_ITEMS, pathname);
   const activeShortcutItem = findActiveItem(HEADER_SECONDARY_NAV_ITEMS, pathname);
   const activePrimaryMeta = activePrimaryItem ? getNavMeta(activePrimaryItem) : null;
@@ -403,6 +406,10 @@ function MobileChrome({
     activeShortcutMeta?.description ??
     activePrimaryMeta?.description ??
     '프리미엄 명리 기준서';
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   return (
     <>
@@ -445,81 +452,101 @@ function MobileChrome({
               </div>
             </Link>
 
-            <nav className="app-top-primary-nav hidden flex-1 items-center justify-center gap-1 lg:flex">
-              {PRIMARY_NAV_ITEMS.map((item) => {
-                const active = matchesPath(item, pathname);
-
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    data-active={active}
-                    className={cn(
-                      'relative rounded-full px-4 py-2 text-sm transition-colors',
-                      active
-                        ? 'bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
-                        : 'text-[var(--app-copy-muted)] hover:bg-[var(--app-surface-muted)] hover:text-[var(--app-ivory)]'
-                    )}
-                  >
-                    {item.label}
-                    {active ? (
-                      <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-[var(--app-gold)]" />
-                    ) : null}
-                  </Link>
-                );
-              })}
-              <Link href="/credits" className="app-top-credit-chip">
-                <CreditCard className="h-3.5 w-3.5" />
-                {creditLabel(user, credits)}
-              </Link>
-            </nav>
-
             <div className="app-top-actions flex items-center gap-2">
-              <Link href="/membership" className="app-top-action-link hidden lg:inline-flex">
-                멤버십
-              </Link>
               <div className="hidden sm:block">
                 <LayoutModeControl compact />
               </div>
+              <Link href="/membership" className="app-top-action-link hidden lg:inline-flex">
+                멤버십
+              </Link>
               <Link
                 href="/credits"
-                className="app-top-credit-chip inline-flex lg:hidden"
+                className="app-top-credit-chip inline-flex"
                 aria-label={`보유 코인 ${creditLabel(user, credits)}`}
               >
                 <CreditCard className="h-3.5 w-3.5" />
                 {creditLabel(user, credits)}
               </Link>
-              <div className="app-top-utility-cluster">
-                <Link
-                  href="/notifications"
-                  className="app-top-icon-link inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-                  aria-label="알림"
-                >
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen((current) => !current)}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-global-menu"
+                className="app-mobile-menu-trigger inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
+              >
+                {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Grid2x2 className="h-4.5 w-4.5" />}
+              </button>
+            </div>
+          </div>
+
+          {mobileMenuOpen ? (
+            <div
+              id="mobile-global-menu"
+              className="app-mobile-menu-panel mt-4 rounded-[1.4rem] border border-[var(--app-line)] bg-[rgba(7,11,24,0.94)] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.34)]"
+            >
+              <div className="app-top-service-label">자주 찾는 메뉴</div>
+              <div className="mt-3 grid grid-cols-3 gap-2">
+                {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
+                  const active = matchesPath(item, pathname);
+                  const meta = getNavMeta(item);
+
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={cn(
+                        'app-mobile-shortcut-card',
+                        active && 'app-mobile-shortcut-card-active'
+                      )}
+                    >
+                      <span
+                        className="app-mobile-shortcut-glyph font-[var(--font-heading)]"
+                        style={{ color: meta.accent }}
+                      >
+                        {meta.glyph}
+                      </span>
+                      <span className="app-mobile-shortcut-label">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="mt-4 grid grid-cols-2 gap-2">
+                <Link href="/notifications" className="app-mobile-menu-utility">
                   <Bell className="h-4 w-4" />
+                  <span>알림</span>
                 </Link>
-                <Link
-                  href="/my/settings"
-                  className="app-top-icon-link inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-                  aria-label="설정"
-                >
+                <Link href="/my/settings" className="app-mobile-menu-utility">
                   <Settings2 className="h-4 w-4" />
+                  <span>설정</span>
                 </Link>
+                <Link href="/my/results" className="app-mobile-menu-utility">
+                  <BookOpenText className="h-4 w-4" />
+                  <span>보관함</span>
+                </Link>
+                <Link href="/membership" className="app-mobile-menu-utility">
+                  <CreditCard className="h-4 w-4" />
+                  <span>멤버십</span>
+                </Link>
+              </div>
+
+              <div className="mt-4">
                 {user ? (
                   <button
                     type="button"
                     onClick={onSignOut}
-                    className="app-top-login inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface)] sm:w-auto sm:gap-1.5 sm:px-3 sm:text-xs"
-                    aria-label="로그아웃"
+                    className="app-mobile-menu-auth"
                   >
-                    <LogOut className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-                    <span className="hidden sm:inline">로그아웃</span>
+                    <LogOut className="h-4 w-4" />
+                    <span>로그아웃</span>
                   </button>
                 ) : (
                   <Link
                     href={authHref}
                     className={cn(
                       buttonVariants({ variant: 'outline', size: 'sm' }),
-                      'app-top-login border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]'
+                      'app-mobile-menu-auth justify-center border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-ivory)] hover:bg-[var(--app-surface)] hover:text-[var(--app-ivory)]'
                     )}
                   >
                     로그인
@@ -527,38 +554,7 @@ function MobileChrome({
                 )}
               </div>
             </div>
-          </div>
-
-          <div className="mt-4 lg:hidden">
-            <div className="app-top-service-label">바로가기</div>
-            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-              {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
-                const active = matchesPath(item, pathname);
-                const meta = getNavMeta(item);
-
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    className={cn(
-                      'app-top-service-chip shrink-0 rounded-full border px-3 py-2 text-sm transition-colors',
-                      active
-                        ? 'border-[var(--app-gold)]/40 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]'
-                        : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)] hover:border-[var(--app-line-strong)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
-                    )}
-                  >
-                    <span
-                      className="app-top-service-glyph font-[var(--font-heading)]"
-                      style={{ color: meta.accent }}
-                    >
-                      {meta.glyph}
-                    </span>
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
+          ) : null}
         </div>
 
         <div className="app-top-header-shortcuts hidden border-t border-[var(--app-line)] bg-[var(--app-surface-muted)] lg:block">
