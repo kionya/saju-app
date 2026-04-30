@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getYearlyVerificationAudit } from '@/server/verification/yearly-audit';
+import { requireVerificationApiAccess } from '@/lib/verification-access';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,6 +11,9 @@ function parseTargetYear(value: string | null) {
 }
 
 export async function GET(req: NextRequest) {
+  const deniedResponse = await requireVerificationApiAccess();
+  if (deniedResponse) return deniedResponse;
+
   const searchParams = req.nextUrl.searchParams;
   const slug = searchParams.get('slug')?.trim() || undefined;
   const targetYear = parseTargetYear(searchParams.get('targetYear'));

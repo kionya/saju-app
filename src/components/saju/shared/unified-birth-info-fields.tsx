@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -52,7 +53,19 @@ const YEAR_OPTIONS = Array.from({ length: new Date().getFullYear() - 1899 }, (_,
   String(new Date().getFullYear() - index)
 );
 const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => String(index + 1));
-const DAY_OPTIONS = Array.from({ length: 31 }, (_, index) => String(index + 1));
+
+function getDaysInMonth(yearValue: string, monthValue: string) {
+  const parsedMonth = Number.parseInt(monthValue, 10);
+
+  if (!Number.isInteger(parsedMonth) || parsedMonth < 1 || parsedMonth > 12) {
+    return 31;
+  }
+
+  const parsedYear = Number.parseInt(yearValue, 10);
+  const safeYear = Number.isInteger(parsedYear) && parsedYear >= 1900 ? parsedYear : 2000;
+
+  return new Date(safeYear, parsedMonth, 0).getDate();
+}
 
 export function UnifiedBirthInfoFields({
   draft,
@@ -66,7 +79,27 @@ export function UnifiedBirthInfoFields({
   onPresetSelect,
   onLocationResultSelect,
 }: UnifiedBirthInfoFieldsProps) {
+  const dayOptions = useMemo(
+    () =>
+      Array.from({ length: getDaysInMonth(draft.year, draft.month) }, (_, index) => String(index + 1)),
+    [draft.month, draft.year]
+  );
   const timeRuleDisabled = draft.unknownBirthTime;
+
+  function applyDateSelectPatch(
+    patch: Partial<UnifiedBirthEntryDraft> & Pick<UnifiedBirthEntryDraft, 'year' | 'month' | 'day'>
+  ) {
+    const nextDraft = { ...draft, ...patch };
+    const nextDay = Number.parseInt(nextDraft.day, 10);
+    const nextMaxDay = getDaysInMonth(nextDraft.year, nextDraft.month);
+
+    if (Number.isInteger(nextDay) && nextDay > nextMaxDay) {
+      onChange({ ...patch, day: '' });
+      return;
+    }
+
+    onChange(patch);
+  }
 
   return (
     <div className="grid gap-5 lg:grid-cols-2">
@@ -109,7 +142,7 @@ export function UnifiedBirthInfoFields({
                 value={draft.year}
                 onChange={(event) => {
                   trigger(onStarted);
-                  onChange({ year: event.target.value });
+                  applyDateSelectPatch({ year: event.target.value, month: draft.month, day: draft.day });
                 }}
                 className="moon-form-control h-10 w-full rounded-lg px-3 text-sm"
               >
@@ -146,7 +179,7 @@ export function UnifiedBirthInfoFields({
                 value={draft.month}
                 onChange={(event) => {
                   trigger(onStarted);
-                  onChange({ month: event.target.value });
+                  applyDateSelectPatch({ year: draft.year, month: event.target.value, day: draft.day });
                 }}
                 className="moon-form-control h-10 w-full rounded-lg px-3 text-sm"
               >
@@ -188,7 +221,7 @@ export function UnifiedBirthInfoFields({
                 className="moon-form-control h-10 w-full rounded-lg px-3 text-sm"
               >
                 <option value="">일 선택</option>
-                {DAY_OPTIONS.map((value) => (
+                {dayOptions.map((value) => (
                   <option key={value} value={value}>
                     {value}일
                   </option>

@@ -1,4 +1,7 @@
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
+import { ActionCluster } from '@/components/layout/action-cluster';
 import SavedReadingsList from '@/components/my/saved-readings-list';
 import { FeatureCard } from '@/components/layout/feature-card';
 import { SectionHeader } from '@/components/layout/section-header';
@@ -7,11 +10,44 @@ import { SupportRail } from '@/components/layout/support-rail';
 import { getAccountDashboardData } from '@/lib/account';
 import { PageHero } from '@/shared/layout/app-shell';
 
-export default async function MyResultsPage() {
+const RESULTS_PAGE_SIZE = 30;
+
+interface MyResultsPageProps {
+  searchParams?: Promise<{
+    page?: string;
+  }>;
+}
+
+function parsePageNumber(value: string | undefined) {
+  const parsed = Number.parseInt(value ?? '1', 10);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function buildResultsPageHref(page: number) {
+  return page <= 1 ? '/my/results' : `/my/results?page=${page}`;
+}
+
+export default async function MyResultsPage({ searchParams }: MyResultsPageProps) {
+  const params = searchParams ? await searchParams : undefined;
+  const currentPage = parsePageNumber(params?.page);
+  const readingOffset = (currentPage - 1) * RESULTS_PAGE_SIZE;
   const dashboard = await getAccountDashboardData('/my/results', {
-    readingLimit: 30,
+    readingLimit: RESULTS_PAGE_SIZE,
+    readingOffset,
     transactionLimit: 1,
   });
+  const totalPages = Math.max(1, Math.ceil(dashboard.readingCount / RESULTS_PAGE_SIZE));
+
+  if (dashboard.readingCount > 0 && currentPage > totalPages) {
+    redirect(buildResultsPageHref(totalPages));
+  }
+
+  const firstVisibleIndex = dashboard.readingCount === 0 ? 0 : readingOffset + 1;
+  const lastVisibleIndex = readingOffset + dashboard.recentReadings.length;
+  const rangeLabel =
+    dashboard.readingCount === 0 ? '보관된 결과 없음' : `${firstVisibleIndex}~${lastVisibleIndex}번째`;
+  const hasPreviousPage = currentPage > 1;
+  const hasNextPage = currentPage < totalPages;
 
   return (
     <div className="space-y-6">
@@ -42,10 +78,51 @@ export default async function MyResultsPage() {
             titleClassName="text-3xl"
             description={`전체 ${dashboard.readingCount}개 결과를 다시 열고 비교할 수 있도록 보관합니다. 삭제는 보관함 목록과 개수에 바로 반영됩니다.`}
             descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            actions={
+              <ActionCluster>
+                <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                  {dashboard.readingCount === 0 ? '보관함 비어 있음' : `${rangeLabel} 표시 중`}
+                </Badge>
+                {totalPages > 1 ? (
+                  <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+                    {currentPage} / {totalPages} 페이지
+                  </Badge>
+                ) : null}
+              </ActionCluster>
+            }
           />
           <div className="mt-6">
-            <SavedReadingsList readings={dashboard.recentReadings} totalCount={dashboard.readingCount} />
+            <SavedReadingsList
+              readings={dashboard.recentReadings}
+              totalCount={dashboard.readingCount}
+              rangeLabel={rangeLabel}
+            />
           </div>
+          {totalPages > 1 ? (
+            <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--app-line)] pt-5">
+              <p className="text-sm text-[var(--app-copy-muted)]">
+                오래된 결과까지 다시 볼 수 있도록 30개씩 나눠 보여드립니다.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {hasPreviousPage ? (
+                  <Link
+                    href={buildResultsPageHref(currentPage - 1)}
+                    className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-2 text-sm text-[var(--app-copy)] transition-colors hover:border-[var(--app-gold)]/35 hover:text-[var(--app-ivory)]"
+                  >
+                    이전 30개
+                  </Link>
+                ) : null}
+                {hasNextPage ? (
+                  <Link
+                    href={buildResultsPageHref(currentPage + 1)}
+                    className="rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 px-4 py-2 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/16"
+                  >
+                    다음 30개
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </SectionSurface>
 
         <SupportRail

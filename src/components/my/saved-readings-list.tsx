@@ -9,6 +9,7 @@ import type { AccountReading } from '@/lib/account';
 interface SavedReadingsListProps {
   readings: AccountReading[];
   totalCount: number;
+  rangeLabel?: string;
 }
 
 function formatCreatedAt(value: string) {
@@ -33,7 +34,7 @@ function formatBirthLabel(reading: AccountReading) {
   return `${reading.birthYear}.${reading.birthMonth}.${reading.birthDay} · ${hourLabel} · ${genderLabel}`;
 }
 
-export default function SavedReadingsList({ readings, totalCount }: SavedReadingsListProps) {
+export default function SavedReadingsList({ readings, totalCount, rangeLabel }: SavedReadingsListProps) {
   const router = useRouter();
   const [items, setItems] = useState(readings);
   const [count, setCount] = useState(totalCount);
@@ -82,8 +83,18 @@ export default function SavedReadingsList({ readings, totalCount }: SavedReading
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm text-[var(--app-copy)]">
-        전체 <span className="font-semibold text-[var(--app-gold-text)]">{count}개</span>를 보관 중입니다.
-        이미 만든 결과는 다시 열어 비교할 수 있고, 삭제하면 이 숫자도 즉시 줄어듭니다.
+        {rangeLabel ? (
+          <>
+            전체 <span className="font-semibold text-[var(--app-gold-text)]">{count}개</span> 중{' '}
+            <span className="font-semibold text-[var(--app-ivory)]">{rangeLabel}</span>를 보고 있습니다.
+            이미 만든 결과는 다시 열어 비교할 수 있고, 삭제하면 이 숫자도 즉시 줄어듭니다.
+          </>
+        ) : (
+          <>
+            전체 <span className="font-semibold text-[var(--app-gold-text)]">{count}개</span>를 보관 중입니다.
+            이미 만든 결과는 다시 열어 비교할 수 있고, 삭제하면 이 숫자도 즉시 줄어듭니다.
+          </>
+        )}
       </div>
 
       {message ? (

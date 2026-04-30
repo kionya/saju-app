@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { notFound, redirect } from 'next/navigation';
 import { ActionCluster } from '@/components/layout/action-cluster';
 import { SectionHeader } from '@/components/layout/section-header';
 import { SectionSurface } from '@/components/layout/section-surface';
@@ -24,6 +25,7 @@ import {
   type ProfileLinkageServiceAudit,
 } from '@/server/verification/profile-linkage-audit';
 import { normalizeConcernId } from '@/lib/today-fortune/concerns';
+import { getVerificationAccessStatus } from '@/lib/verification-access';
 import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
@@ -289,6 +291,16 @@ function ProfileLinkageRows({ services }: { services: ProfileLinkageServiceAudit
 }
 
 export default async function VerificationPage({ searchParams }: VerificationPageProps) {
+  const access = await getVerificationAccessStatus();
+
+  if (access.status === 'unauthenticated') {
+    redirect(`/login?next=${encodeURIComponent('/verification')}`);
+  }
+
+  if (access.status === 'forbidden') {
+    notFound();
+  }
+
   const params = await searchParams;
   const concept = params.concept?.trim() || DEFAULT_CLASSICS_AUDIT_CONCEPT;
   const slug = params.slug?.trim() || '1982-1-29-8-male';

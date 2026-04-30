@@ -2,11 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { normalizeMoonlightCounselor } from '@/lib/counselors';
 import { normalizeConcernId } from '@/lib/today-fortune/concerns';
 import { getTodayFortuneVerificationAudit } from '@/server/verification/today-fortune-audit';
+import { requireVerificationApiAccess } from '@/lib/verification-access';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
+  const deniedResponse = await requireVerificationApiAccess();
+  if (deniedResponse) return deniedResponse;
+
   const searchParams = req.nextUrl.searchParams;
   const slug = searchParams.get('slug')?.trim() || undefined;
   const concernId = normalizeConcernId(searchParams.get('concern'));

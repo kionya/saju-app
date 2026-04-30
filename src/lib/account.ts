@@ -87,7 +87,7 @@ export async function requireAccount(redirectPath: string) {
 
 export async function getAccountDashboardData(
   redirectPath: string,
-  options: { readingLimit?: number; transactionLimit?: number } = {}
+  options: { readingLimit?: number; readingOffset?: number; transactionLimit?: number } = {}
 ): Promise<AccountDashboardData> {
   if (!hasSupabaseServerEnv || !hasSupabaseServiceEnv) {
     return buildLocalPreviewDashboard();
@@ -95,6 +95,7 @@ export async function getAccountDashboardData(
 
   const { supabase, user } = await requireAccount(redirectPath);
   const readingLimit = options.readingLimit ?? 5;
+  const readingOffset = Math.max(0, options.readingOffset ?? 0);
   const transactionLimit = options.transactionLimit ?? 6;
 
   const [creditsResponse, subscription, readingCountResponse, readingsResponse, transactionsResponse] =
@@ -114,7 +115,7 @@ export async function getAccountDashboardData(
         .select('id, birth_year, birth_month, birth_day, birth_hour, gender, created_at, result_json')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(readingLimit),
+        .range(readingOffset, readingOffset + readingLimit - 1),
       supabase
         .from('credit_transactions')
         .select('id, amount, type, feature, metadata, created_at')
