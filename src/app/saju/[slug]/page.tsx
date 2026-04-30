@@ -1095,15 +1095,15 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                   </div>
                 </div>
 
-                <div className="mt-6 grid gap-5 xl:grid-cols-[0.86fr_1.14fr]">
-                  <div className="mx-auto w-full max-w-[360px]">
+                <div className="mt-6 grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
+                  <div className="mx-auto w-full max-w-[390px]">
                     <FiveElementOrbitChart
                       byElement={sajuData.fiveElements.byElement}
                       dominant={sajuData.fiveElements.dominant}
                       weakest={sajuData.fiveElements.weakest}
                     />
                   </div>
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
                     {(Object.entries(sajuData.fiveElements.byElement) as [Element, (typeof sajuData.fiveElements.byElement)[Element]][]).map(([element, value]) => (
                       <div key={element} className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
                         <div
