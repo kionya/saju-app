@@ -4,6 +4,7 @@ import {
   buildProfileReadingSlug,
   buildStarSignSlugFromProfile,
   buildZodiacSlugFromProfile,
+  deriveZodiacSlugFromBirthInput,
   deriveStarSignSlug,
   deriveZodiacSlug,
 } from './profile-personalization';
@@ -48,8 +49,22 @@ test('profile personalization helpers build slugs from saved MY profile', () => 
   const profile = createProfile();
 
   assert.equal(buildStarSignSlugFromProfile(profile), 'aquarius');
-  assert.equal(buildZodiacSlugFromProfile(profile), 'dog');
+  assert.equal(buildZodiacSlugFromProfile(profile), 'rooster');
   assert.equal(buildProfileReadingSlug(profile), '1982-1-29-8-m45-male');
+});
+
+test('deriveZodiacSlugFromBirthInput follows saju year pillar instead of simple calendar year', () => {
+  assert.equal(
+    deriveZodiacSlugFromBirthInput({
+      year: 1982,
+      month: 1,
+      day: 29,
+      hour: 8,
+      minute: 45,
+      gender: 'male',
+    }),
+    'rooster'
+  );
 });
 
 test('profile personalization helpers stay null when core birth profile is missing', () => {

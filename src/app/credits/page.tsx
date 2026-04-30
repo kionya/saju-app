@@ -42,7 +42,7 @@ const PACKAGES: Package[] = [
   { id: 'credit_1', label: '체험', price: 500, credits: 1, desc: '짧은 심화 풀이를 한 번 열어보기 좋은 입문 패키지' },
   { id: 'credit_3', label: '스타터', price: 990, credits: 3, desc: '연애·재물·직장 심화 리포트 첫 결제에 가장 잘 맞는 구간', highlight: true },
   { id: 'credit_7', label: '기본', price: 2000, credits: 7, desc: '주제 여러 개를 이어서 보는 사용자에게 가장 안정적인 묶음' },
-  { id: 'subscription_30', label: '월간 코인팩', price: 9900, credits: 30, desc: '매달 자동 충전으로 넉넉하게 이어가는 코인 전용 플랜', isSubscription: true },
+  { id: 'subscription_30', label: '월간 코인팩', price: 9900, credits: 36, desc: '매달 자동 충전으로 36코인을 넉넉하게 이어가는 코인 전용 플랜 · 스타터 10회보다 6코인이 더 붙습니다', isSubscription: true },
 ];
 
 const CREDIT_FLOW_POINTS = [
@@ -55,6 +55,7 @@ const UNLOCK_EXAMPLES = [
   '1코인 · 오늘의 심화 풀이 한 번 열기',
   '3코인 · 연애·재물·직장 세 주제를 이어서 보기',
   '7코인 · 월간 테마나 상세 해석을 넓게 펼쳐보기',
+  '36코인 · 자주 여는 분을 위한 월간 보너스 패키지',
 ] as const;
 
 function CreditsPageContent() {

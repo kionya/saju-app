@@ -1,15 +1,21 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { ActionCluster } from '@/components/layout/action-cluster';
+import { BulletList } from '@/components/layout/bullet-list';
+import { FeatureCard } from '@/components/layout/feature-card';
+import { ProductGrid } from '@/components/layout/product-grid';
+import { SectionHeader } from '@/components/layout/section-header';
+import { SectionSurface } from '@/components/layout/section-surface';
+import { SupportRail } from '@/components/layout/support-rail';
 import { Badge } from '@/components/ui/badge';
 import SiteHeader from '@/features/shared-navigation/site-header';
-import { WisdomCategoryHero } from '@/features/shared-navigation/wisdom-category-hero';
 import { getOptionalSignedInProfile } from '@/lib/profile';
 import { buildProfileReadingSlug } from '@/lib/profile-personalization';
-import { AppShell } from '@/shared/layout/app-shell';
+import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 export const metadata: Metadata = {
   title: '명리',
-  description: '일주, 오행, 십신을 통해 반복되는 인생 패턴의 이유를 살펴보는 명리 탐구 공간입니다.',
+  description: '일간, 오행, 십신을 내 명식 위에 얹어 반복되는 인생 패턴의 이유를 읽는 명리 기준 화면입니다.',
   alternates: {
     canonical: '/myeongri',
   },
@@ -17,26 +23,32 @@ export const metadata: Metadata = {
 
 const EXPLORATIONS = [
   {
-    title: '일주 이야기',
-    body: '태어난 날의 기둥을 중심으로 성정과 기질의 본질을 읽습니다.',
-    hook: '나는 어떤 그림의 사람인가',
+    title: '일주와 기본 기질',
+    body: '태어난 날의 기둥을 중심으로 성정과 반응 방식, 삶의 기본 결을 읽습니다.',
+    hook: '나는 어떤 결의 사람인가',
     href: '/saju/new',
     badge: '日柱',
   },
   {
-    title: '오행의 흐름',
-    body: '다섯 기운의 균형과 부족한 지점을 시각적으로 이해하도록 돕습니다.',
-    hook: '내 안의 다섯 기운은 어떻게 흐르는가',
+    title: '오행의 강약과 균형',
+    body: '무엇이 강하고 무엇이 메마른지, 왜 늘 같은 장면에서 힘이 붙거나 꺼지는지 살펴봅니다.',
+    hook: '내 안의 다섯 기운은 어디서 흔들리는가',
     href: '/saju/new',
     badge: '五行',
   },
   {
-    title: '열 가지 인연',
-    body: '내 삶에 유난히 반복되는 관계와 역할의 패턴을 십신으로 풀어드립니다.',
-    hook: '내 삶에 등장하는 열 가지 관계',
+    title: '십신과 관계 패턴',
+    body: '돈, 일, 사람, 역할이 반복되는 방식과 삶에 자주 등장하는 장면을 십신으로 풉니다.',
+    hook: '왜 늘 비슷한 관계와 역할이 반복되는가',
     href: '/myeongri/ten-gods',
     badge: '十神',
   },
+] as const;
+
+const MYEONGRI_RULES = [
+  '명리는 점괘보다 구조 해석에 가깝습니다. 먼저 타고난 결을 읽고, 그 위에 관계와 선택을 올립니다.',
+  '하나의 개념만 단독으로 보기보다, 일간·오행·십신을 같이 놓고 읽어야 왜 그런 해석이 나오는지 더 분명해집니다.',
+  '설명만 읽는 것보다 내 명식 결과와 번갈아 보는 편이 훨씬 빠르게 이해됩니다.',
 ] as const;
 
 export default async function MyeongriPage() {
@@ -45,100 +57,126 @@ export default async function MyeongriPage() {
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
-      <div className="wisdom-category-page">
-        <WisdomCategoryHero slug="myeongri" />
-        <div className="wisdom-category-body">
+      <AppPage className="space-y-6">
+        <PageHero
+          badges={[
+            <Badge
+              key="myeongri"
+              className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]"
+            >
+              명리 기준
+            </Badge>,
+            <Badge
+              key="scope"
+              className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
+            >
+              일간 · 오행 · 십신
+            </Badge>,
+          ]}
+          title="개념을 따로 외우기보다, 내 사주 위에서 바로 읽는 명리 화면입니다"
+          description="명리는 성격 테스트가 아니라 원국의 결, 강약, 관계 패턴을 읽는 기준입니다. 설명만 따로 늘어놓지 않고, 실제 사주 결과와 이어지는 언어로 정리했습니다."
+        />
+
+        <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
+          <SectionSurface surface="lunar" size="lg">
+            <div className="app-starfield" />
+            <SectionHeader
+              eyebrow="명리 읽는 순서"
+              title="먼저 바탕을 보고, 그다음 반복되는 장면을 해석합니다"
+              titleClassName="text-3xl text-[var(--app-gold-text)]"
+              description="일간과 오행은 바탕을, 십신은 사람과 역할의 패턴을 설명합니다. 달빛선생에서는 이 셋을 따로 떼지 않고, 결과 화면과 연결되는 순서로 읽게 두었습니다."
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+            />
+
+            <ProductGrid columns={3} className="mt-6">
+              {EXPLORATIONS.map((item) => (
+                <FeatureCard
+                  key={item.title}
+                  surface="soft"
+                  eyebrow={item.badge}
+                  title={item.title}
+                  description={`${item.hook} · ${item.body}`}
+                />
+              ))}
+            </ProductGrid>
+          </SectionSurface>
+
+          <SupportRail
+            surface="panel"
+            eyebrow="읽기 기준"
+            title="명리는 겁을 주는 말이 아니라 반복되는 이유를 설명하는 언어입니다"
+            description="개념을 많이 보여주는 것보다, 왜 그 판단이 나왔는지와 내 선택에 어떻게 연결되는지를 더 먼저 보이도록 정리했습니다."
+          >
+            <BulletList items={MYEONGRI_RULES} />
+
+            <FeatureCard
+              className="mt-5"
+              surface="soft"
+              eyebrow="바로 이어보기"
+              description={
+                readingSlug
+                  ? '저장된 사주 결과가 있다면, 개념 설명보다 먼저 내 명식으로 바로 확인하는 편이 가장 이해가 빠릅니다.'
+                  : '저장된 사주 결과가 없다면, 명리 설명을 읽다가 바로 사주 시작 화면으로 넘어가도 흐름이 끊기지 않게 두었습니다.'
+              }
+            />
+          </SupportRail>
+        </section>
+
         {readingSlug ? (
-          <section className="mt-8 rounded-[1.8rem] border border-[var(--app-gold)]/24 bg-[linear-gradient(180deg,rgba(210,176,114,0.14),rgba(10,18,36,0.94))] p-6">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="max-w-2xl">
-                <div className="app-caption">내 사주로 이어보기</div>
-                <h2 className="mt-3 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
-                  개념 설명보다, 선생님의 사주에 바로 대입해 볼 수 있습니다
-                </h2>
-                <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                  명리 탐구는 개념을 배우는 공간이지만, 저장된 MY 프로필이 있으면 이미 만들어진
-                  선생님의 사주 결과로 바로 이어볼 수 있습니다. 읽다가 궁금한 개념이 생기면 내
-                  결과와 번갈아 보는 흐름이 가장 이해가 빠릅니다.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Link
-                  href={`/saju/${readingSlug}`}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
-                >
-                  내 통합 결과 보기
-                </Link>
-                <Link
-                  href={`/saju/${readingSlug}/elements`}
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm font-semibold text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
-                >
-                  내 오행 바로 보기
-                </Link>
-              </div>
-            </div>
-          </section>
+          <SectionSurface surface="panel" size="lg">
+            <SectionHeader
+              eyebrow="내 사주로 이어보기"
+              title="개념 설명보다, 선생님의 명식 위에서 바로 확인할 수 있습니다"
+              titleClassName="text-3xl"
+              description="읽다가 궁금해진 개념은 실제 결과 화면으로 넘어가면 훨씬 빠르게 이해됩니다. 내 사주를 기준으로 일간, 오행, 십신을 번갈아 확인해 보세요."
+              descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+              actions={
+                <ActionCluster>
+                  <Link
+                    href={`/saju/${readingSlug}`}
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                  >
+                    내 통합 결과 보기
+                  </Link>
+                  <Link
+                    href={`/saju/${readingSlug}/elements`}
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm font-semibold text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                  >
+                    내 오행 바로 보기
+                  </Link>
+                </ActionCluster>
+              }
+            />
+          </SectionSurface>
         ) : null}
 
-        <section className="mt-8 grid gap-4 md:grid-cols-3">
-          {EXPLORATIONS.map((item) => (
-            <Link
-              key={item.title}
-              href={item.href}
-              className="app-panel block p-6 transition-colors hover:bg-[var(--app-surface-strong)]"
-            >
-              <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-soft)]">
-                {item.badge}
-              </Badge>
-              <div className="mt-4 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-                {item.title}
-              </div>
-              <p className="mt-3 text-sm text-[var(--app-gold-soft)]">“{item.hook}”</p>
-              <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
-            </Link>
-          ))}
-        </section>
+        <SectionSurface surface="panel" size="lg">
+          <SectionHeader
+            eyebrow="탐구 주제"
+            title="명리 안에서 가장 자주 다시 보게 되는 세 갈래"
+            titleClassName="text-3xl"
+            description="설명을 길게 늘어놓기보다, 실제로 많이 다시 보게 되는 세 갈래만 먼저 정리했습니다."
+            descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+          />
 
-        <section className="mt-8 grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-          <article className="app-panel p-6">
-            <div className="app-caption">명리를 보는 세 가지 축</div>
-            <div className="mt-5 space-y-4">
-              {[
-                '일주는 내가 본래 어떤 결의 사람인지 알려줍니다.',
-                '오행은 내 안에서 무엇이 강하고 무엇이 메마른지 보여줍니다.',
-                '십신은 사람과 역할, 재물과 자리의 패턴이 어떻게 반복되는지 읽게 해줍니다.',
-              ].map((line) => (
-                <div
-                  key={line}
-                  className="rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-sm leading-7 text-[var(--app-copy)]"
-                >
-                  {line}
-                </div>
-              ))}
-            </div>
-          </article>
-
-          <article className="rounded-[1.75rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(180deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] p-6">
-            <div className="app-caption">가장 많이 찾는 탐구</div>
-            <div className="mt-3 font-[var(--font-heading)] text-3xl text-[var(--app-gold-text)]">
-              십신 · 열 가지 인연
-            </div>
-            <p className="mt-4 text-sm leading-7 text-[var(--app-copy)]">
-              자녀, 배우자, 동료, 재물, 명예처럼 삶에서 자주 부딪히는 관계의 결을 십신으로
-              읽으면 “왜 늘 이 장면이 반복되는지”가 더 또렷해집니다.
-            </p>
-            <div className="mt-6">
+          <ProductGrid columns={3} className="mt-6">
+            {EXPLORATIONS.map((item) => (
               <Link
-                href="/myeongri/ten-gods"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/16 px-5 text-sm font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/22"
+                key={item.title}
+                href={item.href}
+                className="group rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5 transition-colors hover:bg-[rgba(255,255,255,0.05)]"
               >
-                십신 상세 보기
+                <div className="app-caption text-[var(--app-gold-soft)]">{item.badge}</div>
+                <div className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{item.title}</div>
+                <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">{item.body}</p>
+                <div className="mt-4 text-sm font-medium text-[var(--app-gold-text)] transition-transform group-hover:translate-x-1">
+                  {item.hook} →
+                </div>
               </Link>
-            </div>
-          </article>
-        </section>
-        </div>
-      </div>
+            ))}
+          </ProductGrid>
+        </SectionSurface>
+      </AppPage>
     </AppShell>
   );
 }

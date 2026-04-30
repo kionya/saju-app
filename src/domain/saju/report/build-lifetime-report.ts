@@ -424,7 +424,7 @@ export function buildLifetimeReport(
         ...yearlyReport.actionGuide.useWhenStrong,
         ...yearlyReport.actionGuide.defendWhenWeak,
       ].slice(0, 4),
-      ctaLabel: `${targetYear} 신년 리포트 전체 보기`,
+      ctaLabel: `${targetYear} 연간 전략 부록 전체 보기`,
       ctaAnchor: '#yearly-report',
       basis: compactStrings([
         yearlyReport.overview.summary,

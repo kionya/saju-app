@@ -6,14 +6,20 @@ export function formatBirthSummary(input: BirthInput) {
     input.hour !== undefined && input.minute !== undefined
       ? ` ${String(input.minute).padStart(2, '0')}분`
       : '';
-  const timeLabel = input.hour !== undefined ? `${input.hour}시${minuteLabel} 기준` : '태어난 시간 미입력';
+  const solarTimeLabel =
+    input.solarTimeMode === 'longitude' ? '진태양시' : '표준시';
+  const timeLabel =
+    input.hour !== undefined
+      ? `${input.hour}시${minuteLabel} 기준 · ${solarTimeLabel}`
+      : '태어난 시간 미입력';
   const genderLabel = input.gender
     ? input.gender === 'male'
       ? '남성'
       : '여성'
     : '성별 미선택';
-  const locationLabel = input.birthLocation?.label
-    ? `${input.birthLocation.label}${input.solarTimeMode === 'longitude' ? ' 경도 보정' : ''}`
+  const locationSource = input.birthLocation?.label ?? input.birthLocation?.code ?? null;
+  const locationLabel = locationSource
+    ? `${locationSource}${input.solarTimeMode === 'longitude' ? ' · 경도 보정 반영' : ''}`
     : '출생 지역 미입력';
 
   return `${input.year}년 ${input.month}월 ${input.day}일 · ${timeLabel} · ${genderLabel} · ${locationLabel}`;

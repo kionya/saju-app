@@ -1,6 +1,8 @@
+import { calculateSajuDataV1 } from '@/domain/saju/engine/saju-data-v1';
 import type { UserProfile } from '@/lib/profile';
 import { hasCoreBirthProfile, toBirthInputFromProfile } from '@/lib/profile';
 import { toSlug } from '@/lib/saju/pillars';
+import type { Branch, BirthInput } from '@/lib/saju/types';
 
 export function deriveStarSignSlug(month: number, day: number) {
   const value = month * 100 + day;
@@ -34,9 +36,29 @@ const ZODIAC_ORDER = [
   'pig',
 ] as const;
 
+const BRANCH_TO_ZODIAC: Record<Branch, (typeof ZODIAC_ORDER)[number]> = {
+  子: 'rat',
+  丑: 'ox',
+  寅: 'tiger',
+  卯: 'rabbit',
+  辰: 'dragon',
+  巳: 'snake',
+  午: 'horse',
+  未: 'goat',
+  申: 'monkey',
+  酉: 'rooster',
+  戌: 'dog',
+  亥: 'pig',
+};
+
 export function deriveZodiacSlug(year: number) {
   const index = ((year - 1984) % 12 + 12) % 12;
   return ZODIAC_ORDER[index];
+}
+
+export function deriveZodiacSlugFromBirthInput(input: BirthInput) {
+  const data = calculateSajuDataV1(input);
+  return BRANCH_TO_ZODIAC[data.pillars.year.branch] ?? deriveZodiacSlug(input.year);
 }
 
 export function buildProfileReadingSlug(profile: UserProfile | null | undefined) {
@@ -60,5 +82,5 @@ export function buildZodiacSlugFromProfile(profile: UserProfile | null | undefin
     return null;
   }
 
-  return deriveZodiacSlug(profile.birthYear);
+  return deriveZodiacSlugFromBirthInput(toBirthInputFromProfile(profile));
 }

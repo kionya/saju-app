@@ -152,10 +152,12 @@ function ManagedBirthFields({
   draft,
   onChange,
   helperText,
+  dateInputVariant,
 }: {
   draft: UnifiedBirthEntryDraft;
   onChange: (patch: Partial<UnifiedBirthEntryDraft>) => void;
   helperText: string;
+  dateInputVariant?: 'input' | 'select';
 }) {
   const [locationStatus, setLocationStatus] = useState<LocationSearchStatus>('idle');
   const [locationMessage, setLocationMessage] = useState('');
@@ -218,6 +220,7 @@ function ManagedBirthFields({
       <UnifiedBirthInfoFields
         draft={draft}
         onChange={onChange}
+        dateInputVariant={dateInputVariant}
         locationLoading={locationStatus === 'loading'}
         locationMessage={locationMessage}
         locationResults={locationResults}
@@ -543,6 +546,7 @@ export default function ProfileManager({
             <ManagedBirthFields
               draft={familyForm}
               onChange={(patch) => setFamilyForm((current) => ({ ...current, ...patch }))}
+              dateInputVariant="select"
               helperText="가족 프로필도 오늘운세와 사주 시작하기와 같은 입력 규칙으로 저장됩니다. 음력 생일만 기억하는 경우에도 그대로 남겨둘 수 있습니다."
             />
 

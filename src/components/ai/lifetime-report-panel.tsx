@@ -402,7 +402,7 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
         <div className="app-starfield" />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="app-caption">평생 소장 리포트</div>
+            <div className="app-caption">명리 기준서 본문</div>
             <h2 className="font-display mt-4 text-3xl text-[var(--app-ivory)]">
               내 사주의 원본 해설서를 평생 기준서로 정리했습니다
             </h2>

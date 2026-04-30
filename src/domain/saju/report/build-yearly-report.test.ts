@@ -51,6 +51,10 @@ test('buildYearlyReport fills all 12 months with actual monthly ganji evidence',
         typeof flow.monthlyGanji === 'string' &&
         flow.monthlyGanji.length > 0 &&
         flow.summary.length > 0 &&
+        flow.opportunity.length > 0 &&
+        flow.caution.length > 0 &&
+        flow.action.length > 0 &&
+        flow.opportunity !== flow.caution &&
         flow.relatedAreas.length >= 2 &&
         flow.basis.some((line) => line.includes('월운:')) &&
         flow.basis.some((line) => line.includes('세운:'))

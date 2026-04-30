@@ -619,12 +619,16 @@ export default function SajuIntakePage({ step }: { step: OnboardingStep }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             displayName: form.nickname.trim(),
+            calendarType: form.calendarType,
+            timeRule: form.timeRule,
+            unknownBirthTime: parsed.input.unknownTime,
             birthYear: parsed.input.year,
             birthMonth: parsed.input.month,
             birthDay: parsed.input.day,
             birthHour: parsed.input.hour ?? null,
             birthMinute: parsed.input.minute ?? null,
-            birthLocationCode: parsed.input.birthLocation?.code ?? null,
+            birthLocationCode:
+              parsed.input.birthLocation?.code ?? form.birthLocationCode ?? null,
             birthLocationLabel: parsed.input.birthLocation?.label ?? '',
             birthLatitude: parsed.input.birthLocation?.latitude ?? null,
             birthLongitude: parsed.input.birthLocation?.longitude ?? null,

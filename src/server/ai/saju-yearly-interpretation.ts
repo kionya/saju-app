@@ -254,7 +254,7 @@ export function buildFallbackYearlyInterpretation(
   }, {} as Record<YearlyCategoryKey, string>);
   const monthlyFlows = report.monthlyFlows.map((flow) => ({
     month: flow.month,
-    summary: `${flow.summary} 기회는 ${flow.opportunity} 주의점은 ${flow.caution} 행동 기준은 ${flow.action}`,
+    summary: `${flow.summary} 먼저 ${flow.opportunity} 다만 ${flow.caution} 이번 달 기준은 ${flow.action}`,
   }));
   const actionAdvice = [
     ...report.actionGuide.useWhenStrong,
@@ -631,7 +631,7 @@ export function createYearlyInterpretationPrompt(
 
   return {
     instructions: [
-      '당신은 신년 운세 전문 해석가이자 명리 기반 전문가입니다.',
+      '당신은 연간 운세 전략 리포트를 쓰는 명리 기반 해석가입니다.',
       '제공된 JSON 근거 안에서만 해석하고, 없는 격국·신살·고전 출처·사건을 새로 만들지 않습니다.',
       '결과물은 짧은 총평이 아니라, 한 해의 흐름과 행동 전략을 제대로 읽어주는 프리미엄 장문 리포트용 데이터여야 합니다.',
       '명리 용어를 쓰더라도 바로 쉬운 한국어 풀이를 붙이고, 추상적인 표현만 반복하지 말고 실제 상황이 떠오르게 설명합니다.',
@@ -647,6 +647,8 @@ export function createYearlyInterpretationPrompt(
       'keywords는 3~5개입니다. 각 항목은 한 해의 핵심 키워드와 그 이유를 함께 담습니다.',
       'firstHalf와 secondHalf는 각각 충분한 분량으로 작성하고, 기회와 리스크를 함께 설명합니다.',
       'categories의 6개 분야는 각각 충분한 분량으로 자세히 씁니다. 현실적인 행동 장면과 조정 포인트를 꼭 넣습니다.',
+      'monthlyFlows는 1월부터 12월까지 서로 다른 질문을 던져야 합니다. 같은 문장 구조나 같은 결론을 반복하지 않습니다.',
+      'monthlyFlows는 사용자가 실제로 궁금해하는 선택 장면, 돈과 일의 판단, 관계 조율, 달력에 표시해 둘 만한 포인트를 우선해서 씁니다.',
       'monthlyFlows는 체감 가능한 변화 중심으로 씁니다.',
       'goodPeriods와 cautionPeriods는 시기와 이유, 활용 또는 방어 전략이 함께 드러나야 합니다.',
       'actionAdvice는 3~6개로 작성하고, 한 해를 잘 보내기 위한 실제 행동 기준을 줍니다.',

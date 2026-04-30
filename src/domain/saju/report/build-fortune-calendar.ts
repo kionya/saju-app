@@ -59,6 +59,45 @@ function compactStrings(values: Array<string | null | undefined>) {
     .filter(Boolean);
 }
 
+function pickDateLabels(
+  days: FortuneCalendarDayEntry[],
+  primaryTones: FortuneCalendarTone[],
+  fallbackTones: FortuneCalendarTone[],
+  compare: (left: FortuneCalendarDayEntry, right: FortuneCalendarDayEntry) => number,
+  excludeLabels: string[] = []
+) {
+  const picked: string[] = [];
+  const excluded = new Set(excludeLabels);
+
+  const tryPush = (entry: FortuneCalendarDayEntry) => {
+    const label = formatDateLabel(
+      Number(entry.isoDate.slice(0, 4)),
+      Number(entry.isoDate.slice(5, 7)),
+      entry.day
+    );
+    if (excluded.has(label) || picked.includes(label)) return;
+    picked.push(label);
+  };
+
+  [...days]
+    .filter((entry) => primaryTones.includes(entry.tone))
+    .sort(compare)
+    .forEach(tryPush);
+
+  if (picked.length < 4) {
+    [...days]
+      .filter((entry) => fallbackTones.includes(entry.tone))
+      .sort(compare)
+      .forEach(tryPush);
+  }
+
+  if (picked.length < 4) {
+    [...days].sort(compare).forEach(tryPush);
+  }
+
+  return picked.slice(0, 4);
+}
+
 function createDayEntry(
   input: BirthInput,
   sourceData: SajuDataV1,
@@ -157,14 +196,19 @@ export function buildFortuneCalendarMonth(
       caution: 0,
     }
   );
-  const bestDays = [...days]
-    .sort((left, right) => right.score - left.score)
-    .slice(0, 4)
-    .map((item) => formatDateLabel(year, month, item.day));
-  const cautionDays = [...days]
-    .sort((left, right) => left.score - right.score)
-    .slice(0, 4)
-    .map((item) => formatDateLabel(year, month, item.day));
+  const bestDays = pickDateLabels(
+    days,
+    ['decision', 'good'],
+    ['average'],
+    (left, right) => right.score - left.score
+  );
+  const cautionDays = pickDateLabels(
+    days,
+    ['caution'],
+    ['average'],
+    (left, right) => left.score - right.score,
+    bestDays
+  );
   const headline =
     toneCounts.decision >= 4
       ? '결정을 밀어도 되는 날이 고르게 분포한 달입니다.'

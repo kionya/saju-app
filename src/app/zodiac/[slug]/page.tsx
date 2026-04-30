@@ -72,10 +72,10 @@ export default async function ZodiacDetailPage({ params }: Props) {
               {meta.symbol} {item.label}
             </Badge>,
             <Badge
-              key="years"
+              key="basis"
               className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
             >
-              {item.years}
+              연주 기준
             </Badge>,
           ]}
           title={`${item.label}의 ${ZODIAC_BLUEPRINT.yearlyLabel}`}
@@ -167,7 +167,7 @@ export default async function ZodiacDetailPage({ params }: Props) {
                 <FeatureCard
                   key={entry.slug}
                   surface="soft"
-                  eyebrow={`${relatedMeta.symbol} ${entry.years}`}
+                  eyebrow={`${relatedMeta.symbol} 연주 흐름`}
                   title={entry.label}
                   description={relatedMeta.yearlyMessage}
                   footer={

@@ -616,13 +616,13 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                   eyebrow="연간 전략"
                   title="올해 흐름까지 확장"
                   titleClassName="text-2xl"
-                  description="월별 리듬, 기회 달, 조심할 달은 연간 리포트에서 같은 명리 기준 위로 이어집니다."
+                  description="월별 리듬, 기회 달, 조심할 달은 연간 전략 부록에서 같은 명리 기준 위로 이어집니다."
                   footer={
                     <Link
                       href={`/saju/${slug}/premium#yearly-report`}
                       className="text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
                     >
-                      연간 리포트 바로 보기
+                      연간 전략 부록 바로 보기
                     </Link>
                   }
                 />
@@ -728,13 +728,13 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           <div className="app-starfield" />
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <div className="app-caption">연간 리포트 진입</div>
+              <div className="app-caption">연간 전략 부록 진입</div>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--app-ivory)]">
-                2026 신년 리포트를 월별 흐름까지 길게 읽고 싶다면 여기서 이어집니다.
+                2026 연간 전략 부록으로 들어가면 월별 판단 기준까지 길게 읽을 수 있습니다.
               </h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
                 총론, 상반기·하반기, 일·재물·연애·관계·건강·이동 흐름, 12개월 요약까지 한 번에 정리한
-                프리미엄 리포트를 명리 기준서 안에서 확인할 수 있습니다.
+                올해 부록을 명리 기준서 안에서 확인할 수 있습니다.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -742,10 +742,10 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 href={`/saju/${slug}/premium#yearly-report`}
                 className="rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/14 px-5 py-3 text-sm font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/20"
               >
-                2026 신년 리포트 보기
+                2026 연간 전략 부록 보기
               </Link>
               <span className="text-xs text-[var(--app-copy-soft)]">
-                명리 기준서 탭에서 열립니다
+                명리 기준서 안의 올해 부록으로 이어집니다
               </span>
             </div>
           </div>

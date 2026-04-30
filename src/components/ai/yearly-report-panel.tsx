@@ -6,6 +6,11 @@ import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { SajuInterpretationGrounding } from '@/domain/saju/report';
+import type {
+  SajuYearlyReport,
+  YearlyMonthFlow,
+  YearlyTimingWindow,
+} from '@/domain/saju/report/yearly-types';
 import type { KasiSingleInputComparison } from '@/domain/saju/validation/kasi-calendar';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import type { MoonlightCounselorId } from '@/lib/counselors';
@@ -42,6 +47,7 @@ interface YearlyInterpretationResponse {
   grounding: SajuInterpretationGrounding;
   kasiComparison: KasiSingleInputComparison | null;
   interpretation: SajuYearlyAiInterpretation;
+  report: SajuYearlyReport;
   reportText: string;
   stageResults: Array<{
     key: 'narrative' | 'monthly';
@@ -60,6 +66,33 @@ const CATEGORY_ORDER = [
   { key: 'health', label: '건강운', color: '#a78bfa' },
   { key: 'move', label: '이동·변화운', color: '#60a5fa' },
 ] as const;
+
+const MOMENTUM_META: Record<
+  YearlyMonthFlow['momentum'],
+  { label: string; badgeClassName: string }
+> = {
+  rise: {
+    label: '밀어도 되는 달',
+    badgeClassName: 'border-emerald-400/25 bg-emerald-400/10 text-emerald-100',
+  },
+  steady: {
+    label: '정리하는 달',
+    badgeClassName: 'border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]',
+  },
+  caution: {
+    label: '한 번 더 확인할 달',
+    badgeClassName: 'border-rose-400/25 bg-rose-400/10 text-rose-100',
+  },
+};
+
+const YEARLY_AREA_LABEL: Record<YearlyMonthFlow['relatedAreas'][number], string> = {
+  work: '일',
+  wealth: '돈',
+  love: '연애',
+  relationship: '관계',
+  health: '생활 리듬',
+  move: '변화',
+};
 
 function splitParagraphs(text: string) {
   return text
@@ -89,11 +122,177 @@ function formatUpdatedAt(value?: string) {
   }).format(date);
 }
 
-function MonthlyFlowCard({ flow }: { flow: SajuYearlyAiMonthlyFlow }) {
+function buildMonthlyFallback(flow: SajuYearlyAiMonthlyFlow): YearlyMonthFlow {
+  return {
+    month: flow.month,
+    label: `${flow.month}월`,
+    monthlyGanji: null,
+    momentum: 'steady',
+    theme: `${flow.month}월 흐름`,
+    summary: flow.summary,
+    opportunity: '이미 준비된 선택 한두 가지를 먼저 꺼내 보세요.',
+    caution: '확정 전에 한 번 더 비교하고 확인하는 편이 좋습니다.',
+    action: '욕심을 넓히기보다 기준을 먼저 세우고 움직이세요.',
+    relatedAreas: ['work', 'wealth'],
+    basis: [],
+  };
+}
+
+function normalizeMonthlyFlows(
+  report: SajuYearlyReport | undefined,
+  interpretation: SajuYearlyAiInterpretation
+) {
+  if (report?.monthlyFlows?.length) return report.monthlyFlows;
+  return interpretation.monthlyFlows.map(buildMonthlyFallback);
+}
+
+function MonthlyFlowCard({ flow }: { flow: YearlyMonthFlow }) {
+  const momentumMeta = MOMENTUM_META[flow.momentum];
+  const areaLabel = flow.relatedAreas.map((area) => YEARLY_AREA_LABEL[area]).join(' · ');
+
   return (
-    <article className="rounded-[20px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
-      <div className="app-caption text-[var(--app-gold-soft)]">{flow.month}월</div>
-      <div className="mt-3 space-y-3">{renderParagraphs(flow.summary)}</div>
+    <article className="rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="app-caption text-[var(--app-gold-soft)]">{flow.month}월</div>
+        <Badge className={momentumMeta.badgeClassName}>{momentumMeta.label}</Badge>
+      </div>
+
+      <p className="mt-3 text-sm leading-7 text-[var(--app-ivory)]">{flow.summary}</p>
+
+      <div className="mt-4 grid gap-3">
+        <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
+          <div className="app-caption text-[var(--app-gold-soft)]">이번 달 먼저 볼 것</div>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{flow.opportunity}</p>
+        </div>
+        <div className="rounded-[18px] border border-rose-400/18 bg-rose-400/6 px-4 py-3">
+          <div className="app-caption text-rose-100">한 번 더 확인할 장면</div>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{flow.caution}</p>
+        </div>
+        <div className="rounded-[18px] border border-emerald-400/18 bg-emerald-400/6 px-4 py-3">
+          <div className="app-caption text-emerald-100">이번 달 행동 기준</div>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{flow.action}</p>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]">
+          {flow.monthlyGanji ?? `${flow.month}월`}
+        </Badge>
+        <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]">
+          {areaLabel}
+        </Badge>
+      </div>
+    </article>
+  );
+}
+
+function TimingWindowCard({
+  title,
+  windows,
+  tone,
+}: {
+  title: string;
+  windows: YearlyTimingWindow[];
+  tone: 'good' | 'caution';
+}) {
+  const cardClassName =
+    tone === 'good'
+      ? 'border-emerald-400/20 bg-emerald-400/8'
+      : 'border-rose-400/20 bg-rose-400/8';
+  const captionClassName = tone === 'good' ? 'text-emerald-100' : 'text-rose-100';
+
+  return (
+    <article className={`rounded-[22px] border px-4 py-4 ${cardClassName}`}>
+      <div className={`app-caption ${captionClassName}`}>{title}</div>
+      <div className="mt-4 grid gap-3">
+        {windows.map((window) => (
+          <div
+            key={`${title}-${window.label}-${window.months.join('-')}`}
+            className="rounded-[16px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3"
+          >
+            <div className="text-sm font-semibold text-[var(--app-ivory)]">
+              {window.months.map((month) => `${month}월`).join(' · ')}
+            </div>
+            <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{window.reason}</p>
+            <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">{window.strategy}</p>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function buildMonthlySectionTitle(report: SajuYearlyReport) {
+  return `${report.year}년 1월부터 12월까지, 실제로 먼저 확인할 장면을 달별로 정리했습니다`;
+}
+
+function buildMonthlySectionDescription(report: SajuYearlyReport) {
+  const repeatedAreas = [...new Set(report.monthlyFlows.flatMap((flow) => flow.relatedAreas))]
+    .map((area) => YEARLY_AREA_LABEL[area])
+    .slice(0, 4)
+    .join(' · ');
+
+  return `좋은 말만 길게 적지 않고, 사람들이 실제로 궁금해하는 ${repeatedAreas} 중심으로 “이번 달 밀어도 되는 일 / 한 번 더 확인할 일 / 행동 기준”을 먼저 읽게 정리했습니다.`;
+}
+
+function YearlyMonthlySection({
+  report,
+  interpretation,
+}: {
+  report?: SajuYearlyReport;
+  interpretation: SajuYearlyAiInterpretation;
+}) {
+  const monthlyFlows = normalizeMonthlyFlows(report, interpretation);
+  const title = report ? buildMonthlySectionTitle(report) : '1월부터 12월까지 핵심 장면을 먼저 정리했습니다';
+  const description = report
+    ? buildMonthlySectionDescription(report)
+    : '월별 핵심 문장만 빠르게 확인하고, 필요한 달만 다시 펼쳐보실 수 있게 정리했습니다.';
+
+  return (
+    <div className="mt-6">
+      <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
+        월별 핵심 장면
+      </div>
+      <h3 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{title}</h3>
+      <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">{description}</p>
+
+      {report ? (
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <TimingWindowCard title="밀어도 되는 시기" windows={report.goodPeriods} tone="good" />
+          <TimingWindowCard title="한 번 더 확인할 시기" windows={report.cautionPeriods} tone="caution" />
+        </div>
+      ) : null}
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        {monthlyFlows.map((flow) => (
+          <MonthlyFlowCard key={`${flow.month}-${flow.summary.slice(0, 12)}`} flow={flow} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TimingSummaryBlock({
+  title,
+  items,
+  tone,
+}: {
+  title: string;
+  items: string[];
+  tone: 'good' | 'caution';
+}) {
+  const eyebrowClassName = tone === 'good' ? 'text-emerald-100' : 'text-rose-100';
+
+  return (
+    <article className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
+      <div className={`app-caption ${eyebrowClassName}`}>{title}</div>
+      <div className="mt-4 space-y-3">
+        {items.map((item) => (
+          <p key={item} className="text-sm leading-7 text-[var(--app-copy)]">
+            {item}
+          </p>
+        ))}
+      </div>
     </article>
   );
 }
@@ -131,7 +330,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
           | null;
 
         if (!response.ok || !payload || !('ok' in payload) || payload.ok !== true) {
-          setError(payload && 'error' in payload && payload.error ? payload.error : '연간 리포트를 불러오지 못했습니다.');
+          setError(payload && 'error' in payload && payload.error ? payload.error : '연간 전략 부록을 불러오지 못했습니다.');
           setState('error');
           return;
         }
@@ -140,7 +339,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
         setState('ready');
       } catch (fetchError) {
         if ((fetchError as Error).name === 'AbortError') return;
-        setError('연간 리포트를 불러오는 중 오류가 발생했습니다.');
+        setError('연간 전략 부록을 불러오는 중 오류가 발생했습니다.');
         setState('error');
       }
     }
@@ -159,12 +358,12 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
     return (
       <section className="moon-lunar-panel p-6">
         <div className="app-starfield" />
-        <div className="app-caption">연간 리포트 생성 중</div>
+        <div className="app-caption">연간 전략 부록 생성 중</div>
         <h2 className="font-display mt-4 text-3xl text-[var(--app-ivory)]">
-          {targetYear}년 신년 운세를 정리하고 있습니다
+          {targetYear}년 올해 전략 부록을 정리하고 있습니다
         </h2>
         <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-          원국, 세운, 월운, 대운을 다시 맞춰 한 해 전체 흐름을 장문 리포트로 재구성하고 있습니다.
+          원국, 세운, 월운, 대운의 근거를 다시 맞추고, 같은 기준 위에서 올해의 선택 포인트를 재구성하고 있습니다.
         </p>
         <div className="mt-6 grid gap-3 lg:grid-cols-3">
           {Array.from({ length: 3 }, (_, index) => (
@@ -181,8 +380,8 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
   if (state === 'error' || !data) {
     return (
       <section className="app-panel space-y-4 border-rose-400/20 p-6">
-        <div className="app-caption text-rose-200/80">연간 리포트 오류</div>
-        <p className="font-medium text-rose-200">{error || '연간 리포트를 불러오지 못했습니다.'}</p>
+        <div className="app-caption text-rose-200/80">연간 전략 부록 오류</div>
+        <p className="font-medium text-rose-200">{error || '연간 전략 부록을 불러오지 못했습니다.'}</p>
         <Button
           onClick={() => setReloadToken((value) => value + 1)}
           variant="outline"
@@ -201,12 +400,12 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
       <div className="app-starfield" />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="app-caption">{targetYear} 신년 운세 프리미엄 리포트</div>
+          <div className="app-caption">{targetYear} 연간 전략 부록</div>
           <h2 className="font-display mt-4 text-3xl text-[var(--app-ivory)]">
-            {targetYear}년 한 해의 큰 흐름을 먼저 읽어드립니다
+            {targetYear}년 한 해를 월별 판단 기준까지 먼저 정리해드립니다
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
-            명식, 세운, 월운, 대운의 계산 기준을 먼저 고정하고, 이 리포트는 그 결과를 한 해의 언어로 풀어냅니다.
+            명리 기준서가 평생 기준을 남기는 본문이라면, 이 부록은 같은 근거 위에서 올해의 기회 달, 주의 달, 관계·돈·일의 판단 시점을 읽어드리는 연간 전략편입니다.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -248,7 +447,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
           grounding={data.grounding}
           kasiComparison={data.kasiComparison}
           metadata={data.metadata}
-          title="이 연간 리포트가 참고한 실제 계산 근거"
+          title="이 연간 전략 부록이 참고한 실제 계산 근거"
         />
       </div>
 
@@ -308,38 +507,11 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
         ))}
       </div>
 
-      <div className="mt-6">
-        <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
-          월별 흐름 요약
-        </div>
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          {interpretation.monthlyFlows.map((flow) => (
-            <MonthlyFlowCard key={`${flow.month}-${flow.summary.slice(0, 16)}`} flow={flow} />
-          ))}
-        </div>
-      </div>
+      <YearlyMonthlySection report={data.report} interpretation={interpretation} />
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        <article className="rounded-[24px] border border-emerald-400/20 bg-emerald-400/8 px-5 py-5">
-          <div className="app-caption text-emerald-200">잘 풀리는 시기</div>
-          <div className="mt-4 space-y-3">
-            {data.interpretation.goodPeriods.map((item) => (
-              <p key={item} className="text-sm leading-8 text-[var(--app-copy)]">
-                {item}
-              </p>
-            ))}
-          </div>
-        </article>
-        <article className="rounded-[24px] border border-rose-400/20 bg-rose-400/8 px-5 py-5">
-          <div className="app-caption text-rose-200">조심해야 할 시기</div>
-          <div className="mt-4 space-y-3">
-            {data.interpretation.cautionPeriods.map((item) => (
-              <p key={item} className="text-sm leading-8 text-[var(--app-copy)]">
-                {item}
-              </p>
-            ))}
-          </div>
-        </article>
+        <TimingSummaryBlock title="좋은 시기 활용법" items={data.interpretation.goodPeriods} tone="good" />
+        <TimingSummaryBlock title="조심해야 할 시기" items={data.interpretation.cautionPeriods} tone="caution" />
         <article className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
           <div className="app-caption text-[var(--app-gold-soft)]">행동 조언</div>
           <div className="mt-4 space-y-3">

@@ -73,7 +73,11 @@ export default async function ZodiacPage() {
               eyebrow={hasPersonalizedProfile ? 'MY 프로필 기준 띠' : '오늘 먼저 보는 띠'}
               title={hasPersonalizedProfile ? `선생님은 ${featured.label}` : featured.label}
               titleClassName="text-3xl text-[var(--app-gold-text)]"
-              description={featured.years}
+              description={
+                hasPersonalizedProfile
+                  ? '저장된 생년월일 기준으로 계산한 연주 흐름입니다.'
+                  : '12지지의 흐름 중 오늘 먼저 읽기 좋은 띠를 골랐습니다.'
+              }
               descriptionClassName="mx-auto text-[var(--app-copy-muted)]"
             />
             <div className="mt-6 text-6xl">{featuredMeta.symbol}</div>
@@ -126,7 +130,7 @@ export default async function ZodiacPage() {
                 <FeatureCard
                   key={item.slug}
                   surface="soft"
-                  eyebrow={`${meta.symbol} ${item.years}`}
+                  eyebrow={`${meta.symbol} 연주 흐름`}
                   title={item.label}
                   description={meta.yearlyMessage}
                   footer={

@@ -4,6 +4,7 @@ import { unlockFortuneCalendarMonth } from '@/lib/credits/calendar-access';
 import { getFeatureCost } from '@/lib/credits/deduct';
 import { getLifetimeReportEntitlement } from '@/lib/report-entitlements';
 import { resolveReading } from '@/lib/saju/readings';
+import { toSlug } from '@/lib/saju/pillars';
 import { createClient } from '@/lib/supabase/server';
 
 function parseRequest(payload: unknown) {
@@ -44,7 +45,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '본인의 결과만 열 수 있습니다.' }, { status: 403 });
   }
 
-  const entitlement = await getLifetimeReportEntitlement(user.id, parsed.slug);
+  const readingKey = toSlug(reading.input);
+
+  const entitlement = await getLifetimeReportEntitlement(user.id, readingKey);
   if (entitlement) {
     const report = buildFortuneCalendarMonth(
       reading.input,
@@ -65,7 +68,7 @@ export async function POST(req: NextRequest) {
 
   const result = await unlockFortuneCalendarMonth(
     user.id,
-    parsed.slug,
+    readingKey,
     parsed.targetYear,
     parsed.month
   );

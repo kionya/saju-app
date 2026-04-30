@@ -343,6 +343,7 @@ export default function NotificationCenterPage({
   const widgetBlueprint = HOME_WIDGET_BLUEPRINT.find(
     (item) => item.size === preferences.widgetSize
   );
+  const pushReady = pushSupported && Boolean(webPushPublicKey);
 
   async function persistPreferences(next: NotificationPreferences) {
     setPreferences(next);
@@ -690,7 +691,7 @@ export default function NotificationCenterPage({
                 <div className="space-y-3 text-sm leading-7 text-[var(--app-copy)]">
                   <p>
                     {pushSupported
-                      ? '이 브라우저에서 실제 푸시 알림을 받아보실 수 있습니다.'
+                      ? '이 브라우저에서 웹 푸시 자체는 지원합니다.'
                       : '이 브라우저 또는 현재 환경에서는 웹 푸시를 지원하지 않습니다.'}
                   </p>
                   <p>
@@ -698,11 +699,31 @@ export default function NotificationCenterPage({
                       ? '로그인된 기기라면 연결 후 테스트 알림까지 바로 확인할 수 있습니다.'
                       : '실제 푸시 연결은 로그인 후 저장됩니다.'}
                   </p>
+                  <div className="grid gap-2">
+                    {[
+                      { label: '브라우저 지원', ready: pushSupported },
+                      { label: '공개키 설정', ready: Boolean(webPushPublicKey) },
+                      { label: '로그인 상태', ready: isLoggedIn },
+                      { label: '권한 허용', ready: permission === 'granted' },
+                    ].map((item) => (
+                      <div
+                        key={item.label}
+                        className={cn(
+                          'rounded-[1rem] border px-3 py-2 text-xs',
+                          item.ready
+                            ? 'border-emerald-400/20 bg-emerald-400/8 text-emerald-100'
+                            : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-soft)]'
+                        )}
+                      >
+                        {item.ready ? '준비됨' : '확인 필요'} · {item.label}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="mt-5 flex flex-col gap-3">
                   <Button
                     onClick={isCurrentDeviceSubscribed ? disconnectPush : connectPush}
-                    disabled={isConnectingPush || !pushSupported}
+                    disabled={isConnectingPush || !pushReady}
                     className="h-11 rounded-full bg-[var(--app-gold)] text-[#111827] hover:bg-[#e3c68d]"
                   >
                     {isConnectingPush
@@ -711,6 +732,11 @@ export default function NotificationCenterPage({
                         ? '이 브라우저 연결 해제'
                         : '이 브라우저 알림 연결'}
                   </Button>
+                  {!pushReady ? (
+                    <p className="text-xs leading-6 text-[var(--app-copy-soft)]">
+                      브라우저 지원과 공개키 설정이 모두 준비되어야 실제 푸시 연결 버튼이 열립니다.
+                    </p>
+                  ) : null}
                   <Button
                     variant="outline"
                     onClick={sendTestPush}

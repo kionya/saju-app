@@ -480,10 +480,10 @@ function createMonthlyFlow(
 
   const summary =
     momentum === 'rise'
-      ? `${monthly.month}월은 ${monthlyGanji ?? '이번 달'} 흐름이 ${focusLabel}에 힘을 싣는 달입니다. ${primary.summary.split('. ')[0]?.replace(/\.$/, '')} 쪽을 실제 성과로 연결하기 좋습니다.`
+      ? `${monthly.month}월은 ${theme}이 전면으로 올라와 ${focusLabel}에서 미뤄둔 결정을 움직이기 좋은 달입니다. 다만 선택지를 한꺼번에 넓히기보다 이미 준비된 한두 가지를 앞으로 꺼낼 때 체감 성과가 더 분명합니다.`
       : momentum === 'caution'
-        ? `${monthly.month}월은 ${monthlyGanji ?? '이번 달'} 흐름이 예민하게 작동해 ${focusLabel}에서 판단이 흔들리기 쉬운 달입니다. ${secondary.caution.replace(/\.$/, '')} 장면을 먼저 줄이는 편이 좋습니다.`
-        : `${monthly.month}월은 ${theme}의 성격이 강합니다. ${primary.summary.split('. ')[0]?.replace(/\.$/, '')} 흐름을 급하게 몰기보다 기준을 정교하게 다듬는 편이 맞습니다.`;
+        ? `${monthly.month}월은 ${theme}이 예민하게 작동해 ${focusLabel}에서 조급함이 실수로 이어지기 쉬운 달입니다. 큰돈, 큰말, 큰확정처럼 되돌리기 어려운 선택은 한 번 더 확인 절차를 거치는 편이 낫습니다.`
+        : `${monthly.month}월은 ${theme}을 크게 흔들기보다 정리와 조율에 힘이 실리는 달입니다. 결과를 급히 내기보다 약속, 리듬, 지출 구조처럼 이미 잡혀 있는 기준을 다시 맞추는 쪽에서 만족도가 높습니다.`;
 
   return {
     month: monthly.month,

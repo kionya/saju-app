@@ -343,7 +343,7 @@ export default async function SajuPremiumPage({ params }: Props) {
               {hasLifetimeAccess
                 ? '명리 기준서 · 전체 열람'
                 : yearlyAccessLabel
-                  ? '연간 리포트 · 전체 열람'
+                  ? '연간 전략 부록 · 전체 열람'
                   : '명리 기준서 · 미리보기'}
             </Badge>
           </div>
@@ -351,7 +351,7 @@ export default async function SajuPremiumPage({ params }: Props) {
             {hasLifetimeAccess
               ? '명리 기준서 본문과 올해 부록이 모두 열렸습니다'
               : yearlyAccessLabel
-                ? `${targetYear} 연간 리포트와 명리 기준서 미리보기가 열렸습니다`
+                ? `${targetYear} 연간 전략 부록과 명리 기준서 미리보기가 열렸습니다`
                 : '나머지 6개 섹션, 전체 기준서 보기'}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
@@ -418,7 +418,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                   </Badge>
                 </div>
                 <h2 className="mt-4 font-display text-3xl text-[var(--app-gold-text)]">
-                  연간 리포트는 열려 있고, 명리 기준서는 별도로 보관합니다
+                  연간 전략 부록은 열려 있고, 명리 기준서는 별도로 보관합니다
                 </h2>
                 <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
                   지금 권한으로는 올해 흐름과 월별 타이밍을 모두 읽을 수 있습니다. 다만 평생 소장권은 원국의
@@ -438,7 +438,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                   평생 소장 기준서로 확장하기
                 </div>
                 <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                  연간 리포트가 “올해의 흐름”이라면, 평생 소장 기준서는 “내 사주의 원본 해설서”입니다.
+                  연간 전략 부록이 “올해의 흐름”이라면, 평생 소장 기준서는 “내 사주의 원본 해설서”입니다.
                   같은 근거를 쓰더라도 역할이 다르기 때문에, 원국 중심 기준서는 별도의 보관형 본문으로
                   나뉘어야 합니다.
                 </p>

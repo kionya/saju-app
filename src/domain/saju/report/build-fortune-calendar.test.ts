@@ -33,6 +33,10 @@ test('buildFortuneCalendarMonth returns a complete month grid with tone counts',
   );
   assert.ok(report.summary.bestDays.length > 0);
   assert.ok(report.summary.cautionDays.length > 0);
+  assert.equal(
+    report.summary.bestDays.filter((day) => report.summary.cautionDays.includes(day)).length,
+    0
+  );
 });
 
 test('buildFortuneCalendarMonth annotates each day with score, tone, and action hint', () => {

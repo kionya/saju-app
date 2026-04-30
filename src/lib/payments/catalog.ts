@@ -19,8 +19,8 @@ export const PAYMENT_PACKAGES = [
   { id: 'credit_7', name: '기본 7 코인', credits: 7, price: 2000, kind: 'credits' },
   {
     id: 'subscription_30',
-    name: '월간 코인팩 30',
-    credits: 30,
+    name: '월간 코인팩 36',
+    credits: 36,
     price: 9900,
     kind: 'subscription',
     subscriptionPlan: 'plus_monthly',

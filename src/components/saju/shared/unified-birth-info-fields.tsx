@@ -35,6 +35,7 @@ interface UnifiedBirthInfoFieldsProps {
   draft: UnifiedBirthEntryDraft;
   onChange: (patch: Partial<UnifiedBirthEntryDraft>) => void;
   onStarted?: () => void;
+  dateInputVariant?: 'input' | 'select';
   locationLoading: boolean;
   locationMessage: string;
   locationResults: BirthLocationSearchResultLike[];
@@ -47,10 +48,17 @@ function trigger(onStarted?: () => void) {
   onStarted?.();
 }
 
+const YEAR_OPTIONS = Array.from({ length: new Date().getFullYear() - 1899 }, (_, index) =>
+  String(new Date().getFullYear() - index)
+);
+const MONTH_OPTIONS = Array.from({ length: 12 }, (_, index) => String(index + 1));
+const DAY_OPTIONS = Array.from({ length: 31 }, (_, index) => String(index + 1));
+
 export function UnifiedBirthInfoFields({
   draft,
   onChange,
   onStarted,
+  dateInputVariant = 'input',
   locationLoading,
   locationMessage,
   locationResults,
@@ -94,52 +102,112 @@ export function UnifiedBirthInfoFields({
             <Label htmlFor="unified-birth-year" className="mb-2 block text-sm text-[var(--app-copy)]">
               년
             </Label>
-            <Input
-              id="unified-birth-year"
-              name="moonlight-birth-year"
-              value={draft.year}
-              onChange={(event) => {
-                trigger(onStarted);
-                onChange({ year: event.target.value });
-              }}
-              placeholder="1982"
-              autoComplete="off"
-              inputMode="numeric"
-            />
+            {dateInputVariant === 'select' ? (
+              <select
+                id="unified-birth-year"
+                name="moonlight-birth-year"
+                value={draft.year}
+                onChange={(event) => {
+                  trigger(onStarted);
+                  onChange({ year: event.target.value });
+                }}
+                className="moon-form-control h-10 w-full rounded-lg px-3 text-sm"
+              >
+                <option value="">연도 선택</option>
+                {YEAR_OPTIONS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}년
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Input
+                id="unified-birth-year"
+                name="moonlight-birth-year"
+                value={draft.year}
+                onChange={(event) => {
+                  trigger(onStarted);
+                  onChange({ year: event.target.value });
+                }}
+                placeholder="1982"
+                autoComplete="off"
+                inputMode="numeric"
+              />
+            )}
           </div>
           <div>
             <Label htmlFor="unified-birth-month" className="mb-2 block text-sm text-[var(--app-copy)]">
               월
             </Label>
-            <Input
-              id="unified-birth-month"
-              name="moonlight-birth-month"
-              value={draft.month}
-              onChange={(event) => {
-                trigger(onStarted);
-                onChange({ month: event.target.value });
-              }}
-              placeholder="1"
-              autoComplete="off"
-              inputMode="numeric"
-            />
+            {dateInputVariant === 'select' ? (
+              <select
+                id="unified-birth-month"
+                name="moonlight-birth-month"
+                value={draft.month}
+                onChange={(event) => {
+                  trigger(onStarted);
+                  onChange({ month: event.target.value });
+                }}
+                className="moon-form-control h-10 w-full rounded-lg px-3 text-sm"
+              >
+                <option value="">월 선택</option>
+                {MONTH_OPTIONS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}월
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Input
+                id="unified-birth-month"
+                name="moonlight-birth-month"
+                value={draft.month}
+                onChange={(event) => {
+                  trigger(onStarted);
+                  onChange({ month: event.target.value });
+                }}
+                placeholder="1"
+                autoComplete="off"
+                inputMode="numeric"
+              />
+            )}
           </div>
           <div>
             <Label htmlFor="unified-birth-day" className="mb-2 block text-sm text-[var(--app-copy)]">
               일
             </Label>
-            <Input
-              id="unified-birth-day"
-              name="moonlight-birth-day"
-              value={draft.day}
-              onChange={(event) => {
-                trigger(onStarted);
-                onChange({ day: event.target.value });
-              }}
-              placeholder="29"
-              autoComplete="off"
-              inputMode="numeric"
-            />
+            {dateInputVariant === 'select' ? (
+              <select
+                id="unified-birth-day"
+                name="moonlight-birth-day"
+                value={draft.day}
+                onChange={(event) => {
+                  trigger(onStarted);
+                  onChange({ day: event.target.value });
+                }}
+                className="moon-form-control h-10 w-full rounded-lg px-3 text-sm"
+              >
+                <option value="">일 선택</option>
+                {DAY_OPTIONS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}일
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <Input
+                id="unified-birth-day"
+                name="moonlight-birth-day"
+                value={draft.day}
+                onChange={(event) => {
+                  trigger(onStarted);
+                  onChange({ day: event.target.value });
+                }}
+                placeholder="29"
+                autoComplete="off"
+                inputMode="numeric"
+              />
+            )}
           </div>
         </div>
 

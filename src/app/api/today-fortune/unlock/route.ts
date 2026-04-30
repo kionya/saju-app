@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { resolveReading } from '@/lib/saju/readings';
+import { toSlug } from '@/lib/saju/pillars';
 import { createClient } from '@/lib/supabase/server';
 import { getUserProfileById } from '@/lib/profile';
 import { resolveMoonlightCounselor } from '@/lib/counselors';
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
   const concernId = normalizeConcernId(payload?.concernId);
   const profile = await getUserProfileById(user.id);
   const counselorId = resolveMoonlightCounselor(payload?.counselorId, profile.preferredCounselor);
-  const access = await unlockDailyDetailReport(user.id, sourceSessionId);
+  const access = await unlockDailyDetailReport(user.id, toSlug(reading.input));
 
   if (!access.success) {
     return NextResponse.json({ error: '코인이 부족합니다.', remaining: access.remaining }, { status: 402 });
