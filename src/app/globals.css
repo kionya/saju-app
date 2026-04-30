@@ -275,12 +275,23 @@
     font-family: var(--font-body);
     overscroll-behavior-y: contain;
     text-rendering: optimizeLegibility;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
   }
   html {
     @apply font-sans;
     min-height: 100%;
     scroll-padding-top: var(--app-mobile-top-clearance);
     scroll-padding-bottom: var(--app-mobile-dock-clearance);
+    line-break: strict;
+  }
+
+  :where(h1, h2, h3, h4, h5, h6, p, li, dt, dd, blockquote, figcaption, label, legend, summary) {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
   }
 
   body::before {
@@ -819,7 +830,10 @@
     line-height: 1.16;
     letter-spacing: -0.03em;
     color: #f5eedc;
-    text-wrap: balance;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
     text-shadow:
       0 1px 0 rgba(255, 255, 255, 0.04),
       0 14px 30px rgba(0, 0, 0, 0.34);
@@ -829,6 +843,10 @@
     color: rgba(236, 229, 212, 0.86);
     font-size: 0.97rem;
     line-height: 1.78;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
   }
 
   .app-hero-card {
@@ -904,6 +922,10 @@
     color: var(--app-copy-muted);
     font-size: 0.9rem;
     line-height: 1.8;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
   }
 
   .app-section-actions {
@@ -972,6 +994,10 @@
   .app-body-copy {
     color: var(--app-copy);
     line-height: 1.9;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
   }
 
   .app-feature-card,
@@ -1003,12 +1029,20 @@
     font-size: 1.2rem;
     line-height: 1.5;
     color: var(--app-ivory);
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
   }
 
   .app-feature-copy {
     color: var(--app-copy);
     font-size: 0.9rem;
     line-height: 1.78;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
   }
 
   .app-bullet-list {
@@ -1080,6 +1114,9 @@
 
   .app-reading-prose {
     max-width: 52rem;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
   }
 
   .app-micro-copy {
@@ -1110,7 +1147,10 @@
     line-height: 1.42;
     letter-spacing: -0.02em;
     color: #f5eedc;
-    text-wrap: balance;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
     text-shadow:
       0 1px 0 rgba(255, 255, 255, 0.03),
       0 10px 24px rgba(0, 0, 0, 0.28);
@@ -1250,6 +1290,10 @@
     font-weight: 500;
     line-height: 1.1;
     letter-spacing: -0.04em;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
   }
 
   .wisdom-category-hook {
@@ -1259,6 +1303,10 @@
     line-height: 1.65;
     color: var(--app-ivory);
     font-style: italic;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
   }
 
   .wisdom-category-description {
@@ -1267,6 +1315,10 @@
     color: var(--app-copy-muted);
     font-size: 1rem;
     line-height: 1.9;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
   }
 
   .wisdom-category-cta {
@@ -1668,7 +1720,10 @@
     line-height: 1.32;
     letter-spacing: -0.02em;
     color: var(--app-ivory);
-    text-wrap: balance;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
     animation: app-fade-up 640ms ease both 220ms;
   }
 
@@ -1677,7 +1732,10 @@
     font-size: 1rem;
     line-height: 1.9;
     color: var(--app-copy-muted);
-    text-wrap: balance;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+    text-wrap: pretty;
     animation: app-fade-up 640ms ease both 360ms;
   }
 
