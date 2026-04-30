@@ -60,6 +60,18 @@ const NAV_META: Record<string, { glyph: string; accent: string; description: str
   띠운세: { glyph: '支', accent: 'var(--app-coral)', description: '한 해의 리듬' },
 };
 
+const MOBILE_SHORTCUT_LABEL_ORDER = ['사주', '궁합', '명리', '타로', '별자리', '띠운세'] as const;
+const MOBILE_SHORTCUT_GROUPS = [
+  { title: '핵심 해석', labels: ['사주', '궁합', '명리'] as const },
+  { title: '가벼운 탐색', labels: ['타로', '별자리', '띠운세'] as const },
+] as const;
+const MOBILE_DOCK_LABELS: Record<string, string> = {
+  홈: '홈',
+  해석: '기준서',
+  대화: '상담',
+  마이: '보관',
+};
+
 function matchesPath(item: NavItem, pathname: string) {
   if (item.href === '/') return pathname === '/';
   if (pathname === item.href || pathname.startsWith(`${item.href}/`)) return true;
@@ -77,6 +89,19 @@ function getNavMeta(item: NavItem) {
     accent: 'var(--app-gold)',
     description: '달빛선생',
   };
+}
+
+function getMobileDockLabel(item: NavItem) {
+  return MOBILE_DOCK_LABELS[item.label] ?? item.label;
+}
+
+function orderMobileShortcutItems(items: readonly NavItem[]) {
+  return [
+    ...MOBILE_SHORTCUT_LABEL_ORDER.map((label) => items.find((item) => item.label === label)).filter(
+      (item): item is NavItem => Boolean(item)
+    ),
+    ...items.filter((item) => !MOBILE_SHORTCUT_LABEL_ORDER.includes(item.label as never)),
+  ];
 }
 
 function findActiveItem(items: readonly NavItem[], pathname: string) {
@@ -400,6 +425,7 @@ function MobileChrome({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const activePrimaryItem = findActiveItem(PRIMARY_NAV_ITEMS, pathname);
   const activeShortcutItem = findActiveItem(HEADER_SECONDARY_NAV_ITEMS, pathname);
+  const orderedShortcutItems = orderMobileShortcutItems(HEADER_SECONDARY_NAV_ITEMS);
   const activePrimaryMeta = activePrimaryItem ? getNavMeta(activePrimaryItem) : null;
   const activeShortcutMeta = activeShortcutItem ? getNavMeta(activeShortcutItem) : null;
   const contextDescription =
@@ -472,10 +498,11 @@ function MobileChrome({
                 onClick={() => setMobileMenuOpen((current) => !current)}
                 aria-expanded={mobileMenuOpen}
                 aria-controls="mobile-global-menu"
-                className="app-mobile-menu-trigger inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                className="app-mobile-menu-trigger inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
                 aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
               >
                 {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Grid2x2 className="h-4.5 w-4.5" />}
+                <span>{mobileMenuOpen ? '닫기' : '메뉴'}</span>
               </button>
             </div>
           </div>
@@ -485,42 +512,43 @@ function MobileChrome({
               id="mobile-global-menu"
               className="app-mobile-menu-panel mt-4 rounded-[1.4rem] border border-[var(--app-line)] bg-[rgba(7,11,24,0.94)] p-4 shadow-[0_18px_48px_rgba(0,0,0,0.34)]"
             >
-              <div className="app-top-service-label">자주 찾는 메뉴</div>
-              <div className="mt-3 grid grid-cols-3 gap-2">
-                {HEADER_SECONDARY_NAV_ITEMS.map((item) => {
-                  const active = matchesPath(item, pathname);
-                  const meta = getNavMeta(item);
+              <div className="app-top-service-label">메뉴</div>
+              <div className="mt-3 space-y-3">
+                {MOBILE_SHORTCUT_GROUPS.map((group) => (
+                  <div key={group.title}>
+                    <div className="app-mobile-menu-group-title">{group.title}</div>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      {orderedShortcutItems
+                        .filter((item) => group.labels.includes(item.label as never))
+                        .map((item) => {
+                          const active = matchesPath(item, pathname);
+                          const meta = getNavMeta(item);
 
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      className={cn(
-                        'app-mobile-shortcut-card',
-                        active && 'app-mobile-shortcut-card-active'
-                      )}
-                    >
-                      <span
-                        className="app-mobile-shortcut-glyph font-[var(--font-heading)]"
-                        style={{ color: meta.accent }}
-                      >
-                        {meta.glyph}
-                      </span>
-                      <span className="app-mobile-shortcut-label">{item.label}</span>
-                    </Link>
-                  );
-                })}
+                          return (
+                            <Link
+                              key={item.label}
+                              href={item.href}
+                              className={cn(
+                                'app-mobile-shortcut-card',
+                                active && 'app-mobile-shortcut-card-active'
+                              )}
+                            >
+                              <span
+                                className="app-mobile-shortcut-glyph font-[var(--font-heading)]"
+                                style={{ color: meta.accent }}
+                              >
+                                {meta.glyph}
+                              </span>
+                              <span className="app-mobile-shortcut-label">{item.label}</span>
+                            </Link>
+                          );
+                        })}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
-                <Link href="/notifications" className="app-mobile-menu-utility">
-                  <Bell className="h-4 w-4" />
-                  <span>알림</span>
-                </Link>
-                <Link href="/my/settings" className="app-mobile-menu-utility">
-                  <Settings2 className="h-4 w-4" />
-                  <span>설정</span>
-                </Link>
                 <Link href="/my/results" className="app-mobile-menu-utility">
                   <BookOpenText className="h-4 w-4" />
                   <span>보관함</span>
@@ -528,6 +556,14 @@ function MobileChrome({
                 <Link href="/membership" className="app-mobile-menu-utility">
                   <CreditCard className="h-4 w-4" />
                   <span>멤버십</span>
+                </Link>
+                <Link href="/notifications" className="app-mobile-menu-utility">
+                  <Bell className="h-4 w-4" />
+                  <span>알림</span>
+                </Link>
+                <Link href="/my/settings" className="app-mobile-menu-utility">
+                  <Settings2 className="h-4 w-4" />
+                  <span>설정</span>
                 </Link>
               </div>
 
@@ -598,7 +634,9 @@ function MobileChrome({
                 <span className="app-mobile-dock-icon">
                   <DockIcon label={item.label} />
                 </span>
-                <span className="app-mobile-dock-label mt-1 text-[11px] font-medium">{item.label}</span>
+                <span className="app-mobile-dock-label mt-1 text-[11px] font-medium">
+                  {getMobileDockLabel(item)}
+                </span>
               </Link>
             );
           })}
