@@ -452,19 +452,17 @@ export default async function SajuPremiumPage({ params }: Props) {
                   ))}
                 </div>
                 <div className="mt-6 rounded-[1.2rem] border border-[var(--app-gold)]/18 bg-[rgba(255,255,255,0.02)] px-5 py-5 text-center">
-                  <div className="font-display text-2xl text-[var(--app-gold-text)]">
-                    나의 명리 기준서 · 49,000원
-                  </div>
+                  <div className="font-display text-2xl text-[var(--app-gold-text)]">명리 기준서 · 49,000원</div>
                   <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                    명리 기준서 본문과 올해 부록을 한 화면에서 열고, 같은 명식으로 다시 들어와도 계속
-                    열람할 수 있습니다.
+                    기준서 본문과 올해 부록을 함께 열고, 같은 명식으로 다시 들어와도 계속
+                    읽으실 수 있습니다.
                   </p>
                   <div className="mt-5 flex flex-wrap justify-center gap-3">
                     <Link
                       href={`/membership/checkout?plan=lifetime&slug=${encodedSlug}&from=saju-premium`}
                       className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
                     >
-                      명리 기준서 열기
+                      기준서 열기
                     </Link>
                     <Link
                       href={`/saju/${slug}`}
@@ -560,24 +558,22 @@ export default async function SajuPremiumPage({ params }: Props) {
             </div>
 
             <div className="mt-6 rounded-[1.2rem] border border-[var(--app-gold)]/18 bg-[rgba(255,255,255,0.02)] px-5 py-5 text-center">
-              <div className="font-display text-2xl text-[var(--app-gold-text)]">
-                나의 명리 기준서 · 49,000원
-              </div>
+              <div className="font-display text-2xl text-[var(--app-gold-text)]">명리 기준서 · 49,000원</div>
               <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                오늘 바로 전체 7개 섹션이 열리고, 고전 원문 인용, PDF 저장, MY 보관함 재열람, 이후 업데이트 반영까지 함께 포함됩니다.
+                오늘 바로 7개 섹션 본문과 PDF 저장, MY 보관함 재열람, 이후 업데이트 반영이 함께 열립니다.
               </p>
               <div className="mt-5 flex flex-wrap justify-center gap-3">
                 <Link
                   href={`/membership/checkout?plan=lifetime&slug=${encodedSlug}&from=saju-premium`}
                   className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
                 >
-                  완성형 기준서 열기
+                  기준서 열기
                 </Link>
                 <Link
                   href={`/membership/checkout?plan=premium&slug=${encodedSlug}&from=saju-premium`}
                   className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
                 >
-                  Premium 멤버십으로 먼저 보기
+                  멤버십으로 먼저 보기
                 </Link>
                 <Link
                   href={REPORT_SAMPLE_HREF}

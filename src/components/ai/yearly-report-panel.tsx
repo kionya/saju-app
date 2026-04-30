@@ -241,7 +241,7 @@ function MonthlyFlowCard({ flow }: { flow: YearlyMonthFlow }) {
       {flow.basis.length > 0 ? (
         <details className="group mt-4">
           <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-            이번 달 근거 메모
+            근거 메모
           </summary>
           <div className="mt-3 grid gap-2">
             {flow.basis.map((item) => (
@@ -314,9 +314,9 @@ function CoreAreaCard({
       </details>
       {item.basis.length > 0 ? (
         <details className="group mt-4">
-          <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-            판정 기준 메모
-          </summary>
+        <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
+          근거 메모
+        </summary>
           <div className="mt-3 grid gap-2">
             {item.basis.map((line) => (
               <div key={line} className="rounded-xl bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]">
@@ -362,9 +362,9 @@ function SupportAreaCard({
       </details>
       {basis.length > 0 ? (
         <details className="group mt-4">
-          <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-            판정 기준 메모
-          </summary>
+        <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
+          근거 메모
+        </summary>
           <div className="mt-3 grid gap-2">
             {basis.map((line) => (
               <div key={line} className="rounded-xl bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]">

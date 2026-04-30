@@ -105,7 +105,7 @@ function BasisNotes({ items }: { items: string[] }) {
   return (
     <details className="group mt-5">
       <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-        근거 메모 보기
+        근거 메모
       </summary>
       <div className="mt-3 grid gap-2">
         {items.map((line) => (
