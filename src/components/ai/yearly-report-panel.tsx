@@ -73,30 +73,30 @@ const CORE_CATEGORY_GUIDE = {
   work: {
     label: '직장운',
     eyebrow: '일과 평가',
-    opportunityLabel: '평가가 붙는 장면',
-    cautionLabel: '한 번 더 확인할 장면',
-    actionLabel: '올해 행동 기준',
+    opportunityLabel: '기회 장면',
+    cautionLabel: '주의 장면',
+    actionLabel: '실행 기준',
   },
   wealth: {
     label: '재물운',
     eyebrow: '돈의 흐름',
-    opportunityLabel: '돈이 붙는 장면',
-    cautionLabel: '새기 쉬운 장면',
-    actionLabel: '올해 돈 기준',
+    opportunityLabel: '돈 기회',
+    cautionLabel: '새는 장면',
+    actionLabel: '돈 기준',
   },
   love: {
     label: '연애운',
     eyebrow: '가까운 관계',
-    opportunityLabel: '마음이 통하는 장면',
-    cautionLabel: '오해가 커지는 장면',
-    actionLabel: '올해 표현 기준',
+    opportunityLabel: '통하는 장면',
+    cautionLabel: '엉키는 장면',
+    actionLabel: '표현 기준',
   },
   relationship: {
     label: '관계운',
     eyebrow: '사람과 거리',
-    opportunityLabel: '사람을 살리는 장면',
-    cautionLabel: '마찰이 커지는 장면',
-    actionLabel: '올해 관계 기준',
+    opportunityLabel: '살리는 장면',
+    cautionLabel: '긁히는 장면',
+    actionLabel: '거리 기준',
   },
 } as const;
 
@@ -153,6 +153,13 @@ function renderCompactParagraphs(text: string, limit = 2) {
     ));
 }
 
+function tightenUiLine(text: string, maxLength = 104) {
+  const compact = text.replace(/\s+/g, ' ').trim();
+  if (compact.length <= maxLength) return compact;
+  const sliced = compact.slice(0, maxLength).trim();
+  return /[.!?。]$/.test(sliced) ? sliced : `${sliced}...`;
+}
+
 function formatUpdatedAt(value?: string) {
   if (!value) return null;
 
@@ -201,7 +208,7 @@ function MonthlyFlowCard({ flow }: { flow: YearlyMonthFlow }) {
         <Badge className={momentumMeta.badgeClassName}>{momentumMeta.label}</Badge>
       </div>
 
-      <p className="mt-3 text-sm leading-7 text-[var(--app-ivory)]">{flow.summary}</p>
+      <p className="mt-3 text-sm leading-7 text-[var(--app-ivory)]">{tightenUiLine(flow.summary, 108)}</p>
       <div className="mt-4 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
         <div className="app-caption text-[var(--app-gold-soft)]">이번 달 질문</div>
         <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{flow.focusQuestion}</p>
@@ -210,15 +217,15 @@ function MonthlyFlowCard({ flow }: { flow: YearlyMonthFlow }) {
       <div className="mt-4 grid gap-3">
         <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
           <div className="app-caption text-[var(--app-gold-soft)]">먼저 밀어볼 것</div>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{flow.opportunity}</p>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(flow.opportunity, 96)}</p>
         </div>
         <div className="rounded-[18px] border border-rose-400/18 bg-rose-400/6 px-4 py-3">
           <div className="app-caption text-rose-100">한 번 더 확인할 장면</div>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{flow.caution}</p>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(flow.caution, 96)}</p>
         </div>
         <div className="rounded-[18px] border border-emerald-400/18 bg-emerald-400/6 px-4 py-3">
           <div className="app-caption text-emerald-100">이번 달 행동 기준</div>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{flow.action}</p>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(flow.action, 88)}</p>
         </div>
       </div>
 
@@ -266,19 +273,19 @@ function CoreAreaCard({
       <div className="mt-4 grid gap-3">
         <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
           <div className="app-caption text-[var(--app-gold-soft)]">올해 핵심</div>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.summary}</p>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(item.summary, 104)}</p>
         </div>
         <div className="rounded-[18px] border border-emerald-400/18 bg-emerald-400/6 px-4 py-3">
           <div className="app-caption text-emerald-100">{meta.opportunityLabel}</div>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.opportunity}</p>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(item.opportunity, 100)}</p>
         </div>
         <div className="rounded-[18px] border border-rose-400/18 bg-rose-400/6 px-4 py-3">
           <div className="app-caption text-rose-100">{meta.cautionLabel}</div>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.caution}</p>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(item.caution, 100)}</p>
         </div>
         <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
           <div className="app-caption text-[var(--app-gold-soft)]">{meta.actionLabel}</div>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{item.action}</p>
+          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(item.action, 88)}</p>
         </div>
       </div>
       <details className="group mt-4">
@@ -286,7 +293,7 @@ function CoreAreaCard({
           선생 풀이 전문 보기
         </summary>
         <div className="mt-3 space-y-3 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-4">
-          {renderCompactParagraphs(prose, 3)}
+          {renderCompactParagraphs(prose, 2)}
         </div>
       </details>
     </article>

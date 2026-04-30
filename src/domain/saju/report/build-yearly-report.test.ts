@@ -74,6 +74,14 @@ test('buildYearlyReport keeps yearly category opportunity and action distinct fo
       report.categories[key].action,
       `${key} yearly card should not reuse the same text for opportunity and action`
     );
+    assert.ok(
+      report.categories[key].summary.length <= 108,
+      `${key} yearly summary should stay compact enough for the premium cards`
+    );
+    assert.ok(
+      report.categories[key].action.length <= 96,
+      `${key} yearly action should stay compact enough for the premium cards`
+    );
   }
 });
 

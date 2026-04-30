@@ -222,6 +222,40 @@ function compactStrings(values: Array<string | null | undefined | false>) {
     .filter(Boolean);
 }
 
+function splitSentences(text: string) {
+  return text
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?。])\s+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function stripScoreLead(text: string) {
+  const sentences = splitSentences(text);
+  if (sentences[0] && /(?:총운|연애운|재물운|직장운|관계운)\s*\d+점 기준/.test(sentences[0])) {
+    return sentences.slice(1).join(' ');
+  }
+  return text.trim();
+}
+
+function tightenCardCopy(
+  text: string | null | undefined,
+  {
+    maxSentences = 2,
+    maxLength = 110,
+  }: {
+    maxSentences?: number;
+    maxLength?: number;
+  } = {}
+) {
+  if (!text) return '';
+  const compact = splitSentences(text).slice(0, maxSentences).join(' ').trim();
+  if (compact.length <= maxLength) return compact;
+
+  const sliced = compact.slice(0, maxLength).trim();
+  return /[.!?。]$/.test(sliced) ? sliced : `${sliced}...`;
+}
+
 function getElementShortLabel(element: Element) {
   return ELEMENT_INFO[element].name.split(' ')[0] ?? element;
 }
@@ -445,14 +479,29 @@ function createCategorySectionFromReport(
   return {
     key,
     headline: report.headline,
-    summary: report.summary,
-    opportunity: report.primaryAction.description,
-    caution: report.cautionAction.description,
+    summary: tightenCardCopy(report.summaryHighlights[0] || report.summary, {
+      maxSentences: 2,
+      maxLength: 108,
+    }),
+    opportunity: tightenCardCopy(stripScoreLead(report.primaryAction.description), {
+      maxSentences: 2,
+      maxLength: 112,
+    }),
+    caution: tightenCardCopy(stripScoreLead(report.cautionAction.description), {
+      maxSentences: 2,
+      maxLength: 112,
+    }),
     action:
-      report.summaryHighlights[1] ||
-      normalizedAction ||
-      report.timeline[2]?.headline ||
-      report.primaryAction.description,
+      tightenCardCopy(
+        report.summaryHighlights[1] ||
+          normalizedAction ||
+          report.timeline[2]?.headline ||
+          report.primaryAction.description,
+        {
+          maxSentences: 1,
+          maxLength: 96,
+        }
+      ),
     score: getFocusedScore(report) ?? undefined,
     relatedMonths: CATEGORY_MONTH_MAP[key],
     basis: compactStrings([
@@ -604,10 +653,19 @@ function createMonthlyFlow(
     momentum,
     theme,
     focusQuestion: guide.question,
-    summary,
-    opportunity: `${guide.opportunityLead} ${primary.opportunity}`,
-    caution: `${guide.cautionLead} ${secondary.caution}`,
-    action: `${guide.actionLead} ${primary.action}`,
+    summary: tightenCardCopy(summary, { maxSentences: 2, maxLength: 116 }),
+    opportunity: tightenCardCopy(`${guide.opportunityLead} ${primary.opportunity}`, {
+      maxSentences: 2,
+      maxLength: 108,
+    }),
+    caution: tightenCardCopy(`${guide.cautionLead} ${secondary.caution}`, {
+      maxSentences: 2,
+      maxLength: 108,
+    }),
+    action: tightenCardCopy(`${guide.actionLead} ${primary.action}`, {
+      maxSentences: 1,
+      maxLength: 92,
+    }),
     relatedAreas: plan.relatedAreas,
     basis: compactStrings([
       monthlyGanji ? `월운: ${monthlyGanji}` : null,

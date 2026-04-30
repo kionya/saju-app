@@ -5,7 +5,7 @@ import {
 } from '@/lib/counselors';
 import type { ReadingRecord } from '@/lib/saju/readings';
 
-export const SAJU_YEARLY_INTERPRETATION_PROMPT_VERSION = 'saju-yearly-interpret-v5';
+export const SAJU_YEARLY_INTERPRETATION_PROMPT_VERSION = 'saju-yearly-interpret-v6';
 
 const YEARLY_CATEGORY_ORDER: YearlyCategoryKey[] = [
   'work',
@@ -81,9 +81,9 @@ export interface ParsedSajuYearlyAiMonthlyFlows {
 const MAX_OPENING_LENGTH = 1400;
 const MAX_KEYWORD_LENGTH = 180;
 const MAX_HALF_LENGTH = 1100;
-const MAX_CATEGORY_LENGTH = 900;
-const MAX_MONTHLY_LENGTH = 420;
-const MAX_MONTHLY_DETAIL_LENGTH = 160;
+const MAX_CATEGORY_LENGTH = 700;
+const MAX_MONTHLY_LENGTH = 240;
+const MAX_MONTHLY_DETAIL_LENGTH = 110;
 const MAX_PERIOD_LENGTH = 260;
 const MAX_ACTION_LENGTH = 240;
 const MAX_SUMMARY_LENGTH = 220;
@@ -92,6 +92,21 @@ const MIN_MONTHS = 12;
 function cleanText(value: unknown, maxLength: number) {
   if (typeof value !== 'string') return '';
   return value.replace(/\s+/g, ' ').trim().slice(0, maxLength);
+}
+
+function splitSentences(value: string) {
+  return value
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?。])\s+/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+function tightenLine(value: string, maxSentences = 2, maxLength = 110) {
+  const compact = splitSentences(value).slice(0, maxSentences).join(' ').trim();
+  if (compact.length <= maxLength) return compact;
+  const sliced = compact.slice(0, maxLength).trim();
+  return /[.!?。]$/.test(sliced) ? sliced : `${sliced}...`;
 }
 
 function normalizeStringArray(
@@ -241,12 +256,12 @@ function buildCategoryFallback(
       ? '핵심부터 보면'
       : '흐름을 차분히 읽어보면';
 
-  return [
+  return tightenLine([
     `${prefix} ${section.summary}`,
     `좋게 쓰면 ${section.opportunity}`,
     `다만 ${section.caution}`,
     `올해는 ${section.action}`,
-  ].join(' ');
+  ].join(' '), 3, 260);
 }
 
 export function getYearlyInterpretationPromptVersion(
@@ -272,10 +287,10 @@ export function buildFallbackYearlyInterpretation(
   }, {} as Record<YearlyCategoryKey, string>);
   const monthlyFlows = report.monthlyFlows.map((flow) => ({
     month: flow.month,
-    summary: flow.summary,
-    focus: `${flow.focusQuestion} ${flow.opportunity}`,
-    caution: flow.caution,
-    action: flow.action,
+    summary: tightenLine(flow.summary, 1, 88),
+    focus: tightenLine(flow.focusQuestion, 1, 56),
+    caution: tightenLine(flow.caution, 1, 72),
+    action: tightenLine(flow.action, 1, 72),
   }));
   const actionAdvice = [
     ...report.actionGuide.useWhenStrong,
@@ -639,7 +654,8 @@ export function createYearlyInterpretationPrompt(
           '이번 응답에서는 monthlyFlows만 작성합니다.',
           'monthlyFlows 외의 키는 출력하지 않습니다.',
           '1월부터 12월까지 반드시 모두 채우고, 각 달마다 summary, focus, caution, action을 모두 넣습니다.',
-          'summary는 1~2문장으로 짧게, focus/caution/action은 각각 한 문장으로 씁니다.',
+          'summary는 한 문장, 55자 안팎으로 씁니다.',
+          'focus/caution/action은 각각 한 문장으로 쓰고, 20~45자 안에서 바로 판단이 되게 씁니다.',
         ]
       : section === 'narrative'
         ? [
@@ -662,16 +678,18 @@ export function createYearlyInterpretationPrompt(
       'recentFeedbackSummary가 있으면 최근 실제 반응을 참고해 표현 강도만 미세 조정하고, 세운·월운·원국 근거보다 앞세우지 않습니다.',
       '연애, 일, 재물, 관계, 건강, 이동의 현실 주제를 우선하고, 왜 이런 흐름이 오는지 세운·월운·강약·용신 근거를 자연스럽게 녹여냅니다.',
       '길게 늘어놓기보다 읽기 쉽게 씁니다. 한 문단은 2~3문장을 넘기지 않고, 같은 접속어와 같은 결론 구조를 반복하지 않습니다.',
+      '카드 안 문구는 설명보다 판단이 먼저 보여야 합니다. 짧게 잘라서 한 번에 읽히게 씁니다.',
       '응답은 반드시 JSON 객체 하나만 반환합니다. Markdown, 설명 문장, 코드블록을 붙이지 않습니다.',
       'JSON 스키마:',
       schemaLine,
       'opening은 제목 없이 바로 시작되는 첫 문단이며, 흡입력 있게 시작해야 합니다.',
       'keywords는 3~5개입니다. 각 항목은 한 해의 핵심 키워드와 그 이유를 함께 담습니다.',
       'firstHalf와 secondHalf는 각각 2~4개의 짧은 문단 감각으로 쓰고, 기회와 리스크를 함께 설명합니다.',
-      'categories의 6개 분야는 각 분야마다 "무슨 장면이 핵심인지 / 무엇을 조심할지 / 어떻게 행동할지"가 바로 읽히게 3~5문장 안에서 정리합니다.',
+      'categories의 6개 분야는 각 분야마다 "무슨 장면이 핵심인지 / 무엇을 조심할지 / 어떻게 행동할지"가 바로 읽히게 2~4문장 안에서 정리합니다.',
       'monthlyFlows는 1월부터 12월까지 서로 다른 질문을 던져야 합니다. 같은 문장 구조, 같은 도입, 같은 결론을 반복하지 않습니다.',
       'monthlyFlows는 사용자가 실제로 궁금해하는 선택 장면, 돈과 일의 판단, 관계 조율, 달력에 표시해 둘 만한 포인트를 우선해서 씁니다.',
       'monthlyFlows는 체감 가능한 변화 중심으로 쓰고, 설명보다 판단 기준이 먼저 보이게 씁니다. 한 달 설명을 장문 단락 하나로 늘리지 않습니다.',
+      'monthlyFlows의 summary, focus, caution, action은 서로 역할이 겹치지 않게 씁니다. 같은 말을 조금 바꿔 반복하지 않습니다.',
       'goodPeriods와 cautionPeriods는 시기와 이유, 활용 또는 방어 전략이 함께 드러나야 합니다.',
       'actionAdvice는 3~6개로 작성하고, 한 해를 잘 보내기 위한 실제 행동 기준을 줍니다.',
       'oneLineSummary는 단정하고 기억에 남게 마무리합니다.',
