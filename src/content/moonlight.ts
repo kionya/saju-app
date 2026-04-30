@@ -185,9 +185,9 @@ export const WISDOM_CARDS: readonly MoonlightWisdomCard[] = [
 ] as const;
 
 export const HOME_TODAY_SUMMARY = [
-  { label: '재물', value: '양호', ratio: 65, tone: 'gold' as const },
-  { label: '건강', value: '좋음', ratio: 80, tone: 'jade' as const },
-  { label: '관계', value: '평이', ratio: 50, tone: 'sky' as const },
+  { label: '재물', value: '안정', ratio: 65, tone: 'gold' as const },
+  { label: '건강', value: '가뿐', ratio: 80, tone: 'jade' as const },
+  { label: '관계', value: '조율', ratio: 50, tone: 'sky' as const },
 ] as const;
 
 export const INTERPRETATION_LAYERS = [

@@ -19,6 +19,7 @@ import { SectionHeader } from '@/components/layout/section-header';
 import { SectionSurface } from '@/components/layout/section-surface';
 import { ReportKeepsakeSection } from '@/components/report/report-keepsake-section';
 import { ReportOneMinuteSummary } from '@/components/report/report-one-minute-summary';
+import FiveElementOrbitChart from '@/components/saju/five-element-orbit-chart';
 import { GroundingDecisionTrace } from '@/components/saju/grounding-decision-trace';
 import { SajuFactEvidencePanel } from '@/components/saju/saju-fact-evidence-panel';
 import { Badge } from '@/components/ui/badge';
@@ -1062,23 +1063,65 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 rounded-[22px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 lg:flex-row lg:items-center">
-                <div className="min-w-40 text-sm font-semibold text-[var(--app-ivory)]">오행 분포</div>
-                <div className="grid flex-1 gap-2 md:grid-cols-5">
-                  {(Object.entries(sajuData.fiveElements.byElement) as [Element, (typeof sajuData.fiveElements.byElement)[Element]][]).map(([element, value]) => (
-                    <div key={element} className="min-w-0">
-                      <div className="mb-1 flex items-center justify-between gap-2 text-xs">
-                        <span style={{ color: ELEMENT_INFO[element].color }}>{ELEMENT_INFO[element].name.split(' ')[0]}</span>
-                        <span className="text-[var(--app-copy-soft)]">{value.count}개</span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-[var(--app-surface-strong)]">
+              <div className="rounded-[22px] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="max-w-sm">
+                    <div className="text-sm font-semibold text-[var(--app-ivory)]">오행 균형</div>
+                    <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">
+                      오행은 막대 합계보다 무엇이 중심을 잡고 무엇이 비어 있는지 먼저 읽는 편이 더 자연스럽습니다.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span
+                      className="rounded-full border px-3 py-1 text-sm"
+                      style={{
+                        borderColor: `${ELEMENT_INFO[sajuData.fiveElements.dominant].color}55`,
+                        backgroundColor: `${ELEMENT_INFO[sajuData.fiveElements.dominant].color}16`,
+                        color: ELEMENT_INFO[sajuData.fiveElements.dominant].color,
+                      }}
+                    >
+                      주도 · {ELEMENT_INFO[sajuData.fiveElements.dominant].name}
+                    </span>
+                    <span
+                      className="rounded-full border px-3 py-1 text-sm"
+                      style={{
+                        borderColor: `${ELEMENT_INFO[sajuData.fiveElements.weakest].color}55`,
+                        backgroundColor: `${ELEMENT_INFO[sajuData.fiveElements.weakest].color}16`,
+                        color: ELEMENT_INFO[sajuData.fiveElements.weakest].color,
+                      }}
+                    >
+                      보완 · {ELEMENT_INFO[sajuData.fiveElements.weakest].name}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-5 xl:grid-cols-[0.86fr_1.14fr]">
+                  <div className="mx-auto w-full max-w-[360px]">
+                    <FiveElementOrbitChart
+                      byElement={sajuData.fiveElements.byElement}
+                      dominant={sajuData.fiveElements.dominant}
+                      weakest={sajuData.fiveElements.weakest}
+                    />
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                    {(Object.entries(sajuData.fiveElements.byElement) as [Element, (typeof sajuData.fiveElements.byElement)[Element]][]).map(([element, value]) => (
+                      <div key={element} className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
                         <div
-                          className="h-1.5 rounded-full"
-                          style={{ width: `${value.percentage}%`, backgroundColor: ELEMENT_INFO[element].color }}
-                        />
+                          className="text-sm font-semibold"
+                          style={{ color: ELEMENT_INFO[element].color }}
+                        >
+                          {ELEMENT_INFO[element].name}
+                        </div>
+                        <div className="mt-2 text-xl font-semibold text-[var(--app-ivory)]">
+                          {Math.round(value.percentage)}%
+                        </div>
+                        <div className="mt-1 text-xs text-[var(--app-copy-soft)]">{value.count}개</div>
+                        <p className="mt-3 text-xs leading-6 text-[var(--app-copy-muted)]">
+                          {ELEMENT_INFO[element].keywords.slice(0, 2).join(' · ')}
+                        </p>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             </section>

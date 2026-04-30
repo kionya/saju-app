@@ -42,11 +42,28 @@ function clampRatio(value: number) {
   return Math.max(42, Math.min(92, Math.round(value)));
 }
 
-function scoreToValue(score: number) {
-  if (score >= 82) return '상승';
-  if (score >= 70) return '양호';
-  if (score >= 58) return '보통';
-  return '정리';
+function scoreToValue(label: HomeTodaySummaryItem['label'], score: number) {
+  if (label === '재물') {
+    if (score >= 82) return '확장';
+    if (score >= 72) return '안정';
+    if (score >= 62) return '관리';
+    if (score >= 54) return '점검';
+    return '절약';
+  }
+
+  if (label === '컨디션') {
+    if (score >= 82) return '가뿐';
+    if (score >= 72) return '안정';
+    if (score >= 62) return '유지';
+    if (score >= 54) return '회복';
+    return '휴식';
+  }
+
+  if (score >= 82) return '온기';
+  if (score >= 72) return '부드러움';
+  if (score >= 62) return '균형';
+  if (score >= 54) return '조율';
+  return '거리';
 }
 
 function scoreToTone(score: number): MoonlightTone {
@@ -108,21 +125,21 @@ export function buildPersonalizedTodaySummary(
   return [
     {
       label: '재물',
-      value: scoreToValue(scores.wealth),
+      value: scoreToValue('재물', scores.wealth),
       ratio: scores.wealth,
       tone: scoreToTone(scores.wealth),
       detail: `${profile.birthMonth}월 ${profile.birthDay}일 기준의 기회 포착 감각입니다.`,
     },
     {
       label: '컨디션',
-      value: scoreToValue(scores.condition),
+      value: scoreToValue('컨디션', scores.condition),
       ratio: scores.condition,
       tone: scoreToTone(scores.condition),
       detail: hourDetail,
     },
     {
       label: '관계',
-      value: scoreToValue(scores.relationship),
+      value: scoreToValue('관계', scores.relationship),
       ratio: scores.relationship,
       tone: scoreToTone(scores.relationship),
       detail: '오늘의 말투와 거리감 조율 흐름을 개인 정보 기준으로 조정했습니다.',
