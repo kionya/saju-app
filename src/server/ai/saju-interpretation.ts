@@ -56,13 +56,13 @@ export function buildFallbackInterpretation(
   const primaryConcept = grounding?.evidenceJson.primaryConcept ?? null;
   const strengthSummary =
     grounding?.evidenceJson.strength.level && grounding?.evidenceJson.strength.score !== null
-      ? `강약은 ${grounding.evidenceJson.strength.level} ${grounding.evidenceJson.strength.score}점으로 읽힙니다.`
+      ? `강약은 ${grounding.evidenceJson.strength.level} 흐름이며, 현재 균형 점수는 ${grounding.evidenceJson.strength.score}점입니다.`
       : null;
   const patternSummary = grounding?.evidenceJson.pattern.name
-    ? `격국은 ${grounding.evidenceJson.pattern.name}${grounding.evidenceJson.pattern.tenGod ? ` · ${grounding.evidenceJson.pattern.tenGod}` : ''} 흐름입니다.`
+    ? `격국의 중심은 ${grounding.evidenceJson.pattern.name}${grounding.evidenceJson.pattern.tenGod ? ` · ${grounding.evidenceJson.pattern.tenGod}` : ''}입니다.`
     : null;
   const yongsinSummary = grounding?.evidenceJson.yongsin.primary
-    ? `용신은 ${grounding.evidenceJson.yongsin.primary}${grounding.evidenceJson.yongsin.support.length > 0 ? `, 보조는 ${grounding.evidenceJson.yongsin.support.join(' · ')}` : ''}로 잡힙니다.`
+    ? `보완 축은 ${grounding.evidenceJson.yongsin.primary}${grounding.evidenceJson.yongsin.support.length > 0 ? `, ${grounding.evidenceJson.yongsin.support.join(' · ')}` : ''}입니다.`
     : null;
   const luckSummary = grounding?.evidenceJson.luckFlow.currentMajorLuck
     ? `현재 ${grounding.evidenceJson.luckFlow.currentMajorLuck} 대운이 함께 작동합니다.`

@@ -237,6 +237,21 @@ function MonthlyFlowCard({ flow }: { flow: YearlyMonthFlow }) {
           {areaLabel}
         </Badge>
       </div>
+
+      {flow.basis.length > 0 ? (
+        <details className="group mt-4">
+          <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
+            이번 달 근거 메모
+          </summary>
+          <div className="mt-3 grid gap-2">
+            {flow.basis.map((item) => (
+              <div key={item} className="rounded-xl bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+                {item}
+              </div>
+            ))}
+          </div>
+        </details>
+      ) : null}
     </article>
   );
 }
@@ -254,6 +269,7 @@ function CoreAreaCard({
     opportunity: string;
     caution: string;
     action: string;
+    basis: string[];
   };
   prose: string;
 }) {
@@ -296,6 +312,20 @@ function CoreAreaCard({
           {renderCompactParagraphs(prose, 2)}
         </div>
       </details>
+      {item.basis.length > 0 ? (
+        <details className="group mt-4">
+          <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
+            판정 기준 메모
+          </summary>
+          <div className="mt-3 grid gap-2">
+            {item.basis.map((line) => (
+              <div key={line} className="rounded-xl bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+                {line}
+              </div>
+            ))}
+          </div>
+        </details>
+      ) : null}
     </article>
   );
 }
@@ -305,11 +335,13 @@ function SupportAreaCard({
   eyebrow,
   section,
   prose,
+  basis,
 }: {
   label: string;
   eyebrow: string;
   section: SajuYearlyReport['categories']['health'];
   prose: string;
+  basis: string[];
 }) {
   return (
     <article className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
@@ -328,6 +360,20 @@ function SupportAreaCard({
           {renderCompactParagraphs(prose, 2)}
         </div>
       </details>
+      {basis.length > 0 ? (
+        <details className="group mt-4">
+          <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
+            판정 기준 메모
+          </summary>
+          <div className="mt-3 grid gap-2">
+            {basis.map((line) => (
+              <div key={line} className="rounded-xl bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+                {line}
+              </div>
+            ))}
+          </div>
+        </details>
+      ) : null}
     </article>
   );
 }
@@ -555,6 +601,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
       opportunity: section.opportunity,
       caution: section.caution,
       action: section.action,
+      basis: section.basis,
     };
   });
 
@@ -684,12 +731,14 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
           eyebrow="리듬 관리"
           section={data.report.categories.health}
           prose={interpretation.categories.health}
+          basis={data.report.categories.health.basis}
         />
         <SupportAreaCard
           label="이동·변화"
           eyebrow="자리와 이동"
           section={data.report.categories.move}
           prose={interpretation.categories.move}
+          basis={data.report.categories.move.basis}
         />
       </div>
 

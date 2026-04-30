@@ -326,7 +326,7 @@ function formatEvidencePoint(
   const card = report.evidenceCards.find((item) => item.key === key);
   if (!card) return '';
 
-  return `${card.label}은 ${card.title}으로 계산됩니다. ${card.plainSummary ?? card.body}`;
+  return `${card.label} 기준 · ${card.title}. ${card.plainSummary ?? card.body}`;
 }
 
 function flattenDetailTopic(topic: DetailTopicReportContent) {

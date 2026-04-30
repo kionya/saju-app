@@ -30,7 +30,7 @@ export default async function SajuNaturePage({ params }: Props) {
   const metaphor = sajuData.dayMaster.metaphor ?? '자연의 상징';
   const description =
     sajuData.dayMaster.description ??
-    '선생님의 기질은 자연의 리듬처럼 밝음과 고요함이 함께 흐르는 모습으로 읽힙니다.';
+    '선생님의 기질은 자연의 리듬처럼 밝음과 고요함이 함께 흐르는 모습입니다.';
 
   return (
     <AppShell header={<SiteHeader />}>

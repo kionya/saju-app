@@ -243,7 +243,7 @@ export function buildLifetimeReport(
       ].slice(0, 5),
       elementHighlights,
       basis: compactStrings([
-        strength?.technicalSummary,
+        strength?.title ? `강약 기준: ${strength.title}` : null,
         `강한 오행: ${dominant}`,
         `약한 오행: ${weakest}`,
       ]),
@@ -257,7 +257,8 @@ export function buildLifetimeReport(
         pattern?.plainSummary ??
         '격국은 이 사람이 어떤 역할 구조에서 실력이 붙는지, 어디에서 책임과 반응이 반복되는지를 읽는 기준입니다.',
       yongsinDirection:
-        yongsin?.technicalSummary ??
+        yongsin?.plainSummary ??
+        yongsin?.body ??
         `${yongsinLabels} 기운을 꾸준히 들이면 명식의 장점이 균형 있게 살아납니다.`,
       choiceRule: `${supportLabels} 보완 축이 살아나는 선택은 길게 보면 명식을 살리고, ${kiyshinLabels} 기운이 과해지는 선택은 짧게는 편해도 오래 가면 균형을 흐릴 가능성이 큽니다.`,
       supportSymbols: compactStrings([
@@ -349,7 +350,7 @@ export function buildLifetimeReport(
       basis: compactStrings([
         careerReport.headline,
         careerReport.summary,
-        pattern?.technicalSummary,
+        pattern?.title ? `격국 기준: ${pattern.title}` : null,
       ]),
     },
     healthRhythm: {

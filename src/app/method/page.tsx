@@ -59,7 +59,7 @@ export default function MethodIndexPage() {
             </Badge>,
           ]}
           title="기준서를 읽고 나면, 다음 질문이 더 선명해집니다"
-          description="달빛선생 엔진 기준서를 바탕으로, 실제 사용자들이 가장 많이 궁금해하는 지점을 따로 풀어낸 읽을거리입니다. 왜 AI마다 결과가 다른지, 왜 출생지와 분 단위 시간이 필요한지, 왜 용신 계산이 어려운지를 일반 사용자 언어로 정리했습니다."
+          description="달빛선생 엔진 기준서를 바탕으로, 실제 사용자들이 가장 많이 궁금해하는 지점을 따로 풀어낸 읽을거리입니다. 왜 AI마다 결과가 다른지, 왜 출생지와 분 단위 시간이 필요한지를 일반 사용자 언어로 정리했습니다."
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
@@ -68,7 +68,7 @@ export default function MethodIndexPage() {
               eyebrow="이런 분께 먼저 권합니다"
               title="읽는 순서를 조금만 잡아도 기준이 훨씬 덜 흔들립니다"
               titleClassName="text-3xl"
-              description="이 허브는 제품 소개보다 문서형 읽기 경험에 가깝습니다. 먼저 왜 결과가 갈리는지 보고, 그다음 시간과 용신 같은 민감한 축을 읽으면 각 글이 훨씬 덜 따로 놀게 됩니다."
+              description="먼저 왜 결과가 갈리는지 보고, 그다음 시간과 용신 같은 민감한 축을 읽으면 각 글이 훨씬 덜 따로 놀게 됩니다."
               descriptionClassName="text-[var(--app-copy)]"
             />
 

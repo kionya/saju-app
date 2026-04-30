@@ -115,8 +115,8 @@ export default function SampleReportPage() {
 
           <SupportRail
             eyebrow="이 미리보기에서 먼저 보는 것"
-            title="결제 전에 결과물의 흐름을 짧게 훑어보실 수 있습니다"
-            description="달빛선생의 리포트는 한 줄 요약에서 끝나지 않고, 판정 근거와 소장 가치까지 한 번에 이어지는 구조를 전제로 설계합니다."
+            title="결과 흐름을 먼저 짧게 훑어보실 수 있습니다"
+            description="달빛선생 리포트는 한 줄 요약에서 끝나지 않고, 판정 근거와 소장 가치까지 한 번에 이어지는 구조로 설계했습니다."
           >
             <BulletList items={SAMPLE_PREVIEW_GUIDE} />
             <div className="mt-5 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4 text-sm leading-7 text-[var(--app-copy-soft)]">

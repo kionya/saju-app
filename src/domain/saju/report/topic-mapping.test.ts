@@ -150,5 +150,5 @@ test('summary and action copy now reference computed evidence instead of generic
   const report = buildSajuReport(birthInput, data, 'today');
   const combined = [report.summaryHighlights.join(' '), report.primaryAction.description, report.cautionAction.description].join(' ');
 
-  assert.match(combined, /강약|격국|용신|합충|공망|신살/);
+  assert.match(combined, /중화|火 \(화\)|묶이거나 부딪히는/);
 });

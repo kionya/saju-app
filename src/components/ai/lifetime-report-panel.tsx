@@ -99,6 +99,25 @@ function FactCard({ label, body }: { label: string; body: string }) {
   );
 }
 
+function BasisNotes({ items }: { items: string[] }) {
+  if (items.length === 0) return null;
+
+  return (
+    <details className="group mt-5">
+      <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
+        근거 메모 보기
+      </summary>
+      <div className="mt-3 grid gap-2">
+        {items.map((line) => (
+          <div key={line} className="rounded-xl bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+            {line}
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+}
+
 function LifetimeSectionBody({
   sectionKey,
   interpretation,
@@ -494,6 +513,7 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
 
       {SECTION_META.map((section) => {
         const reportSection = report[section.key];
+        const basisLines = 'basis' in reportSection ? reportSection.basis : [];
 
         return (
           <section key={section.key} className="app-panel p-6 sm:p-7">
@@ -511,6 +531,7 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
               interpretation={interpretation}
               report={report}
             />
+            <BasisNotes items={basisLines} />
           </section>
         );
       })}

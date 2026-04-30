@@ -838,7 +838,7 @@ export function buildCompatibilityInterpretation(
 
   const summary = [
     headline,
-    `${self.name}님은 ${selfData.dayMaster.stem} 일간, ${partner.name}님은 ${partnerData.dayMaster.stem} 일간으로 읽힙니다.`,
+    `${self.name}님은 ${selfData.dayMaster.stem} 일간, ${partner.name}님은 ${partnerData.dayMaster.stem} 일간입니다.`,
     branchInteraction.body,
   ].join(' ');
 

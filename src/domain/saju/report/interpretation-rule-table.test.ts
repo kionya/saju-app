@@ -75,6 +75,6 @@ test('evidence helpers pick priority cards and normalize readable snippets', () 
   const snippet = toEvidenceSnippet(selected);
 
   assert.equal(selected?.key, 'relations');
-  assert.match(snippet ?? '', /합충에서는 충 · 반합으로 읽힙니다/);
+  assert.match(snippet ?? '', /합충은 관계가 묶이거나 부딪히는 지점입니다/);
   assert.doesNotMatch(snippet ?? '', /쉽게 말하면/);
 });

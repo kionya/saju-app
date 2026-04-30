@@ -153,7 +153,7 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
       lead: `${dominant} 기운이 가장 앞에 있고, ${weakest} 기운을 어떻게 보완하느냐가 평생 균형의 핵심입니다.`,
       decision: strength?.plainSummary ?? `${dominant}은 쓰기 쉬운 장점이고, ${weakest}은 의식적으로 보완해야 하는 약한 축입니다.`,
       paragraphs: compactStrings([
-        strength?.technicalSummary,
+        strength?.title ? `강약 기준은 ${strength.title}입니다.` : null,
         todayReport.summaryHighlights[1],
       ]),
       keyPoints: compactList([
@@ -176,7 +176,7 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
       decision: yongsin?.plainSummary ?? `이 명식은 ${supportLabels} 기운을 어떻게 쓰느냐가 균형의 핵심입니다.`,
       paragraphs: compactStrings([
         pattern?.plainSummary,
-        yongsin?.technicalSummary,
+        yongsin?.title ? `보완 축 메모: ${yongsin.title}` : null,
         `평생 운을 볼 때는 타고난 구조를 고정값으로 단정하기보다, ${supportLabels} 기운을 생활 환경과 선택 안에 얼마나 안정적으로 들이는지가 중요합니다.`,
       ]),
       keyPoints: compactList([
@@ -351,17 +351,17 @@ export default async function SajuPremiumPage({ params }: Props) {
           </div>
           <h1 className="mt-5 font-display text-4xl text-[var(--app-ivory)] sm:text-5xl">
             {hasLifetimeAccess
-              ? '명리 기준서 본문과 올해 부록이 모두 열렸습니다'
+              ? '명리 기준서와 올해 부록이 열렸습니다'
               : yearlyAccessLabel
-                ? `${targetYear} 연간 전략 부록과 명리 기준서 미리보기가 열렸습니다`
-                : '나머지 6개 섹션, 전체 기준서 보기'}
+                ? `${targetYear} 연간 전략 부록이 열렸습니다`
+                : '명리 기준서 전체 보기'}
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            명리 기준서는 원국 중심 기준서이고, 올해 리포트는 해당 연도의 흐름 부록입니다. 두 리포트를
-            섞지 않고 “평생 기준에서 올해 적용으로” 이어지는 순서로 읽는 구조를 기준으로 정리했습니다.
+            명리 기준서는 원국의 바탕을 읽는 본문이고, 올해 부록은 같은 기준 위에서 올해의 흐름을
+            적용해 보는 확장판입니다.
           </p>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
-            격국, 용신, 대운의 판정은 계산 기준을 먼저 고정하고, AI는 그 결과를 이해하기 쉬운 문장으로만 풀어드립니다.
+            격국, 용신, 대운의 판정은 계산 기준을 먼저 고정하고, AI는 그 결과를 읽기 쉬운 문장으로만 풀어드립니다.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
@@ -489,7 +489,7 @@ export default async function SajuPremiumPage({ params }: Props) {
             <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
               선생님의 일주는 {sajuData.pillars.day.ganzi}입니다. {sajuData.dayMaster.metaphor ?? '자연의 상징'}이
               깊은 밤의 물결과 만나는 형상처럼, 밖으로는 밝고 따뜻하시지만 안쪽에는 사유의
-              결이 함께 흐르는 모습으로 읽힙니다.
+              결이 함께 흐르는 모습입니다.
             </p>
 
             <div className="relative mt-6 overflow-hidden rounded-[1.3rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">

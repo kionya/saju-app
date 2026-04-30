@@ -205,7 +205,7 @@ export default function AboutEnginePage() {
             </Badge>
           ))}
           title="달빛선생은 어떻게 사주를 계산하나요?"
-          description="달빛선생은 AI가 사주를 맞히는 서비스가 아니라, 계산된 명리 구조를 AI가 이해하기 쉽게 설명하는 서비스입니다. 계산은 엔진이 먼저 맡고, 선생의 말투는 그 결과를 풀어내는 설명 레이어로만 사용합니다."
+          description="달빛선생은 계산된 명리 구조를 AI가 이해하기 쉽게 설명하는 서비스입니다. 계산은 엔진이 먼저 맡고, 선생의 말투는 설명 레이어로만 사용합니다."
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
@@ -215,7 +215,7 @@ export default function AboutEnginePage() {
               eyebrow="엔진 기준서 요약"
               title="이 문서는 계산과 설명이 어디서 갈리는지 먼저 보여드립니다"
               titleClassName="text-3xl text-[var(--app-gold-text)]"
-              description="긴 리포트 설명보다 먼저, 명식 계산과 시간 보정, 격국·용신 판정, 저장 메타데이터가 어떤 순서로 이어지는지 문서형으로 정리한 페이지입니다."
+              description="명식 계산, 시간 보정, 격국·용신 판정, 저장 메타데이터가 어떤 순서로 이어지는지 문서형으로 정리한 페이지입니다."
               descriptionClassName="text-[var(--app-copy)]"
             />
 

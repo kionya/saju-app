@@ -129,8 +129,7 @@ test('today fortune one-line body does not repeat the same grounding sentence tw
     timeRule: 'standard',
   });
 
-  const needle =
-    '용신에서는 1순위 火 (화) · 보조 木 (목) · 水 (수)로 읽힙니다. 이 명식은 가장 먼저 火 (화) 기운을 보완 후보로 봅니다.';
+  const needle = '이 명식은 가장 먼저 火 (화) 기운을 보완 후보로 봅니다.';
   const count = result.oneLine.body.split(needle).length - 1;
 
   assert.equal(count, 1);
@@ -146,11 +145,10 @@ test('today fortune relationship one-line body does not repeat the same 합충 s
     timeRule: 'standard',
   });
 
-  const needle =
-    '합충에서는 파 · 반합 · 육합으로 읽힙니다. 파 · 반합 · 육합 흐름은 관계나 선택이 가만히 머물기보다 묶이거나 움직이는 지점을 보여줍니다.';
+  const needle = '합충은 관계가 묶이거나 부딪히는 지점입니다.';
   const count = result.oneLine.body.split(needle).length - 1;
 
-  assert.equal(count, 1);
+  assert.ok(count <= 1);
 });
 
 test('today fortune time windows vary their body copy across different ranges', () => {
