@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   if (!item) {
     return {
-      title: '엔진 읽을거리',
+      title: '계산 기준 읽을거리',
     };
   }
 
@@ -73,8 +73,8 @@ function buildMethodFaqs(item: EngineMethodEntry) {
     {
       question: '달빛선생에서는 이 주제를 어떤 방식으로 보여주나요?',
       answer: secondSection
-        ? `${secondSection.body} 결과 화면에서는 판정 근거와 체크 포인트를 같이 보여주고, 필요한 경우 엔진 기준서와 명리 기준서로 이어서 확인할 수 있습니다.`
-        : '결과 화면에서는 판정 근거와 체크 포인트를 같이 보여주고, 필요한 경우 엔진 기준서와 명리 기준서로 이어서 확인할 수 있습니다.',
+        ? `${secondSection.body} 결과 화면에서는 판정 근거와 체크 포인트를 같이 보여주고, 필요한 경우 계산 기준서와 명리 기준서로 이어서 확인할 수 있습니다.`
+        : '결과 화면에서는 판정 근거와 체크 포인트를 같이 보여주고, 필요한 경우 계산 기준서와 명리 기준서로 이어서 확인할 수 있습니다.',
     },
   ];
 }
@@ -160,7 +160,7 @@ export default async function MethodDetailPage({ params }: Props) {
               <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
                 {item.eyebrow}
               </Badge>
-              <Badge className="border-white/10 bg-white/5 text-white/68">엔진 기준서 연계 글</Badge>
+              <Badge className="border-white/10 bg-white/5 text-white/68">계산 기준서 연계 글</Badge>
             </div>
 
             <SectionHeader
@@ -203,7 +203,7 @@ export default async function MethodDetailPage({ params }: Props) {
                 href="/about-engine"
                 className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
               >
-                엔진 기준서 보기
+                계산 기준서 보기
               </Link>
               <Link
                 href="/sample-report"

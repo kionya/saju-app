@@ -274,7 +274,7 @@ export default function HomePage() {
             <div className="app-caption mb-4">프리미엄 명리 리포트</div>
             <h1 className="moon-hero-h1">당신의 사주를 한 권의 기준서로 남깁니다.</h1>
             <p className="moon-hero-sub">
-              명식, 격국, 용신, 대운은 엔진이 먼저 계산합니다.
+              명식, 격국, 용신, 대운은 출생 정보로 먼저 계산합니다.
               <br className="hidden sm:block" />
               달빛선생은 그 구조를 고급 리포트와 대화로 풀어드립니다.
             </p>
@@ -382,7 +382,7 @@ export default function HomePage() {
                     href="/about-engine"
                     className="inline-flex items-center gap-2 px-1 py-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
                   >
-                    엔진 기준서 보기
+                    계산 기준서 보기
                   </Link>
                 </ActionCluster>
                 <div className="rounded-[1.05rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]">
@@ -473,7 +473,7 @@ export default function HomePage() {
           <article className="app-panel p-6 sm:p-7">
             <SectionHeader
               eyebrow="같은 기준, 다른 말투"
-              title="해석 엔진은 같고, 선생의 설명 결만 달라집니다"
+              title="계산 기준은 같고, 선생의 설명 결만 달라집니다"
               titleClassName="text-2xl"
               description={
                 <>

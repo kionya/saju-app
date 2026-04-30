@@ -13,16 +13,16 @@ import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 import { ENGINE_METHOD_ENTRIES } from '@/lib/engine-method-pages';
 
 export const metadata: Metadata = {
-  title: '엔진 읽을거리 | 달빛선생',
+  title: '계산 기준 읽을거리 | 달빛선생',
   description:
     'AI 사주가 왜 흔들리는지, 진태양시가 무엇인지, 용신 계산이 왜 어려운지 달빛선생 기준으로 풀어낸 읽을거리 모음입니다.',
   alternates: {
     canonical: '/method',
   },
   openGraph: {
-    title: '달빛선생 엔진 읽을거리',
+    title: '달빛선생 계산 기준 읽을거리',
     description:
-      '엔진 기준서와 함께 읽으면 좋은 AI 사주·진태양시·용신 해설 글을 모았습니다.',
+      '계산 기준서와 함께 읽으면 좋은 AI 사주·진태양시·용신 해설 글을 모았습니다.',
     url: 'https://saju-app-lac.vercel.app/method',
     siteName: '달빛선생',
     locale: 'ko_KR',
@@ -52,14 +52,14 @@ export default function MethodIndexPage() {
               key="method-guide"
               className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]"
             >
-              엔진 읽을거리
+              계산 기준 읽을거리
             </Badge>,
             <Badge key="seo" className="border-white/10 bg-white/5 text-white/70">
               AI 사주 · 진태양시 · 용신 해설
             </Badge>,
           ]}
           title="기준서를 읽고 나면, 다음 질문이 더 선명해집니다"
-          description="달빛선생 엔진 기준서를 바탕으로, 실제 사용자들이 가장 많이 궁금해하는 지점을 따로 풀어낸 읽을거리입니다. 왜 AI마다 결과가 다른지, 왜 출생지와 분 단위 시간이 필요한지를 일반 사용자 언어로 정리했습니다."
+          description="달빛선생 계산 기준서를 바탕으로, 실제 사용자들이 가장 많이 궁금해하는 지점을 따로 풀어낸 읽을거리입니다. 왜 AI마다 결과가 다른지, 왜 출생지와 분 단위 시간이 필요한지를 일반 사용자 언어로 정리했습니다."
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
@@ -86,14 +86,14 @@ export default function MethodIndexPage() {
             surface="lunar"
             eyebrow="바로 이어보기"
             title="읽은 기준을 실제 결과 화면에서 바로 확인해보세요"
-            description="이 글들은 설명의 문을 여는 역할입니다. 실제 결과 화면에서는 같은 기준이 판정 근거, KASI 대조, 메타데이터로 이어집니다."
+            description="이 글들은 설명의 문을 여는 역할입니다. 실제 결과 화면에서는 같은 기준이 판정 근거, 절기 확인, 저장과 재확인 흐름으로 이어집니다."
           >
             <ActionCluster>
               <Link
                 href="/about-engine"
                 className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
               >
-                엔진 기준서 보기
+                계산 기준서 보기
               </Link>
               <Link
                 href="/saju/new"
@@ -107,7 +107,7 @@ export default function MethodIndexPage() {
 
         <SectionSurface surface="panel">
           <SectionHeader
-            eyebrow="엔진 읽을거리 목록"
+            eyebrow="계산 기준 읽을거리 목록"
             title="설명은 길게 흩어놓기보다, 질문 단위로 나누어 읽기 좋게 정리했습니다"
             titleClassName="text-3xl"
             description="각 글은 하나의 질문에만 집중하고, 마지막에는 다음으로 읽기 좋은 주제를 이어서 제안합니다."

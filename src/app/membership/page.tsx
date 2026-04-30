@@ -80,7 +80,7 @@ const COMPARISON_ROWS = [
   {
     label: '명식 계산',
     ai: '입력 문맥을 바탕으로 추론하거나 단순화될 수 있습니다.',
-    moonlight: '엔진이 먼저 명식과 운의 구조를 계산한 뒤 결과를 설명합니다.',
+    moonlight: '출생 정보로 명식과 운의 구조를 먼저 계산한 뒤 결과를 설명합니다.',
   },
   {
     label: '격국·용신',
@@ -144,7 +144,7 @@ const PRE_PURCHASE_LINKS = [
     href: REPORT_SAMPLE_HREF,
   },
   {
-    title: '엔진 기준서 보기',
+    title: '계산 기준서 보기',
     body: '달빛선생이 어떤 계산 기준과 판정 순서를 쓰는지 정리해둔 문서입니다.',
     href: '/about-engine',
   },
@@ -353,7 +353,7 @@ export default async function MembershipPage({
                   eyebrow="3. 결정 전에 확인할 것"
                   title="비교와 읽을거리도 상품 결정에 필요한 만큼만 남겼습니다"
                   titleClassName="text-3xl"
-                  description="일반 AI 사주와 다른 지점, 결제 전에 먼저 봐도 좋은 샘플/엔진 기준서, 그리고 어떤 순서로 고르면 덜 흔들리는지를 한곳에 모았습니다."
+                  description="일반 AI 사주와 다른 지점, 결제 전에 먼저 봐도 좋은 샘플/계산 기준서, 그리고 어떤 순서로 고르면 덜 흔들리는지를 한곳에 모았습니다."
                   descriptionClassName="max-w-3xl"
                 />
 
