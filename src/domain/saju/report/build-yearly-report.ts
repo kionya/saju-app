@@ -449,8 +449,8 @@ function createCategorySectionFromReport(
     opportunity: report.primaryAction.description,
     caution: report.cautionAction.description,
     action:
-      normalizedAction ||
       report.summaryHighlights[1] ||
+      normalizedAction ||
       report.timeline[2]?.headline ||
       report.primaryAction.description,
     score: getFocusedScore(report) ?? undefined,
