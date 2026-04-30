@@ -49,6 +49,7 @@ export interface AccountDashboardData {
   };
   credits: AccountCredits;
   subscription: AccountSubscription | null;
+  readingCount: number;
   recentReadings: AccountReading[];
   recentTransactions: AccountTransaction[];
 }
@@ -65,6 +66,7 @@ function buildLocalPreviewDashboard(): AccountDashboardData {
       total: 0,
     },
     subscription: null,
+    readingCount: 0,
     recentReadings: [],
     recentTransactions: [],
   };
@@ -95,7 +97,7 @@ export async function getAccountDashboardData(
   const readingLimit = options.readingLimit ?? 5;
   const transactionLimit = options.transactionLimit ?? 6;
 
-  const [creditsResponse, subscription, readingsResponse, transactionsResponse] =
+  const [creditsResponse, subscription, readingCountResponse, readingsResponse, transactionsResponse] =
     await Promise.all([
       supabase
         .from('user_credits')
@@ -103,6 +105,10 @@ export async function getAccountDashboardData(
         .eq('user_id', user.id)
         .maybeSingle(),
       getManagedSubscription(user.id),
+      supabase
+        .from('readings')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id),
       supabase
         .from('readings')
         .select('id, birth_year, birth_month, birth_day, birth_hour, gender, created_at, result_json')
@@ -131,6 +137,7 @@ export async function getAccountDashboardData(
       subscriptionBalance,
       total: balance + subscriptionBalance,
     },
+    readingCount: readingCountResponse.count ?? readingsResponse.data?.length ?? 0,
     subscription: subscription
       ? {
           status: subscription.status,

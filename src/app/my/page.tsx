@@ -9,6 +9,10 @@ import { SupportRail } from '@/components/layout/support-rail';
 import { Badge } from '@/components/ui/badge';
 import { MY_MENU_BLUEPRINT } from '@/content/moonlight';
 import { getAccountDashboardData } from '@/lib/account';
+import {
+  getSubscriptionPlanLabel,
+  getSubscriptionStatusLabel,
+} from '@/lib/subscription';
 import { PageHero } from '@/shared/layout/app-shell';
 
 function formatBirthLabel(reading: {
@@ -22,6 +26,16 @@ function formatBirthLabel(reading: {
   const genderLabel =
     reading.gender === 'male' ? '남성' : reading.gender === 'female' ? '여성' : '성별 미선택';
   return `${reading.birthYear}.${reading.birthMonth}.${reading.birthDay} · ${hourLabel} · ${genderLabel}`;
+}
+
+function formatRenewalLabel(value: string | null) {
+  if (!value) return '다음 갱신일 미정';
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(value));
 }
 
 const MENU_ICONS: Record<string, string> = {
@@ -44,12 +58,23 @@ export default async function MyPage() {
   const displayName = dashboard.user.email?.split('@')[0] ?? '선생님';
   const sigil = mostRecentReading?.dayMasterStem ?? '月';
   const isPremium = Boolean(dashboard.subscription);
+  const planTitle = dashboard.subscription
+    ? getSubscriptionPlanLabel(dashboard.subscription.plan)
+    : '미가입';
+  const planSummary = dashboard.subscription
+    ? `${getSubscriptionStatusLabel(dashboard.subscription.status)} · ${formatRenewalLabel(
+        dashboard.subscription.renewsAt
+      )}`
+    : '무료 이용 중 · 멤버십 가입 전';
 
   const stats = [
     {
       label: '저장한 해석',
-      value: dashboard.recentReadings.length,
-      sub: '결과보관함에서 다시 보기',
+      value: dashboard.readingCount,
+      sub:
+        dashboard.readingCount > 0
+          ? `전체 ${dashboard.readingCount}개 · 결과보관함에서 다시 보기`
+          : '저장된 결과 없음',
       href: '/my/results',
       icon: BookOpen,
       tone: 'text-[var(--app-gold-text)]',
@@ -64,8 +89,8 @@ export default async function MyPage() {
     },
     {
       label: '플랜 상태',
-      value: isPremium ? dashboard.subscription?.status ?? '활성' : '미가입',
-      sub: isPremium ? '마이 결제에서 관리하기' : '플랜 가입으로 더 깊이 보기',
+      value: planTitle,
+      sub: isPremium ? planSummary : '무료 이용 중 · 플랜 가입으로 더 깊이 보기',
       href: isPremium ? '/my/billing' : '/membership',
       icon: Star,
       tone: isPremium ? 'text-[var(--app-plum)]' : 'text-[var(--app-copy-muted)]',
@@ -114,11 +139,14 @@ export default async function MyPage() {
             </div>
             <div className="space-y-2">
               <Badge className={isPremium ? 'border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]' : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]'}>
-                {isPremium ? '프리미엄 회원' : '무료 이용 중'}
+                {isPremium ? planTitle : '무료 이용 중'}
               </Badge>
               <Badge className="border-[var(--app-jade)]/25 bg-[var(--app-jade)]/8 text-[var(--app-jade)]">
                 코인 {dashboard.credits.total}
               </Badge>
+              {isPremium ? (
+                <div className="text-xs text-[var(--app-copy-soft)]">{planSummary}</div>
+              ) : null}
               {mostRecentReading?.dayPillarLabel ? (
                 <div className="font-hanja text-xs tracking-[0.28em] text-[var(--app-gold)]/72">
                   {mostRecentReading.dayPillarLabel}
