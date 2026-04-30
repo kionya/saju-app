@@ -14,9 +14,9 @@ import { ENGINE_METHOD_ENTRIES } from '@/lib/engine-method-pages';
 import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 export const metadata: Metadata = {
-  title: '달빛선생 엔진 기준서 | AI 사주 계산 기준',
+  title: '달빛선생 계산 기준서 | AI 사주 계산 기준',
   description:
-    '달빛선생이 AI 사주를 어떻게 계산하고 설명하는지, 진태양시·격국·용신·대운 판정 기준과 리포트 근거 구조를 정리한 엔진 기준서입니다.',
+    '달빛선생이 AI 사주를 어떻게 계산하고 설명하는지, 진태양시·격국·용신·대운 판정 기준과 리포트 근거 구조를 쉽게 정리한 계산 기준서입니다.',
   keywords: [
     'AI 사주',
     '사주 계산 기준',
@@ -24,13 +24,13 @@ export const metadata: Metadata = {
     '격국 판정',
     '용신 계산',
     '대운 세운',
-    '달빛선생 엔진 기준서',
+    '달빛선생 계산 기준서',
   ],
   alternates: { canonical: '/about-engine' },
   openGraph: {
-    title: '달빛선생 엔진 기준서',
+    title: '달빛선생 계산 기준서',
     description:
-      '명식 계산은 엔진이 먼저 맡고, AI는 계산된 구조를 설명하는 역할만 한다는 달빛선생의 기준을 정리했습니다.',
+      '명식 계산을 먼저 고정하고, AI는 계산된 구조를 설명하는 역할만 한다는 달빛선생의 기준을 정리했습니다.',
     url: 'https://saju-app-lac.vercel.app/about-engine',
     siteName: '달빛선생',
     locale: 'ko_KR',
@@ -42,7 +42,7 @@ const ENGINE_BADGES = [
   'AI 사주 계산 기준',
   '진태양시 · 절기 · 자시 규칙',
   '격국 · 용신 · 대운 판정',
-  '판정 근거 · KASI 대조 · 메타데이터',
+  '판정 근거 · KASI 대조 · 저장 기준',
 ] as const;
 
 const PAGE_SECTIONS = [
@@ -50,13 +50,13 @@ const PAGE_SECTIONS = [
   { href: '#time-precision', label: '출생시각·출생지 정밀도' },
   { href: '#decision-trace', label: '판정 근거 펼치기' },
   { href: '#report-ux', label: '리포트에서 무엇이 보이나' },
-  { href: '#metadata', label: '엔진 버전과 저장 메타' },
+  { href: '#metadata', label: '저장과 재확인' },
   { href: '#faq', label: '자주 묻는 질문' },
 ] as const;
 
 const ENGINE_PRINCIPLES = [
   {
-    title: '명식 계산은 엔진이 먼저 맡습니다',
+    title: '명식 계산을 먼저 고정합니다',
     body:
       '달빛선생은 출생 정보로 명식과 운의 구조를 먼저 계산합니다. 격국, 용신, 대운처럼 결과를 크게 바꾸는 항목은 AI가 대화 중에 새로 추측하지 않도록 분리합니다.',
   },
@@ -136,15 +136,6 @@ const SAFETY_RULES = [
   '의심이 남는 구간은 “참고 해석”으로 낮춰 보여줍니다.',
 ] as const;
 
-const VERSION_FIELDS = [
-  'engine_version',
-  'rule_set_version',
-  'birth_input_snapshot',
-  'decision_trace',
-  'llm_model',
-  'prompt_version',
-] as const;
-
 const FAQS = [
   {
     question: 'AI가 직접 사주를 계산하지 않는다는 뜻은 무엇인가요?',
@@ -205,17 +196,17 @@ export default function AboutEnginePage() {
             </Badge>
           ))}
           title="달빛선생은 어떻게 사주를 계산하나요?"
-          description="달빛선생은 계산된 명리 구조를 AI가 이해하기 쉽게 설명하는 서비스입니다. 계산은 엔진이 먼저 맡고, 선생의 말투는 설명 레이어로만 사용합니다."
+          description="달빛선생은 명식과 운의 구조를 먼저 계산하고, AI는 그 결과를 이해하기 쉬운 문장으로 풀어주는 서비스입니다."
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
           <SectionSurface surface="lunar">
             <div className="app-starfield" />
             <SectionHeader
-              eyebrow="엔진 기준서 요약"
+              eyebrow="계산 기준서 요약"
               title="이 문서는 계산과 설명이 어디서 갈리는지 먼저 보여드립니다"
               titleClassName="text-3xl text-[var(--app-gold-text)]"
-              description="명식 계산, 시간 보정, 격국·용신 판정, 저장 메타데이터가 어떤 순서로 이어지는지 문서형으로 정리한 페이지입니다."
+              description="명식 계산, 시간 보정, 격국·용신 판정, 리포트 저장 기준이 어떤 순서로 이어지는지 문서형으로 정리한 페이지입니다."
               descriptionClassName="text-[var(--app-copy)]"
             />
 
@@ -279,7 +270,7 @@ export default function AboutEnginePage() {
                 eyebrow="왜 AI만으로 보지 않나"
                 title="일반 AI 사주와 달빛선생의 차이는 말투보다 판정 순서에 있습니다"
                 titleClassName="text-3xl"
-                description="일반적인 대화형 AI는 설명을 잘 쓰지만, 명식 계산과 격국·용신 판정은 입력 방식과 프롬프트 길이에 따라 흔들릴 수 있습니다. 달빛선생은 계산과 설명을 분리해, 흔들리기 쉬운 부분을 엔진 기준으로 먼저 고정합니다."
+                description="일반적인 대화형 AI는 설명을 잘 쓰지만, 명식 계산과 격국·용신 판정은 입력 방식과 프롬프트 길이에 따라 흔들릴 수 있습니다. 달빛선생은 계산과 설명을 분리해, 흔들리기 쉬운 부분을 먼저 고정합니다."
                 descriptionClassName="app-reading-prose text-[var(--app-copy)]"
               />
 
@@ -381,21 +372,23 @@ export default function AboutEnginePage() {
 
             <SectionSurface id="metadata" surface="panel" className="scroll-mt-28">
               <SectionHeader
-                eyebrow="엔진 버전과 저장 메타"
-                title="계산 기준이 바뀌어도 다시 추적할 수 있게 남깁니다"
+                eyebrow="저장과 재확인"
+                title="다시 열어도 같은 기준으로 확인할 수 있게 남깁니다"
                 titleClassName="text-3xl"
-                description="리포트 저장 시에는 엔진 버전, 규칙 버전, 입력 스냅샷, 판정 흐름, 설명 레이어 버전을 함께 남깁니다. 같은 명식이라도 기준이 어떻게 바뀌었는지 추적할 수 있어야 신뢰가 유지된다고 보기 때문입니다."
+                description="리포트는 입력값과 판정 흐름을 내부적으로 함께 보관합니다. 화면에는 복잡한 저장 항목을 드러내지 않고, 사용자가 다시 열었을 때 같은 기준으로 확인할 수 있게 관리합니다."
                 descriptionClassName="app-reading-prose text-[var(--app-copy)]"
               />
 
               <div className="mt-6 grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
                 <div className="rounded-[20px] border border-[var(--app-line)] bg-[rgba(7,9,16,0.32)] px-5 py-5">
-                  <div className="app-caption text-[var(--app-gold-soft)]">저장 메타데이터 예시</div>
-                  <div className="font-hanja mt-4 grid gap-2 text-xs leading-6 text-[var(--app-copy)]">
-                    {VERSION_FIELDS.map((item) => (
-                      <div key={item}>{item}</div>
-                    ))}
-                  </div>
+                  <div className="app-caption text-[var(--app-gold-soft)]">사용자에게 보이는 원칙</div>
+                  <BulletList
+                    items={[
+                      '복잡한 내부 버전명은 일반 화면에 노출하지 않습니다.',
+                      '입력한 출생 정보와 판정 흐름은 재열람을 위해 내부 기준으로만 관리합니다.',
+                      '리포트 화면에는 사용자가 이해할 수 있는 계산 순서와 근거만 보여드립니다.',
+                    ]}
+                  />
                 </div>
 
                 <div className="space-y-3">
@@ -408,7 +401,7 @@ export default function AboutEnginePage() {
             <SectionSurface id="faq" surface="panel" className="scroll-mt-28">
               <SectionHeader
                 eyebrow="FAQ"
-                title="엔진 기준서에서 가장 자주 묻는 질문"
+                title="계산 기준서에서 가장 자주 묻는 질문"
                 titleClassName="text-3xl"
               />
               <div className="mt-6 space-y-3">
@@ -442,7 +435,7 @@ export default function AboutEnginePage() {
               surface="panel"
               eyebrow="바로 이어보기"
               title="기준을 읽었다면, 이제 결과 화면에서 같은 눈으로 확인해보세요"
-              description="샘플 리포트와 실제 결과 화면에서는 이 기준이 판정 근거, KASI 대조, 메타데이터로 이어집니다."
+              description="샘플 리포트와 실제 결과 화면에서는 이 기준이 판정 근거와 계산 순서로 이어집니다."
             >
               <ActionCluster>
                 <Link

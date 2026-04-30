@@ -85,10 +85,6 @@ export function GroundingDecisionTrace({
   });
 
   const metadata: ReportMetadata = {
-    engineVersion: grounding.factJson.metadata.engineVersion,
-    ruleSetVersion: grounding.factJson.metadata.ruleSetVersion,
-    generatedAt: grounding.factJson.metadata.calculatedAt,
-    birthInputSnapshot: grounding.factJson.birthInput,
     decisionTrace: items,
   };
 

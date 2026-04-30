@@ -91,24 +91,13 @@ const CONFIDENCE_META: Record<
 };
 
 function buildMetaLine({
-  engineVersion,
-  ruleSetVersion,
   timeRule,
   isTimeUnknown,
-}: Pick<
-  DecisionTracePanelProps,
-  'engineVersion' | 'ruleSetVersion' | 'timeRule' | 'isTimeUnknown'
->) {
-  const parts = [];
+}: Pick<DecisionTracePanelProps, 'timeRule' | 'isTimeUnknown'>) {
+  const parts = ['계산 기준 확인됨'];
 
-  if (engineVersion) parts.push(`engine ${engineVersion}`);
-  if (ruleSetVersion) parts.push(`rules ${ruleSetVersion}`);
   if (timeRule) parts.push(timeRule);
-  if (isTimeUnknown) parts.push('출생시각 미입력 기준');
-
-  if (parts.length === 0) {
-    return '현재 리포트 기준으로 표시합니다.';
-  }
+  if (isTimeUnknown) parts.push('출생시각 미입력은 보수적으로 반영');
 
   return parts.join(' · ');
 }
@@ -116,32 +105,26 @@ function buildMetaLine({
 export function DecisionTracePanel({
   items = FALLBACK_DECISION_TRACE,
   metadata,
-  engineVersion,
-  ruleSetVersion,
   timeRule,
   isTimeUnknown = false,
   title = '판정 근거 보기',
-  description = '아래 내용은 달빛선생 엔진이 어떤 순서로 명식과 운의 구조를 검토했는지 요약한 것입니다.',
+  description = '아래 내용은 달빛선생이 어떤 순서로 명식과 운의 구조를 검토했는지 요약한 것입니다.',
   compact = false,
 }: DecisionTracePanelProps) {
   const hasTrackedOpenRef = useRef(false);
   const resolvedItems =
     items.length > 0 ? items : metadata?.decisionTrace && metadata.decisionTrace.length > 0 ? metadata.decisionTrace : FALLBACK_DECISION_TRACE;
-  const resolvedEngineVersion = engineVersion ?? metadata?.engineVersion;
-  const resolvedRuleSetVersion = ruleSetVersion ?? metadata?.ruleSetVersion;
   const handleToggle = useCallback((event: React.SyntheticEvent<HTMLDetailsElement>) => {
     const nextOpen = event.currentTarget.open;
     if (nextOpen && !hasTrackedOpenRef.current) {
       hasTrackedOpenRef.current = true;
       trackMoonlightEvent('report_decision_trace_open', {
         title,
-        engineVersion: resolvedEngineVersion,
-        ruleSetVersion: resolvedRuleSetVersion,
         timeRule,
         itemCount: resolvedItems.length,
       });
     }
-  }, [resolvedEngineVersion, resolvedItems.length, resolvedRuleSetVersion, timeRule, title]);
+  }, [resolvedItems.length, timeRule, title]);
 
   return (
     <details
@@ -202,11 +185,9 @@ export function DecisionTracePanel({
       </div>
 
       <div className="mt-4 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
-        <div className="app-caption text-[var(--app-gold-soft)]">리포트 기준 정보</div>
+        <div className="app-caption text-[var(--app-gold-soft)]">읽기 기준</div>
         <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
           {buildMetaLine({
-            engineVersion: resolvedEngineVersion,
-            ruleSetVersion: resolvedRuleSetVersion,
             timeRule,
             isTimeUnknown,
           })}

@@ -4,7 +4,7 @@ export const SAMPLE_REPORT_HERO = {
   eyebrow: "샘플 리포트",
   title: "달빛선생 리포트 구조를 먼저 확인하세요",
   description:
-    "아래 샘플은 가상 인물을 기준으로 구성한 예시입니다. 실제 리포트는 입력하신 출생 정보와 엔진 판정 기준에 따라 달라집니다.",
+    "아래 샘플은 가상 인물을 기준으로 구성한 예시입니다. 실제 리포트는 입력하신 출생 정보와 계산 기준에 따라 달라집니다.",
 } as const;
 
 export const SAMPLE_SUBJECT = {

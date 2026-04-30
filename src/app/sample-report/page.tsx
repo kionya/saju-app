@@ -90,7 +90,7 @@ export default function SampleReportPage() {
                     eventParams={{ from: "sample_report_hero" }}
                     className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
                   >
-                    엔진 기준서 보기
+                    계산 기준서 보기
                   </TrackedLink>
                 </ActionCluster>
               }
@@ -120,7 +120,7 @@ export default function SampleReportPage() {
           >
             <BulletList items={SAMPLE_PREVIEW_GUIDE} />
             <div className="mt-5 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4 text-sm leading-7 text-[var(--app-copy-soft)]">
-              실제 리포트는 입력하신 출생 정보와 엔진 판정 기준에 따라 달라지며, 이 페이지는
+              실제 리포트는 입력하신 출생 정보와 계산 기준에 따라 달라지며, 이 페이지는
               결과물의 깊이와 위계를 먼저 확인하실 수 있도록 준비한 미리보기입니다.
             </div>
           </SupportRail>
@@ -197,8 +197,6 @@ export default function SampleReportPage() {
             <div className="mt-6">
               <DecisionTracePanel
                 metadata={{
-                  engineVersion: "sample-engine",
-                  ruleSetVersion: "sample-rules",
                   decisionTrace: SAMPLE_DECISION_TRACE,
                 }}
                 timeRule="표준시 기준"

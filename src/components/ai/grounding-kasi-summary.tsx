@@ -88,9 +88,7 @@ export function GroundingKasiSummary({
       <p className="mt-4 text-xs leading-6 text-[var(--app-copy-soft)]">{buildKasiLine(kasiComparison)}</p>
       {metadata ? (
         <p className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">
-          engine {metadata.engineVersion} · rules {metadata.ruleSetVersion}
-          {metadata.promptVersion ? ` · prompt ${metadata.promptVersion}` : ''}
-          {metadata.llmModel ? ` · model ${metadata.llmModel}` : ''}
+          계산 기준과 판정 흐름을 저장해 같은 리포트를 다시 열어도 같은 기준으로 확인할 수 있습니다.
         </p>
       ) : null}
       <div className="mt-4">
