@@ -106,6 +106,10 @@ function BasisNotes({ items }: { items: string[] }) {
   );
 }
 
+function getLifetimeSectionId(sectionKey: (typeof SECTION_META)[number]['key']) {
+  return `lifetime-${sectionKey}`;
+}
+
 function LifetimeSectionBody({
   sectionKey,
   interpretation,
@@ -469,13 +473,51 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
         </div>
       </section>
 
-      {SECTION_META.map((section) => {
+      <section className="app-panel p-5 sm:p-6">
+        <div className="grid gap-5 lg:grid-cols-[0.74fr_1.26fr] lg:items-start">
+          <div>
+            <div className="app-caption">본문 목차</div>
+            <h3 className="mt-3 font-display text-2xl text-[var(--app-ivory)]">
+              필요한 장으로 바로 이동합니다
+            </h3>
+            <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+              먼저 전체 기준을 읽고, 다시 볼 때는 돈·일·관계처럼 필요한 장만 골라 들어가도 됩니다.
+              계산 근거와 세부 기준은 각 장 아래의 접힌 영역으로 분리했습니다.
+            </p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {SECTION_META.map((section, index) => (
+              <Link
+                key={section.key}
+                href={`#${getLifetimeSectionId(section.key)}`}
+                className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 transition-colors hover:border-[var(--app-gold)]/30 hover:bg-[var(--app-gold)]/8"
+              >
+                <div className="text-xs text-[var(--app-gold-text)]">{index + 1}장</div>
+                <div className="mt-1 text-sm font-semibold leading-6 text-[var(--app-ivory)]">
+                  {section.label}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {SECTION_META.map((section, index) => {
         const reportSection = report[section.key];
         const basisLines = 'basis' in reportSection ? reportSection.basis : [];
 
         return (
-          <section key={section.key} className="app-panel p-6 sm:p-7">
-            <div className="app-caption">{section.label}</div>
+          <section
+            key={section.key}
+            id={getLifetimeSectionId(section.key)}
+            className="app-panel scroll-mt-28 p-6 sm:p-7"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+                {index + 1}장
+              </Badge>
+              <div className="app-caption">{section.label}</div>
+            </div>
             <h3 className="font-display mt-3 text-2xl text-[var(--app-ivory)]">
               {reportSection.headline}
             </h3>

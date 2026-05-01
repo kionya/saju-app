@@ -289,6 +289,102 @@ function canUseSubscriptionForPremiumReport(subscription: Awaited<ReturnType<typ
   );
 }
 
+type PremiumReadingStep = {
+  label: string;
+  title: string;
+  description: string;
+  href: string;
+  status: string;
+  note: string;
+};
+
+function PremiumReadingMap({
+  title,
+  description,
+  steps,
+}: {
+  title: string;
+  description: string;
+  steps: PremiumReadingStep[];
+}) {
+  return (
+    <section className="app-panel p-5 sm:p-6">
+      <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+        <div>
+          <div className="app-caption">읽기 지도</div>
+          <h2 className="mt-3 font-display text-2xl text-[var(--app-ivory)]">
+            {title}
+          </h2>
+          <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+            {description}
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {steps.map((step, index) => (
+            <Link
+              key={step.href}
+              href={step.href}
+              className="group flex min-h-[168px] flex-col rounded-[1.15rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4 transition-colors hover:border-[var(--app-gold)]/32 hover:bg-[var(--app-gold)]/8"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-sm font-semibold text-[var(--app-gold-text)]">
+                  {index + 1}
+                </span>
+                <span className="rounded-full border border-[var(--app-line)] px-2.5 py-1 text-[11px] text-[var(--app-copy-soft)]">
+                  {step.status}
+                </span>
+              </div>
+              <div className="mt-4 app-caption text-[var(--app-gold-soft)]">{step.label}</div>
+              <div className="mt-2 text-base font-semibold leading-6 text-[var(--app-ivory)]">
+                {step.title}
+              </div>
+              <p className="mt-2 flex-1 text-sm leading-6 text-[var(--app-copy-muted)]">
+                {step.description}
+              </p>
+              <p className="mt-3 text-xs leading-5 text-[var(--app-copy-soft)]">
+                {step.note}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function PremiumSectionIntro({
+  eyebrow,
+  title,
+  description,
+  aside,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  aside?: string;
+}) {
+  return (
+    <section className="rounded-[1.4rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.028)] px-5 py-5 sm:px-6">
+      <div className="grid gap-4 lg:grid-cols-[1fr_0.42fr] lg:items-end">
+        <div>
+          <div className="app-caption text-[var(--app-gold-soft)]">{eyebrow}</div>
+          <h2 className="mt-3 font-display text-2xl text-[var(--app-ivory)] sm:text-3xl">
+            {title}
+          </h2>
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
+            {description}
+          </p>
+        </div>
+        {aside ? (
+          <div className="rounded-[1rem] border border-[var(--app-gold)]/16 bg-[var(--app-gold)]/8 px-4 py-3 text-sm leading-6 text-[var(--app-gold-text)]">
+            {aside}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  );
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: '명리 기준서',
@@ -346,7 +442,7 @@ export default async function SajuPremiumPage({ params }: Props) {
     : yearlyAccessLabel
       ? '올해 흐름과 월간 타이밍을 먼저 읽고, 필요하면 평생 소장 기준서로 확장합니다.'
       : '결제 전에는 기준서가 어떤 순서로 읽히는지 먼저 보여드리고, 필요한 경우 소장권으로 이어집니다.';
-  const readingSteps = hasLifetimeAccess
+  const readingSteps: PremiumReadingStep[] = hasLifetimeAccess
     ? [
         {
           label: '기준서',
@@ -354,6 +450,7 @@ export default async function SajuPremiumPage({ params }: Props) {
           description: '타고난 구조와 평생 흐름을 먼저 읽습니다.',
           href: '#premium-lifetime',
           status: '열림',
+          note: '처음 읽는 장입니다.',
         },
         {
           label: '올해',
@@ -361,6 +458,7 @@ export default async function SajuPremiumPage({ params }: Props) {
           description: '올해 주제와 분야별 선택 기준을 이어봅니다.',
           href: '#premium-yearly',
           status: '열림',
+          note: '기준서를 올해 선택으로 옮깁니다.',
         },
         {
           label: '달별',
@@ -368,6 +466,7 @@ export default async function SajuPremiumPage({ params }: Props) {
           description: '월간 타이밍과 해금한 달을 다시 확인합니다.',
           href: '#premium-calendar',
           status: '연결',
+          note: '실행 날짜를 고르는 부록입니다.',
         },
       ]
     : yearlyAccessLabel
@@ -378,6 +477,7 @@ export default async function SajuPremiumPage({ params }: Props) {
             description: '구독 권한으로 열린 올해 흐름을 먼저 읽습니다.',
             href: '#premium-yearly',
             status: '열림',
+            note: '올해의 큰 주제부터 봅니다.',
           },
           {
             label: '달별',
@@ -385,6 +485,7 @@ export default async function SajuPremiumPage({ params }: Props) {
             description: '월간 타이밍과 해금한 달을 다시 확인합니다.',
             href: '#premium-calendar',
             status: '연결',
+            note: '해금한 월은 다시 차감 없이 확인합니다.',
           },
           {
             label: '확장',
@@ -392,6 +493,7 @@ export default async function SajuPremiumPage({ params }: Props) {
             description: '원국과 대운 기준을 오래 남기는 상품입니다.',
             href: '#premium-upgrade',
             status: '선택',
+            note: '올해 운의 바탕을 따로 보관합니다.',
           },
         ]
       : [
@@ -401,6 +503,7 @@ export default async function SajuPremiumPage({ params }: Props) {
             description: '결제 전 본문 구성과 소장 가치를 확인합니다.',
             href: '#premium-preview',
             status: '공개',
+            note: '구매 전 읽기 흐름을 봅니다.',
           },
           {
             label: '달별',
@@ -408,6 +511,7 @@ export default async function SajuPremiumPage({ params }: Props) {
             description: '월간 흐름 구조를 먼저 살펴봅니다.',
             href: '#premium-calendar',
             status: '일부',
+            note: '월간 달력의 형태를 확인합니다.',
           },
           {
             label: '샘플',
@@ -415,8 +519,14 @@ export default async function SajuPremiumPage({ params }: Props) {
             description: '완성형 리포트의 읽기 방식을 봅니다.',
             href: REPORT_SAMPLE_HREF,
             status: '보기',
+            note: '완성본의 밀도를 비교합니다.',
           },
         ];
+  const readingMapDescription = hasLifetimeAccess
+    ? '명리 기준서는 원국을 먼저 읽고, 올해 전략과 달별 실행으로 내려오는 순서가 가장 자연스럽습니다.'
+    : yearlyAccessLabel
+      ? '구독 권한에서는 올해 전략과 달별 흐름을 먼저 보고, 필요한 경우 원국 기준서를 별도 소장으로 확장합니다.'
+      : '아직 결제 전이라면 미리보기, 달별 흐름, 샘플 기준서 순서로 화면의 역할을 빠르게 확인하시면 됩니다.';
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -437,7 +547,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                 {heroDescription}
               </p>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
-                이 화면은 설명 글보다 실제 풀이를 먼저 읽도록, 기준서 본문과 올해 전략서, 달별 흐름을 한 줄기로 배치했습니다.
+                긴 설명을 앞에 쌓지 않고, 실제 풀이를 기준서 본문과 올해 전략서, 달별 흐름 순서로 이어 읽게 정리했습니다.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 {readingSteps.map((step) => (
@@ -485,26 +595,63 @@ export default async function SajuPremiumPage({ params }: Props) {
           </div>
         </section>
 
+        <PremiumReadingMap
+          title="기준서처럼 읽고, 달력처럼 다시 봅니다"
+          description={readingMapDescription}
+          steps={readingSteps}
+        />
+
         {hasLifetimeAccess ? (
           <>
+            <PremiumSectionIntro
+              eyebrow="1장 · 평생 기준"
+              title="먼저 내 사주의 원본 기준을 읽습니다"
+              description="원국, 강약, 격국, 용신, 관계와 일의 결을 한 번에 훑은 뒤 올해 운으로 넘어가면 같은 문장도 덜 흩어져 보입니다."
+              aside="긴 본문 안의 판단 근거는 각 장의 접힌 영역으로 분리했습니다."
+            />
             <div id="premium-lifetime" className="scroll-mt-28">
               <LifetimeReportPanel slug={slug} targetYear={targetYear} />
             </div>
+            <PremiumSectionIntro
+              eyebrow="2장 · 올해 전략"
+              title={`${targetYear}년에 실제로 무엇을 조절할지 봅니다`}
+              description="평생 기준서에서 잡은 성향과 보완 방향을 올해의 일, 돈, 관계, 생활 리듬으로 옮긴 부록입니다."
+            />
             <div id="premium-yearly" className="scroll-mt-28">
               <YearlyReportPanel slug={slug} targetYear={targetYear} />
             </div>
+            <PremiumSectionIntro
+              eyebrow="3장 · 월간 실행"
+              title="월별 흐름은 다시 열어보는 실행 달력입니다"
+              description="이미 해금한 월간 흐름은 일정 판단을 다시 할 때 꺼내보는 영역입니다. 좋은 날과 확인할 날은 이곳에서 이어집니다."
+            />
             <div id="premium-calendar" className="scroll-mt-28">
               <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess />
             </div>
           </>
         ) : yearlyAccessLabel ? (
           <>
+            <PremiumSectionIntro
+              eyebrow="1장 · 올해 전략"
+              title="구독 권한으로 열린 올해 흐름부터 읽습니다"
+              description="지금은 올해 주제와 월별 타이밍이 중심입니다. 평생 기준서는 별도 소장 상품이므로 원국 해설과 대운 지도는 아래에서 확장합니다."
+            />
             <div id="premium-yearly" className="scroll-mt-28">
               <YearlyReportPanel slug={slug} targetYear={targetYear} />
             </div>
+            <PremiumSectionIntro
+              eyebrow="2장 · 월간 실행"
+              title="해금한 월간 흐름은 실행 전에 다시 봅니다"
+              description="월별 달력은 올해 전략을 실제 날짜 감각으로 옮기는 영역입니다. 이미 열린 항목은 같은 명식에서 다시 확인하는 흐름으로 이어집니다."
+            />
             <div id="premium-calendar" className="scroll-mt-28">
               <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess={false} />
             </div>
+            <PremiumSectionIntro
+              eyebrow="3장 · 소장 확장"
+              title="올해 운의 바탕이 되는 기준서를 별도로 남깁니다"
+              description="연간 전략을 반복해서 읽다 보면 결국 원국 기준이 필요해집니다. 이 영역은 결제 상품과 링크를 그대로 유지한 확장 카드입니다."
+            />
             <section id="premium-upgrade" className="grid scroll-mt-28 gap-6 lg:grid-cols-[0.92fr_1.08fr]">
               <article className="moon-lunar-panel p-6">
                 <div className="app-starfield" />
@@ -574,6 +721,12 @@ export default async function SajuPremiumPage({ params }: Props) {
           </>
         ) : (
         <>
+        <PremiumSectionIntro
+          eyebrow="미리보기 · 결제 전"
+          title="기준서가 어떤 순서로 읽히는지 먼저 확인합니다"
+          description="잠긴 본문을 길게 보여주기보다, 첫 섹션의 톤과 소장 상품의 구성을 빠르게 확인하도록 정리했습니다."
+          aside="결제 링크와 상품 ID는 변경하지 않았습니다."
+        />
         <section id="premium-preview" className="grid scroll-mt-28 gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <article className="moon-lunar-panel p-6">
             <div className="app-starfield" />
@@ -595,8 +748,10 @@ export default async function SajuPremiumPage({ params }: Props) {
                   다시 쓰이며, 같은 기준서에서 다시 열람할 수 있습니다.
                 </p>
               </div>
-              <div className="absolute inset-0 flex items-center justify-center text-5xl text-[var(--app-gold-text)]/90">
-                🔒
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="rounded-full border border-[var(--app-gold)]/30 bg-[rgba(7,19,39,0.78)] px-4 py-2 text-sm font-semibold text-[var(--app-gold-text)]">
+                  잠긴 본문
+                </span>
               </div>
             </div>
 
@@ -682,6 +837,11 @@ export default async function SajuPremiumPage({ params }: Props) {
             </div>
           </article>
         </section>
+        <PremiumSectionIntro
+          eyebrow="부록 · 달별 흐름"
+          title="월간 달력은 기준서를 열기 전에도 구조를 볼 수 있습니다"
+          description="월별 흐름은 긴 풀이를 대신하는 실행 보조 영역입니다. 실제 해금과 재열람 정책은 기존 달력 로직을 그대로 따릅니다."
+        />
         <div id="premium-calendar" className="scroll-mt-28">
           <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess={false} />
         </div>
