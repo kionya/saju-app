@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import {
+  Activity,
+  BriefcaseBusiness,
+  Heart,
+  Sparkles,
+  WalletCards,
+  type LucideIcon,
+} from 'lucide-react';
 import { GroundingKasiSummary } from '@/components/ai/grounding-kasi-summary';
 import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import { Badge } from '@/components/ui/badge';
@@ -108,6 +116,110 @@ function BasisNotes({ items }: { items: string[] }) {
 
 function getLifetimeSectionId(sectionKey: (typeof SECTION_META)[number]['key']) {
   return `lifetime-${sectionKey}`;
+}
+
+function LifetimeSummaryCard({
+  icon: Icon,
+  eyebrow,
+  title,
+  body,
+  href,
+}: {
+  icon: LucideIcon;
+  eyebrow: string;
+  title: string;
+  body: string;
+  href: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4 transition-colors hover:border-[var(--app-gold)]/30 hover:bg-[var(--app-gold)]/8"
+    >
+      <div className="flex items-start gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <span className="min-w-0">
+          <span className="app-caption text-[var(--app-gold-soft)]">{eyebrow}</span>
+          <span className="mt-1 block text-base font-semibold leading-6 text-[var(--app-ivory)]">
+            {title}
+          </span>
+          <span className="mt-2 block text-sm leading-6 text-[var(--app-copy-muted)]">
+            {body}
+          </span>
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+function LifetimeAtAGlance({
+  interpretation,
+  report,
+}: {
+  interpretation: SajuLifetimeAiInterpretation;
+  report: SajuLifetimeReport;
+}) {
+  return (
+    <section className="app-panel p-5 sm:p-6">
+      <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+        <div>
+          <div className="app-caption">한 장 요약</div>
+          <h3 className="mt-3 font-display text-2xl text-[var(--app-ivory)]">
+            긴 기준서는 먼저 이 네 장면만 보셔도 됩니다
+          </h3>
+          <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+            전문 용어는 아래로 접어두고, 생활에서 바로 느껴지는 돈·일·관계·리듬부터 카드로 분리했습니다.
+          </p>
+          <div className="mt-4 rounded-[1rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-3">
+            <div className="app-caption text-[var(--app-gold-soft)]">평생 기준 한 줄</div>
+            <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">
+              {interpretation.lifetimeRule}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <LifetimeSummaryCard
+            icon={Sparkles}
+            eyebrow="타고난 결"
+            title="어떤 환경에서 잘 살아나는가"
+            body={report.coreIdentity.bestEnvironment}
+            href={`#${getLifetimeSectionId('coreIdentity')}`}
+          />
+          <LifetimeSummaryCard
+            icon={WalletCards}
+            eyebrow="재물"
+            title="돈을 벌고 지키는 방식"
+            body={report.wealthStyle.earningStyle}
+            href={`#${getLifetimeSectionId('wealthStyle')}`}
+          />
+          <LifetimeSummaryCard
+            icon={BriefcaseBusiness}
+            eyebrow="일"
+            title="잘 맞는 일의 구조"
+            body={report.careerDirection.fitStructure}
+            href={`#${getLifetimeSectionId('careerDirection')}`}
+          />
+          <LifetimeSummaryCard
+            icon={Heart}
+            eyebrow="관계"
+            title="사람과 거리를 잡는 방식"
+            body={report.relationshipPattern.distanceStyle}
+            href={`#${getLifetimeSectionId('relationshipPattern')}`}
+          />
+          <LifetimeSummaryCard
+            icon={Activity}
+            eyebrow="건강 리듬"
+            title="무너질 때 회복하는 법"
+            body={report.healthRhythm.recoveryRoutine}
+            href={`#${getLifetimeSectionId('healthRhythm')}`}
+          />
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function LifetimeSectionBody({
@@ -472,6 +584,8 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
           </div>
         </div>
       </section>
+
+      <LifetimeAtAGlance interpretation={interpretation} report={report} />
 
       <section className="app-panel p-5 sm:p-6">
         <div className="grid gap-5 lg:grid-cols-[0.74fr_1.26fr] lg:items-start">
