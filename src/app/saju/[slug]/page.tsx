@@ -466,8 +466,16 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             branchColor: pillar ? ELEMENT_INFO[pillar.branchElement].color : 'var(--app-copy-soft)',
           }))}
           dayMasterLabel={`${sajuData.dayMaster.stem} 일간`}
-          dominantElementLabel={ELEMENT_INFO[sajuData.fiveElements.dominant].name}
-          weakestElementLabel={ELEMENT_INFO[sajuData.fiveElements.weakest].name}
+          dayMasterElement={sajuData.dayMaster.element}
+          dayMasterMetaphor={sajuData.dayMaster.metaphor ?? '자연의 상징'}
+          dayMasterDescription={
+            sajuData.dayMaster.description ??
+            '타고난 기질은 한 가지 단어보다 상황 속에서 어떻게 드러나는지 함께 읽어야 더 자연스럽습니다.'
+          }
+          dayMasterTraits={ELEMENT_INFO[sajuData.dayMaster.element].traits}
+          fiveElementsByElement={sajuData.fiveElements.byElement}
+          dominantElement={sajuData.fiveElements.dominant}
+          weakestElement={sajuData.fiveElements.weakest}
           supportElements={report.supportElements.map((element) => ELEMENT_INFO[element].name)}
           evidenceCards={report.evidenceCards.map((card) => ({
             label: card.label,
