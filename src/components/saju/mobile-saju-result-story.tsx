@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRef, useState, type TouchEvent } from 'react';
+import { useRef, useState, type ReactNode, type TouchEvent } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -57,9 +57,8 @@ interface MobileSajuResultStoryProps {
   cautionDates: string[];
 }
 
-function compactText(value: string, maxLength = 72) {
-  const normalized = value.replace(/\s+/g, ' ').trim();
-  return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}…` : normalized;
+function StoryBody({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn('saju-mobile-story-body grid gap-3', className)}>{children}</div>;
 }
 
 function StoryList({ items, tone = 'gold' }: { items: string[]; tone?: 'gold' | 'jade' | 'coral' }) {
@@ -77,7 +76,7 @@ function StoryList({ items, tone = 'gold' }: { items: string[]; tone?: 'gold' | 
           key={item}
           className={cn('rounded-[1rem] border px-3 py-2 text-xs leading-5', colorClass)}
         >
-          {compactText(item, 58)}
+          {item}
         </div>
       ))}
     </div>
@@ -116,16 +115,16 @@ export function MobileSajuResultStory({
       title: '핵심만 먼저',
       eyebrow: focusBadge,
       render: () => (
-        <div className="grid min-h-0 flex-1 content-between gap-3">
+        <StoryBody className="content-start">
           <div>
             <p className="line-clamp-1 text-[11px] leading-5 text-[var(--app-copy-soft)]">{birthSummary}</p>
-            <h1 className="mt-3 line-clamp-3 text-[1.65rem] font-semibold leading-tight tracking-tight text-[var(--app-ivory)]">
+            <h1 className="mt-3 text-[1.48rem] font-semibold leading-tight tracking-tight text-[var(--app-ivory)]">
               {headline}
             </h1>
-            <p className="mt-3 line-clamp-3 text-sm leading-6 text-[var(--app-copy)]">{dayMasterSummary}</p>
+            <p className="mt-3 text-sm leading-6 text-[var(--app-copy)]">{dayMasterSummary}</p>
           </div>
           <StoryList items={keyThemes} />
-        </div>
+        </StoryBody>
       ),
     },
     {
@@ -134,13 +133,13 @@ export function MobileSajuResultStory({
       title: '분야별 점수',
       eyebrow: '오늘의 흐름',
       render: () => (
-        <div className="grid min-h-0 flex-1 content-between gap-3">
+        <StoryBody className="content-start">
           <div className="grid gap-2">
             {scores.slice(0, 5).map((score) => (
               <Link
                 key={score.key}
                 href={`/saju/${slug}?topic=${score.key === 'overall' ? 'today' : score.key}`}
-                className="grid grid-cols-[3.75rem_1fr] items-center gap-3 rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-3 py-2"
+                className="grid grid-cols-[3.75rem_1fr] items-start gap-3 rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-3 py-2.5"
               >
                 <div className="text-center">
                   <div className="text-xl font-semibold text-[var(--app-gold-text)]">{score.score}</div>
@@ -148,22 +147,24 @@ export function MobileSajuResultStory({
                 </div>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-[var(--app-ivory)]">{score.label}</div>
-                  <p className="line-clamp-1 text-xs leading-5 text-[var(--app-copy-muted)]">{score.summary}</p>
+                  <p className="mt-1 text-xs leading-5 text-[var(--app-copy-muted)]">{score.summary}</p>
                 </div>
               </Link>
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-2">
             <div className="rounded-[1rem] border border-[var(--app-jade)]/22 bg-[var(--app-jade)]/8 px-3 py-3">
               <div className="text-[10px] font-semibold text-[var(--app-jade)]">실행</div>
-              <div className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--app-ivory)]">{primaryAction.title}</div>
+              <div className="mt-1 text-sm font-semibold leading-5 text-[var(--app-ivory)]">{primaryAction.title}</div>
+              <p className="mt-2 text-xs leading-5 text-[var(--app-copy)]">{primaryAction.description}</p>
             </div>
             <div className="rounded-[1rem] border border-[var(--app-coral)]/22 bg-[var(--app-coral)]/8 px-3 py-3">
               <div className="text-[10px] font-semibold text-[var(--app-coral)]">주의</div>
-              <div className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--app-ivory)]">{cautionAction.title}</div>
+              <div className="mt-1 text-sm font-semibold leading-5 text-[var(--app-ivory)]">{cautionAction.title}</div>
+              <p className="mt-2 text-xs leading-5 text-[var(--app-copy)]">{cautionAction.description}</p>
             </div>
           </div>
-        </div>
+        </StoryBody>
       ),
     },
     {
@@ -172,21 +173,39 @@ export function MobileSajuResultStory({
       title: '시간 흐름',
       eyebrow: '대운·세운·월운',
       render: () => (
-        <div className="grid min-h-0 flex-1 content-between gap-3">
+        <StoryBody className="content-start">
           <div className="grid gap-2">
             {timeline.slice(0, 3).map((item) => (
               <div key={item.label} className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-3 py-3">
                 <div className="text-[10px] font-semibold tracking-[0.14em] text-[var(--app-gold-text)]">{item.label}</div>
-                <div className="mt-1 line-clamp-1 text-sm font-semibold text-[var(--app-ivory)]">{item.headline}</div>
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--app-copy-muted)]">{item.body}</p>
+                <div className="mt-1 text-sm font-semibold leading-5 text-[var(--app-ivory)]">{item.headline}</div>
+                <p className="mt-1 text-xs leading-5 text-[var(--app-copy-muted)]">{item.body}</p>
+                {item.points && item.points.length > 0 ? (
+                  <div className="mt-2 grid gap-1.5">
+                    {item.points.slice(0, 3).map((point) => (
+                      <span
+                        key={`${item.label}-${point}`}
+                        className="rounded-xl border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-2.5 py-1.5 text-[11px] leading-5 text-[var(--app-copy-muted)]"
+                      >
+                        {point}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <StoryList items={luckyDates} tone="jade" />
-            <StoryList items={cautionDates} tone="coral" />
+          <div className="grid gap-2">
+            <div>
+              <div className="mb-1 text-[10px] font-semibold text-[var(--app-jade)]">좋은 날짜</div>
+              <StoryList items={luckyDates} tone="jade" />
+            </div>
+            <div>
+              <div className="mb-1 text-[10px] font-semibold text-[var(--app-coral)]">주의 날짜</div>
+              <StoryList items={cautionDates} tone="coral" />
+            </div>
           </div>
-        </div>
+        </StoryBody>
       ),
     },
     {
@@ -195,7 +214,7 @@ export function MobileSajuResultStory({
       title: '원국과 오행',
       eyebrow: dayMasterLabel,
       render: () => (
-        <div className="grid min-h-0 flex-1 content-between gap-3">
+        <StoryBody className="content-start">
           <div className="grid grid-cols-4 gap-2">
             {pillars.map((pillar) => (
               <div key={pillar.label} className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-2 py-3 text-center">
@@ -224,7 +243,7 @@ export function MobileSajuResultStory({
               ))}
             </div>
           </div>
-        </div>
+        </StoryBody>
       ),
     },
     {
@@ -233,13 +252,13 @@ export function MobileSajuResultStory({
       title: '왜 이렇게 봤는지',
       eyebrow: '판정 근거',
       render: () => (
-        <div className="grid min-h-0 flex-1 content-between gap-3">
+        <StoryBody className="content-start">
           <div className="grid gap-2">
             {evidenceCards.slice(0, 3).map((card) => (
               <div key={card.label} className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-3 py-3">
                 <div className="text-[10px] font-semibold tracking-[0.14em] text-[var(--app-gold-text)]">{card.label}</div>
-                <div className="mt-1 line-clamp-1 text-sm font-semibold text-[var(--app-ivory)]">{card.title}</div>
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--app-copy-muted)]">{card.body}</p>
+                <div className="mt-1 text-sm font-semibold leading-5 text-[var(--app-ivory)]">{card.title}</div>
+                <p className="mt-1 text-xs leading-5 text-[var(--app-copy-muted)]">{card.body}</p>
               </div>
             ))}
           </div>
@@ -249,7 +268,7 @@ export function MobileSajuResultStory({
           >
             명리 기준서로 자세히 보기
           </Link>
-        </div>
+        </StoryBody>
       ),
     },
     {
@@ -258,16 +277,16 @@ export function MobileSajuResultStory({
       title: '이어서 보기',
       eyebrow: '다음 행동',
       render: () => (
-        <div className="grid min-h-0 flex-1 content-between gap-3">
+        <StoryBody className="content-start">
           <div className="grid gap-2">
             {favorableChoices.slice(0, 2).map((item) => (
               <div key={item} className="rounded-[1rem] border border-[var(--app-jade)]/22 bg-[var(--app-jade)]/8 px-3 py-3 text-xs leading-5 text-[var(--app-copy)]">
-                {compactText(item, 66)}
+                {item}
               </div>
             ))}
             {cautionPatterns.slice(0, 2).map((item) => (
               <div key={item} className="rounded-[1rem] border border-[var(--app-coral)]/22 bg-[var(--app-coral)]/8 px-3 py-3 text-xs leading-5 text-[var(--app-copy)]">
-                {compactText(item, 66)}
+                {item}
               </div>
             ))}
           </div>
@@ -279,7 +298,7 @@ export function MobileSajuResultStory({
               이어서 묻기
             </Link>
           </div>
-        </div>
+        </StoryBody>
       ),
     },
   ];
