@@ -7,7 +7,7 @@ import {
 import { createClient } from '@/lib/supabase/server';
 import { deductCredits } from '@/lib/credits/deduct';
 import {
-  unlockDailyDetailReport,
+  unlockDetailReport,
   validateCreditUsePayload,
 } from '@/lib/credits/detail-report-access';
 import { getUserProfileById } from '@/lib/profile';
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '본인의 결과만 열 수 있습니다.' }, { status: 403 });
     }
 
-    const result = await unlockDailyDetailReport(user.id, toSlug(reading.input));
+    const result = await unlockDetailReport(user.id, toSlug(reading.input));
     if (!result.success) {
       return NextResponse.json({ error: '코인이 부족합니다.', remaining: result.remaining }, { status: 402 });
     }
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
       remaining: result.remaining,
       content,
       counselorId,
-      access: result.reused ? 'daily_reuse' : 'charged',
+      access: result.reused ? 'reused' : 'charged',
     });
   }
 

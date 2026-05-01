@@ -2,6 +2,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import {
   deductCredits,
   getCredits,
+  unlockCreditsOnce,
 } from './deduct';
 
 export const FORTUNE_CALENDAR_MONTH_ACCESS_KIND = 'fortune_calendar_month_access';
@@ -19,6 +20,20 @@ function pad(value: number) {
 
 export function getFortuneCalendarMonthKey(year: number, month: number) {
   return `${year}-${pad(month)}`;
+}
+
+function getFortuneCalendarMonthAccessMetadata(
+  readingKey: string,
+  year: number,
+  month: number
+) {
+  return {
+    kind: FORTUNE_CALENDAR_MONTH_ACCESS_KIND,
+    readingKey,
+    yearMonth: getFortuneCalendarMonthKey(year, month),
+    year,
+    month,
+  };
 }
 
 async function getRemainingCredits(userId: string) {
@@ -61,19 +76,12 @@ export async function recordFortuneCalendarMonthAccess(
   month: number
 ) {
   const service = await createServiceClient();
-  const yearMonth = getFortuneCalendarMonthKey(year, month);
   const { error } = await service.from('credit_transactions').insert({
     user_id: userId,
     amount: 0,
     type: 'use',
     feature: 'calendar',
-    metadata: {
-      kind: FORTUNE_CALENDAR_MONTH_ACCESS_KIND,
-      readingKey,
-      yearMonth,
-      year,
-      month,
-    },
+    metadata: getFortuneCalendarMonthAccessMetadata(readingKey, year, month),
   });
 
   if (error) {
@@ -93,6 +101,13 @@ export async function unlockFortuneCalendarMonth(
       remaining: await getRemainingCredits(userId),
       reused: true,
     };
+  }
+
+  const accessMetadata = getFortuneCalendarMonthAccessMetadata(readingKey, year, month);
+  const atomicResult = await unlockCreditsOnce(userId, 'calendar', accessMetadata);
+
+  if (atomicResult) {
+    return atomicResult;
   }
 
   const deducted = await deductCredits(userId, 'calendar');

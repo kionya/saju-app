@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {
+  DETAIL_REPORT_ACCESS_KIND,
   DETAIL_REPORT_DAILY_ACCESS_KIND,
+  TODAY_FORTUNE_PREMIUM_ACCESS_KIND,
   getKoreaAccessDay,
   validateCreditUsePayload,
 } from './detail-report-access';
@@ -47,5 +49,7 @@ test('daily detail report access key uses Korea calendar day', () => {
   const utcAfternoon = new Date('2026-04-18T16:30:00.000Z');
 
   assert.equal(getKoreaAccessDay(utcAfternoon), '2026-04-19');
+  assert.equal(DETAIL_REPORT_ACCESS_KIND, 'detail_report_access');
   assert.equal(DETAIL_REPORT_DAILY_ACCESS_KIND, 'detail_report_daily_access');
+  assert.equal(TODAY_FORTUNE_PREMIUM_ACCESS_KIND, 'today_fortune_premium_access');
 });

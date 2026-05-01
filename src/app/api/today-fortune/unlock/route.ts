@@ -4,7 +4,7 @@ import { toSlug } from '@/lib/saju/pillars';
 import { createClient } from '@/lib/supabase/server';
 import { getUserProfileById } from '@/lib/profile';
 import { resolveMoonlightCounselor } from '@/lib/counselors';
-import { unlockDailyDetailReport } from '@/lib/credits/detail-report-access';
+import { unlockTodayFortunePremium } from '@/lib/credits/detail-report-access';
 import { buildTodayFortunePremiumResult } from '@/server/today-fortune/build-today-fortune';
 import { normalizeConcernId } from '@/lib/today-fortune/concerns';
 
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   const concernId = normalizeConcernId(payload?.concernId);
   const profile = await getUserProfileById(user.id);
   const counselorId = resolveMoonlightCounselor(payload?.counselorId, profile.preferredCounselor);
-  const access = await unlockDailyDetailReport(user.id, toSlug(reading.input));
+  const access = await unlockTodayFortunePremium(user.id, toSlug(reading.input), sourceSessionId);
 
   if (!access.success) {
     return NextResponse.json({ error: '코인이 부족합니다.', remaining: access.remaining }, { status: 402 });
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     ok: true,
     result,
     remaining: access.remaining,
-    access: access.reused ? 'daily_reuse' : 'charged',
+    access: access.reused ? 'reused' : 'charged',
     counselorId,
   });
 }

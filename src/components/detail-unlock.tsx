@@ -298,7 +298,7 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
   const [content, setContent] = useState<DetailContent | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [remaining, setRemaining] = useState<number | null>(null);
-  const [access, setAccess] = useState<'charged' | 'daily_reuse' | null>(null);
+  const [access, setAccess] = useState<'charged' | 'reused' | null>(null);
 
   async function handleUnlock() {
     setState('loading');
@@ -331,7 +331,7 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
           })
         );
       }
-      setAccess(data.access === 'daily_reuse' ? 'daily_reuse' : 'charged');
+      setAccess(data.access === 'reused' ? 'reused' : 'charged');
       setState('unlocked');
     } catch {
       setErrorMsg('서버 오류가 발생했습니다.');
@@ -352,7 +352,7 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
           </div>
           <div className="flex items-center gap-2">
             <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-              {access === 'daily_reuse' ? '오늘 재열람' : '해금 완료'}
+              {access === 'reused' ? '재열람' : '해금 완료'}
             </Badge>
             <Badge className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-copy-muted)]">
               {counselorId === 'male' ? '달빛 남선생 기준' : '달빛 여선생 기준'}
@@ -364,8 +364,8 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
         </div>
 
         <p className="app-body-copy text-sm">
-          {access === 'daily_reuse'
-            ? '오늘 이미 열어본 상세 해석이라 코인 차감 없이 다시 보여드립니다.'
+          {access === 'reused'
+            ? '이미 열어본 상세 해석이라 코인 차감 없이 다시 보여드립니다.'
             : '좋은 말만 길게 나열하지 않고, 지금 실제로 궁금한 장면부터 읽을 수 있게 분야별 핵심과 주의 포인트를 먼저 정리했습니다.'}
         </p>
 
@@ -496,7 +496,7 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
         <div className="relative z-20 mt-6 rounded-[24px] border border-[var(--app-line)] bg-[rgba(2,8,23,0.56)] p-5 text-center backdrop-blur-sm">
           <p className="font-semibold text-[var(--app-ivory)]">상세 해석 열기</p>
           <p className="mt-2 text-sm text-[var(--app-copy-muted)]">
-            재물·애정·직업·건강 4개 영역을 한 번에 열고, 같은 결과는 오늘 하루 동안 재차감 없이 다시 볼 수 있습니다
+            재물·애정·직업·건강 4개 영역을 한 번에 열고, 같은 결과는 다시 코인 차감 없이 볼 수 있습니다
           </p>
           <Button
             onClick={handleUnlock}
@@ -506,7 +506,7 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
             {state === 'loading' ? '처리 중...' : '코인 1개로 지금 열기'}
           </Button>
           <p className="mt-3 text-xs text-[var(--app-copy-soft)]">
-            오늘 이미 열었던 같은 결과는 코인 차감 없이 다시 열립니다.
+            이미 열었던 같은 결과는 코인 차감 없이 다시 열립니다.
           </p>
         </div>
       </div>

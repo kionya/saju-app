@@ -3,10 +3,13 @@ import {
   deductCredits,
   getCredits,
   isFeature,
+  unlockCreditsOnce,
   type Feature,
 } from './deduct';
 
+export const DETAIL_REPORT_ACCESS_KIND = 'detail_report_access';
 export const DETAIL_REPORT_DAILY_ACCESS_KIND = 'detail_report_daily_access';
+export const TODAY_FORTUNE_PREMIUM_ACCESS_KIND = 'today_fortune_premium_access';
 
 export interface CreditUsePayload {
   feature: Feature;
@@ -75,10 +78,32 @@ async function getRemainingCredits(userId: string) {
   return (credits?.balance ?? 0) + (credits?.subscription_balance ?? 0);
 }
 
-export async function hasDailyDetailReportAccess(
+function getDetailReportAccessMetadata(readingKey: string) {
+  return {
+    kind: DETAIL_REPORT_ACCESS_KIND,
+    readingKey,
+  };
+}
+
+function getLegacyDailyDetailReportAccessMetadata(readingKey: string) {
+  return {
+    kind: DETAIL_REPORT_DAILY_ACCESS_KIND,
+    readingKey,
+  };
+}
+
+function getTodayFortunePremiumAccessMetadata(sourceSessionId: string, readingKey: string) {
+  return {
+    kind: TODAY_FORTUNE_PREMIUM_ACCESS_KIND,
+    sourceSessionId,
+    readingKey,
+  };
+}
+
+async function hasFeatureAccess(
   userId: string,
-  readingKey: string,
-  accessDay = getKoreaAccessDay()
+  feature: Feature,
+  metadata: Record<string, unknown>
 ) {
   const service = await createServiceClient();
   const { data, error } = await service
@@ -86,12 +111,8 @@ export async function hasDailyDetailReportAccess(
     .select('id')
     .eq('user_id', userId)
     .eq('type', 'use')
-    .eq('feature', 'detail_report')
-    .contains('metadata', {
-      kind: DETAIL_REPORT_DAILY_ACCESS_KIND,
-      readingKey,
-      accessDay,
-    })
+    .eq('feature', feature)
+    .contains('metadata', metadata)
     .limit(1);
 
   if (error) {
@@ -101,10 +122,34 @@ export async function hasDailyDetailReportAccess(
   return Boolean(data && data.length > 0);
 }
 
-export async function recordDailyDetailReportAccess(
+export async function hasDetailReportAccess(
   userId: string,
-  readingKey: string,
-  accessDay = getKoreaAccessDay()
+  readingKey: string
+) {
+  if (await hasFeatureAccess(userId, 'detail_report', getDetailReportAccessMetadata(readingKey))) {
+    return true;
+  }
+
+  return hasFeatureAccess(
+    userId,
+    'detail_report',
+    getLegacyDailyDetailReportAccessMetadata(readingKey)
+  );
+}
+
+export async function hasTodayFortunePremiumAccess(
+  userId: string,
+  sourceSessionId: string
+) {
+  return hasFeatureAccess(userId, 'detail_report', {
+    kind: TODAY_FORTUNE_PREMIUM_ACCESS_KIND,
+    sourceSessionId,
+  });
+}
+
+export async function recordDetailReportAccess(
+  userId: string,
+  readingKey: string
 ) {
   const service = await createServiceClient();
   const { error } = await service.from('credit_transactions').insert({
@@ -112,11 +157,7 @@ export async function recordDailyDetailReportAccess(
     amount: 0,
     type: 'use',
     feature: 'detail_report',
-    metadata: {
-      kind: DETAIL_REPORT_DAILY_ACCESS_KIND,
-      readingKey,
-      accessDay,
-    },
+    metadata: getDetailReportAccessMetadata(readingKey),
   });
 
   if (error) {
@@ -124,17 +165,42 @@ export async function recordDailyDetailReportAccess(
   }
 }
 
-export async function unlockDailyDetailReport(
+export async function recordTodayFortunePremiumAccess(
   userId: string,
   readingKey: string,
-  accessDay = getKoreaAccessDay()
+  sourceSessionId: string
+) {
+  const service = await createServiceClient();
+  const { error } = await service.from('credit_transactions').insert({
+    user_id: userId,
+    amount: 0,
+    type: 'use',
+    feature: 'detail_report',
+    metadata: getTodayFortunePremiumAccessMetadata(sourceSessionId, readingKey),
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function unlockDetailReport(
+  userId: string,
+  readingKey: string
 ): Promise<DetailReportUnlockResult> {
-  if (await hasDailyDetailReportAccess(userId, readingKey, accessDay)) {
+  if (await hasDetailReportAccess(userId, readingKey)) {
     return {
       success: true,
       remaining: await getRemainingCredits(userId),
       reused: true,
     };
+  }
+
+  const accessMetadata = getDetailReportAccessMetadata(readingKey);
+  const atomicResult = await unlockCreditsOnce(userId, 'detail_report', accessMetadata);
+
+  if (atomicResult) {
+    return atomicResult;
   }
 
   const deducted = await deductCredits(userId, 'detail_report');
@@ -148,11 +214,58 @@ export async function unlockDailyDetailReport(
     };
   }
 
-  await recordDailyDetailReportAccess(userId, readingKey, accessDay);
+  await recordDetailReportAccess(userId, readingKey);
 
   return {
     success: true,
     remaining: deducted.remaining,
     reused: false,
   };
+}
+
+export async function unlockTodayFortunePremium(
+  userId: string,
+  readingKey: string,
+  sourceSessionId: string
+): Promise<DetailReportUnlockResult> {
+  if (await hasTodayFortunePremiumAccess(userId, sourceSessionId)) {
+    return {
+      success: true,
+      remaining: await getRemainingCredits(userId),
+      reused: true,
+    };
+  }
+
+  const accessMetadata = getTodayFortunePremiumAccessMetadata(sourceSessionId, readingKey);
+  const atomicResult = await unlockCreditsOnce(userId, 'detail_report', accessMetadata);
+
+  if (atomicResult) {
+    return atomicResult;
+  }
+
+  const deducted = await deductCredits(userId, 'detail_report');
+
+  if (!deducted.success) {
+    return {
+      success: false,
+      remaining: deducted.remaining,
+      reused: false,
+      error: deducted.error,
+    };
+  }
+
+  await recordTodayFortunePremiumAccess(userId, readingKey, sourceSessionId);
+
+  return {
+    success: true,
+    remaining: deducted.remaining,
+    reused: false,
+  };
+}
+
+export async function unlockDailyDetailReport(
+  userId: string,
+  readingKey: string
+): Promise<DetailReportUnlockResult> {
+  return unlockDetailReport(userId, readingKey);
 }

@@ -23,6 +23,48 @@ export function getFeatureCost(feature: Feature) {
   return CREDIT_COSTS[feature];
 }
 
+export interface IdempotentCreditUnlockResult {
+  success: boolean;
+  remaining: number;
+  reused: boolean;
+  error?: string;
+}
+
+function readBoolean(value: unknown) {
+  return typeof value === 'boolean' ? value : false;
+}
+
+function readNumber(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
+}
+
+function readString(value: unknown) {
+  return typeof value === 'string' ? value : undefined;
+}
+
+function parseIdempotentCreditUnlockResult(data: unknown): IdempotentCreditUnlockResult {
+  const payload = data && typeof data === 'object' ? (data as Record<string, unknown>) : {};
+
+  return {
+    success: readBoolean(payload.success),
+    remaining: readNumber(payload.remaining),
+    reused: readBoolean(payload.reused),
+    error: readString(payload.error),
+  };
+}
+
+function isMissingIdempotentUnlockRpc(error: unknown) {
+  const payload = error && typeof error === 'object' ? (error as Record<string, unknown>) : {};
+  const code = readString(payload.code);
+  const message = readString(payload.message) ?? '';
+
+  return (
+    code === 'PGRST202' ||
+    message.includes('unlock_credit_feature_once') ||
+    message.includes('Could not find the function')
+  );
+}
+
 export async function getCredits(userId: string): Promise<{ balance: number; subscription_balance: number } | null> {
   const supabase = await createServiceClient();
   const { data } = await supabase
@@ -62,6 +104,32 @@ export async function deductCredits(
   feature: Feature
 ): Promise<{ success: boolean; remaining: number; error?: string }> {
   return deductCreditsWithCost(userId, feature, CREDIT_COSTS[feature]);
+}
+
+export async function unlockCreditsOnce(
+  userId: string,
+  feature: Feature,
+  accessMetadata: Record<string, unknown>,
+  cost = CREDIT_COSTS[feature]
+): Promise<IdempotentCreditUnlockResult | null> {
+  const supabase = await createServiceClient();
+
+  const { data, error } = await supabase.rpc('unlock_credit_feature_once', {
+    p_user_id: userId,
+    p_feature: feature,
+    p_cost: cost,
+    p_access_metadata: accessMetadata,
+  });
+
+  if (error) {
+    if (isMissingIdempotentUnlockRpc(error)) {
+      return null;
+    }
+
+    throw new Error(error.message);
+  }
+
+  return parseIdempotentCreditUnlockResult(data);
 }
 
 export async function deductCreditsAmount(
