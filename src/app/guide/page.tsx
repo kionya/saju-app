@@ -62,6 +62,45 @@ const GUIDE_LINKS = [
   },
 ] as const;
 
+const HOME_MOVED_GUIDES = [
+  {
+    title: '오늘운세와 가벼운 탐색',
+    body: '오늘의 흐름, 타로, 별자리, 띠운세는 홈이 아니라 해석 메뉴에서 가볍게 시작합니다.',
+    href: '/interpretation',
+    cta: '해석 메뉴 보기',
+  },
+  {
+    title: '궁합과 관계 풀이',
+    body: '상대 정보를 직접 입력하거나 저장된 사람을 골라 관계의 결을 따로 확인합니다.',
+    href: '/compatibility/input',
+    cta: '궁합 입력하기',
+  },
+  {
+    title: '선생 말투와 대화',
+    body: '풀이를 읽은 뒤 남는 질문은 대화에서 이어가고, 말투 선택은 결과를 더 편하게 읽기 위한 장치입니다.',
+    href: '/dialogue',
+    cta: '대화 열기',
+  },
+  {
+    title: '리포트 상품과 보관',
+    body: '명리 기준서, 연간 전략서, PDF, MY 보관함처럼 소장형 흐름은 멤버십에서 비교합니다.',
+    href: '/membership',
+    cta: '상품 보기',
+  },
+  {
+    title: '계산 기준과 판정 흐름',
+    body: '절기, 출생지, 시간 보정, 판정 근거처럼 설명이 필요한 기준은 별도 문서에서 확인합니다.',
+    href: '/method',
+    cta: '기준 보기',
+  },
+  {
+    title: '샘플 리포트',
+    body: '실제 결제 전 어떤 순서의 리포트를 받게 되는지 샘플 화면으로 먼저 살펴봅니다.',
+    href: REPORT_SAMPLE_HREF,
+    cta: '샘플 보기',
+  },
+] as const;
+
 export default function GuidePage() {
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
@@ -140,6 +179,36 @@ export default function GuidePage() {
             <BulletList items={READING_FLOW} className="mt-6" />
           </SectionSurface>
         </section>
+
+        <SectionSurface surface="panel">
+          <SectionHeader
+            eyebrow="홈에서 분리한 정보"
+            title="사주풀이 외의 안내는 이곳에서 찾으시면 됩니다"
+            titleClassName="text-3xl"
+            description="홈은 명리 기준서 시작에 집중하고, 여러 서비스와 사용법은 안내 페이지에 모았습니다."
+          />
+
+          <ProductGrid columns={3} className="mt-6">
+            {HOME_MOVED_GUIDES.map((item) => (
+              <FeatureCard
+                key={item.title}
+                surface="soft"
+                title={item.title}
+                titleClassName="text-xl"
+                description={item.body}
+                footer={
+                  <Link
+                    href={item.href}
+                    className="inline-flex items-center gap-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                  >
+                    {item.cta}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                }
+              />
+            ))}
+          </ProductGrid>
+        </SectionSurface>
 
         <SectionSurface surface="panel">
           <SectionHeader

@@ -1,40 +1,19 @@
 'use client';
 
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ChevronRight } from 'lucide-react';
-import { CounselorSelector } from '@/components/counselor/counselor-selector';
-import { SpecialistMentorGrid } from '@/components/counselor/specialist-mentor-grid';
-import { TodayConcernSelector } from '@/components/today-fortune/today-concern-selector';
-import { ProductReportCard } from '@/components/home/product-report-card';
+import { ArrowRight } from 'lucide-react';
 import { ActionCluster } from '@/components/layout/action-cluster';
 import { EvidenceStrip } from '@/components/layout/evidence-strip';
 import { FeatureCard } from '@/components/layout/feature-card';
 import { ProductGrid } from '@/components/layout/product-grid';
 import { SectionHeader } from '@/components/layout/section-header';
 import { SectionSurface } from '@/components/layout/section-surface';
-import { SupportRail } from '@/components/layout/support-rail';
-import { ReportKeepsakeSection } from '@/components/report/report-keepsake-section';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { MoonlightHeroVideo } from '@/components/home/moonlight-hero-video';
-import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import { trackMoonlightEvent } from '@/lib/analytics';
-import type { ConcernId } from '@/lib/today-fortune/types';
 import { AppShell } from '@/shared/layout/app-shell';
-import {
-  HOME_DAILY_LINES,
-  REPORT_SAMPLE_HREF,
-  WISDOM_CARDS,
-  toneClasses,
-} from '@/content/moonlight';
-import { PRODUCT_REPORT_CATALOG } from '@/content/report-catalog';
-import {
-  buildHomePersonalizationCopy,
-  buildPersonalizedTodaySummary,
-  type HomeProfileLoadStatus,
-  type HomeProfilePreview,
-} from '@/features/home/personalized-today';
-import { cn } from '@/lib/utils';
+import { REPORT_SAMPLE_HREF } from '@/content/moonlight';
 
 function formatTodayLabel() {
   const now = new Date();
@@ -48,120 +27,47 @@ function formatTodayLabel() {
   return `${values.year}년 ${values.month} ${values.day} · ${values.weekday}`;
 }
 
-function buildHomeImpactSignal(
-  items: ReturnType<typeof buildPersonalizedTodaySummary>,
-  isPersonalized: boolean
-) {
-  const weakest = [...items].sort((a, b) => a.ratio - b.ratio)[0];
-  const strongest = [...items].sort((a, b) => b.ratio - a.ratio)[0];
-
-  const signalByLabel: Record<string, { headline: string; body: string }> = {
-    재물: {
-      headline: isPersonalized ? '지출보다 정산을 먼저 볼수록 좋습니다.' : '돈의 흐름은 속도보다 점검이 먼저입니다.',
-      body: '큰 기회보다 새는 구멍을 먼저 막을수록 체감 운이 더 단단해집니다.',
-    },
-    컨디션: {
-      headline: isPersonalized ? '무리하면 바로 티가 나는 날입니다.' : '컨디션은 회복 리듬을 먼저 살피는 편이 좋습니다.',
-      body: '몰아서 버티기보다 쉬는 구간을 먼저 정해두면 하루가 훨씬 안정적으로 갑니다.',
-    },
-    관계: {
-      headline: isPersonalized ? '말의 온도를 낮출수록 흐름이 풀립니다.' : '관계운은 표현의 세기보다 타이밍을 보세요.',
-      body: '결론을 서두르기보다 짧은 확인과 부드러운 말투가 오해를 줄여줍니다.',
-    },
-  };
-
-  const signal = signalByLabel[weakest.label] ?? {
-    headline: '오늘은 흐름을 먼저 읽고 움직이는 편이 좋습니다.',
-    body: '무리하게 앞서가기보다 약한 축을 먼저 보완하면 운의 체감이 더 좋아집니다.',
-  };
-
-  return {
-    weakest,
-    strongest,
-    headline: signal.headline,
-    body: signal.body,
-  };
-}
-
 const PREMIUM_HERO_TOKENS = [
   { label: '기준서 핵심', value: '원국 · 격국 · 용신 · 대운' },
-  { label: '신뢰 장치', value: '판정 근거 · KASI 대조' },
-  { label: '소장 가치', value: 'PDF · MY 보관함' },
+  { label: '판정 흐름', value: '명식 · 격국 · 용신 · 운' },
+  { label: '소장 방식', value: 'PDF · MY 보관함 · 대화' },
 ] as const;
 
 const PREMIUM_PROOF_POINTS = [
-  '핵심 한 줄 · 올해 강한 주제 · 조심할 패턴부터 먼저 보입니다.',
-  '판정 근거, 시간 보정, KASI 대조 상태를 함께 펼쳐볼 수 있습니다.',
-  '명리 기준서 저장, PDF 소장, 대화 이어보기까지 한 줄로 연결됩니다.',
+  '첫 화면에서 한 줄 총평과 올해 핵심 주제를 먼저 확인합니다.',
+  '상세 본문은 재물, 관계, 일, 생활 리듬처럼 궁금한 영역부터 읽습니다.',
+  '필요하면 PDF와 보관함, 대화 상담으로 같은 기준을 이어갑니다.',
+] as const;
+
+const SAJU_FLOW_STEPS = [
+  {
+    eyebrow: 'STEP 1',
+    title: '출생 정보를 입력합니다',
+    body: '연월일, 시간, 출생지를 기준으로 명식과 운의 구조를 먼저 계산합니다.',
+  },
+  {
+    eyebrow: 'STEP 2',
+    title: '1분 요약을 먼저 봅니다',
+    body: '긴 풀이 전에 핵심 한 줄, 올해 주제, 조심할 패턴부터 확인합니다.',
+  },
+  {
+    eyebrow: 'STEP 3',
+    title: '상세 풀이로 내려갑니다',
+    body: '궁금한 영역부터 읽고, 필요할 때 판정 흐름과 PDF 보관으로 이어갑니다.',
+  },
 ] as const;
 
 export default function HomePage() {
-  const [selectedSlug, setSelectedSlug] = useState(WISDOM_CARDS[0].slug);
-  const [selectedConcern, setSelectedConcern] = useState<ConcernId>('general');
-  const [concernExpanded, setConcernExpanded] = useState(false);
-  const [profilePreview, setProfilePreview] = useState<HomeProfilePreview | null>(null);
-  const [profileLoadStatus, setProfileLoadStatus] = useState<HomeProfileLoadStatus>('loading');
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [metersVisible, setMetersVisible] = useState(false);
-
   const heroRef = useRef<HTMLElement>(null);
-  const metersRef = useRef<HTMLDivElement>(null);
+  const todayLabel = useMemo(() => formatTodayLabel(), []);
 
-  const todayLine = useMemo(() => {
-    const now = new Date();
-    return HOME_DAILY_LINES[now.getDate() % HOME_DAILY_LINES.length];
-  }, []);
-
-  const personalizedTodaySummary = useMemo(
-    () => buildPersonalizedTodaySummary(profilePreview),
-    [profilePreview]
-  );
-  const personalizationCopy = useMemo(
-    () => buildHomePersonalizationCopy(profilePreview, profileLoadStatus),
-    [profileLoadStatus, profilePreview]
-  );
-
-  const selectedWisdom = WISDOM_CARDS.find((c) => c.slug === selectedSlug) ?? WISDOM_CARDS[0];
-  const selectedTone = toneClasses(selectedWisdom.tone);
-  const displayName = profilePreview?.profile?.displayName?.trim() || '방문자';
-  const todayLabel = formatTodayLabel();
-  const impactSignal = useMemo(
-    () => buildHomeImpactSignal(personalizedTodaySummary, personalizationCopy.isPersonalized),
-    [personalizationCopy.isPersonalized, personalizedTodaySummary]
-  );
-  const {
-    counselor,
-    counselorId,
-    hydrated: counselorReady,
-    persistState,
-    selectCounselor,
-  } = usePreferredCounselor(profilePreview?.profile?.preferredCounselor ?? null);
-
-  useEffect(() => {
-    let isActive = true;
-    async function load() {
-      try {
-        const res = await fetch('/api/profile', { cache: 'no-store' });
-        if (!res.ok) throw new Error('failed');
-        const data = (await res.json()) as HomeProfilePreview;
-        if (!isActive) return;
-        setProfilePreview({ authenticated: Boolean(data.authenticated), profile: data.profile ?? null });
-        setProfileLoadStatus('ready');
-      } catch {
-        if (!isActive) return;
-        setProfileLoadStatus('error');
-      }
-    }
-    void load();
-    return () => { isActive = false; };
-  }, []);
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  const handleMouseMove = useCallback((event: MouseEvent) => {
     if (!heroRef.current) return;
     const rect = heroRef.current.getBoundingClientRect();
     setMousePos({
-      x: (e.clientX - rect.left - rect.width / 2) / rect.width,
-      y: (e.clientY - rect.top - rect.height / 2) / rect.height,
+      x: (event.clientX - rect.left - rect.width / 2) / rect.width,
+      y: (event.clientY - rect.top - rect.height / 2) / rect.height,
     });
   }, []);
 
@@ -171,17 +77,6 @@ export default function HomePage() {
     hero.addEventListener('mousemove', handleMouseMove);
     return () => hero.removeEventListener('mousemove', handleMouseMove);
   }, [handleMouseMove]);
-
-  useEffect(() => {
-    const el = metersRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setMetersVisible(true); },
-      { threshold: 0.3 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
 
   useEffect(() => {
     trackMoonlightEvent('home_view', { from: 'home' });
@@ -203,16 +98,8 @@ export default function HomePage() {
     return () => obs.disconnect();
   }, []);
 
-  const STEPS = [
-    ['내 정보 저장', '출생 연월일과 시·분을 MY에 한 번만 저장합니다.'],
-    ['해석 자동 입력', '사주 보기에서 "내 정보 불러오기"로 바로 채웁니다.'],
-    ['가족 확장', '가족 프로필을 저장해 궁합과 가족 리포트로 이어갑니다.'],
-  ] as const;
-
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
-
-      {/* ─── HERO ─── */}
       <section ref={heroRef} className="moon-hero">
         <MoonlightHeroVideo />
         <div className="moon-particles" aria-hidden />
@@ -246,12 +133,12 @@ export default function HomePage() {
           <div className="moon-date-badge">{todayLabel}</div>
 
           <div className="moon-hero-headline-wrap">
-            <div className="app-caption mb-4">프리미엄 명리 리포트</div>
+            <div className="app-caption mb-4">프리미엄 사주풀이</div>
             <h1 className="moon-hero-h1">당신의 사주를 한 권의 기준서로 남깁니다.</h1>
             <p className="moon-hero-sub">
-              명식, 격국, 용신, 대운은 출생 정보로 먼저 계산합니다.
+              홈에서는 사주풀이 시작에만 집중합니다.
               <br className="hidden sm:block" />
-              달빛선생은 그 구조를 고급 리포트와 대화로 풀어드립니다.
+              다른 운세와 사용법은 안내 메뉴에서 따로 보실 수 있습니다.
             </p>
           </div>
 
@@ -300,27 +187,10 @@ export default function HomePage() {
             </Link>
             <span className="hidden h-1 w-1 rounded-full bg-[var(--app-copy-soft)] md:block" />
             <Link
-              href={`/today-fortune?concern=${selectedConcern}`}
+              href="/interpretation"
               className="inline-flex items-center gap-2 hover:text-[var(--app-ivory)]"
             >
-              오늘의 흐름은 가볍게 먼저 보기
-            </Link>
-          </div>
-
-          <div className="flex max-w-3xl flex-wrap items-center justify-center gap-2 text-center text-sm text-[var(--app-copy)]">
-            <span>계산 기준과 읽는 법은 안내 메뉴에 모아두었습니다.</span>
-            <Link
-              href="/method"
-              className="text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-            >
-              기준 보기
-            </Link>
-            <span className="text-[var(--app-copy-soft)]">·</span>
-            <Link
-              href="/about-engine#decision-trace"
-              className="text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-            >
-              판정 흐름
+              다른 해석 메뉴 보기
             </Link>
           </div>
 
@@ -333,7 +203,7 @@ export default function HomePage() {
               <div className="space-y-5">
                 <SectionHeader
                   eyebrow="샘플 기준서 미리보기"
-                  title="받게 될 리포트를 짧게 미리 봅니다"
+                  title="받게 될 사주풀이를 짧게 미리 봅니다"
                   titleClassName="text-2xl"
                   description="실제 결과가 어떤 순서로 보이는지, 요약과 본문, 보관 흐름만 빠르게 확인하는 입구입니다."
                   descriptionClassName="max-w-2xl text-[var(--app-copy)]"
@@ -346,14 +216,14 @@ export default function HomePage() {
                     샘플 리포트 펼쳐보기
                   </Link>
                   <Link
-                    href="/guide"
+                    href="/saju/new"
                     className="inline-flex items-center gap-2 px-1 py-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
                   >
-                    읽는 법 보기
+                    바로 입력하기
                   </Link>
                 </ActionCluster>
                 <div className="rounded-[1.05rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]">
-                  핵심 요약, 상세 본문, PDF와 보관함까지 한 화면 흐름으로 확인하실 수 있습니다.
+                  결과 화면은 핵심 요약, 상세 풀이, 판정 흐름, 보관으로 이어집니다.
                 </div>
               </div>
 
@@ -363,7 +233,7 @@ export default function HomePage() {
                     <FeatureCard
                       key={item}
                       surface="soft"
-                      className={cn(index === PREMIUM_PROOF_POINTS.length - 1 && 'md:col-span-2')}
+                      className={index === PREMIUM_PROOF_POINTS.length - 1 ? 'md:col-span-2' : undefined}
                       eyebrow={`미리보기 ${index + 1}`}
                       description={item}
                     />
@@ -372,8 +242,8 @@ export default function HomePage() {
                 <EvidenceStrip
                   items={[
                     {
-                      title: '미리보기 범위',
-                      body: '샘플은 리포트 화면 구조를 확인하는 용도입니다. 실제 풀이는 입력 정보로 생성됩니다.',
+                      title: '홈 구성',
+                      body: '오늘운세, 타로, 궁합, 사용법 안내는 가이드와 해석 메뉴로 분리했습니다.',
                     },
                   ]}
                 />
@@ -389,348 +259,68 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── CONTENT ─── */}
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-
-        <section className="reveal-on-scroll mb-12 space-y-5">
-          <article className="moon-lunar-panel p-6 sm:p-7">
-            <div className="app-starfield" />
+        <section className="reveal-on-scroll mb-12">
+          <SectionSurface surface="panel">
             <SectionHeader
-              eyebrow="오늘의 흐름도 가볍게 확인해보세요"
-              title="오늘 운세와 오늘 고민 빠른 선택은 아래에서 이어집니다"
-              titleClassName="text-2xl"
-              description="오늘 고민 선택, 무료 결과, 1코인 심화풀이로 이어지는 빠른 동선은 그대로 열어두었습니다. 다만 달빛선생의 중심 가치는 오늘의 운세보다, 오래 남는 명리 기준서와 판정 근거에 있습니다."
-              actions={
-                <Link
-                  href={`/today-fortune?concern=${selectedConcern}`}
-                  className="shrink-0 text-xs text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-                >
-                  오늘 운세 열기
-                </Link>
-              }
+              align="center"
+              eyebrow="사주풀이 흐름"
+              title="홈에서는 이 세 단계만 보시면 됩니다"
+              description="서비스 설명을 길게 읽지 않아도, 출생 정보를 입력하면 핵심 요약과 상세 풀이로 바로 이어집니다."
+              className="mb-8 max-w-3xl"
             />
-            <div className="mt-4 rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-              {todayLine.title} {todayLine.subtitle}
-            </div>
-            <div className="mt-5 rounded-[1.3rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
-              <div className="text-xs tracking-[0.22em] text-[var(--app-gold)]/72">오늘 고민 빠른 선택</div>
-              <div className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">
-                무료 결과로 지금 가장 먼저 확인할 질문을 고르실 수 있습니다. 심층 기준서와는 별개로, 오늘의 흐름만 빠르게 확인하는 짧은 입구입니다.
-              </div>
-              <div className="mt-3">
-                <TodayConcernSelector
-                  value={selectedConcern}
-                  onChange={(next) => {
-                    setSelectedConcern(next);
-                    trackMoonlightEvent('today_concern_selected', {
-                      from: 'home',
-                      concern: next,
-                    });
-                  }}
-                  expanded={concernExpanded}
-                  onToggleExpanded={() => setConcernExpanded((current) => !current)}
-                  compact
+
+            <ProductGrid columns={3}>
+              {SAJU_FLOW_STEPS.map((step) => (
+                <FeatureCard
+                  key={step.title}
+                  surface="soft"
+                  eyebrow={step.eyebrow}
+                  title={step.title}
+                  titleClassName="text-2xl"
+                  description={step.body}
                 />
-              </div>
-            </div>
-          </article>
-
-          <article className="app-panel p-6 sm:p-7">
-            <SectionHeader
-              eyebrow="같은 기준, 다른 말투"
-              title="계산 기준은 같고, 선생의 설명 결만 달라집니다"
-              titleClassName="text-2xl"
-              description={
-                <>
-                  안녕하세요, <span className="text-[var(--app-gold-text)]">{displayName}</span> 선생님.
-                  달빛선생은 명식과 운의 구조를 같은 계산 기준으로 먼저 잡고, 선생의 말투는 그 결과를 이해하기 쉽게 풀어드립니다.
-                </>
-              }
-            />
-            <div className="moon-counselor-selector-wrap mt-5">
-              <CounselorSelector
-                value={counselorId}
-                onChange={(nextCounselor) => void selectCounselor(nextCounselor)}
-                variant="hero"
-                title="같은 기준을 다른 말투로 읽는 선생을 골라보세요"
-                description="명식과 운의 구조는 같은 계산 기준으로 먼저 잡고, 선생의 말투는 그 결과를 이해하기 쉽게 풀어드립니다."
-              />
-              <p className="mt-3 text-center text-xs leading-6 text-[var(--app-copy-soft)]">
-                지금은{' '}
-                <span className={cn('font-semibold', counselor.accentClassName)}>
-                  {counselor.label}
-                </span>
-                {' '}기준으로 읽도록 맞춰집니다.
-                {persistState === 'saved'
-                  ? ' 로그인 계정에도 저장했습니다.'
-                  : persistState === 'local_only'
-                    ? ' 이 기기에는 바로 반영했고, 로그인 저장은 환경에 따라 나중에 이어질 수 있습니다.'
-                    : counselorReady
-                    ? ` ${counselor.signature}`
-                    : ''}
-              </p>
-            </div>
-          </article>
-
-          <SupportRail
-            surface="muted"
-            className="reveal-on-scroll"
-            eyebrow="전문 선생"
-            title="질문이 분명할 때는, 전문 선생이 먼저 정리해드리는 리포트로 들어가셔도 좋습니다"
-            description="기존 여선생과 남선생은 말투와 설명 결을 고르는 선택입니다. 그와 별개로, 아래 전문 선생들은 어떤 고민을 어떤 리포트로 먼저 보는 편이 좋은지 안내하는 역할을 맡습니다."
-          >
-            <SpecialistMentorGrid
-              showHeader={false}
-            />
-          </SupportRail>
-        </section>
-
-        {/* TODAY + SETUP */}
-        <section className="reveal-on-scroll mb-12 grid gap-5 lg:grid-cols-[1fr_22rem]">
-
-          <aside ref={metersRef} className="app-panel p-6 sm:p-8">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="app-caption">{personalizationCopy.eyebrow}</div>
-                <h2 className="mt-3 font-[var(--font-heading)] text-2xl text-[var(--app-ivory)]">
-                  {personalizationCopy.title}
-                </h2>
-              </div>
-              <span className={cn(
-                'rounded-full border px-3 py-1 text-xs',
-                personalizationCopy.isPersonalized
-                  ? 'border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 text-[var(--app-jade)]'
-                  : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]'
-              )}>
-                {personalizationCopy.isPersonalized ? '개인화' : '기본'}
-              </span>
-            </div>
-
-            <div className="mt-6 rounded-[1.3rem] border border-[var(--app-gold)]/18 bg-[linear-gradient(135deg,rgba(210,176,114,0.10),rgba(8,15,30,0.88))] p-5">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-3 py-1 text-xs text-[var(--app-gold-text)]">
-                  오늘 가장 먼저 볼 흐름
-                </span>
-                <span className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 py-1 text-xs text-[var(--app-copy-muted)]">
-                  {impactSignal.weakest.label}運 {impactSignal.weakest.value}
-                </span>
-              </div>
-              <div className="mt-4 font-[var(--font-heading)] text-2xl leading-9 text-[var(--app-ivory)]">
-                {impactSignal.headline}
-              </div>
-              <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
-                {impactSignal.body}
-              </p>
-              <div className="mt-4 rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm text-[var(--app-copy-muted)]">
-                가장 강한 축은 <span className="text-[var(--app-ivory)]">{impactSignal.strongest.label}運</span>입니다.
-                {' '}오늘은 강한 쪽을 밀기보다 약한 쪽을 먼저 정리하면 전체 체감이 더 좋아집니다.
-              </div>
-            </div>
-
-            <div className="mt-6">
-              <div className="app-caption">세 축 요약</div>
-            </div>
-
-            <div className="mt-4 space-y-5">
-              {personalizedTodaySummary.map((item, i) => {
-                const tone = toneClasses(item.tone);
-                return (
-                  <div key={item.label}>
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <span className="text-[var(--app-copy-muted)]">{item.label}運</span>
-                      <span className={cn('font-[var(--font-heading)] text-lg font-semibold', tone.text)}>
-                        {item.value}
-                      </span>
-                    </div>
-                    <div className="moon-meter mt-2">
-                      <span
-                        className={cn(tone.bg)}
-                        style={{
-                          width: metersVisible ? `${item.ratio}%` : '0%',
-                          transitionDelay: `${i * 180}ms`,
-                        }}
-                      />
-                    </div>
-                    <p className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">{item.detail}</p>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="mt-6 rounded-[1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
-              <p className="text-sm leading-7 text-[var(--app-copy)]">{personalizationCopy.body}</p>
-              <Link
-                href={personalizationCopy.ctaHref}
-                className="mt-3 inline-flex text-sm font-medium text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-              >
-                {personalizationCopy.ctaLabel}
-              </Link>
-            </div>
-          </aside>
-
-          <article className="moon-lunar-panel p-6 sm:p-7">
-            <div className="app-starfield" />
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="app-caption">개인화 준비</div>
-                <h2 className="mt-3 font-[var(--font-heading)] text-xl font-semibold text-[var(--app-ivory)]">
-                  내 정보가 저장되면 더 깊어집니다
-                </h2>
-              </div>
-              <Link
-                href={personalizationCopy.ctaHref}
-                className="shrink-0 text-xs text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-              >
-                {personalizationCopy.ctaLabel}
-              </Link>
-            </div>
-            <div className="mt-5 space-y-3">
-              {STEPS.map(([title, body], idx) => (
-                <div key={title} className="moon-payment-row px-4 py-3.5">
-                  <div className="text-[10px] tracking-[0.24em] text-[var(--app-gold-text)]">STEP {idx + 1}</div>
-                  <div className="mt-1.5 font-medium text-[var(--app-ivory)]">{title}</div>
-                  <p className="mt-1 text-sm leading-6 text-[var(--app-copy-muted)]">{body}</p>
-                </div>
               ))}
-            </div>
-          </article>
-        </section>
+            </ProductGrid>
 
-        <section className="reveal-on-scroll mb-12">
-          <SectionHeader
-            align="center"
-            eyebrow="고민별 리포트"
-            title="고민별로 깊이가 다른 리포트를 선택하세요"
-            description="원국 기준서는 나의 바탕을, 연간 전략서는 올해의 흐름을, 궁합과 가족 리포트는 관계의 구조를 따로 정리합니다."
-            className="mb-8 max-w-3xl"
-          />
-
-          <ProductGrid columns={4}>
-            {PRODUCT_REPORT_CATALOG.map((item) => (
-              <ProductReportCard key={item.slug} item={item} />
-            ))}
-          </ProductGrid>
-        </section>
-
-        <section className="reveal-on-scroll mb-12">
-          <ReportKeepsakeSection />
-        </section>
-
-        {/* WISDOM GRID */}
-        <section className="reveal-on-scroll mb-12">
-          <div className="mb-8 text-center">
-            <div className="app-caption mb-3">여섯 가지 지혜</div>
-            <h2 className="moon-section-title mx-auto max-w-2xl">
-              문득 떠오르는 질문마다 다른 지혜가 기다리고 있습니다
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-[var(--app-copy-muted)]">
-              마음이 먼저 움직이는 곳을 누르시면, 달빛선생이 그 자리에서부터 차분히 이야기를 풀어드립니다.
-            </p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {WISDOM_CARDS.map((card, index) => {
-              const tone = toneClasses(card.tone);
-              const active = selectedSlug === card.slug;
-              return (
-                <button
-                  key={card.slug}
-                  type="button"
-                  onClick={() => setSelectedSlug(card.slug)}
-                  className={cn('moon-wisdom-card moon-wisdom-card-interactive text-left', active && 'moon-wisdom-card-active')}
-                  style={{ animationDelay: `${index * 70}ms` }}
-                >
-                  <div className={cn('moon-wisdom-hanja', tone.text)}>{card.hanja}</div>
-                  <div className={cn('mt-3 font-[var(--font-heading)] text-2xl font-semibold', tone.text)}>
-                    {card.title}
-                  </div>
-                  <p className="mt-3 text-base leading-7 text-[var(--app-ivory)]">"{card.hook}"</p>
-                  <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">{card.description}</p>
-                  {active && (
-                    <div className={cn('mt-4 flex items-center gap-1.5 text-xs font-medium', tone.text)}>
-                      <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
-                      선택됨
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          <article className="mt-5 app-panel p-6 sm:p-8">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div>
-                <div className={cn('app-caption', selectedTone.text)}>오늘 마음이 머무는 지혜</div>
-                <h3 className="mt-3 font-[var(--font-heading)] text-3xl font-semibold text-[var(--app-ivory)]">
-                  {selectedWisdom.title}
-                </h3>
-                <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-                  {selectedWisdom.description}
-                </p>
-              </div>
-              <Link
-                href={selectedWisdom.href}
-                className={cn(
-                  'inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border px-5 text-sm font-medium transition-colors',
-                  selectedTone.border,
-                  selectedTone.bg,
-                  selectedTone.text
-                )}
-              >
-                이 지혜 펼쳐보기
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <Link
-                href={selectedWisdom.href}
-                className={cn(
-                  'inline-flex h-11 items-center justify-center gap-2 rounded-full border px-5 text-sm font-medium transition-colors',
-                  selectedTone.border,
-                  selectedTone.bg,
-                  selectedTone.text
-                )}
-              >
-                {selectedWisdom.title} 바로 열기
-                <ArrowRight className="h-4 w-4" />
+            <ActionCluster align="center" className="mt-8">
+              <Link href="/saju/new" className="moon-cta-primary">
+                사주풀이 시작하기
               </Link>
               <Link
-                href="/guide"
-                className="inline-flex items-center gap-2 px-1 py-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                href={REPORT_SAMPLE_HREF}
+                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
               >
-                해석 종류 읽는 법
+                샘플 먼저 보기
               </Link>
-            </div>
-          </article>
+            </ActionCluster>
+          </SectionSurface>
         </section>
 
-        {/* POPULAR PATHS */}
         <section className="reveal-on-scroll">
-          <div className="mb-6">
-            <div className="app-caption">오늘 가장 많이 찾는 길</div>
-            <h2 className="mt-3 text-2xl font-semibold text-[var(--app-ivory)]">
-              오늘은 이 길로 이어가 보셔도 좋습니다
-            </h2>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {WISDOM_CARDS.slice(0, 4).map((card) => {
-              const tone = toneClasses(card.tone);
-              return (
-                <Link key={card.slug} href={card.href} className="moon-path-card group">
-                  <div className={cn('text-[11px] tracking-[0.28em]', tone.text)}>{card.hanja}</div>
-                  <div className="mt-2 font-semibold text-[var(--app-ivory)]">{card.title}</div>
-                  <p className="mt-2 text-sm leading-7 text-[var(--app-copy-muted)]">"{card.hook}"</p>
-                  <div className={cn(
-                    'mt-4 flex items-center gap-1 text-xs opacity-0 transition-opacity duration-200 group-hover:opacity-100',
-                    tone.text
-                  )}>
-                    자세히 보기 <ChevronRight className="h-3.5 w-3.5" />
-                  </div>
+          <SectionSurface surface="lunar">
+            <div className="app-starfield" />
+            <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+              <SectionHeader
+                eyebrow="안내 메뉴로 이동"
+                title="다른 운세와 사용법은 가이드에 모았습니다"
+                titleClassName="text-3xl text-[var(--app-gold-text)]"
+                description="오늘운세, 타로, 궁합, 선생 말투, PDF 보관 방식, 계산 기준은 홈에서 길게 설명하지 않고 안내 페이지에서 차분히 보실 수 있습니다."
+              />
+              <ActionCluster className="lg:justify-end">
+                <Link href="/guide" className="moon-cta-primary">
+                  가이드 보기
                 </Link>
-              );
-            })}
-          </div>
+                <Link
+                  href="/interpretation"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                >
+                  해석 메뉴
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </ActionCluster>
+            </div>
+          </SectionSurface>
         </section>
       </div>
     </AppShell>
