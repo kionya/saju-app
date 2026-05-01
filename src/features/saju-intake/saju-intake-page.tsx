@@ -37,7 +37,7 @@ import { trackMoonlightEvent } from '@/lib/analytics';
 import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 export type OnboardingStep = 'empathy' | 'birth' | 'nickname' | 'consent';
-type SwipeStepId = 'date' | 'gender' | 'location' | 'consent';
+type SwipeStepId = 'profile' | 'date' | 'gender' | 'location' | 'consent';
 type ProfileLoadStatus = 'idle' | 'loading' | 'ready' | 'anonymous' | 'empty' | 'error';
 type LocationSearchStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
 
@@ -110,8 +110,15 @@ interface BirthLocationSearchResponse {
   items?: BirthLocationSearchResult[];
 }
 
+const PROFILE_STEP = {
+  id: 'profile' as const,
+  eyebrow: '저장 정보',
+  title: '먼저 내 정보나 등록한 사람을 고릅니다',
+  description: '저장된 정보가 있으면 바로 불러오고, 없거나 새로 보려면 직접 입력으로 시작합니다.',
+};
+
 const BASE_STEPS: Array<{
-  id: Exclude<SwipeStepId, 'consent'>;
+  id: Exclude<SwipeStepId, 'profile' | 'consent'>;
   eyebrow: string;
   title: string;
   description: string;
@@ -120,22 +127,22 @@ const BASE_STEPS: Array<{
   {
     id: 'date',
     eyebrow: '생년월일',
-    title: '먼저 태어난 날짜를 고릅니다',
-    description: '양력과 음력을 먼저 정하고, 연·월·일을 셀렉트 박스로 차례대로 선택합니다.',
+    title: '태어난 날짜를 고릅니다',
+    description: '양력과 음력을 정하고 연·월·일을 선택합니다.',
     section: 'date',
   },
   {
     id: 'gender',
     eyebrow: '성별',
-    title: '다음으로 성별을 선택합니다',
-    description: '사주 결과에 필요한 기본 구분만 받습니다. 말투 선택은 결과 화면에서 남선생·여선생으로 고릅니다.',
+    title: '성별을 선택합니다',
+    description: '사주 계산에 필요한 기본 구분만 받습니다.',
     section: 'gender',
   },
   {
     id: 'location',
     eyebrow: '출생지와 시간',
-    title: '마지막으로 출생지와 시간을 맞춥니다',
-    description: '출생지는 진태양시와 시간 보정에 쓰입니다. 시간을 모르면 시간 모름으로 진행할 수 있습니다.',
+    title: '출생지와 시간을 맞춥니다',
+    description: '출생지는 시간 보정에 쓰입니다. 시간을 모르면 시간 모름으로 진행할 수 있습니다.',
     section: 'location-time',
   },
 ];
@@ -143,8 +150,8 @@ const BASE_STEPS: Array<{
 const CONSENT_STEP = {
   id: 'consent' as const,
   eyebrow: '동의',
-  title: '필수 동의만 확인하면 바로 결과로 이어집니다',
-  description: '한 번 동의하면 같은 필수 항목이 유지되는 동안 다음 입력부터는 다시 표시하지 않습니다.',
+  title: '필수 동의만 확인합니다',
+  description: '한 번 동의하면 다음 입력부터는 다시 표시하지 않습니다.',
 };
 
 const STEP_HINTS = [
@@ -301,11 +308,14 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
   const hasTrackedBirthStartRef = useRef(false);
 
   const steps = useMemo(
-    () => (consentAccepted ? BASE_STEPS : [...BASE_STEPS, CONSENT_STEP]),
+    () => (consentAccepted ? [PROFILE_STEP, ...BASE_STEPS] : [PROFILE_STEP, ...BASE_STEPS, CONSENT_STEP]),
     [consentAccepted]
   );
   const activeStep = steps[activeIndex] ?? steps[0];
   const progressLabel = `${activeIndex + 1} / ${steps.length}`;
+  const dateStepIndex = 1;
+  const locationStepIndex = 3;
+  const consentStepIndex = steps.findIndex((item) => item.id === 'consent');
 
   useEffect(() => {
     const draft = loadOnboardingDraft();
@@ -490,7 +500,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
         ? `${profile.label} 가족 프로필을 불러왔습니다. 결과를 열어도 내 정보는 바뀌지 않습니다.`
         : `${profile.label} 정보를 입력칸에 불러왔습니다.`
     );
-    setActiveIndex(0);
+    setActiveIndex(consentAccepted ? locationStepIndex : Math.max(consentStepIndex, locationStepIndex));
   }
 
   function validateDateStep() {
@@ -673,8 +683,102 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
     if (delta > 0) goPrev();
   }
 
+  function renderProfileStep() {
+    return (
+      <div className="mt-4 space-y-3">
+        {profileLoadStatus === 'loading' ? (
+          <div className="rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-sm text-[var(--app-copy-muted)]">
+            저장된 내 정보와 등록한 사람을 확인하고 있습니다.
+          </div>
+        ) : null}
+
+        {profileLoadStatus === 'anonymous' ? (
+          <div className="rounded-[1.1rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-4">
+            <div className="text-sm font-medium text-[var(--app-ivory)]">로그인하면 저장 정보로 바로 시작할 수 있습니다</div>
+            <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
+              지금은 새 정보를 직접 입력해 사주풀이를 열 수 있습니다.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href="/login?next=/saju/new"
+                className="inline-flex h-9 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-4 text-sm text-[var(--app-gold-text)]"
+              >
+                로그인
+              </Link>
+              <Button
+                type="button"
+                onClick={() => setActiveIndex(dateStepIndex)}
+                className="h-9 rounded-full bg-[var(--app-gold)] px-4 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+              >
+                새 정보 입력
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
+        {profileLoadStatus === 'empty' ? (
+          <div className="rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4">
+            <div className="text-sm font-medium text-[var(--app-ivory)]">아직 저장된 정보가 없습니다</div>
+            <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
+              이번에 입력한 정보는 다음부터 바로 불러올 수 있게 저장됩니다.
+            </p>
+          </div>
+        ) : null}
+
+        {profileLoadStatus === 'error' ? (
+          <div className="rounded-[1.1rem] border border-[var(--app-coral)]/28 bg-[var(--app-coral)]/10 px-4 py-4 text-sm leading-6 text-rose-100">
+            {profileLoadMessage}
+          </div>
+        ) : null}
+
+        {profileLoadStatus === 'ready' ? (
+          <div className="max-h-[min(42vh,22rem)] overflow-y-auto pr-1">
+            <ProductGrid columns={2}>
+              {savedProfileOptions.map((profile) => (
+                <button
+                  key={profile.id}
+                  type="button"
+                  onClick={() => applySavedProfile(profile)}
+                  className="app-feature-card-soft text-left transition-colors hover:border-[var(--app-gold)]/38 hover:bg-[var(--app-gold)]/8"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 text-sm font-medium text-[var(--app-ivory)]">{profile.label}</div>
+                    <span className="shrink-0 rounded-full border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/8 px-2 py-0.5 text-[10px] text-[var(--app-gold-text)]">
+                      선택
+                    </span>
+                  </div>
+                  <div className="mt-2 text-xs leading-6 text-[var(--app-copy-muted)]">{profile.detail}</div>
+                </button>
+              ))}
+            </ProductGrid>
+          </div>
+        ) : null}
+
+        {profileLoadMessage && profileLoadStatus !== 'error' ? (
+          <p className="rounded-full border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-3 py-2 text-xs leading-5 text-[var(--app-gold-text)]">
+            {profileLoadMessage}
+          </p>
+        ) : null}
+
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
+          <span className="text-sm leading-6 text-[var(--app-copy-muted)]">새 생년월일로 보려면 직접 입력하세요.</span>
+          <Button
+            type="button"
+            onClick={() => setActiveIndex(dateStepIndex)}
+            variant="outline"
+            className="h-9 rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+          >
+            직접 입력
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const nextLabel =
-    activeStep.id === 'location' && consentAccepted
+    activeStep.id === 'profile'
+      ? '직접 입력하기'
+      : activeStep.id === 'location' && consentAccepted
       ? isSubmitting
         ? '결과 준비 중...'
         : '사주풀이 열기'
@@ -686,8 +790,9 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
-      <AppPage className="space-y-6">
+      <AppPage className="saju-intake-page space-y-4 sm:space-y-6">
         <PageHero
+          className="saju-intake-hero"
           badges={[
             <Badge
               key="count"
@@ -702,13 +807,13 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
               옆으로 넘기는 입력
             </Badge>,
           ]}
-          title="한 화면씩 넘기며 사주 정보를 입력합니다"
-          description="생년월일, 성별, 출생지와 시간을 차례대로 받습니다. 남선생·여선생 말투 선택은 사주풀이 결과 화면에서만 고르도록 분리했습니다."
+          title="저장 정보로 시작하거나, 한 화면씩 입력합니다"
+          description="내 정보와 등록한 사람을 먼저 고르고, 필요할 때만 생년월일·성별·출생지와 시간을 직접 입력합니다."
         />
 
-        <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
-          <SectionSurface surface="panel" size="lg" className="overflow-hidden">
-            <div className="mb-6 flex items-center justify-between gap-3">
+        <section className="grid gap-4 lg:grid-cols-[1.04fr_0.96fr] lg:gap-6">
+          <SectionSurface surface="panel" size="lg" className="saju-intake-main-card overflow-hidden">
+            <div className="mb-4 flex items-center justify-between gap-3 sm:mb-6">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
                 {steps.map((item, index) => (
                   <button
@@ -747,81 +852,76 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
               }}
               onTouchEnd={handleTouchEnd}
             >
-              <div
-                className="flex transition-transform duration-300 ease-out"
-                style={{ transform: `translateX(-${activeIndex * 100}%)` }}
-              >
-                {steps.map((item) => (
-                  <div key={item.id} className="w-full shrink-0">
-                    <SectionHeader
-                      eyebrow={item.eyebrow}
-                      title={item.title}
-                      titleClassName="text-3xl"
-                      description={item.description}
-                      descriptionClassName="max-w-3xl text-[var(--app-copy)]"
-                    />
+              <div key={activeStep.id} className="saju-intake-active-slide">
+                <SectionHeader
+                  eyebrow={activeStep.eyebrow}
+                  title={activeStep.title}
+                  titleClassName="text-2xl sm:text-3xl"
+                  description={activeStep.description}
+                  descriptionClassName="max-w-3xl text-sm text-[var(--app-copy)] sm:text-base"
+                />
 
-                    {item.id === 'consent' ? (
-                      <div className="mt-6 space-y-3">
-                        {ONBOARDING_CONSENTS.map((consent) => (
-                          <label
-                            key={consent.title}
-                            className="flex items-start gap-3 rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={form.consents[consent.title]}
-                              onChange={(event) =>
-                                setForm((current) => ({
-                                  ...current,
-                                  consents: {
-                                    ...current.consents,
-                                    [consent.title]: event.target.checked,
-                                  },
-                                }))
-                              }
-                              className="mt-1 h-4 w-4 rounded border-[var(--app-line)] bg-transparent accent-[var(--app-gold)]"
-                            />
-                            <span className="min-w-0">
-                              <span className="flex items-center gap-2 text-sm font-medium text-[var(--app-ivory)]">
-                                {consent.title}
-                                <span
-                                  className={cn(
-                                    'rounded-full border px-2 py-0.5 text-[10px]',
-                                    consent.required
-                                      ? 'border-[var(--app-coral)]/28 bg-[var(--app-coral)]/10 text-[var(--app-coral)]'
-                                      : 'border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]'
-                                  )}
-                                >
-                                  {consent.required ? '필수' : '선택'}
-                                </span>
-                              </span>
-                              <span className="mt-2 block text-xs leading-6 text-[var(--app-copy-muted)]">
-                                {consent.detail}
-                              </span>
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="mt-6">
-                        <UnifiedBirthInfoFields
-                          draft={buildUnifiedBirthDraft(form)}
-                          onChange={(patch) => setForm((current) => applyUnifiedBirthPatch(current, patch))}
-                          onStarted={() => markBirthStarted('manual')}
-                          dateInputVariant="select"
-                          visibleSections={[item.section]}
-                          locationLoading={locationSearchStatus === 'loading'}
-                          locationMessage={locationSearchMessage}
-                          locationResults={locationSearchResults}
-                          onLocationSearch={searchBirthLocationCoordinates}
-                          onPresetSelect={updateBirthLocation}
-                          onLocationResultSelect={applyBirthLocationSearchResult}
+                {activeStep.id === 'profile' ? (
+                  renderProfileStep()
+                ) : activeStep.id === 'consent' ? (
+                  <div className="mt-4 space-y-2.5 sm:mt-6 sm:space-y-3">
+                    {ONBOARDING_CONSENTS.map((consent) => (
+                      <label
+                        key={consent.title}
+                        className="flex items-start gap-3 rounded-[1.05rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3.5 py-3 sm:rounded-[1.25rem] sm:px-4 sm:py-4"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={form.consents[consent.title]}
+                          onChange={(event) =>
+                            setForm((current) => ({
+                              ...current,
+                              consents: {
+                                ...current.consents,
+                                [consent.title]: event.target.checked,
+                              },
+                            }))
+                          }
+                          className="mt-1 h-4 w-4 rounded border-[var(--app-line)] bg-transparent accent-[var(--app-gold)]"
                         />
-                      </div>
-                    )}
+                        <span className="min-w-0">
+                          <span className="flex items-center gap-2 text-sm font-medium text-[var(--app-ivory)]">
+                            {consent.title}
+                            <span
+                              className={cn(
+                                'rounded-full border px-2 py-0.5 text-[10px]',
+                                consent.required
+                                  ? 'border-[var(--app-coral)]/28 bg-[var(--app-coral)]/10 text-[var(--app-coral)]'
+                                  : 'border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]'
+                              )}
+                            >
+                              {consent.required ? '필수' : '선택'}
+                            </span>
+                          </span>
+                          <span className="mt-1.5 block text-xs leading-5 text-[var(--app-copy-muted)] sm:mt-2 sm:leading-6">
+                            {consent.detail}
+                          </span>
+                        </span>
+                      </label>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="mt-4 sm:mt-6">
+                    <UnifiedBirthInfoFields
+                      draft={buildUnifiedBirthDraft(form)}
+                      onChange={(patch) => setForm((current) => applyUnifiedBirthPatch(current, patch))}
+                      onStarted={() => markBirthStarted('manual')}
+                      dateInputVariant="select"
+                      visibleSections={[activeStep.section]}
+                      locationLoading={locationSearchStatus === 'loading'}
+                      locationMessage={locationSearchMessage}
+                      locationResults={locationSearchResults}
+                      onLocationSearch={searchBirthLocationCoordinates}
+                      onPresetSelect={updateBirthLocation}
+                      onLocationResultSelect={applyBirthLocationSearchResult}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 
@@ -831,7 +931,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
               </div>
             ) : null}
 
-            <ActionCluster className="mt-8">
+            <ActionCluster className="mt-5 sm:mt-8">
               <Button
                 type="button"
                 onClick={goPrev}
@@ -864,66 +964,16 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
             />
             <BulletList items={STEP_HINTS} className="mt-6" />
 
-            <div className="mt-6 rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="app-caption">저장된 정보</div>
-                  <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
-                    내 정보나 가족 프로필이 있으면 한 번에 불러올 수 있습니다.
-                  </p>
-                </div>
-                <Link href="/my/profile" className="app-top-action-link shrink-0">
-                  프로필 관리
-                </Link>
-              </div>
-
-              <div className="mt-4">
-                {profileLoadStatus === 'loading' ? (
-                  <p className="text-sm text-[var(--app-copy-muted)]">저장된 정보를 확인하고 있습니다.</p>
-                ) : null}
-
-                {profileLoadStatus === 'anonymous' ? (
-                  <div className="flex flex-col gap-3 text-sm leading-6 text-[var(--app-copy-muted)] sm:flex-row sm:items-center sm:justify-between">
-                    <span>로그인하면 저장해 둔 정보를 바로 불러올 수 있습니다.</span>
-                    <Link
-                      href="/login?next=/saju/new"
-                      className="inline-flex h-9 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-4 text-sm text-[var(--app-gold-text)]"
-                    >
-                      로그인
-                    </Link>
-                  </div>
-                ) : null}
-
-                {profileLoadStatus === 'empty' ? (
-                  <p className="text-sm leading-6 text-[var(--app-copy-muted)]">
-                    아직 저장된 프로필이 없습니다. 이번 입력을 마치면 내 정보에 저장됩니다.
-                  </p>
-                ) : null}
-
-                {profileLoadStatus === 'error' ? (
-                  <p className="text-sm leading-6 text-rose-100">{profileLoadMessage}</p>
-                ) : null}
-
-                {profileLoadStatus === 'ready' ? (
-                  <ProductGrid columns={2} className="mt-1">
-                    {savedProfileOptions.map((profile) => (
-                      <button
-                        key={profile.id}
-                        type="button"
-                        onClick={() => applySavedProfile(profile)}
-                        className="app-feature-card-soft text-left transition-colors hover:border-[var(--app-gold)]/38 hover:bg-[var(--app-gold)]/8"
-                      >
-                        <div className="text-sm font-medium text-[var(--app-ivory)]">{profile.label}</div>
-                        <div className="mt-2 text-xs leading-6 text-[var(--app-copy-muted)]">{profile.detail}</div>
-                      </button>
-                    ))}
-                  </ProductGrid>
-                ) : null}
-
-                {profileLoadMessage && profileLoadStatus !== 'error' ? (
-                  <p className="mt-3 text-xs leading-6 text-[var(--app-gold-text)]">{profileLoadMessage}</p>
-                ) : null}
-              </div>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link href="/my/profile" className="app-top-action-link shrink-0">
+                프로필 관리
+              </Link>
+              <Link
+                href="/guide"
+                className="inline-flex h-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+              >
+                입력 기준 보기
+              </Link>
             </div>
 
             <FeatureCard

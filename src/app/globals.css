@@ -2843,6 +2843,31 @@
   min-width: 0;
 }
 
+.saju-intake-hero {
+  padding: 1rem !important;
+}
+
+.saju-intake-hero .app-hero-title {
+  margin-top: 0.75rem;
+  font-size: 1.7rem;
+  line-height: 1.18;
+  letter-spacing: 0;
+}
+
+.saju-intake-hero .app-hero-description {
+  margin-top: 0.7rem;
+  font-size: 0.9rem;
+  line-height: 1.62;
+}
+
+.saju-intake-main-card {
+  padding: 1rem !important;
+}
+
+.saju-intake-active-slide {
+  min-height: 0;
+}
+
 @media (max-width: 640px) {
   .app-swipe-section-deck {
     margin-inline: -0.25rem;
@@ -2850,6 +2875,30 @@
 
   .app-swipe-section-page {
     padding-inline: 0.25rem;
+  }
+
+  .saju-intake-page {
+    padding-top: 1rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .saju-intake-hero {
+    padding: 1.5rem !important;
+  }
+
+  .saju-intake-hero .app-hero-title {
+    font-size: 2.45rem;
+    line-height: 1.14;
+  }
+
+  .saju-intake-hero .app-hero-description {
+    font-size: 1rem;
+    line-height: 1.76;
+  }
+
+  .saju-intake-main-card {
+    padding: 1.5rem !important;
   }
 }
 
