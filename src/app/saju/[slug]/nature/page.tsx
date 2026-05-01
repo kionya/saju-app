@@ -7,6 +7,7 @@ import { ProductGrid } from '@/components/layout/product-grid';
 import { SectionHeader } from '@/components/layout/section-header';
 import { SectionSurface } from '@/components/layout/section-surface';
 import { SupportRail } from '@/components/layout/support-rail';
+import { SwipeSectionDeck, SwipeSectionSlide } from '@/components/layout/swipe-section-deck';
 import { Badge } from '@/components/ui/badge';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
 import { formatBirthSummary } from '@/features/saju-detail/saju-screen-helpers';
@@ -105,8 +106,18 @@ export default async function SajuNaturePage({ params }: Props) {
           description="일간의 비유와 기질의 장점, 그리고 감정이 앞설 때 조절해야 할 포인트를 먼저 읽는 화면입니다."
         />
 
-        <section className="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
-          <SectionSurface surface="hero" size="lg" className="overflow-hidden">
+        <SwipeSectionDeck
+          title="성정 해석을 한 장씩 넘겨 봅니다"
+          description="타고난 기질, 사람 앞에서 드러나는 모습, 다음 행동을 화면 단위로 나눴습니다."
+        >
+          <SwipeSectionSlide
+            eyebrow="기질"
+            title="타고난 성정 핵심"
+            description="일간 비유와 기질의 장점을 먼저 확인합니다."
+            navLabel="기질"
+          >
+            <section className="grid gap-6 xl:grid-cols-[1.06fr_0.94fr]">
+              <SectionSurface surface="hero" size="lg" className="overflow-hidden">
             <div className="app-starfield" />
             <div className="relative z-10 grid gap-6 lg:grid-cols-[0.38fr_0.62fr] lg:items-center">
               <div className="rounded-[1.75rem] border border-[var(--app-gold)]/20 bg-[rgba(255,255,255,0.03)] px-5 py-6 text-center shadow-[0_22px_55px_rgba(0,0,0,0.25)]">
@@ -172,10 +183,17 @@ export default async function SajuNaturePage({ params }: Props) {
                 surface="soft"
               />
             </div>
-          </SupportRail>
-        </section>
+              </SupportRail>
+            </section>
+          </SwipeSectionSlide>
 
-        <ProductGrid columns={3}>
+          <SwipeSectionSlide
+            eyebrow="정리"
+            title="생활 리듬과 다음 화면"
+            description="성향 키워드와 다음 오행 균형 화면으로 이어지는 선택을 모았습니다."
+            navLabel="정리"
+          >
+            <ProductGrid columns={3}>
           <FeatureCard
             eyebrow="성향 키워드"
             title={`${ELEMENT_INFO[element].name}의 결`}
@@ -203,9 +221,9 @@ export default async function SajuNaturePage({ params }: Props) {
               </Link>
             }
           />
-        </ProductGrid>
+            </ProductGrid>
 
-        <section className="flex flex-wrap gap-3">
+            <section className="flex flex-wrap gap-3">
           <Link
             href={`/saju/${slug}/overview`}
             className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
@@ -218,7 +236,9 @@ export default async function SajuNaturePage({ params }: Props) {
           >
             다음: 오행 균형
           </Link>
-        </section>
+            </section>
+          </SwipeSectionSlide>
+        </SwipeSectionDeck>
       </AppPage>
     </AppShell>
   );

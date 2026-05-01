@@ -2812,6 +2812,47 @@
   }
 }
 
+.app-swipe-section-deck {
+  min-width: 0;
+}
+
+.app-swipe-section-viewport {
+  display: flex;
+  min-width: 0;
+  gap: 0;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.app-swipe-section-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.app-swipe-section-page {
+  min-width: 0;
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.app-swipe-section-page > * {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .app-swipe-section-deck {
+    margin-inline: -0.25rem;
+  }
+
+  .app-swipe-section-page {
+    padding-inline: 0.25rem;
+  }
+}
+
 @media (min-width: 1280px) {
   .app-desktop-sidebar {
     width: 17rem;

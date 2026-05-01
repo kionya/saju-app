@@ -17,6 +17,7 @@ import { FeatureCard } from '@/components/layout/feature-card';
 import { ProductGrid } from '@/components/layout/product-grid';
 import { SectionHeader } from '@/components/layout/section-header';
 import { SectionSurface } from '@/components/layout/section-surface';
+import { SwipeSectionDeck, SwipeSectionSlide } from '@/components/layout/swipe-section-deck';
 import { ReportKeepsakeSection } from '@/components/report/report-keepsake-section';
 import { ReportOneMinuteSummary } from '@/components/report/report-one-minute-summary';
 import FiveElementOrbitChart from '@/components/saju/five-element-orbit-chart';
@@ -542,18 +543,28 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           </div>
         </SectionSurface>
 
-        <section className="space-y-4">
-          <ReportOneMinuteSummary
-            headline={report.headline}
-            keyThemes={keyThemes}
-            cautionPatterns={cautionPatterns}
-            favorableChoices={favorableChoices}
-            isTimeUnknown={isTimeUnknown}
-          />
+        <SwipeSectionDeck
+          title="사주풀이 결과를 한 화면씩 넘겨 봅니다"
+          description="긴 결과 본문을 요약, 분야, 운 흐름, 근거, 상세 해석으로 나눴습니다. 모바일에서는 좌우로 밀고, 데스크톱에서는 상단 버튼과 칩으로 바로 이동할 수 있습니다."
+        >
+          <SwipeSectionSlide
+            eyebrow="첫 화면"
+            title="1분 요약과 판정 근거"
+            description="결과를 처음 열었을 때 꼭 봐야 하는 핵심과 다음 행동만 먼저 모았습니다."
+            navLabel="요약"
+          >
+            <section className="space-y-4">
+              <ReportOneMinuteSummary
+                headline={report.headline}
+                keyThemes={keyThemes}
+                cautionPatterns={cautionPatterns}
+                favorableChoices={favorableChoices}
+                isTimeUnknown={isTimeUnknown}
+              />
 
-          <GroundingDecisionTrace grounding={grounding} kasiComparison={kasiComparison} />
+              <GroundingDecisionTrace grounding={grounding} kasiComparison={kasiComparison} />
 
-          <SectionSurface surface="panel">
+              <SectionSurface surface="panel">
             <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
               <div>
                 <SectionHeader
@@ -629,10 +640,17 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 />
               </ProductGrid>
             </div>
-          </SectionSurface>
-        </section>
+              </SectionSurface>
+            </section>
+          </SwipeSectionSlide>
 
-        <section className="app-panel p-6 sm:p-7">
+          <SwipeSectionSlide
+            eyebrow="분야"
+            title="분야별 흐름과 연간 부록"
+            description="오늘, 연애, 재물, 직장, 관계를 고르고 연간 전략으로 이어지는 화면입니다."
+            navLabel="분야"
+          >
+            <section className="app-panel p-6 sm:p-7">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="app-caption">분야별 흐름</div>
@@ -752,7 +770,15 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-3">
+          </SwipeSectionSlide>
+
+          <SwipeSectionSlide
+            eyebrow="운 흐름"
+            title="오늘과 이번 달, 대운 흐름"
+            description="현재 시점에서 이어지는 시간 흐름을 한 화면으로 묶었습니다."
+            navLabel="운 흐름"
+          >
+            <section className="grid gap-4 lg:grid-cols-3">
           {report.timeline.map((item) => (
             <article key={item.label} className="app-panel p-6">
               <div className="app-caption">{item.label}</div>
@@ -774,16 +800,31 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           ))}
         </section>
 
-        <SajuFactEvidencePanel
-          grounding={grounding}
-          kasiComparison={kasiComparison}
-          primaryClassicItems={primaryClassicItems}
-          showDecisionTrace={false}
-        />
+          </SwipeSectionSlide>
 
-        <ReportKeepsakeSection />
+          <SwipeSectionSlide
+            eyebrow="근거와 보관"
+            title="계산 근거와 다시 읽을 가치"
+            description="판정의 바탕과 PDF·보관함 가치를 별도 화면으로 모았습니다."
+            navLabel="근거"
+          >
+            <SajuFactEvidencePanel
+              grounding={grounding}
+              kasiComparison={kasiComparison}
+              primaryClassicItems={primaryClassicItems}
+              showDecisionTrace={false}
+            />
 
-        <div>
+            <ReportKeepsakeSection />
+          </SwipeSectionSlide>
+
+          <SwipeSectionSlide
+            eyebrow="상세"
+            title="상세 해석과 사주 명반"
+            description="더 깊은 풀이, AI 해석, 현재 운과 대운 흐름은 이 화면에서 열어봅니다."
+            navLabel="상세"
+          >
+            <div>
           <DetailUnlock
             slug={slug}
             referenceChildren={
@@ -1259,20 +1300,29 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               </article>
             </section>
           </DetailUnlock>
-        </div>
+            </div>
+          </SwipeSectionSlide>
 
-        <SafetyNotice variant="health" />
-
-        <div className="text-center">
-          <Link
-            href="/saju/new"
-            className="text-sm text-[var(--app-gold-soft)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+          <SwipeSectionSlide
+            eyebrow="마무리"
+            title="안전 안내와 고전 근거"
+            description="의료·건강 판단 안내와 고전 근거 확인, 새 리포트 생성 링크를 마지막 화면에 모았습니다."
+            navLabel="안내"
           >
-            다른 생년월일로 새 리포트 만들기
-          </Link>
-        </div>
+            <SafetyNotice variant="health" />
 
-        <ClassicEvidencePanel concept={classicEvidenceConcept} />
+            <div className="text-center">
+              <Link
+                href="/saju/new"
+                className="text-sm text-[var(--app-gold-soft)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+              >
+                다른 생년월일로 새 리포트 만들기
+              </Link>
+            </div>
+
+            <ClassicEvidencePanel concept={classicEvidenceConcept} />
+          </SwipeSectionSlide>
+        </SwipeSectionDeck>
       </AppPage>
     </AppShell>
   );

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ArrowRight, Lock } from 'lucide-react';
+import { SwipeSectionDeck, SwipeSectionSlide } from '@/components/layout/swipe-section-deck';
 import { Badge } from '@/components/ui/badge';
 import { SAJU_BASIC_SECTIONS, SAJU_PREMIUM_SECTIONS } from '@/content/moonlight';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
@@ -70,8 +71,18 @@ export default async function SajuOverviewPage({ params }: Props) {
           </div>
         </section>
 
-        {/* ─── 사주 원국 4기둥 ─── */}
-        <section className="app-panel p-6 sm:p-7">
+        <SwipeSectionDeck
+          title="사주 기본 화면을 한 장씩 넘겨 봅니다"
+          description="원국 확인과 기본 해석 진입을 분리해 처음 보는 화면의 부담을 줄였습니다."
+        >
+          <SwipeSectionSlide
+            eyebrow="원국"
+            title="사주 원국 네 기둥"
+            description="년·월·일·시의 기본 구조를 먼저 확인합니다."
+            navLabel="원국"
+          >
+            {/* ─── 사주 원국 4기둥 ─── */}
+            <section className="app-panel p-6 sm:p-7">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="app-caption">사주 원국</div>
@@ -137,10 +148,17 @@ export default async function SajuOverviewPage({ params }: Props) {
             은 {sajuData.dayMaster.metaphor ?? '자연의 상징'}로 읽습니다.{' '}
             {sajuData.dayMaster.description}
           </div>
-        </section>
+            </section>
+          </SwipeSectionSlide>
 
-        {/* ─── 기본 해석 + 명리 기준서 ─── */}
-        <section className="grid gap-5 lg:grid-cols-[1fr_0.96fr]">
+          <SwipeSectionSlide
+            eyebrow="다음 선택"
+            title="기본 해석과 명리 기준서"
+            description="무료 기본 해석과 보관형 기준서 진입을 한 화면에서 고릅니다."
+            navLabel="해석"
+          >
+            {/* ─── 기본 해석 + 명리 기준서 ─── */}
+            <section className="grid gap-5 lg:grid-cols-[1fr_0.96fr]">
 
           <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
@@ -223,7 +241,9 @@ export default async function SajuOverviewPage({ params }: Props) {
               </div>
             </div>
           </article>
-        </section>
+            </section>
+          </SwipeSectionSlide>
+        </SwipeSectionDeck>
 
       </AppPage>
     </AppShell>

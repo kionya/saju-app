@@ -12,6 +12,7 @@ import {
   SAJU_PREMIUM_PREVIEW,
   SAJU_PREMIUM_VALUE_POINTS,
 } from '@/content/moonlight';
+import { SwipeSectionDeck, SwipeSectionSlide } from '@/components/layout/swipe-section-deck';
 import { buildSajuReport } from '@/domain/saju/report';
 import {
   ELEMENT_INFO,
@@ -385,30 +386,82 @@ export default async function SajuPremiumPage({ params }: Props) {
           </div>
         </section>
 
-        <EngineMethodLinks
-          title="지금 보고 있는 명리 기준서와 가장 직접적으로 이어지는 기준 글"
-          description="격국, 용신, 대운, 시간 기준처럼 실제 판정과 행동 조언을 바꾸는 항목만 골라 바로 이어볼 수 있게 두었습니다."
-          slugs={[
-            'why-pattern-judgments-diverge',
-            'why-yongsin-is-hard',
-            'how-to-read-daewoon-and-sewoon-together',
-            'how-far-to-trust-gongmang-and-shinsal',
-          ]}
-          ctaHref="/method"
-          ctaLabel="연결된 읽을거리 전체 보기"
-        />
+        <SwipeSectionDeck
+          title="명리 기준서를 한 화면씩 넘겨 봅니다"
+          description="기준 글, 본문, 연간 부록, 월간 달력을 나눠서 너무 길게 내려가지 않도록 정리했습니다."
+        >
+          <SwipeSectionSlide
+            eyebrow="기준"
+            title="이 리포트와 이어지는 기준 글"
+            description="격국, 용신, 대운처럼 실제 판정을 바꾸는 기준만 먼저 모았습니다."
+            navLabel="기준"
+          >
+            <EngineMethodLinks
+              title="지금 보고 있는 명리 기준서와 가장 직접적으로 이어지는 기준 글"
+              description="격국, 용신, 대운, 시간 기준처럼 실제 판정과 행동 조언을 바꾸는 항목만 골라 바로 이어볼 수 있게 두었습니다."
+              slugs={[
+                'why-pattern-judgments-diverge',
+                'why-yongsin-is-hard',
+                'how-to-read-daewoon-and-sewoon-together',
+                'how-far-to-trust-gongmang-and-shinsal',
+              ]}
+              ctaHref="/method"
+              ctaLabel="연결된 읽을거리 전체 보기"
+            />
+          </SwipeSectionSlide>
 
         {hasLifetimeAccess ? (
           <>
-            <LifetimeReportPanel slug={slug} targetYear={targetYear} />
-            <YearlyReportPanel slug={slug} targetYear={targetYear} />
-            <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess />
+            <SwipeSectionSlide
+              eyebrow="평생 기준서"
+              title="명리 기준서 본문"
+              description="원국과 평생 흐름을 보관형 본문으로 읽습니다."
+              navLabel="기준서"
+            >
+              <LifetimeReportPanel slug={slug} targetYear={targetYear} />
+            </SwipeSectionSlide>
+            <SwipeSectionSlide
+              eyebrow="연간"
+              title={`${targetYear} 연간 전략 부록`}
+              description="올해 흐름과 분야별 판단 기준을 별도 화면으로 확인합니다."
+              navLabel="연간"
+            >
+              <YearlyReportPanel slug={slug} targetYear={targetYear} />
+            </SwipeSectionSlide>
+            <SwipeSectionSlide
+              eyebrow="월간"
+              title="달별로 보는 흐름"
+              description="좋은 날, 주의할 날, 결정일을 월별 화면에서 확인합니다."
+              navLabel="달력"
+            >
+              <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess />
+            </SwipeSectionSlide>
           </>
         ) : yearlyAccessLabel ? (
           <>
-            <YearlyReportPanel slug={slug} targetYear={targetYear} />
-            <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess={false} />
-            <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+            <SwipeSectionSlide
+              eyebrow="연간"
+              title={`${targetYear} 연간 전략 부록`}
+              description="구독 권한으로 열린 연간 흐름을 먼저 읽습니다."
+              navLabel="연간"
+            >
+              <YearlyReportPanel slug={slug} targetYear={targetYear} />
+            </SwipeSectionSlide>
+            <SwipeSectionSlide
+              eyebrow="월간"
+              title="달별로 보는 흐름"
+              description="월별 타이밍은 별도 화면에서 넘기며 확인합니다."
+              navLabel="달력"
+            >
+              <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess={false} />
+            </SwipeSectionSlide>
+            <SwipeSectionSlide
+              eyebrow="확장"
+              title="명리 기준서로 확장하기"
+              description="연간 부록과 평생 소장 기준서의 차이를 정리했습니다."
+              navLabel="확장"
+            >
+              <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
               <article className="moon-lunar-panel p-6">
                 <div className="app-starfield" />
                 <div className="flex flex-wrap items-center gap-2">
@@ -473,10 +526,17 @@ export default async function SajuPremiumPage({ params }: Props) {
                   </div>
                 </div>
               </article>
-            </section>
+              </section>
+            </SwipeSectionSlide>
           </>
         ) : (
         <>
+        <SwipeSectionSlide
+          eyebrow="미리보기"
+          title="명리 기준서 미리보기와 구매 선택"
+          description="결제 전 확인할 내용과 기준서 열기 버튼을 한 화면에 모았습니다."
+          navLabel="미리보기"
+        >
         <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <article className="moon-lunar-panel p-6">
             <div className="app-starfield" />
@@ -585,9 +645,18 @@ export default async function SajuPremiumPage({ params }: Props) {
             </div>
           </article>
         </section>
+        </SwipeSectionSlide>
+        <SwipeSectionSlide
+          eyebrow="월간"
+          title="달별로 보는 흐름"
+          description="기준서 구매 전에도 월간 흐름 구조를 별도 화면에서 확인합니다."
+          navLabel="달력"
+        >
         <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess={false} />
+        </SwipeSectionSlide>
         </>
         )}
+        </SwipeSectionDeck>
       </AppPage>
     </AppShell>
   );

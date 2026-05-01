@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react';
 import { FeatureCard } from '@/components/layout/feature-card';
 import { ProductGrid } from '@/components/layout/product-grid';
 import { SupportRail } from '@/components/layout/support-rail';
+import { SwipeSectionDeck, SwipeSectionSlide } from '@/components/layout/swipe-section-deck';
 import { Badge } from '@/components/ui/badge';
 import FiveElementOrbitChart from '@/components/saju/five-element-orbit-chart';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
@@ -95,8 +96,18 @@ export default async function SajuElementsPage({ params }: Props) {
           description="다섯 기운을 막대 합계보다 배치와 간격으로 먼저 읽고, 어떤 축이 앞서고 어떤 축을 생활 안에서 보완해야 하는지 한눈에 정리한 화면입니다."
         />
 
-        <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-          <section className="app-hero-card app-section-frame-lg overflow-hidden">
+        <SwipeSectionDeck
+          title="오행 균형을 한 장씩 넘겨 봅니다"
+          description="원형 차트, 오행별 카드, 다음 기준서 진입을 화면 단위로 나눴습니다."
+        >
+          <SwipeSectionSlide
+            eyebrow="균형"
+            title="다섯 기운의 배치"
+            description="막대 합계보다 배치와 간격을 먼저 확인합니다."
+            navLabel="균형"
+          >
+            <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+              <section className="app-hero-card app-section-frame-lg overflow-hidden">
             <div className="app-starfield" />
             <div className="relative z-10">
               <div className="app-caption">다섯 기운의 배치</div>
@@ -154,10 +165,17 @@ export default async function SajuElementsPage({ params }: Props) {
                 surface="soft"
               />
             </div>
-          </SupportRail>
-        </section>
+              </SupportRail>
+            </section>
+          </SwipeSectionSlide>
 
-        <ProductGrid columns={3}>
+          <SwipeSectionSlide
+            eyebrow="오행별"
+            title="각 오행의 비중과 다음 선택"
+            description="주도하는 축과 보완하는 축을 카드로 다시 정리합니다."
+            navLabel="오행별"
+          >
+            <ProductGrid columns={3}>
           {ELEMENT_ORDER.map((element) => {
             const value = sajuData.fiveElements.byElement[element];
             const isDominant = dominant === element;
@@ -185,9 +203,9 @@ export default async function SajuElementsPage({ params }: Props) {
               />
             );
           })}
-        </ProductGrid>
+            </ProductGrid>
 
-        <section className="flex flex-wrap gap-3">
+            <section className="flex flex-wrap gap-3">
           <Link
             href={`/saju/${slug}/nature`}
             className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
@@ -201,7 +219,9 @@ export default async function SajuElementsPage({ params }: Props) {
             다음: 명리 기준서
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
-        </section>
+            </section>
+          </SwipeSectionSlide>
+        </SwipeSectionDeck>
       </AppPage>
     </AppShell>
   );
