@@ -5,14 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import FortuneCalendarPanel from '@/components/ai/fortune-calendar-panel';
 import LifetimeReportPanel from '@/components/ai/lifetime-report-panel';
 import YearlyReportPanel from '@/components/ai/yearly-report-panel';
-import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import {
   REPORT_SAMPLE_HREF,
   SAJU_PREMIUM_SECTIONS,
   SAJU_PREMIUM_PREVIEW,
   SAJU_PREMIUM_VALUE_POINTS,
 } from '@/content/moonlight';
-import { SwipeSectionDeck, SwipeSectionSlide } from '@/components/layout/swipe-section-deck';
 import { buildSajuReport } from '@/domain/saju/report';
 import {
   ELEMENT_INFO,
@@ -333,6 +331,92 @@ export default async function SajuPremiumPage({ params }: Props) {
   }
 
   const targetYear = new Date().getFullYear();
+  const heroLabel = hasLifetimeAccess
+    ? '명리 기준서 · 전체 열람'
+    : yearlyAccessLabel
+      ? `${targetYear} 올해 전략서 · 전체 열람`
+      : '명리 기준서 · 미리보기';
+  const heroTitle = hasLifetimeAccess
+    ? '내 명리 기준서'
+    : yearlyAccessLabel
+      ? `${targetYear} 올해 전략서`
+      : '내 명리 기준서 미리보기';
+  const heroDescription = hasLifetimeAccess
+    ? '원국 기준을 먼저 읽고, 같은 기준 위에서 올해 흐름과 월간 달력을 이어봅니다.'
+    : yearlyAccessLabel
+      ? '올해 흐름과 월간 타이밍을 먼저 읽고, 필요하면 평생 소장 기준서로 확장합니다.'
+      : '결제 전에는 기준서가 어떤 순서로 읽히는지 먼저 보여드리고, 필요한 경우 소장권으로 이어집니다.';
+  const readingSteps = hasLifetimeAccess
+    ? [
+        {
+          label: '기준서',
+          title: '명리 기준서 본문',
+          description: '타고난 구조와 평생 흐름을 먼저 읽습니다.',
+          href: '#premium-lifetime',
+          status: '열림',
+        },
+        {
+          label: '올해',
+          title: `${targetYear} 올해 전략서`,
+          description: '올해 주제와 분야별 선택 기준을 이어봅니다.',
+          href: '#premium-yearly',
+          status: '열림',
+        },
+        {
+          label: '달별',
+          title: '달별 흐름',
+          description: '월간 타이밍과 해금한 달을 다시 확인합니다.',
+          href: '#premium-calendar',
+          status: '연결',
+        },
+      ]
+    : yearlyAccessLabel
+      ? [
+          {
+            label: '올해',
+            title: `${targetYear} 올해 전략서`,
+            description: '구독 권한으로 열린 올해 흐름을 먼저 읽습니다.',
+            href: '#premium-yearly',
+            status: '열림',
+          },
+          {
+            label: '달별',
+            title: '달별 흐름',
+            description: '월간 타이밍과 해금한 달을 다시 확인합니다.',
+            href: '#premium-calendar',
+            status: '연결',
+          },
+          {
+            label: '확장',
+            title: '평생 소장 기준서',
+            description: '원국과 대운 기준을 오래 남기는 상품입니다.',
+            href: '#premium-upgrade',
+            status: '선택',
+          },
+        ]
+      : [
+          {
+            label: '미리보기',
+            title: '기준서 미리보기',
+            description: '결제 전 본문 구성과 소장 가치를 확인합니다.',
+            href: '#premium-preview',
+            status: '공개',
+          },
+          {
+            label: '달별',
+            title: '달별 흐름',
+            description: '월간 흐름 구조를 먼저 살펴봅니다.',
+            href: '#premium-calendar',
+            status: '일부',
+          },
+          {
+            label: '샘플',
+            title: '샘플 기준서',
+            description: '완성형 리포트의 읽기 방식을 봅니다.',
+            href: REPORT_SAMPLE_HREF,
+            status: '보기',
+          },
+        ];
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -341,127 +425,87 @@ export default async function SajuPremiumPage({ params }: Props) {
 
         <section className="moon-lunar-panel p-7 sm:p-8">
           <div className="app-starfield" />
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-              {hasLifetimeAccess
-                ? '명리 기준서 · 전체 열람'
-                : yearlyAccessLabel
-                  ? '연간 전략 부록 · 전체 열람'
-                  : '명리 기준서 · 미리보기'}
-            </Badge>
-          </div>
-          <h1 className="mt-5 font-display text-4xl text-[var(--app-ivory)] sm:text-5xl">
-            {hasLifetimeAccess
-              ? '명리 기준서와 올해 부록이 열렸습니다'
-              : yearlyAccessLabel
-                ? `${targetYear} 연간 전략 부록이 열렸습니다`
-                : '명리 기준서 전체 보기'}
-          </h1>
-          <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
-            명리 기준서는 원국의 바탕을 읽는 본문이고, 올해 부록은 같은 기준 위에서 올해의 흐름을
-            적용해 보는 확장판입니다.
-          </p>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
-            격국, 용신, 대운의 판정은 계산 기준을 먼저 고정하고, AI는 그 결과를 읽기 쉬운 문장으로만 풀어드립니다.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href="/about-engine"
-              className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
-            >
-              계산 기준서 보기
-            </Link>
-            <Link
-              href={
-                hasLifetimeAccess
-                  ? '#lifetime-evidence'
-                  : yearlyAccessLabel
-                    ? '#yearly-evidence'
-                    : '/about-engine#decision-trace'
-              }
-              className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
-            >
-              {hasLifetimeAccess || yearlyAccessLabel ? '판정 근거 먼저 보기' : '판정 근거 예시 보기'}
-            </Link>
+          <div className="grid gap-7 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+            <div>
+              <Badge className="border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+                {heroLabel}
+              </Badge>
+              <h1 className="mt-5 font-display text-4xl text-[var(--app-ivory)] sm:text-5xl">
+                {heroTitle}
+              </h1>
+              <p className="mt-4 max-w-3xl text-base leading-8 text-[var(--app-copy)]">
+                {heroDescription}
+              </p>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
+                이 화면은 설명 글보다 실제 풀이를 먼저 읽도록, 기준서 본문과 올해 전략서, 달별 흐름을 한 줄기로 배치했습니다.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                {readingSteps.map((step) => (
+                  <Link
+                    key={step.href}
+                    href={step.href}
+                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-5 text-sm font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                  >
+                    {step.label} 보기
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <aside className="rounded-[1.35rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] p-5">
+              <div className="app-caption">현재 읽는 순서</div>
+              <div className="mt-4 grid gap-3">
+                {readingSteps.map((step, index) => (
+                  <Link
+                    key={step.title}
+                    href={step.href}
+                    className="group rounded-[1.05rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 transition-colors hover:border-[var(--app-gold)]/30 hover:bg-[var(--app-gold)]/8"
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-sm font-semibold text-[var(--app-gold-text)]">
+                        {index + 1}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-3">
+                          <span className="text-sm font-semibold text-[var(--app-ivory)]">
+                            {step.title}
+                          </span>
+                          <span className="shrink-0 rounded-full border border-[var(--app-line)] px-2.5 py-1 text-[11px] text-[var(--app-copy-soft)]">
+                            {step.status}
+                          </span>
+                        </span>
+                        <span className="mt-1 block text-sm leading-6 text-[var(--app-copy-muted)]">
+                          {step.description}
+                        </span>
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </aside>
           </div>
         </section>
 
-        <SwipeSectionDeck
-          title="명리 기준서를 한 화면씩 넘겨 봅니다"
-          description="기준 글, 본문, 연간 부록, 월간 달력을 나눠서 너무 길게 내려가지 않도록 정리했습니다."
-        >
-          <SwipeSectionSlide
-            eyebrow="기준"
-            title="이 리포트와 이어지는 기준 글"
-            description="격국, 용신, 대운처럼 실제 판정을 바꾸는 기준만 먼저 모았습니다."
-            navLabel="기준"
-          >
-            <EngineMethodLinks
-              title="지금 보고 있는 명리 기준서와 가장 직접적으로 이어지는 기준 글"
-              description="격국, 용신, 대운, 시간 기준처럼 실제 판정과 행동 조언을 바꾸는 항목만 골라 바로 이어볼 수 있게 두었습니다."
-              slugs={[
-                'why-pattern-judgments-diverge',
-                'why-yongsin-is-hard',
-                'how-to-read-daewoon-and-sewoon-together',
-                'how-far-to-trust-gongmang-and-shinsal',
-              ]}
-              ctaHref="/method"
-              ctaLabel="연결된 읽을거리 전체 보기"
-            />
-          </SwipeSectionSlide>
-
         {hasLifetimeAccess ? (
           <>
-            <SwipeSectionSlide
-              eyebrow="평생 기준서"
-              title="명리 기준서 본문"
-              description="원국과 평생 흐름을 보관형 본문으로 읽습니다."
-              navLabel="기준서"
-            >
+            <div id="premium-lifetime" className="scroll-mt-28">
               <LifetimeReportPanel slug={slug} targetYear={targetYear} />
-            </SwipeSectionSlide>
-            <SwipeSectionSlide
-              eyebrow="연간"
-              title={`${targetYear} 연간 전략 부록`}
-              description="올해 흐름과 분야별 판단 기준을 별도 화면으로 확인합니다."
-              navLabel="연간"
-            >
+            </div>
+            <div id="premium-yearly" className="scroll-mt-28">
               <YearlyReportPanel slug={slug} targetYear={targetYear} />
-            </SwipeSectionSlide>
-            <SwipeSectionSlide
-              eyebrow="월간"
-              title="달별로 보는 흐름"
-              description="좋은 날, 주의할 날, 결정일을 월별 화면에서 확인합니다."
-              navLabel="달력"
-            >
+            </div>
+            <div id="premium-calendar" className="scroll-mt-28">
               <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess />
-            </SwipeSectionSlide>
+            </div>
           </>
         ) : yearlyAccessLabel ? (
           <>
-            <SwipeSectionSlide
-              eyebrow="연간"
-              title={`${targetYear} 연간 전략 부록`}
-              description="구독 권한으로 열린 연간 흐름을 먼저 읽습니다."
-              navLabel="연간"
-            >
+            <div id="premium-yearly" className="scroll-mt-28">
               <YearlyReportPanel slug={slug} targetYear={targetYear} />
-            </SwipeSectionSlide>
-            <SwipeSectionSlide
-              eyebrow="월간"
-              title="달별로 보는 흐름"
-              description="월별 타이밍은 별도 화면에서 넘기며 확인합니다."
-              navLabel="달력"
-            >
+            </div>
+            <div id="premium-calendar" className="scroll-mt-28">
               <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess={false} />
-            </SwipeSectionSlide>
-            <SwipeSectionSlide
-              eyebrow="확장"
-              title="명리 기준서로 확장하기"
-              description="연간 부록과 평생 소장 기준서의 차이를 정리했습니다."
-              navLabel="확장"
-            >
-              <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+            </div>
+            <section id="premium-upgrade" className="grid scroll-mt-28 gap-6 lg:grid-cols-[0.92fr_1.08fr]">
               <article className="moon-lunar-panel p-6">
                 <div className="app-starfield" />
                 <div className="flex flex-wrap items-center gap-2">
@@ -473,7 +517,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                   </Badge>
                 </div>
                 <h2 className="mt-4 font-display text-3xl text-[var(--app-gold-text)]">
-                  연간 전략 부록은 열려 있고, 명리 기준서는 별도로 보관합니다
+                  올해 전략서는 열려 있고, 명리 기준서는 별도로 보관합니다
                 </h2>
                 <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
                   지금 권한으로는 올해 흐름과 월별 타이밍을 모두 읽을 수 있습니다. 다만 평생 소장권은 원국의
@@ -493,7 +537,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                   평생 소장 기준서로 확장하기
                 </div>
                 <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                  연간 전략 부록이 “올해의 흐름”이라면, 평생 소장 기준서는 “내 사주의 원본 해설서”입니다.
+                  올해 전략서가 “올해의 흐름”이라면, 평생 소장 기준서는 “내 사주의 원본 해설서”입니다.
                   같은 근거를 쓰더라도 역할이 다르기 때문에, 원국 중심 기준서는 별도의 보관형 본문으로
                   나뉘어야 합니다.
                 </p>
@@ -526,18 +570,11 @@ export default async function SajuPremiumPage({ params }: Props) {
                   </div>
                 </div>
               </article>
-              </section>
-            </SwipeSectionSlide>
+            </section>
           </>
         ) : (
         <>
-        <SwipeSectionSlide
-          eyebrow="미리보기"
-          title="명리 기준서 미리보기와 구매 선택"
-          description="결제 전 확인할 내용과 기준서 열기 버튼을 한 화면에 모았습니다."
-          navLabel="미리보기"
-        >
-        <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <section id="premium-preview" className="grid scroll-mt-28 gap-6 lg:grid-cols-[0.9fr_1.1fr]">
           <article className="moon-lunar-panel p-6">
             <div className="app-starfield" />
             <div className="app-caption">결제 전 미리보기</div>
@@ -553,9 +590,9 @@ export default async function SajuPremiumPage({ params }: Props) {
             <div className="relative mt-6 overflow-hidden rounded-[1.3rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 py-5">
               <div className="select-none blur-[5px] opacity-65">
                 <p className="text-sm leading-8 text-[var(--app-copy)]">
-                  병화 일주의 특징은 태양이 그러하듯 숨김이 없는 성정입니다. 생각한 것을 곧 말로
-                  꺼내시는 편이고, 한 번 마음을 정하면 곧장 움직이시는 추진력이 큰 장점으로
-                  드러납니다. 다만 그 열기가 오래 이어지면 관계 속에서 피로를 만들 수도 있습니다.
+                  이 일간의 세부 풀이에서는 타고난 표현 방식, 관계에서 피로가 쌓이는 지점,
+                  대운 안에서 오래 가져갈 기준을 이어서 정리합니다. 본문은 개인의 명식 기준으로
+                  다시 쓰이며, 같은 기준서에서 다시 열람할 수 있습니다.
                 </p>
               </div>
               <div className="absolute inset-0 flex items-center justify-center text-5xl text-[var(--app-gold-text)]/90">
@@ -645,18 +682,11 @@ export default async function SajuPremiumPage({ params }: Props) {
             </div>
           </article>
         </section>
-        </SwipeSectionSlide>
-        <SwipeSectionSlide
-          eyebrow="월간"
-          title="달별로 보는 흐름"
-          description="기준서 구매 전에도 월간 흐름 구조를 별도 화면에서 확인합니다."
-          navLabel="달력"
-        >
-        <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess={false} />
-        </SwipeSectionSlide>
+        <div id="premium-calendar" className="scroll-mt-28">
+          <FortuneCalendarPanel slug={slug} targetYear={targetYear} hasLifetimeAccess={false} />
+        </div>
         </>
         )}
-        </SwipeSectionDeck>
       </AppPage>
     </AppShell>
   );
