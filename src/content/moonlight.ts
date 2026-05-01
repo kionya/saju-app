@@ -89,7 +89,19 @@ export const PRIMARY_TABS: readonly MoonlightNavItem[] = [
   {
     label: '해석',
     href: '/interpretation',
-    matchPrefixes: ['/interpretation', '/saju', '/myeongri', '/compatibility', '/star-sign', '/zodiac', '/tarot'],
+    matchPrefixes: [
+      '/interpretation',
+      '/saju',
+      '/myeongri',
+      '/compatibility',
+      '/star-sign',
+      '/zodiac',
+      '/tarot',
+      '/guide',
+      '/method',
+      '/about-engine',
+      '/sample-report',
+    ],
   },
   { label: '대화', href: '/dialogue', matchPrefixes: ['/dialogue'] },
   { label: '마이', href: '/my', matchPrefixes: ['/my', '/membership', '/credits'] },
@@ -102,6 +114,7 @@ export const HEADER_SHORTCUTS: readonly MoonlightNavItem[] = [
   { label: '궁합', href: '/compatibility', matchPrefixes: ['/compatibility'], tone: 'service' },
   { label: '별자리', href: '/star-sign', matchPrefixes: ['/star-sign'], tone: 'service' },
   { label: '띠운세', href: '/zodiac', matchPrefixes: ['/zodiac'], tone: 'service' },
+  { label: '안내', href: '/guide', matchPrefixes: ['/guide', '/method', '/about-engine', '/sample-report'], tone: 'service' },
 ] as const;
 
 export const HOME_DAILY_LINES = [

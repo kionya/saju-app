@@ -17,14 +17,12 @@ import { SupportRail } from '@/components/layout/support-rail';
 import { ReportKeepsakeSection } from '@/components/report/report-keepsake-section';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { MoonlightHeroVideo } from '@/components/home/moonlight-hero-video';
-import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
 import { trackMoonlightEvent } from '@/lib/analytics';
 import type { ConcernId } from '@/lib/today-fortune/types';
 import { AppShell } from '@/shared/layout/app-shell';
 import {
   HOME_DAILY_LINES,
-  INTERPRETATION_LAYERS,
   REPORT_SAMPLE_HREF,
   WISDOM_CARDS,
   toneClasses,
@@ -89,29 +87,6 @@ const PREMIUM_HERO_TOKENS = [
   { label: '기준서 핵심', value: '원국 · 격국 · 용신 · 대운' },
   { label: '신뢰 장치', value: '판정 근거 · KASI 대조' },
   { label: '소장 가치', value: 'PDF · MY 보관함' },
-] as const;
-
-const TRUST_PILLARS = [
-  {
-    label: '기준',
-    title: 'AI가 명식을 추측하지 않습니다',
-    body: '명식과 운의 구조는 먼저 계산하고, 설명은 그 결과를 이해하기 쉽게 풀어드립니다.',
-  },
-  {
-    label: '정밀',
-    title: '출생시각·출생지·절기 기준을 반영합니다',
-    body: '분 단위 시간과 출생지를 함께 보고, 절기와 시간 경계가 가까운 경우는 더 보수적으로 읽습니다.',
-  },
-  {
-    label: '근거',
-    title: '격국·용신 판정 근거를 보여드립니다',
-    body: '강약, 격국 후보, 용신 후보, KASI 대조를 결과 화면에서 직접 확인할 수 있도록 남깁니다.',
-  },
-  {
-    label: '소장',
-    title: 'PDF와 보관함으로 오래 남깁니다',
-    body: '명리 기준서는 PDF와 MY 보관함으로 이어지고, 이후 월운과 대화도 같은 기준 위에서 계속 이어집니다.',
-  },
 ] as const;
 
 const PREMIUM_PROOF_POINTS = [
@@ -318,10 +293,10 @@ export default function HomePage() {
 
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-[var(--app-copy-muted)]">
             <Link
-              href="/about-engine#decision-trace"
+              href="/guide"
               className="inline-flex items-center gap-2 text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
             >
-              판정 근거 먼저 보기
+              이용 안내 보기
             </Link>
             <span className="hidden h-1 w-1 rounded-full bg-[var(--app-copy-soft)] md:block" />
             <Link
@@ -332,29 +307,21 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="max-w-3xl text-center">
-            <p className="text-sm font-medium text-[var(--app-gold-text)]">
-              좋은 해석은 말맛보다 기준에서 먼저 갈립니다.
-            </p>
-            <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">
-              달빛선생은 AI가 사주를 즉흥적으로 추측하지 않습니다. 출생 정보로 명식과 운의 구조를 먼저 계산하고,
-              선생의 말투는 그 결과를 이해하기 쉽게 풀어주는 역할만 맡습니다.
-            </p>
-          </div>
-
-          <div className="grid w-full max-w-6xl gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {TRUST_PILLARS.map((item) => (
-              <article
-                key={item.title}
-                className="rounded-[1.45rem] border border-[var(--app-line)] bg-[rgba(7,13,28,0.6)] px-5 py-5 text-left backdrop-blur"
-              >
-                <div className="app-caption text-[var(--app-gold-text)]">{item.label}</div>
-                <h2 className="font-display mt-3 text-lg font-semibold leading-7 text-[var(--app-ivory)]">
-                  {item.title}
-                </h2>
-                <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{item.body}</p>
-              </article>
-            ))}
+          <div className="flex max-w-3xl flex-wrap items-center justify-center gap-2 text-center text-sm text-[var(--app-copy)]">
+            <span>계산 기준과 읽는 법은 안내 메뉴에 모아두었습니다.</span>
+            <Link
+              href="/method"
+              className="text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+            >
+              기준 보기
+            </Link>
+            <span className="text-[var(--app-copy-soft)]">·</span>
+            <Link
+              href="/about-engine#decision-trace"
+              className="text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+            >
+              판정 흐름
+            </Link>
           </div>
 
           <SectionSurface
@@ -366,9 +333,9 @@ export default function HomePage() {
               <div className="space-y-5">
                 <SectionHeader
                   eyebrow="샘플 기준서 미리보기"
-                  title="한 번의 해석이 오래 남도록, 기준과 근거를 먼저 보여드립니다"
+                  title="받게 될 리포트를 짧게 미리 봅니다"
                   titleClassName="text-2xl"
-                  description="샘플 리포트는 실제 명리 기준서가 어떤 순서로 읽히는지, 무엇이 먼저 보이고 어디서 판정 근거를 확인하는지를 짧게 훑어보는 입구입니다."
+                  description="실제 결과가 어떤 순서로 보이는지, 요약과 본문, 보관 흐름만 빠르게 확인하는 입구입니다."
                   descriptionClassName="max-w-2xl text-[var(--app-copy)]"
                 />
                 <ActionCluster>
@@ -379,16 +346,14 @@ export default function HomePage() {
                     샘플 리포트 펼쳐보기
                   </Link>
                   <Link
-                    href="/about-engine"
+                    href="/guide"
                     className="inline-flex items-center gap-2 px-1 py-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
                   >
-                    계산 기준서 보기
+                    읽는 법 보기
                   </Link>
                 </ActionCluster>
                 <div className="rounded-[1.05rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]">
-                  결과를 보기 전에 <span className="text-[var(--app-gold-text)]">1분 요약</span>과{' '}
-                  <span className="text-[var(--app-gold-text)]">판정 근거</span>, 그리고{' '}
-                  <span className="text-[var(--app-gold-text)]">소장 흐름</span>이 어떻게 이어지는지 먼저 확인하실 수 있습니다.
+                  핵심 요약, 상세 본문, PDF와 보관함까지 한 화면 흐름으로 확인하실 수 있습니다.
                 </div>
               </div>
 
@@ -408,7 +373,7 @@ export default function HomePage() {
                   items={[
                     {
                       title: '미리보기 범위',
-                      body: '샘플 페이지는 계산 정확도 자체를 과장하지 않고, 실제로 어떤 구조의 리포트를 받게 되는지 먼저 보여주는 브로셔 역할을 맡습니다.',
+                      body: '샘플은 리포트 화면 구조를 확인하는 용도입니다. 실제 풀이는 입력 정보로 생성됩니다.',
                     },
                   ]}
                 />
@@ -632,20 +597,6 @@ export default function HomePage() {
         </section>
 
         <section className="reveal-on-scroll mb-12">
-          <EngineMethodLinks
-            title="달빛선생이 왜 이렇게 읽는지, 짧게 먼저 보셔도 좋습니다"
-            description="홈에서 가장 많이 이어지는 질문은 세 가지입니다. 왜 AI마다 결과가 다른지, 왜 분 단위 시간과 출생지를 묻는지, 시간을 모를 때는 어디까지 읽을 수 있는지부터 짧게 정리해 두었습니다."
-            slugs={[
-              'why-ai-saju-can-drift',
-              'what-is-true-solar-time',
-              'what-if-birth-hour-is-unknown',
-            ]}
-            ctaHref="/method"
-            ctaLabel="기준 읽을거리 전체 보기"
-          />
-        </section>
-
-        <section className="reveal-on-scroll mb-12">
           <SectionHeader
             align="center"
             eyebrow="고민별 리포트"
@@ -731,21 +682,25 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
-              {INTERPRETATION_LAYERS.map((layer) => (
-                <div key={layer.title} className="app-panel-muted p-5">
-                  <div className="font-semibold text-[var(--app-ivory)]">{layer.title}</div>
-                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">{layer.body}</p>
-                  <ul className="mt-4 space-y-2 text-sm text-[var(--app-copy)]">
-                    {layer.items.map((item) => (
-                      <li key={item} className="flex gap-2">
-                        <span className="mt-[0.38rem] h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--app-gold)]/70" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <Link
+                href={selectedWisdom.href}
+                className={cn(
+                  'inline-flex h-11 items-center justify-center gap-2 rounded-full border px-5 text-sm font-medium transition-colors',
+                  selectedTone.border,
+                  selectedTone.bg,
+                  selectedTone.text
+                )}
+              >
+                {selectedWisdom.title} 바로 열기
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/guide"
+                className="inline-flex items-center gap-2 px-1 py-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+              >
+                해석 종류 읽는 법
+              </Link>
             </div>
           </article>
         </section>
