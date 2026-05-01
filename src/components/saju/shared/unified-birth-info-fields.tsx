@@ -36,6 +36,7 @@ interface UnifiedBirthInfoFieldsProps {
   draft: UnifiedBirthEntryDraft;
   onChange: (patch: Partial<UnifiedBirthEntryDraft>) => void;
   onStarted?: () => void;
+  idPrefix?: string;
   dateInputVariant?: 'input' | 'select';
   locationLoading: boolean;
   locationMessage: string;
@@ -71,6 +72,7 @@ export function UnifiedBirthInfoFields({
   draft,
   onChange,
   onStarted,
+  idPrefix = 'unified',
   dateInputVariant = 'input',
   locationLoading,
   locationMessage,
@@ -85,6 +87,7 @@ export function UnifiedBirthInfoFields({
     [draft.month, draft.year]
   );
   const timeRuleDisabled = draft.unknownBirthTime;
+  const fieldId = (name: string) => `${idPrefix}-${name}`;
 
   function applyDateSelectPatch(
     patch: Partial<UnifiedBirthEntryDraft> & Pick<UnifiedBirthEntryDraft, 'year' | 'month' | 'day'>
@@ -132,12 +135,12 @@ export function UnifiedBirthInfoFields({
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div>
-            <Label htmlFor="unified-birth-year" className="mb-2 block text-sm text-[var(--app-copy)]">
+            <Label htmlFor={fieldId('birth-year')} className="mb-2 block text-sm text-[var(--app-copy)]">
               년
             </Label>
             {dateInputVariant === 'select' ? (
               <select
-                id="unified-birth-year"
+                id={fieldId('birth-year')}
                 name="moonlight-birth-year"
                 value={draft.year}
                 onChange={(event) => {
@@ -155,7 +158,7 @@ export function UnifiedBirthInfoFields({
               </select>
             ) : (
               <Input
-                id="unified-birth-year"
+                id={fieldId('birth-year')}
                 name="moonlight-birth-year"
                 value={draft.year}
                 onChange={(event) => {
@@ -169,12 +172,12 @@ export function UnifiedBirthInfoFields({
             )}
           </div>
           <div>
-            <Label htmlFor="unified-birth-month" className="mb-2 block text-sm text-[var(--app-copy)]">
+            <Label htmlFor={fieldId('birth-month')} className="mb-2 block text-sm text-[var(--app-copy)]">
               월
             </Label>
             {dateInputVariant === 'select' ? (
               <select
-                id="unified-birth-month"
+                id={fieldId('birth-month')}
                 name="moonlight-birth-month"
                 value={draft.month}
                 onChange={(event) => {
@@ -192,7 +195,7 @@ export function UnifiedBirthInfoFields({
               </select>
             ) : (
               <Input
-                id="unified-birth-month"
+                id={fieldId('birth-month')}
                 name="moonlight-birth-month"
                 value={draft.month}
                 onChange={(event) => {
@@ -206,12 +209,12 @@ export function UnifiedBirthInfoFields({
             )}
           </div>
           <div>
-            <Label htmlFor="unified-birth-day" className="mb-2 block text-sm text-[var(--app-copy)]">
+            <Label htmlFor={fieldId('birth-day')} className="mb-2 block text-sm text-[var(--app-copy)]">
               일
             </Label>
             {dateInputVariant === 'select' ? (
               <select
-                id="unified-birth-day"
+                id={fieldId('birth-day')}
                 name="moonlight-birth-day"
                 value={draft.day}
                 onChange={(event) => {
@@ -229,7 +232,7 @@ export function UnifiedBirthInfoFields({
               </select>
             ) : (
               <Input
-                id="unified-birth-day"
+                id={fieldId('birth-day')}
                 name="moonlight-birth-day"
                 value={draft.day}
                 onChange={(event) => {
@@ -246,11 +249,11 @@ export function UnifiedBirthInfoFields({
 
         <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
           <div>
-            <Label htmlFor="unified-birth-hour" className="mb-2 block text-sm text-[var(--app-copy)]">
+            <Label htmlFor={fieldId('birth-hour')} className="mb-2 block text-sm text-[var(--app-copy)]">
               태어난 시간
             </Label>
             <select
-              id="unified-birth-hour"
+              id={fieldId('birth-hour')}
               name="moonlight-birth-hour"
               value={draft.hour}
               onChange={(event) => {
@@ -270,11 +273,11 @@ export function UnifiedBirthInfoFields({
             </select>
           </div>
           <div>
-            <Label htmlFor="unified-birth-minute" className="mb-2 block text-sm text-[var(--app-copy)]">
+            <Label htmlFor={fieldId('birth-minute')} className="mb-2 block text-sm text-[var(--app-copy)]">
               분
             </Label>
             <Input
-              id="unified-birth-minute"
+              id={fieldId('birth-minute')}
               name="moonlight-birth-minute"
               value={draft.minute}
               onChange={(event) => {
@@ -334,12 +337,12 @@ export function UnifiedBirthInfoFields({
 
       <div className="space-y-4">
         <div>
-          <Label htmlFor="unified-birth-location" className="mb-2 block text-sm text-[var(--app-copy)]">
+          <Label htmlFor={fieldId('birth-location')} className="mb-2 block text-sm text-[var(--app-copy)]">
             출생지
           </Label>
           <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
             <Input
-              id="unified-birth-location"
+              id={fieldId('birth-location')}
               name="moonlight-birth-location"
               value={draft.birthLocationLabel}
               onChange={(event) => {
@@ -410,11 +413,11 @@ export function UnifiedBirthInfoFields({
         ) : null}
 
         <div>
-          <Label htmlFor="unified-time-rule" className="mb-2 block text-sm text-[var(--app-copy)]">
-            timeRule
+          <Label htmlFor={fieldId('time-rule')} className="mb-2 block text-sm text-[var(--app-copy)]">
+            시간 기준
           </Label>
           <select
-            id="unified-time-rule"
+            id={fieldId('time-rule')}
             name="moonlight-time-rule"
             value={draft.timeRule}
             onChange={(event) => {
