@@ -1,6 +1,20 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  BriefcaseBusiness,
+  CalendarDays,
+  CheckCircle2,
+  Heart,
+  MapPinned,
+  Sparkles,
+  UsersRound,
+  WalletCards,
+  type LucideIcon,
+} from 'lucide-react';
 import { GroundingKasiSummary } from '@/components/ai/grounding-kasi-summary';
 import { EngineMethodLinks } from '@/components/content/engine-method-links';
 import { Badge } from '@/components/ui/badge';
@@ -73,6 +87,7 @@ const CORE_CATEGORY_GUIDE = {
   work: {
     label: '직장운',
     eyebrow: '일과 평가',
+    icon: BriefcaseBusiness,
     opportunityLabel: '기회 장면',
     cautionLabel: '주의 장면',
     actionLabel: '실행 기준',
@@ -80,6 +95,7 @@ const CORE_CATEGORY_GUIDE = {
   wealth: {
     label: '재물운',
     eyebrow: '돈의 흐름',
+    icon: WalletCards,
     opportunityLabel: '돈 기회',
     cautionLabel: '새는 장면',
     actionLabel: '돈 기준',
@@ -87,6 +103,7 @@ const CORE_CATEGORY_GUIDE = {
   love: {
     label: '연애운',
     eyebrow: '가까운 관계',
+    icon: Heart,
     opportunityLabel: '통하는 장면',
     cautionLabel: '엉키는 장면',
     actionLabel: '표현 기준',
@@ -94,6 +111,7 @@ const CORE_CATEGORY_GUIDE = {
   relationship: {
     label: '관계운',
     eyebrow: '사람과 거리',
+    icon: UsersRound,
     opportunityLabel: '살리는 장면',
     cautionLabel: '긁히는 장면',
     actionLabel: '거리 기준',
@@ -102,19 +120,42 @@ const CORE_CATEGORY_GUIDE = {
 
 const MOMENTUM_META: Record<
   YearlyMonthFlow['momentum'],
-  { label: string; badgeClassName: string }
+  {
+    label: string;
+    shortLabel: string;
+    guideLabel: string;
+    icon: LucideIcon;
+    badgeClassName: string;
+    panelClassName: string;
+    dotClassName: string;
+  }
 > = {
   rise: {
     label: '밀어도 되는 달',
+    shortLabel: '좋음',
+    guideLabel: '밀어도 되는 달',
+    icon: CheckCircle2,
     badgeClassName: 'border-emerald-400/25 bg-emerald-400/10 text-emerald-100',
+    panelClassName: 'border-emerald-400/24 bg-emerald-400/8',
+    dotClassName: 'border-emerald-300/30 bg-emerald-300/14 text-emerald-100',
   },
   steady: {
     label: '정리하는 달',
+    shortLabel: '정리',
+    guideLabel: '차분히 정리할 달',
+    icon: Sparkles,
     badgeClassName: 'border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]',
+    panelClassName: 'border-[var(--app-line)] bg-[rgba(255,255,255,0.035)]',
+    dotClassName: 'border-[var(--app-line)] bg-[rgba(255,255,255,0.045)] text-[var(--app-copy)]',
   },
   caution: {
     label: '한 번 더 확인할 달',
+    shortLabel: '확인',
+    guideLabel: '한 번 더 확인할 달',
+    icon: AlertTriangle,
     badgeClassName: 'border-rose-400/25 bg-rose-400/10 text-rose-100',
+    panelClassName: 'border-rose-400/24 bg-rose-400/8',
+    dotClassName: 'border-rose-300/30 bg-rose-300/14 text-rose-100',
   },
 };
 
@@ -189,18 +230,152 @@ function normalizeMonthlyFlows(
   return interpretation.monthlyFlows.map(buildMonthlyFallback);
 }
 
+function groupMonthlyFlowsByMomentum(monthlyFlows: YearlyMonthFlow[]) {
+  return {
+    rise: monthlyFlows.filter((flow) => flow.momentum === 'rise'),
+    caution: monthlyFlows.filter((flow) => flow.momentum === 'caution'),
+    steady: monthlyFlows.filter((flow) => flow.momentum === 'steady'),
+  };
+}
+
+function formatMonthList(flows: YearlyMonthFlow[]) {
+  if (flows.length === 0) return '해당 월 없음';
+  return flows.map((flow) => `${flow.month}월`).join(' · ');
+}
+
+function getTopAreaLabel(flow: YearlyMonthFlow) {
+  return flow.relatedAreas
+    .slice(0, 2)
+    .map((area) => YEARLY_AREA_LABEL[area])
+    .join(' · ');
+}
+
+function MomentumSummaryCard({
+  tone,
+  flows,
+}: {
+  tone: YearlyMonthFlow['momentum'];
+  flows: YearlyMonthFlow[];
+}) {
+  const meta = MOMENTUM_META[tone];
+  const Icon = meta.icon;
+
+  return (
+    <article className={`rounded-[22px] border px-4 py-4 ${meta.panelClassName}`}>
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-current/25 bg-black/10">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <div className="text-sm font-semibold text-[var(--app-ivory)]">{meta.guideLabel}</div>
+          <div className="mt-1 text-2xl font-semibold text-[var(--app-gold-text)]">
+            {flows.length}개월
+          </div>
+          <p className="mt-2 text-sm leading-6 text-[var(--app-copy)]">{formatMonthList(flows)}</p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function YearlyVisualMap({ report }: { report: SajuYearlyReport }) {
+  const grouped = groupMonthlyFlowsByMomentum(report.monthlyFlows);
+  const highlightedGood = report.goodPeriods[0];
+  const highlightedCaution = report.cautionPeriods[0];
+
+  return (
+    <section className="mt-6 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <article className="rounded-[28px] border border-[var(--app-gold)]/20 bg-[rgba(210,176,114,0.075)] px-5 py-5">
+        <div className="flex items-center gap-2">
+          <MapPinned className="h-5 w-5 text-[var(--app-gold-text)]" aria-hidden="true" />
+          <div className="app-caption text-[var(--app-gold-soft)]">연간 지도</div>
+        </div>
+        <h3 className="mt-3 text-2xl font-semibold leading-8 text-[var(--app-ivory)]">
+          먼저 색으로 보고, 필요한 달만 펼칩니다
+        </h3>
+        <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+          열두 달을 전부 긴 글로 읽기 전에, 밀어도 되는 달과 한 번 더 확인할 달을 먼저 나눠 봅니다.
+        </p>
+        <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+          <MomentumSummaryCard tone="rise" flows={grouped.rise} />
+          <MomentumSummaryCard tone="caution" flows={grouped.caution} />
+          <MomentumSummaryCard tone="steady" flows={grouped.steady} />
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {highlightedGood ? (
+            <div className="rounded-[18px] border border-emerald-400/18 bg-emerald-400/6 px-4 py-3">
+              <div className="app-caption text-emerald-100">가장 쓰기 좋은 구간</div>
+              <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">
+                {highlightedGood.months.map((month) => `${month}월`).join(' · ')} · {highlightedGood.strategy}
+              </p>
+            </div>
+          ) : null}
+          {highlightedCaution ? (
+            <div className="rounded-[18px] border border-rose-400/18 bg-rose-400/6 px-4 py-3">
+              <div className="app-caption text-rose-100">확인이 필요한 구간</div>
+              <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">
+                {highlightedCaution.months.map((month) => `${month}월`).join(' · ')} · {highlightedCaution.strategy}
+              </p>
+            </div>
+          ) : null}
+        </div>
+      </article>
+
+      <article className="rounded-[28px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
+        <div className="flex items-center gap-2">
+          <CalendarDays className="h-5 w-5 text-[var(--app-gold-text)]" aria-hidden="true" />
+          <div className="app-caption text-[var(--app-gold-soft)]">12개월 흐름 레일</div>
+        </div>
+        <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {report.monthlyFlows.map((flow) => {
+            const meta = MOMENTUM_META[flow.momentum];
+
+            return (
+              <a
+                key={`year-map-${flow.month}`}
+                href={`#yearly-month-${flow.month}`}
+                className={`group rounded-[18px] border px-3 py-3 transition-colors hover:border-[var(--app-gold)]/36 ${meta.dotClassName}`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-base font-semibold">{flow.month}월</span>
+                  <span className="rounded-full border border-current/20 px-2 py-0.5 text-[10px]">
+                    {meta.shortLabel}
+                  </span>
+                </div>
+                <p className="mt-2 text-[11px] leading-5 text-[var(--app-copy)]">
+                  {getTopAreaLabel(flow)}
+                </p>
+              </a>
+            );
+          })}
+        </div>
+        <p className="mt-4 text-sm leading-7 text-[var(--app-copy-muted)]">
+          색이 진한 달부터 확인하고, 나머지는 일정이 생길 때 다시 열어보는 방식이 가장 덜 피곤합니다.
+        </p>
+      </article>
+    </section>
+  );
+}
+
 function MonthlyFlowCard({ flow }: { flow: YearlyMonthFlow }) {
   const momentumMeta = MOMENTUM_META[flow.momentum];
   const areaLabel = flow.relatedAreas.map((area) => YEARLY_AREA_LABEL[area]).join(' · ');
+  const MomentumIcon = momentumMeta.icon;
 
   return (
-    <article className="rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
+    <article
+      id={`yearly-month-${flow.month}`}
+      className="scroll-mt-28 rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <div className="app-caption text-[var(--app-gold-soft)]">{flow.month}월</div>
           <div className="mt-1 text-xs text-[var(--app-copy-soft)]">{areaLabel}</div>
         </div>
-        <Badge className={momentumMeta.badgeClassName}>{momentumMeta.label}</Badge>
+        <Badge className={`${momentumMeta.badgeClassName} gap-1.5`}>
+          <MomentumIcon className="h-3.5 w-3.5" aria-hidden="true" />
+          {momentumMeta.label}
+        </Badge>
       </div>
 
       <p className="mt-3 text-sm leading-7 text-[var(--app-ivory)]">{tightenUiLine(flow.summary, 104)}</p>
@@ -271,33 +446,50 @@ function CoreAreaCard({
   prose: string;
 }) {
   const meta = CORE_CATEGORY_GUIDE[item.key];
+  const Icon = meta.icon;
 
   return (
     <article className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="app-caption text-[var(--app-gold-soft)]">{meta.eyebrow}</div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+            <Icon className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div>
+            <div className="app-caption text-[var(--app-gold-soft)]">{meta.eyebrow}</div>
+            <h3 className="mt-1 text-xl font-semibold text-[var(--app-ivory)]">{item.label}</h3>
+          </div>
+        </div>
         {item.scoreLabel ? (
-          <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]">
+          <Badge className="shrink-0 border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]">
             {item.scoreLabel}
           </Badge>
         ) : null}
       </div>
-      <h3 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">{item.label}</h3>
       <div className="mt-4 grid gap-3">
         <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
           <div className="app-caption text-[var(--app-gold-soft)]">올해 핵심</div>
           <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(item.summary, 104)}</p>
         </div>
         <div className="rounded-[18px] border border-emerald-400/18 bg-emerald-400/6 px-4 py-3">
-          <div className="app-caption text-emerald-100">{meta.opportunityLabel}</div>
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-100">
+            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+            {meta.opportunityLabel}
+          </div>
           <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(item.opportunity, 100)}</p>
         </div>
         <div className="rounded-[18px] border border-rose-400/18 bg-rose-400/6 px-4 py-3">
-          <div className="app-caption text-rose-100">{meta.cautionLabel}</div>
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-rose-100">
+            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
+            {meta.cautionLabel}
+          </div>
           <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(item.caution, 100)}</p>
         </div>
         <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
-          <div className="app-caption text-[var(--app-gold-soft)]">{meta.actionLabel}</div>
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--app-gold-soft)]">
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+            {meta.actionLabel}
+          </div>
           <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(item.action, 88)}</p>
         </div>
       </div>
@@ -340,10 +532,19 @@ function SupportAreaCard({
   prose: string;
   basis: string[];
 }) {
+  const Icon = label.startsWith('건강') ? Activity : MapPinned;
+
   return (
     <article className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
-      <div className="app-caption text-[var(--app-gold-soft)]">{eyebrow}</div>
-      <h3 className="mt-3 text-lg font-semibold text-[var(--app-ivory)]">{label}</h3>
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[1rem] border border-[var(--app-gold)]/20 bg-[var(--app-gold)]/8 text-[var(--app-gold-text)]">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div>
+          <div className="app-caption text-[var(--app-gold-soft)]">{eyebrow}</div>
+          <h3 className="mt-1 text-lg font-semibold text-[var(--app-ivory)]">{label}</h3>
+        </div>
+      </div>
       <div className="mt-4 space-y-3">
         <p className="text-sm leading-7 text-[var(--app-copy)]">{section.summary}</p>
         <p className="text-sm leading-7 text-[var(--app-copy-muted)]">{section.caution}</p>
@@ -471,10 +672,14 @@ function TimingSummaryBlock({
   tone: 'good' | 'caution';
 }) {
   const eyebrowClassName = tone === 'good' ? 'text-emerald-100' : 'text-rose-100';
+  const Icon = tone === 'good' ? CheckCircle2 : AlertTriangle;
 
   return (
     <article className="rounded-[24px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
-      <div className={`app-caption ${eyebrowClassName}`}>{title}</div>
+      <div className={`flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] ${eyebrowClassName}`}>
+        <Icon className="h-4 w-4" aria-hidden="true" />
+        {title}
+      </div>
       <div className="mt-4 space-y-3">
         {items.map((item) => (
           <p key={item} className="text-sm leading-7 text-[var(--app-copy)]">
@@ -643,6 +848,8 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
         </p>
         <div className="mt-4 space-y-3">{renderCompactParagraphs(interpretation.opening, 2)}</div>
       </div>
+
+      <YearlyVisualMap report={data.report} />
 
       <div className="mt-6">
         <div className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--app-gold-soft)]">
