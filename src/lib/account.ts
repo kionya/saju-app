@@ -72,6 +72,19 @@ function buildLocalPreviewDashboard(): AccountDashboardData {
   };
 }
 
+function getResponseErrorMessage(error: unknown) {
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String(error.message ?? '알 수 없는 오류가 발생했습니다.');
+  }
+
+  return '알 수 없는 오류가 발생했습니다.';
+}
+
+function assertAccountQueryOk(error: unknown, label: string) {
+  if (!error) return;
+  throw new Error(`${label} 정보를 불러오지 못했습니다. ${getResponseErrorMessage(error)}`);
+}
+
 export async function requireAccount(redirectPath: string) {
   const supabase = await createClient();
   const {
@@ -124,6 +137,11 @@ export async function getAccountDashboardData(
         .order('created_at', { ascending: false })
         .limit(transactionLimit),
     ]);
+
+  assertAccountQueryOk(creditsResponse.error, '코인');
+  assertAccountQueryOk(readingCountResponse.error, '저장 결과 개수');
+  assertAccountQueryOk(readingsResponse.error, '저장 결과 목록');
+  assertAccountQueryOk(transactionsResponse.error, '코인 이용 이력');
 
   const balance = creditsResponse.data?.balance ?? 0;
   const subscriptionBalance = creditsResponse.data?.subscription_balance ?? 0;

@@ -34,8 +34,44 @@ const FEATURE_LABELS: Record<string, string> = {
   calendar: '월간 달력 열기',
   lifetime_report: '명리 기준서 열람',
   yearly_report: '올해 전략서 열람',
+  ai_chat: '대화 이용',
   ai_chat_bundle: '대화 묶음 사용',
 };
+
+function readMetadataString(
+  transaction: Awaited<ReturnType<typeof getAccountDashboardData>>['recentTransactions'][number],
+  key: string
+) {
+  const value = transaction.metadata?.[key];
+  return typeof value === 'string' ? value : '';
+}
+
+function getTransactionFeatureLabel(
+  transaction: Awaited<ReturnType<typeof getAccountDashboardData>>['recentTransactions'][number]
+) {
+  if (transaction.feature === 'detail_report') {
+    const kind = readMetadataString(transaction, 'kind');
+    if (kind === 'today_fortune_premium_access') return '오늘운세 심화풀이';
+    if (kind === 'today_result_followup') return '오늘운세 후속 대화';
+    if (kind === 'detail_report_access') return '상세 해석 열기';
+    if (kind === 'detail_report_daily_access') return '상세 해석 열기';
+    return '상세 해석 이용';
+  }
+
+  if (transaction.feature === 'calendar') {
+    const yearMonth = readMetadataString(transaction, 'yearMonth');
+    return yearMonth ? `${yearMonth} 월간 달력` : '월간 달력 열기';
+  }
+
+  if (transaction.feature === 'ai_chat') {
+    const status = readMetadataString(transaction, 'billingStatus');
+    return status === 'charged_bundle' ? '대화 묶음 사용' : '대화 이용';
+  }
+
+  if (!transaction.feature) return '기본 이용 흐름';
+
+  return FEATURE_LABELS[transaction.feature] ?? transaction.feature;
+}
 
 function getTransactionLabel(transaction: Awaited<ReturnType<typeof getAccountDashboardData>>['recentTransactions'][number]) {
   if (transaction.feature === 'lifetime_report') {
@@ -44,6 +80,10 @@ function getTransactionLabel(transaction: Awaited<ReturnType<typeof getAccountDa
 
   if (transaction.type === 'subscription') {
     return '멤버십 시작';
+  }
+
+  if (transaction.type === 'use') {
+    return getTransactionFeatureLabel(transaction);
   }
 
   return TYPE_LABELS[transaction.type] ?? transaction.type;
@@ -205,9 +245,7 @@ export default async function MyBillingPage() {
                 description={
                   <>
                     <span className="block text-[var(--app-copy-muted)]">
-                      {transaction.feature
-                        ? (FEATURE_LABELS[transaction.feature] ?? transaction.feature)
-                        : '기본 이용 흐름'}
+                      {getTransactionFeatureLabel(transaction)}
                     </span>
                     <span
                       className={`mt-2 block font-semibold ${

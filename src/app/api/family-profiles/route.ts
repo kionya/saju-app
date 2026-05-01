@@ -252,7 +252,10 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    await deleteFamilyProfile(user.id, id);
+    const deleted = await deleteFamilyProfile(user.id, id);
+    if (!deleted) {
+      return NextResponse.json({ error: '삭제할 가족 프로필을 찾지 못했습니다.' }, { status: 404 });
+    }
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(

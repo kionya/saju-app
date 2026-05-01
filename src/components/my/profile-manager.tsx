@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -90,6 +90,51 @@ function toFamilyFormState(profile: FamilyProfile): FamilyFormState {
     birthLatitude: profile.birthLatitude === null ? '' : String(profile.birthLatitude),
     birthLongitude: profile.birthLongitude === null ? '' : String(profile.birthLongitude),
     note: profile.note,
+  };
+}
+
+function toNumberOrNull(value: string) {
+  if (!value) return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toFamilyProfileFromForm(
+  id: string,
+  form: FamilyFormState,
+  createdAt: string
+): FamilyProfile {
+  const birthHour = form.unknownBirthTime ? null : toNumberOrNull(form.hour);
+  const hasLocation = Boolean(
+    form.birthLocationCode ||
+      form.birthLocationLabel ||
+      form.birthLatitude ||
+      form.birthLongitude
+  );
+
+  return {
+    id,
+    label: form.label.trim(),
+    relationship: form.relationship.trim(),
+    calendarType: form.calendarType,
+    timeRule: form.timeRule,
+    birthYear: toNumberOrNull(form.year),
+    birthMonth: toNumberOrNull(form.month),
+    birthDay: toNumberOrNull(form.day),
+    birthHour,
+    birthMinute:
+      form.unknownBirthTime || birthHour === null ? null : toNumberOrNull(form.minute),
+    birthLocationCode: form.birthLocationCode || null,
+    birthLocationLabel: form.birthLocationLabel.trim(),
+    birthLatitude: toNumberOrNull(form.birthLatitude),
+    birthLongitude: toNumberOrNull(form.birthLongitude),
+    solarTimeMode: form.timeRule === 'trueSolarTime' && hasLocation ? 'longitude' : 'standard',
+    gender:
+      form.gender === 'male' || form.gender === 'female'
+        ? form.gender
+        : null,
+    note: form.note.trim(),
+    createdAt,
   };
 }
 
@@ -253,12 +298,17 @@ export default function ProfileManager({
   const [profileForm, setProfileForm] = useState<ProfileFormState>(
     toProfileFormState(initialProfile)
   );
+  const [familyProfiles, setFamilyProfiles] = useState(initialFamilyProfiles);
   const [familyForm, setFamilyForm] = useState<FamilyFormState>(EMPTY_FAMILY_FORM);
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingFamily, setSavingFamily] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingFamilyId, setEditingFamilyId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    setFamilyProfiles(initialFamilyProfiles);
+  }, [initialFamilyProfiles]);
 
   async function saveProfile() {
     setSavingProfile(true);
@@ -269,9 +319,9 @@ export default function ProfileManager({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(profileForm),
       });
-      const data = await response.json();
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
       if (!response.ok) {
-        setMessage(data.error ?? '프로필을 저장하지 못했습니다.');
+        setMessage(data?.error ?? '프로필을 저장하지 못했습니다.');
         return;
       }
       setMessage('내 프로필을 저장했습니다. 오늘운세와 사주 시작하기에서 같은 입력값을 바로 불러옵니다.');
@@ -292,14 +342,36 @@ export default function ProfileManager({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editingFamilyId ? { id: editingFamilyId, ...familyForm } : familyForm),
       });
-      const data = await response.json();
+      const data = (await response.json().catch(() => null)) as {
+        id?: unknown;
+        error?: string;
+      } | null;
       if (!response.ok) {
-        setMessage(data.error ?? '가족 프로필을 저장하지 못했습니다.');
+        setMessage(data?.error ?? '가족 프로필을 저장하지 못했습니다.');
         return;
       }
+      const savedId = typeof data?.id === 'string' ? data.id : editingFamilyId;
+      if (!savedId) {
+        setMessage('가족 프로필은 저장됐지만 화면 갱신 정보가 부족합니다. 잠시 후 다시 확인해 주세요.');
+        router.refresh();
+        return;
+      }
+      const existingCreatedAt =
+        familyProfiles.find((profile) => profile.id === savedId)?.createdAt ??
+        new Date().toISOString();
+      const savedProfile = toFamilyProfileFromForm(savedId, familyForm, existingCreatedAt);
+      setFamilyProfiles((current) =>
+        editingFamilyId
+          ? current.map((profile) => (profile.id === savedId ? savedProfile : profile))
+          : [savedProfile, ...current]
+      );
       setFamilyForm(EMPTY_FAMILY_FORM);
       setEditingFamilyId(null);
-      setMessage(editingFamilyId ? '가족 프로필을 수정했습니다.' : '가족 프로필을 추가했습니다.');
+      setMessage(
+        editingFamilyId
+          ? '가족 프로필을 수정했습니다. 사주 시작하기와 궁합 입력에서도 같은 값으로 불러옵니다.'
+          : '가족 프로필을 추가했습니다. 궁합 입력에서 이름만 눌러 바로 채울 수 있습니다.'
+      );
       router.refresh();
     } catch {
       setMessage('가족 프로필 저장 중 네트워크 오류가 발생했습니다.');
@@ -329,16 +401,18 @@ export default function ProfileManager({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       });
-      const data = await response.json();
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
       if (!response.ok) {
-        setMessage(data.error ?? '가족 프로필을 삭제하지 못했습니다.');
+        setMessage(data?.error ?? '가족 프로필을 삭제하지 못했습니다.');
         return;
       }
       if (editingFamilyId === id) {
         setEditingFamilyId(null);
         setFamilyForm(EMPTY_FAMILY_FORM);
       }
-      setMessage('가족 프로필을 삭제했습니다.');
+      const nextCount = Math.max(0, familyProfiles.length - 1);
+      setFamilyProfiles((current) => current.filter((profile) => profile.id !== id));
+      setMessage(`가족 프로필을 삭제했습니다. 현재 ${nextCount}명을 보관 중입니다.`);
       router.refresh();
     } catch {
       setMessage('가족 프로필 삭제 중 네트워크 오류가 발생했습니다.');
@@ -463,14 +537,14 @@ export default function ProfileManager({
             </p>
           </div>
           <Badge className="border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 text-[var(--app-jade)]">
-            {editingFamilyId ? '수정 중' : '가족 정보 추가'}
+            {editingFamilyId ? '수정 중' : `가족 ${familyProfiles.length}명`}
           </Badge>
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
           <div className="space-y-3">
-            {initialFamilyProfiles.length > 0 ? (
-              initialFamilyProfiles.map((profile) => (
+            {familyProfiles.length > 0 ? (
+              familyProfiles.map((profile) => (
                 <article
                   key={profile.id}
                   className="rounded-[1.2rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4"

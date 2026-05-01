@@ -227,6 +227,20 @@ export async function deleteReadingForUser(id: string, userId: string): Promise<
   return Boolean(data);
 }
 
+export async function getReadingCountForUser(userId: string): Promise<number> {
+  const supabase = await createServiceClient();
+  const { count, error } = await supabase
+    .from('readings')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return count ?? 0;
+}
+
 export async function resolveReading(
   identifier: string
 ): Promise<ReadingRecord | null> {

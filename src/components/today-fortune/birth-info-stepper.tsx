@@ -94,7 +94,13 @@ export function BirthInfoStepper({
       const response = await fetch('/api/profile', { cache: 'no-store' });
       const data = (await response.json().catch(() => null)) as ProfileResponse | null;
 
-      if (!response.ok || !data?.authenticated || !data.profile?.birthYear) {
+      if (
+        !response.ok ||
+        !data?.authenticated ||
+        !data.profile?.birthYear ||
+        !data.profile.birthMonth ||
+        !data.profile.birthDay
+      ) {
         if (!silent) {
           setProfileMessage('MY 프로필에 저장된 출생 정보가 아직 충분하지 않습니다.');
         }

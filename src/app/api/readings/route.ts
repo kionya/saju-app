@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseBirthInputDraft } from '@/domain/saju/validators/birth-input';
 import { toSlug } from '@/lib/saju/pillars';
-import { createReading, deleteReadingForUser } from '@/lib/saju/readings';
+import { createReading, deleteReadingForUser, getReadingCountForUser } from '@/lib/saju/readings';
 import {
   isUnifiedBirthEntryDraft,
   resolveUnifiedBirthInput,
@@ -83,7 +83,9 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: '삭제할 결과를 찾지 못했습니다.' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true });
+    const readingCount = await getReadingCountForUser(user.id);
+
+    return NextResponse.json({ success: true, readingCount });
   } catch (error) {
     return NextResponse.json(
       {

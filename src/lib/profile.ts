@@ -254,7 +254,7 @@ async function writeProfilePayloadWithFallback<
   let currentPayload = payload;
   let response = await write(currentPayload);
 
-  for (let attempt = 0; response.error && attempt < 2; attempt += 1) {
+  for (let attempt = 0; response.error && attempt < 4; attempt += 1) {
     let nextPayload: Record<string, unknown> | null = null;
 
     if (isMissingBirthMinuteColumnError(response.error)) {
@@ -769,11 +769,13 @@ export async function updateFamilyProfile(
 
 export async function deleteFamilyProfile(userId: string, familyProfileId: string) {
   const service = await createServiceClient();
-  const { error } = await service
+  const { data, error } = await service
     .from('family_profiles')
     .delete()
     .eq('id', familyProfileId)
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .select('id')
+    .maybeSingle();
 
   if (error) {
     if (isMissingFamilyProfilesTableError(error)) {
@@ -781,4 +783,6 @@ export async function deleteFamilyProfile(userId: string, familyProfileId: strin
     }
     throw new Error(error.message);
   }
+
+  return Boolean(data);
 }
