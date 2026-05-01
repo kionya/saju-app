@@ -2528,13 +2528,41 @@
     padding-bottom: 0;
   }
 
+  [data-app-layout="horizontal"] .app-top-header-main > .flex {
+    height: 100%;
+    align-items: center;
+  }
+
   [data-app-layout="horizontal"] .app-top-brand {
-    margin-right: 3rem;
-    flex-shrink: 0;
+    margin-right: 1.35rem;
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  [data-app-layout="horizontal"] .app-top-brand-kicker,
+  [data-app-layout="horizontal"] .app-top-brand-context,
+  [data-app-layout="horizontal"] .app-top-context-note {
+    display: none;
+  }
+
+  [data-app-layout="horizontal"] .app-top-brand-title {
+    max-width: 8rem;
+    font-size: 1.22rem;
+    line-height: 1;
+    white-space: nowrap;
   }
 
   [data-app-layout="horizontal"] .app-top-primary-nav {
+    display: flex !important;
+    min-width: 0;
+    flex: 1 1 auto;
     gap: 0.25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  [data-app-layout="horizontal"] .app-top-primary-nav::-webkit-scrollbar {
+    display: none;
   }
 
   [data-app-layout="horizontal"] .app-top-primary-nav a:not(.app-top-credit-chip) {
@@ -2551,6 +2579,7 @@
   }
 
   [data-app-layout="horizontal"] .app-top-actions {
+    flex: 0 0 auto;
     gap: 0.5rem;
   }
 
@@ -3116,6 +3145,241 @@
 
   [data-app-layout="horizontal"] .app-shell-with-navigation .app-shell-content {
     padding-left: 0;
+  }
+}
+
+.pdf-print-page {
+  width: min(100%, 72rem);
+}
+
+.pdf-print-document {
+  overflow: hidden;
+  border: 1px solid var(--app-line-strong);
+  border-radius: 1.6rem;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(212, 176, 106, 0.14), transparent 30%),
+    linear-gradient(180deg, rgba(246, 240, 226, 0.98), rgba(238, 230, 211, 0.96));
+  color: #151515;
+  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.34);
+}
+
+.pdf-print-cover,
+.pdf-print-summary,
+.pdf-print-section,
+.pdf-print-footer {
+  padding: 2rem;
+}
+
+.pdf-print-cover {
+  min-height: 20rem;
+  background:
+    radial-gradient(circle at 80% 20%, rgba(212, 176, 106, 0.32), transparent 26%),
+    linear-gradient(135deg, #101522, #1c2234);
+  color: var(--app-ivory);
+}
+
+.pdf-print-brand {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--app-gold-text);
+}
+
+.pdf-print-kicker,
+.pdf-print-section-kicker {
+  margin-top: 0.85rem;
+  color: #9b7b3d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.pdf-print-cover h1 {
+  margin-top: 1.4rem;
+  max-width: 46rem;
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 5vw, 4rem);
+  line-height: 1.12;
+}
+
+.pdf-print-lead {
+  margin-top: 1.4rem;
+  max-width: 42rem;
+  color: rgba(246, 240, 226, 0.86);
+  font-size: 1.05rem;
+  line-height: 1.85;
+}
+
+.pdf-print-meta {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 2rem;
+  color: rgba(246, 240, 226, 0.72);
+  font-size: 0.92rem;
+}
+
+.pdf-print-summary,
+.pdf-print-section {
+  border-top: 1px solid rgba(27, 31, 44, 0.14);
+}
+
+.pdf-print-summary h2,
+.pdf-print-section h2 {
+  margin-top: 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  line-height: 1.28;
+  color: #161922;
+}
+
+.pdf-print-summary p,
+.pdf-print-section p,
+.pdf-print-section li {
+  color: rgba(20, 24, 34, 0.82);
+  font-size: 1rem;
+  line-height: 1.9;
+}
+
+.pdf-print-paragraphs {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.pdf-print-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1.2rem;
+}
+
+.pdf-print-keywords span {
+  border: 1px solid rgba(155, 123, 61, 0.24);
+  border-radius: 9999px;
+  background: rgba(155, 123, 61, 0.08);
+  padding: 0.45rem 0.8rem;
+  color: #4b3b1f;
+  font-size: 0.86rem;
+}
+
+.pdf-print-rule,
+.pdf-print-cycle,
+.pdf-print-two-column > div {
+  margin-top: 1.1rem;
+  border: 1px solid rgba(27, 31, 44, 0.12);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.52);
+  padding: 1rem;
+}
+
+.pdf-print-cycle-list {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.pdf-print-two-column {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pdf-print-list {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1rem;
+  padding-left: 1.1rem;
+}
+
+.pdf-print-footer {
+  border-top: 1px solid rgba(27, 31, 44, 0.14);
+  color: rgba(20, 24, 34, 0.62);
+  font-size: 0.85rem;
+  line-height: 1.75;
+}
+
+@media (min-width: 768px) {
+  .pdf-print-two-column {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  html,
+  body {
+    background: white !important;
+    color: #151515 !important;
+  }
+
+  body::before,
+  body::after,
+  .pdf-print-actions,
+  .app-desktop-sidebar,
+  .app-top-header,
+  .app-mobile-dock {
+    display: none !important;
+  }
+
+  .app-shell,
+  .app-shell-content,
+  .pdf-print-page {
+    min-height: 0 !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .app-shell::before,
+  .app-shell::after {
+    display: none !important;
+  }
+
+  .pdf-print-document {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+
+  .pdf-print-cover {
+    min-height: 0;
+    color: #151515 !important;
+    background: white !important;
+    page-break-after: always;
+  }
+
+  .pdf-print-cover h1,
+  .pdf-print-summary h2,
+  .pdf-print-section h2 {
+    color: #151515 !important;
+  }
+
+  .pdf-print-brand,
+  .pdf-print-kicker,
+  .pdf-print-section-kicker {
+    color: #7a5d22 !important;
+  }
+
+  .pdf-print-lead,
+  .pdf-print-meta {
+    color: #444 !important;
+  }
+
+  .pdf-print-summary,
+  .pdf-print-section,
+  .pdf-print-footer {
+    break-inside: avoid;
+    padding: 0 0 10mm;
+  }
+
+  .pdf-print-section {
+    page-break-inside: avoid;
   }
 }
 

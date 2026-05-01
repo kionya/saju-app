@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
+import { TrackedLink } from '@/components/common/tracked-link';
 import { Badge } from '@/components/ui/badge';
 import FortuneCalendarPanel from '@/components/ai/fortune-calendar-panel';
 import LifetimeReportPanel from '@/components/ai/lifetime-report-panel';
@@ -559,6 +560,16 @@ export default async function SajuPremiumPage({ params }: Props) {
                     {step.label} 보기
                   </Link>
                 ))}
+                {hasLifetimeAccess ? (
+                  <TrackedLink
+                    href={`/saju/${slug}/premium/print`}
+                    eventName="report_pdf_click"
+                    eventParams={{ slug, from: 'premium_hero', status: 'available' }}
+                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                  >
+                    PDF로 저장하기
+                  </TrackedLink>
+                ) : null}
               </div>
             </div>
             <aside className="rounded-[1.35rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] p-5">

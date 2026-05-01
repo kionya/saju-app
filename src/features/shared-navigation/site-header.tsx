@@ -448,13 +448,13 @@ function MobileChrome({
         <div className="app-top-header-inner app-top-header-main px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="app-top-brand min-w-0">
-              <div className="truncate font-[var(--font-heading)] text-[10px] tracking-[0.42em] text-[var(--app-gold)]/72">
+              <div className="app-top-brand-kicker truncate font-[var(--font-heading)] text-[10px] tracking-[0.42em] text-[var(--app-gold)]/72">
                 月 光 先 生
               </div>
-              <div className="truncate text-xl font-semibold tracking-tight text-[var(--app-ivory)]">
+              <div className="app-top-brand-title truncate text-xl font-semibold tracking-tight text-[var(--app-ivory)]">
                 달빛선생
               </div>
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <div className="app-top-brand-context mt-2 flex flex-wrap items-center gap-1.5">
                 {activePrimaryItem ? (
                   <span className="app-top-context-chip">
                     <span
@@ -483,6 +483,28 @@ function MobileChrome({
               </div>
             </Link>
 
+            <nav className="app-top-primary-nav hidden min-w-0 items-center gap-1 lg:flex" aria-label="주요 메뉴">
+              {PRIMARY_NAV_ITEMS.map((item) => {
+                const active = matchesPath(item, pathname);
+                const meta = getNavMeta(item);
+
+                return (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    data-active={active}
+                    scroll={false}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-[var(--app-copy-muted)] transition-colors hover:bg-[rgba(255,255,255,0.04)] hover:text-[var(--app-ivory)]"
+                  >
+                    <span className="font-[var(--font-heading)]" style={{ color: meta.accent }}>
+                      {meta.glyph}
+                    </span>
+                    <span>{getMobileDockLabel(item)}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
             <div className="app-top-actions flex items-center gap-2">
               <div className="hidden sm:block">
                 <LayoutModeControl compact />
@@ -498,12 +520,21 @@ function MobileChrome({
                 <CreditCard className="h-3.5 w-3.5" />
                 {creditLabel(user, credits)}
               </Link>
+              {user ? (
+                <Link href="/my" className="app-top-action-link hidden lg:inline-flex">
+                  보관
+                </Link>
+              ) : (
+                <Link href={authHref} className="app-top-login hidden lg:inline-flex">
+                  로그인
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen((current) => !current)}
                 aria-expanded={mobileMenuOpen}
                 aria-controls="mobile-global-menu"
-                className="app-mobile-menu-trigger inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                className="app-mobile-menu-trigger inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)] lg:hidden"
                 aria-label={mobileMenuOpen ? '메뉴 닫기' : '메뉴 열기'}
               >
                 {mobileMenuOpen ? <X className="h-4.5 w-4.5" /> : <Grid2x2 className="h-4.5 w-4.5" />}

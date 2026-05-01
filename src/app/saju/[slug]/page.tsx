@@ -10,7 +10,6 @@ import type {
 import { SajuAiInterpretationPanel } from '@/components/ai/saju-ai-interpretation-panel';
 import { ClassicEvidencePanel } from '@/components/classics/classic-evidence-panel';
 import { SafetyNotice } from '@/components/common/safety-notice';
-import { TrackedButton } from '@/components/common/tracked-button';
 import { TrackedLink } from '@/components/common/tracked-link';
 import { ActionCluster } from '@/components/layout/action-cluster';
 import { FeatureCard } from '@/components/layout/feature-card';
@@ -614,7 +613,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                   eyebrow="다음 단계"
                   title="핵심과 근거를 확인하셨다면, 필요한 깊이만 바로 이어보실 수 있습니다"
                   titleClassName="text-3xl"
-                  description="심층 리포트는 더 긴 기준서로, 대화는 지금 막 확인한 결과를 이어 묻는 흐름으로 연결됩니다. PDF는 기능 준비 전이라도 관심도를 먼저 확인할 수 있게 남겨두었습니다."
+                  description="심층 리포트는 더 긴 기준서로, 대화는 지금 막 확인한 결과를 이어 묻는 흐름으로 연결됩니다. PDF 저장은 명리 기준서 소장권에서 바로 이어집니다."
                 />
                 <ActionCluster className="mt-6">
                   <TrackedLink
@@ -625,14 +624,14 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                   >
                     심층 리포트로 이어보기
                   </TrackedLink>
-                  <TrackedButton
-                    type="button"
+                  <TrackedLink
+                    href={`/saju/${slug}/premium/print`}
                     eventName="report_pdf_click"
-                    eventParams={{ slug, from: 'result_next_actions', status: 'coming_soon' }}
+                    eventParams={{ slug, from: 'result_next_actions', status: 'print_page' }}
                     className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
                   >
                     PDF로 소장하기
-                  </TrackedButton>
+                  </TrackedLink>
                   <TrackedLink
                     href="/dialogue"
                     eventName="report_dialogue_continue_click"
@@ -657,7 +656,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                   eyebrow="PDF 소장"
                   title="다시 읽을 기준 남기기"
                   titleClassName="text-2xl"
-                  description="표지, 요약, 판정 근거, 본문을 묶은 형태로 다시 볼 수 있도록 준비하고 있습니다."
+                  description="명리 기준서 소장권을 열면 표지, 요약, 판정 근거, 본문을 인쇄용 화면에서 PDF로 저장할 수 있습니다."
                 />
                 <FeatureCard
                   surface="soft"
@@ -858,7 +857,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               showDecisionTrace={false}
             />
 
-            <ReportKeepsakeSection />
+            <ReportKeepsakeSection pdfHref={`/saju/${slug}/premium/print`} />
           </SwipeSectionSlide>
 
           <SwipeSectionSlide
