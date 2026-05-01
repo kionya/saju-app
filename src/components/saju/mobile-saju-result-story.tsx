@@ -77,6 +77,7 @@ interface StorySlide {
   label: string;
   title: string;
   eyebrow: string;
+  summary: string;
   detailHref: string;
   detailLabel: string;
   render: () => ReactNode;
@@ -126,6 +127,67 @@ function StoryList({
   );
 }
 
+function StoryReadablePanel({
+  eyebrow,
+  title,
+  body,
+  tone = 'gold',
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  tone?: 'gold' | 'jade' | 'coral';
+}) {
+  const toneClass =
+    tone === 'jade'
+      ? 'border-[var(--app-jade)]/22 bg-[var(--app-jade)]/8'
+      : tone === 'coral'
+        ? 'border-[var(--app-coral)]/22 bg-[var(--app-coral)]/8'
+        : 'border-[var(--app-gold)]/22 bg-[var(--app-gold)]/8';
+  const eyebrowClass =
+    tone === 'jade'
+      ? 'text-[var(--app-jade)]'
+      : tone === 'coral'
+        ? 'text-[var(--app-coral)]'
+        : 'text-[var(--app-gold-text)]';
+
+  return (
+    <div className={cn('rounded-[1.05rem] border px-3 py-3', toneClass)}>
+      <div className={cn('text-[10px] font-semibold tracking-[0.14em]', eyebrowClass)}>
+        {eyebrow}
+      </div>
+      <div className="mt-1.5 text-sm font-semibold leading-5 text-[var(--app-ivory)]">
+        {title}
+      </div>
+      <p className="mt-2 text-xs leading-5 text-[var(--app-copy)]">{body}</p>
+    </div>
+  );
+}
+
+function StoryInlineFact({
+  label,
+  value,
+  tone = 'gold',
+}: {
+  label: string;
+  value: string;
+  tone?: 'gold' | 'jade' | 'coral';
+}) {
+  const colorClass =
+    tone === 'jade'
+      ? 'border-[var(--app-jade)]/20 bg-[var(--app-jade)]/8 text-[var(--app-jade)]'
+      : tone === 'coral'
+        ? 'border-[var(--app-coral)]/20 bg-[var(--app-coral)]/8 text-[var(--app-coral)]'
+        : 'border-[var(--app-gold)]/20 bg-[var(--app-gold)]/8 text-[var(--app-gold-text)]';
+
+  return (
+    <div className={cn('rounded-[0.95rem] border px-3 py-2', colorClass)}>
+      <div className="text-[10px] font-semibold opacity-80">{label}</div>
+      <div className="mt-1 text-xs leading-5 text-[var(--app-copy)]">{value}</div>
+    </div>
+  );
+}
+
 function MiniPillarGrid({ pillars }: { pillars: MobilePillar[] }) {
   return (
     <div className="grid grid-cols-4 gap-1.5">
@@ -168,7 +230,7 @@ function CompactScoreList({
           </div>
           <div className="min-w-0">
             <div className="text-sm font-semibold text-[var(--app-ivory)]">{score.label}</div>
-            <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--app-copy-muted)]">{score.summary}</p>
+            <p className="mt-1 text-xs leading-5 text-[var(--app-copy-muted)]">{score.summary}</p>
           </div>
         </Link>
       ))}
@@ -204,7 +266,7 @@ function StoryActionCard({
     <div className={cn('rounded-[1rem] border px-3 py-3', toneClass)}>
       <div className={cn('text-[10px] font-semibold', eyebrowClass)}>{eyebrow}</div>
       <div className="mt-1 text-sm font-semibold leading-5 text-[var(--app-ivory)]">{title}</div>
-      <p className="mt-2 line-clamp-3 text-xs leading-5 text-[var(--app-copy)]">{body}</p>
+      <p className="mt-2 text-xs leading-5 text-[var(--app-copy)]">{body}</p>
     </div>
   );
 }
@@ -247,19 +309,45 @@ export function MobileSajuResultStory({
       label: '통합',
       title: '통합 결과',
       eyebrow: focusBadge,
+      summary: '결론, 해석 기준, 오늘의 선택 방향이 한 흐름으로 이어집니다.',
       detailHref: `/saju/${slug}/overview`,
       detailLabel: '사주 전체 보기',
       render: () => (
         <StoryBody className="content-start">
-          <div>
-            <p className="line-clamp-1 text-[11px] leading-5 text-[var(--app-copy-soft)]">{birthSummary}</p>
-            <h1 className="mt-3 text-[1.42rem] font-semibold leading-tight tracking-tight text-[var(--app-ivory)]">
+          <div className="rounded-[1.2rem] border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/8 px-4 py-4">
+            <p className="text-[11px] leading-5 text-[var(--app-copy-soft)]">{birthSummary}</p>
+            <h1 className="mt-3 text-[1.32rem] font-semibold leading-tight tracking-tight text-[var(--app-ivory)]">
               {headline}
             </h1>
-            <p className="mt-3 line-clamp-4 text-sm leading-6 text-[var(--app-copy)]">{dayMasterSummary}</p>
+            <p className="mt-3 text-sm leading-6 text-[var(--app-copy)]">{dayMasterSummary}</p>
           </div>
-          <StoryList items={keyThemes} />
-          <MiniPillarGrid pillars={pillars} />
+          <div className="grid gap-2">
+            <StoryReadablePanel
+              eyebrow="이번 풀이의 중심"
+              title={keyThemes[0] ?? '핵심 흐름'}
+              body={keyThemes[1] ?? '오늘의 실행 기준과 오행 균형을 함께 보면 흐름이 더 또렷해집니다.'}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <StoryInlineFact
+                label="도움 되는 선택"
+                value={favorableChoices[0] ?? primaryAction.description}
+                tone="jade"
+              />
+              <StoryInlineFact
+                label="주의할 패턴"
+                value={cautionPatterns[0] ?? cautionAction.description}
+                tone="coral"
+              />
+            </div>
+          </div>
+          <details className="group rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-3 py-3">
+            <summary className="cursor-pointer list-none text-xs font-semibold text-[var(--app-gold-text)]">
+              원국 네 기둥 함께 보기
+            </summary>
+            <div className="mt-3">
+              <MiniPillarGrid pillars={pillars} />
+            </div>
+          </details>
         </StoryBody>
       ),
     },
@@ -268,6 +356,7 @@ export function MobileSajuResultStory({
       label: '오늘',
       title: '오늘의 흐름',
       eyebrow: '점수와 실행 기준',
+      summary: '점수보다 중요한 것은 오늘 어디에 힘을 쓰고 어디서 속도를 늦출지입니다.',
       detailHref: `/saju/${slug}?topic=today`,
       detailLabel: '오늘 흐름 전체 보기',
       render: () => (
@@ -305,6 +394,7 @@ export function MobileSajuResultStory({
       label: '오행',
       title: '오행 균형',
       eyebrow: `${ELEMENT_INFO[dominantElement].name} 중심`,
+      summary: '오행은 수치 합계보다 중심 기운과 보완 기운을 같이 볼 때 읽기가 쉬워집니다.',
       detailHref: `/saju/${slug}/elements`,
       detailLabel: '오행 상세 보기',
       render: () => (
@@ -348,6 +438,7 @@ export function MobileSajuResultStory({
       label: '성정',
       title: '타고난 성정',
       eyebrow: `${dayMasterLabel} · ${dayMasterMetaphor}`,
+      summary: '성정은 성격 단정이 아니라, 어떤 환경에서 힘이 살아나는지 보는 장입니다.',
       detailHref: `/saju/${slug}/nature`,
       detailLabel: '성정 상세 보기',
       render: () => (
@@ -359,7 +450,7 @@ export function MobileSajuResultStory({
             <div className="mt-2 text-lg font-semibold leading-6 text-[var(--app-ivory)]">
               {dayMasterMetaphor}처럼 드러나는 기질
             </div>
-            <p className="mt-3 line-clamp-4 text-sm leading-6 text-[var(--app-copy)]">
+            <p className="mt-3 text-sm leading-6 text-[var(--app-copy)]">
               {dayMasterDescription}
             </p>
           </div>
@@ -381,7 +472,7 @@ export function MobileSajuResultStory({
               >
                 <div className="text-[10px] font-semibold tracking-[0.14em] text-[var(--app-gold-text)]">{card.label}</div>
                 <div className="mt-1 text-sm font-semibold leading-5 text-[var(--app-ivory)]">{card.title}</div>
-                <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--app-copy-muted)]">{card.body}</p>
+                <p className="mt-1 text-xs leading-5 text-[var(--app-copy-muted)]">{card.body}</p>
               </div>
             ))}
           </div>
@@ -393,6 +484,7 @@ export function MobileSajuResultStory({
       label: '다음',
       title: '다음 행동',
       eyebrow: '소장과 대화',
+      summary: '결과를 읽은 뒤에는 기준서를 보관하거나, 지금 궁금한 질문으로 바로 이어갈 수 있습니다.',
       detailHref: `/saju/${slug}/premium`,
       detailLabel: '명리 기준서 보기',
       render: () => (
@@ -405,7 +497,7 @@ export function MobileSajuResultStory({
               <div className="mt-2 text-base font-semibold leading-6 text-[var(--app-ivory)]">
                 {strongestTimeline.headline}
               </div>
-              <p className="mt-2 line-clamp-3 text-xs leading-5 text-[var(--app-copy-muted)]">
+              <p className="mt-2 text-xs leading-5 text-[var(--app-copy-muted)]">
                 {strongestTimeline.body}
               </p>
             </div>
@@ -483,6 +575,9 @@ export function MobileSajuResultStory({
               <h2 className="mt-1 text-[1.55rem] font-semibold tracking-tight text-[var(--app-ivory)]">
                 {activeSlide.title}
               </h2>
+              <p className="mt-1 text-xs leading-5 text-[var(--app-copy-muted)]">
+                {activeSlide.summary}
+              </p>
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2">
               <span className="rounded-full border border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] px-2.5 py-1 text-xs text-[var(--app-copy-muted)]">
