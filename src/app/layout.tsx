@@ -22,8 +22,11 @@ const layoutModeScript = `
   try {
     const mode = window.localStorage.getItem('moonlight:layout-mode-v3');
     document.documentElement.dataset.appLayout = mode === 'horizontal' ? 'horizontal' : 'vertical';
+    const comfort = window.localStorage.getItem('moonlight:reading-comfort-v1');
+    document.documentElement.dataset.readingComfort = comfort === 'large' ? 'large' : 'standard';
   } catch {
     document.documentElement.dataset.appLayout = 'vertical';
+    document.documentElement.dataset.readingComfort = 'standard';
   }
 })();
 `;
@@ -69,6 +72,7 @@ export default function RootLayout({
       lang="ko"
       className={`${brandSerif.variable} ${classicBatang.variable} dark h-full antialiased`}
       data-app-layout="vertical"
+      data-reading-comfort="standard"
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">

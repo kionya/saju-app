@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { LayoutModeControl } from '@/features/layout-preference/layout-mode-control';
+import { ReadingComfortControl } from '@/features/layout-preference/reading-comfort-control';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import {
@@ -406,6 +407,8 @@ function DesktopSidebar({
       <div className="relative z-10 border-t border-[var(--app-line)] px-5 py-3">
         <div className="app-caption mb-2">보기 방식</div>
         <LayoutModeControl />
+        <div className="app-caption mb-2 mt-3">읽기 크기</div>
+        <ReadingComfortControl />
       </div>
     </aside>
   );
@@ -567,6 +570,11 @@ function MobileChrome({
                   <Settings2 className="h-4 w-4" />
                   <span>설정</span>
                 </Link>
+              </div>
+
+              <div className="mt-4">
+                <div className="app-mobile-menu-group-title mb-2">읽기 크기</div>
+                <ReadingComfortControl />
               </div>
 
               <div className="mt-4">

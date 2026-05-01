@@ -3118,3 +3118,120 @@
     padding-left: 0;
   }
 }
+
+html[data-reading-comfort="large"] {
+  --app-mobile-dock-clearance: calc(7.35rem + env(safe-area-inset-bottom));
+  --app-mobile-top-clearance: 9.25rem;
+}
+
+html[data-reading-comfort="large"] body {
+  font-size: 17px;
+}
+
+html[data-reading-comfort="large"] :where(.app-shell, .moon-lunar-panel, .app-hero-card) {
+  --app-copy: rgba(246, 240, 226, 0.9);
+  --app-copy-muted: rgba(194, 199, 211, 0.94);
+  --app-copy-soft: rgba(148, 154, 170, 0.98);
+}
+
+html[data-reading-comfort="large"] :where(
+  .app-hero-description,
+  .app-section-copy,
+  .app-feature-copy,
+  .moon-lunar-panel p,
+  .saju-mobile-story-body p,
+  .saju-mobile-story-body li,
+  .app-reading-nav-link,
+  .app-subnav-link
+) {
+  font-size: 1rem;
+  line-height: 1.9;
+}
+
+html[data-reading-comfort="large"] .app-caption {
+  font-size: 0.78rem;
+}
+
+html[data-reading-comfort="large"] .app-hero-title {
+  font-size: 2.25rem;
+  line-height: 1.18;
+  letter-spacing: 0;
+}
+
+html[data-reading-comfort="large"] .app-top-credit-chip,
+html[data-reading-comfort="large"] .app-mobile-menu-trigger {
+  min-height: 2.55rem;
+  font-size: 0.88rem;
+}
+
+html[data-reading-comfort="large"] .app-mobile-shortcut-card {
+  min-height: 4.35rem;
+}
+
+html[data-reading-comfort="large"] .app-mobile-shortcut-label {
+  font-size: 0.82rem;
+}
+
+html[data-reading-comfort="large"] .app-mobile-menu-utility,
+html[data-reading-comfort="large"] .app-mobile-menu-auth {
+  min-height: 3.1rem;
+  font-size: 0.95rem;
+}
+
+html[data-reading-comfort="large"] .app-mobile-dock-link {
+  min-height: 4.55rem;
+}
+
+html[data-reading-comfort="large"] .app-mobile-dock-icon {
+  height: 2.35rem;
+  width: 2.35rem;
+}
+
+html[data-reading-comfort="large"] .app-mobile-dock-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+html[data-reading-comfort="large"] .saju-mobile-story-progress-dot {
+  height: 1.9rem;
+  font-size: 0.78rem;
+}
+
+html[data-reading-comfort="large"] .saju-mobile-story-card {
+  padding: 1rem;
+}
+
+html[data-reading-comfort="large"] .saju-mobile-story-detail-link {
+  min-height: 2.2rem;
+  font-size: 0.82rem;
+}
+
+@media (min-width: 640px) {
+  html[data-reading-comfort="large"] .app-hero-title {
+    font-size: 3rem;
+  }
+
+  html[data-reading-comfort="large"] .app-hero-description {
+    font-size: 1.12rem;
+  }
+}
+
+@media (max-width: 640px) {
+  html[data-reading-comfort="large"] .app-top-context-note {
+    display: none;
+  }
+
+  html[data-reading-comfort="large"] .app-top-context-chip {
+    min-height: 1.8rem;
+    font-size: 0.78rem;
+  }
+
+  html[data-reading-comfort="large"] .saju-intake-hero .app-hero-title {
+    font-size: 1.9rem;
+  }
+
+  html[data-reading-comfort="large"] .saju-intake-hero .app-hero-description {
+    font-size: 1rem;
+    line-height: 1.75;
+  }
+}
