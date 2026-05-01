@@ -238,7 +238,7 @@ function MonthlyFlowCard({ flow }: { flow: YearlyMonthFlow }) {
       {flow.basis.length > 0 ? (
         <details className="group mt-4">
           <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-            근거 메모
+            판단 기준 따로 보기
           </summary>
           <div className="mt-3 grid gap-2">
             {flow.basis.map((item) => (
@@ -303,7 +303,7 @@ function CoreAreaCard({
       </div>
       <details className="group mt-4">
         <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-          선생 풀이 전문 보기
+          풀이 자세히 보기
         </summary>
         <div className="mt-3 space-y-3 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-4">
           {renderCompactParagraphs(prose, 2)}
@@ -312,7 +312,7 @@ function CoreAreaCard({
       {item.basis.length > 0 ? (
         <details className="group mt-4">
         <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-          근거 메모
+          판단 기준 따로 보기
         </summary>
           <div className="mt-3 grid gap-2">
             {item.basis.map((line) => (
@@ -351,7 +351,7 @@ function SupportAreaCard({
       </div>
       <details className="group mt-4">
         <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-          선생 풀이 전문 보기
+          풀이 자세히 보기
         </summary>
         <div className="mt-3 space-y-3 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-4">
           {renderCompactParagraphs(prose, 2)}
@@ -360,7 +360,7 @@ function SupportAreaCard({
       {basis.length > 0 ? (
         <details className="group mt-4">
         <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-          근거 메모
+          판단 기준 따로 보기
         </summary>
           <div className="mt-3 grid gap-2">
             {basis.map((line) => (

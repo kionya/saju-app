@@ -61,11 +61,11 @@ function getFallbackReasonLabel(reason: FallbackReason | null, fromApi: boolean)
 
   switch (reason) {
     case 'ai_not_configured':
-      return 'OpenAI 키가 연결되지 않아 기본 해석으로 표시 중입니다.';
+      return '정밀 해석 연결 전이라 기본 해석으로 표시 중입니다.';
     case 'empty_ai_response':
-      return 'AI 응답이 비어 있어 기본 해석으로 표시 중입니다.';
+      return '정밀 해석 내용이 비어 있어 기본 해석으로 표시 중입니다.';
     case 'openai_error':
-      return 'AI 호출이 실패해 기본 해석으로 안전하게 전환했습니다.';
+      return '정밀 해석을 불러오지 못해 기본 해석으로 안전하게 전환했습니다.';
     default:
       return '기본 해석으로 표시 중입니다.';
   }
@@ -302,7 +302,7 @@ export function SajuAiInterpretationPanel({
                         : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-soft)]'
                     )}
                   >
-                    {compareState.source === 'openai' ? 'OpenAI' : 'Fallback'}
+                    {compareState.source === 'openai' ? '정밀 해석' : '기본 해석'}
                   </span>
                 </div>
                 <div className="mt-4 text-lg font-semibold leading-8 text-[var(--app-ivory)]">
@@ -330,9 +330,7 @@ export function SajuAiInterpretationPanel({
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs leading-6 text-[var(--app-copy-soft)]">
         <span>{result.counselorId === 'male' ? '달빛 남선생 기준' : '달빛 여선생 기준'}</span>
         {result.source === 'openai' ? (
-          <span>
-            모델: {result.model ?? 'OpenAI'}{result.cached ? ' · 캐시됨' : ' · 새로 생성됨'}
-          </span>
+          <span>{result.cached ? '저장된 해석' : '새로 정리'}</span>
         ) : (
           <span>{getFallbackReasonLabel(result.fallbackReason, result.fromApi)}</span>
         )}
@@ -346,7 +344,7 @@ export function SajuAiInterpretationPanel({
           disabled={status === 'loading'}
           className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {status === 'loading' ? '불러오는 중' : cacheEnabled ? '캐시 확인' : 'AI 해석 생성'}
+          {status === 'loading' ? '불러오는 중' : cacheEnabled ? '저장된 해석 확인' : '해석 정리하기'}
         </button>
         {!cacheEnabled ? (
           <span className="text-xs leading-6 text-[var(--app-copy-soft)]">

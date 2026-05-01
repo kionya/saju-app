@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { GroundingKasiSummary } from '@/components/ai/grounding-kasi-summary';
 import { EngineMethodLinks } from '@/components/content/engine-method-links';
@@ -78,18 +78,6 @@ function renderParagraphs(text: string) {
   ));
 }
 
-function formatUpdatedAt(value?: string) {
-  if (!value) return null;
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-
-  return new Intl.DateTimeFormat('ko-KR', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  }).format(date);
-}
-
 function FactCard({ label, body }: { label: string; body: string }) {
   return (
     <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
@@ -105,7 +93,7 @@ function BasisNotes({ items }: { items: string[] }) {
   return (
     <details className="group mt-5">
       <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-        근거 메모
+        판단 기준 따로 보기
       </summary>
       <div className="mt-3 grid gap-2">
         {items.map((line) => (
@@ -138,7 +126,7 @@ function LifetimeSectionBody({
           </div>
           <details className="group mt-5">
             <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)]">
-              계산 근거 펼치기
+              판단 기준 따로 보기
             </summary>
             <div className="mt-3 grid gap-2">
               {report.coreIdentity.basis.map((line) => (
@@ -212,7 +200,7 @@ function LifetimeSectionBody({
           </div>
           <details className="group mt-5">
             <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)]">
-              희신 / 기신 / 계산 상세 보기
+              보완 기준 따로 보기
             </summary>
             <div className="mt-3 grid gap-2">
               {report.patternAndYongsin.detailLines.map((line) => (
@@ -352,7 +340,7 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
           | null;
 
         if (!response.ok || !payload || !('ok' in payload) || payload.ok !== true) {
-          setError(payload && 'error' in payload && payload.error ? payload.error : '평생 리포트를 불러오지 못했습니다.');
+          setError(payload && 'error' in payload && payload.error ? payload.error : '명리 기준서를 불러오지 못했습니다.');
           setState('error');
           return;
         }
@@ -361,7 +349,7 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
         setState('ready');
       } catch (fetchError) {
         if ((fetchError as Error).name === 'AbortError') return;
-        setError('평생 리포트를 불러오는 중 오류가 발생했습니다.');
+        setError('명리 기준서를 불러오는 중 오류가 발생했습니다.');
         setState('error');
       }
     }
@@ -371,18 +359,16 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
     return () => controller.abort();
   }, [slug, targetYear, counselorId, reloadToken]);
 
-  const updatedAtLabel = useMemo(() => formatUpdatedAt(undefined), []);
-
   if (state === 'loading') {
     return (
       <section id="lifetime-report" className="moon-lunar-panel p-6 sm:p-7">
         <div className="app-starfield" />
-        <div className="app-caption">평생 소장 리포트 생성 중</div>
+        <div className="app-caption">명리 기준서 생성 중</div>
         <h2 className="font-display mt-4 text-3xl text-[var(--app-ivory)]">
           원국 중심 기준서를 정리하고 있습니다
         </h2>
         <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-          일간, 강약, 격국, 용신, 대운 10년 흐름을 묶어 평생 참고할 수 있는 기준서로 재구성하고 있습니다.
+          타고난 구조와 보완 방향, 대운 흐름을 묶어 다시 열어볼 수 있는 기준서로 재구성하고 있습니다.
         </p>
         <div className="mt-6 grid gap-3 lg:grid-cols-3">
           {Array.from({ length: 3 }, (_, index) => (
@@ -399,8 +385,8 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
   if (state === 'error' || !data) {
     return (
       <section id="lifetime-report" className="app-panel space-y-4 border-rose-400/20 p-6">
-        <div className="app-caption text-rose-200/80">평생 리포트 오류</div>
-        <p className="font-medium text-rose-200">{error || '평생 리포트를 불러오지 못했습니다.'}</p>
+        <div className="app-caption text-rose-200/80">명리 기준서 오류</div>
+        <p className="font-medium text-rose-200">{error || '명리 기준서를 불러오지 못했습니다.'}</p>
         <Button
           onClick={() => setReloadToken((value) => value + 1)}
           variant="outline"
@@ -426,7 +412,7 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
               내 사주의 원본 해설서를 평생 기준서로 정리했습니다
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
-              일간, 강약, 격국, 용신, 대운의 판정을 먼저 고정하고, 이 리포트는 그 구조를 평생 기준서 문장으로만 풀어냅니다.
+              어려운 계산 항목은 뒤로 빼고, 먼저 “나는 어떤 환경에서 잘 살아나는가”를 읽을 수 있게 정리했습니다.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -434,15 +420,12 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
               {data.counselorId === 'male' ? '달빛 남선생 기준' : '달빛 여선생 기준'}
             </Badge>
             <Badge className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-copy-muted)]">
-              {data.source === 'openai' ? 'OpenAI 생성' : '근거 기반 fallback'}
+              새로 정리
             </Badge>
           </div>
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-[var(--app-copy-soft)]">
-          {updatedAtLabel ? <span>최근 생성: {updatedAtLabel}</span> : null}
-          {data.model ? <span>모델: {data.model}</span> : null}
-          <span>생성 시간: {data.generationMs}ms</span>
           <Button
             onClick={() => setReloadToken((value) => value + 1)}
             variant="outline"
@@ -483,31 +466,6 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
               ))}
             </div>
           </div>
-        </div>
-        <div className="mt-6">
-          <GroundingKasiSummary
-            id="lifetime-evidence"
-            grounding={data.grounding}
-            kasiComparison={data.kasiComparison}
-            metadata={data.metadata}
-            title="이 평생 리포트가 참고한 실제 계산 근거"
-          />
-        </div>
-
-        <div className="mt-6">
-          <EngineMethodLinks
-            title="평생 기준서를 읽을 때 같이 보면 좋은 글"
-            description="격국과 용신, 시간을 모를 때의 안전선, 공망·신살을 어디까지 참고해야 하는지처럼 평생 기준서와 자주 같이 묻는 질문을 모았습니다."
-            slugs={[
-              'why-pattern-judgments-diverge',
-              'why-yongsin-is-hard',
-              'what-if-birth-hour-is-unknown',
-              'how-far-to-trust-gongmang-and-shinsal',
-            ]}
-            ctaHref="/method"
-            ctaLabel="관련 기준 더 보기"
-            compact
-          />
         </div>
       </section>
 
@@ -570,6 +528,33 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
           </Link>
         </div>
       </section>
+
+      <details className="group" id="lifetime-evidence">
+        <summary className="cursor-pointer list-none rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-4 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
+          판정 기준과 계산 근거 확인
+        </summary>
+        <div className="mt-4 grid gap-4">
+          <GroundingKasiSummary
+            grounding={data.grounding}
+            kasiComparison={data.kasiComparison}
+            metadata={data.metadata}
+            title="이 명리 기준서가 참고한 계산 근거"
+          />
+          <EngineMethodLinks
+            title="명리 기준서를 읽을 때 같이 보면 좋은 글"
+            description="보완 방향, 시간 기준, 대운 흐름처럼 풀이를 더 깊게 보고 싶을 때 필요한 기준만 따로 모았습니다."
+            slugs={[
+              'why-pattern-judgments-diverge',
+              'why-yongsin-is-hard',
+              'what-if-birth-hour-is-unknown',
+              'how-far-to-trust-gongmang-and-shinsal',
+            ]}
+            ctaHref="/method"
+            ctaLabel="관련 기준 더 보기"
+            compact
+          />
+        </div>
+      </details>
     </section>
   );
 }

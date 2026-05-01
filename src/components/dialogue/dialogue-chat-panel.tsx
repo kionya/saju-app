@@ -98,11 +98,11 @@ function getBadgeState(status: ChatStatus, latestAssistant?: ChatMessage) {
 function getFallbackLabel(reason: FallbackReason | null | undefined) {
   switch (reason) {
     case 'ai_not_configured':
-      return 'OpenAI 키 또는 결제가 연결되지 않아 기본 답변으로 표시 중입니다.';
+      return '정밀 답변 연결 전이라 기본 답변으로 표시 중입니다.';
     case 'empty_ai_response':
-      return 'AI 응답이 비어 있어 기본 답변으로 표시 중입니다.';
+      return '정밀 답변 내용이 비어 있어 기본 답변으로 표시 중입니다.';
     case 'openai_error':
-      return 'AI 호출 실패로 기본 답변을 표시 중입니다.';
+      return '정밀 답변을 불러오지 못해 기본 답변으로 표시 중입니다.';
     default:
       return '기본 답변으로 표시 중입니다.';
   }
@@ -121,7 +121,7 @@ function getBillingLabel(billing: AiChatBillingSummary | null | undefined) {
     case 'bundle_included':
       return `결제된 ${billing.bundleSize}회 묶음 사용 중 · 이번 묶음 ${billing.bundleTurnsRemaining ?? 0}회 남음`;
     case 'not_charged_fallback':
-      return `fallback 응답 · 횟수/코인 차감 없음 · 잔여 ${billing.remaining ?? 0}개`;
+      return `기본 답변 · 횟수/코인 차감 없음 · 잔여 ${billing.remaining ?? 0}개`;
     case 'not_charged_safe_redirect':
       return '안전 안내 전환 · 횟수/코인 차감 없음';
     case 'auth_required':
@@ -138,11 +138,11 @@ function getConnectionSummary(
   status: ChatStatus
 ) {
   if (status === 'loading') {
-    return '로그인과 코인을 확인한 뒤 OpenAI 응답 가능 여부를 살피고 있습니다.';
+    return '로그인과 코인을 확인한 뒤 정밀 답변을 이어갈 수 있는지 살피고 있습니다.';
   }
 
   if (!latestAssistant || latestAssistant.id === INITIAL_MESSAGE.id) {
-    return '처음 3회는 무료입니다. 이후에는 OpenAI 응답 기준으로 3회 묶음마다 3코인이 차감되고, fallback 응답과 안전 안내는 횟수에도 포함되지 않습니다. 오늘 결과에서 이어진 첫 질문은 코인 차감 없이 먼저 답합니다.';
+    return '처음 3회는 무료입니다. 이후에는 정밀 답변 기준으로 3회 묶음마다 3코인이 차감되고, 기본 답변과 안전 안내는 횟수에도 포함되지 않습니다. 오늘 결과에서 이어진 첫 질문은 코인 차감 없이 먼저 답합니다.';
   }
 
   if (latestAssistant.source === 'openai') {
@@ -151,14 +151,14 @@ function getConnectionSummary(
       latestAssistant.profileContext?.used && latestAssistant.profileContext.summary
         ? ` 저장 프로필 기준: ${latestAssistant.profileContext.summary}`
         : '';
-    return `최근 답변은 OpenAI로 생성되었습니다.${billingLabel ? ` ${billingLabel}` : ''}${profileLabel}`;
+    return `최근 답변은 정밀 답변으로 정리되었습니다.${billingLabel ? ` ${billingLabel}` : ''}${profileLabel}`;
   }
 
   if (latestAssistant.source === 'fallback') {
     const profileLabel = latestAssistant.profileContext?.summary
       ? ` ${latestAssistant.profileContext.used ? '저장 프로필 기준으로' : ''} ${latestAssistant.profileContext.summary}`
       : '';
-    return `최근 답변은 fallback으로 내려왔습니다.${latestAssistant.configured === false ? ' OpenAI 키가 연결되지 않았거나 읽히지 않았습니다.' : ''}${profileLabel}`;
+    return `최근 답변은 기본 답변으로 표시되었습니다.${latestAssistant.configured === false ? ' 정밀 답변 연결 전입니다.' : ''}${profileLabel}`;
   }
 
   return '안전 안내 기준으로 일반 대화를 중단했습니다.';
@@ -367,13 +367,13 @@ export function DialogueChatPanel({
                   <div className="mt-3 flex flex-wrap gap-2 text-xs leading-6 text-[var(--app-copy-soft)]">
                     {message.source === 'openai' ? (
                       <span>
-                        {message.counselorId === 'male' ? '달빛 남선생' : '달빛 여선생'} · OpenAI 응답 · 모델 {message.model ?? 'OpenAI'}
+                        {message.counselorId === 'male' ? '달빛 남선생' : '달빛 여선생'} · 정밀 답변
                       </span>
                     ) : (
                       <span>
                         {message.counselorId === 'male' ? '달빛 남선생' : '달빛 여선생'} ·{' '}
                         {message.configured === false
-                          ? 'Fallback 응답 · OpenAI 키 미연결'
+                          ? '기본 답변 · 정밀 답변 연결 전'
                           : getFallbackLabel(message.fallbackReason)}
                       </span>
                     )}
@@ -455,8 +455,8 @@ export function DialogueChatPanel({
           </div>
         </div>
         <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
-          처음 3회는 무료입니다. 이후에는 OpenAI 응답 기준으로 3회 묶음마다
-          3코인이 차감되고, fallback 응답과 안전 안내는 횟수와 코인을 차감하지
+          처음 3회는 무료입니다. 이후에는 정밀 답변 기준으로 3회 묶음마다
+          3코인이 차감되고, 기본 답변과 안전 안내는 횟수와 코인을 차감하지
           않습니다. 오늘 결과에서 이어진 첫 질문은 코인 차감 없이 먼저 답해드립니다.
           로그인 후 MY 프로필에 저장된 출생 정보가 있으면 대화에서도
           기본 명식으로 자동 사용합니다. 대화 저장은 아직 하지 않으며, 새로고침하면

@@ -236,7 +236,7 @@ function buildUnlockedReportSections(reading: ReadingRecord): PremiumReportSecti
     {
       eyebrow: '생활 분야',
       title: '6. 재물·연애·직장·관계',
-      lead: '평생 리포트에서는 한 분야만 따로 떼어 보지 않고, 돈·마음·역할·사람 사이의 균형을 함께 봅니다.',
+      lead: '명리 기준서에서는 한 분야만 따로 떼어 보지 않고, 돈·마음·역할·사람 사이의 균형을 함께 봅니다.',
       decision: '유료 상세에서는 분야별 운을 길게 늘어놓기보다, 지금 실제로 판단해야 할 우선순위를 나눠 보여줍니다.',
       paragraphs: compactStrings([
         `재물: ${wealthReport.primaryAction.description}`,

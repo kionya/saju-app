@@ -39,7 +39,7 @@ const FEATURE_LABELS: Record<string, string> = {
 
 function getTransactionLabel(transaction: Awaited<ReturnType<typeof getAccountDashboardData>>['recentTransactions'][number]) {
   if (transaction.feature === 'lifetime_report') {
-    return '평생 리포트 권한';
+    return '명리 기준서 권한';
   }
 
   if (transaction.type === 'subscription') {
