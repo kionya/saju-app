@@ -515,7 +515,6 @@ export default function ProfileManager({
           <Button
             onClick={saveProfile}
             disabled={savingProfile}
-            className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]"
           >
             {savingProfile ? '저장 중...' : '내 기본 정보 저장'}
           </Button>
@@ -564,15 +563,15 @@ export default function ProfileManager({
                         onClick={() => editFamilyProfile(profile)}
                         disabled={savingFamily || deletingId === profile.id}
                         variant="outline"
-                        className="rounded-full border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)] hover:bg-[var(--app-gold)]/15 hover:text-[var(--app-gold-text)]"
+                        size="sm"
                       >
                         수정
                       </Button>
                       <Button
                         onClick={() => removeFamilyProfile(profile.id)}
                         disabled={deletingId === profile.id}
-                        variant="outline"
-                        className="rounded-full border-[var(--app-line)] bg-[var(--app-surface)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                        variant="destructive"
+                        size="sm"
                       >
                         {deletingId === profile.id ? '삭제 중...' : '삭제'}
                       </Button>
@@ -642,7 +641,6 @@ export default function ProfileManager({
               <Button
                 onClick={saveFamilyProfile}
                 disabled={savingFamily}
-                className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]"
               >
                 {savingFamily
                   ? editingFamilyId
@@ -656,8 +654,7 @@ export default function ProfileManager({
                 <Button
                   onClick={cancelFamilyEdit}
                   disabled={savingFamily}
-                  variant="outline"
-                  className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                  variant="secondary"
                 >
                   수정 취소
                 </Button>

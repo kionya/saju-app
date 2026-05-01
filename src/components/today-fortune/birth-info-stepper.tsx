@@ -197,7 +197,6 @@ export function BirthInfoStepper({
           onClick={handleLoadProfile}
           disabled={profileLoading}
           variant="outline"
-          className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
         >
           {profileLoading ? '불러오는 중...' : 'MY 프로필 불러오기'}
         </Button>
@@ -240,7 +239,7 @@ export function BirthInfoStepper({
           type="button"
           onClick={onSubmit}
           disabled={loading}
-          className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] hover:bg-[var(--app-gold-text)]"
+          size="lg"
         >
           {loading ? '무료 결과 만드는 중...' : '무료 결과 보기'}
         </Button>

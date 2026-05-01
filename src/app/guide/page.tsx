@@ -139,7 +139,7 @@ export default function GuidePage() {
                   </Link>
                   <Link
                     href="/interpretation"
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                    className="moon-action-secondary"
                   >
                     해석 입구 보기
                   </Link>

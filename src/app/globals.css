@@ -777,22 +777,27 @@
   .app-top-action-link {
     align-items: center;
     justify-content: center;
-    min-height: 2.1rem;
-    border: 1px solid var(--app-line);
-    border-radius: 0.6rem;
-    padding-inline: 1rem;
-    color: var(--app-copy-muted);
+    min-height: 2.35rem;
+    border: 1px solid rgba(212, 176, 106, 0.26);
+    border-radius: 9999px;
+    background: rgba(212, 176, 106, 0.08);
+    padding-inline: 1.05rem;
+    color: var(--app-gold-text);
     font-size: 0.8125rem;
+    font-weight: 700;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     transition:
       border-color 160ms ease,
       background-color 160ms ease,
-      color 160ms ease;
+      color 160ms ease,
+      transform 160ms ease;
   }
 
   .app-top-action-link:hover {
-    border-color: rgba(212, 176, 106, 0.3);
-    background: rgba(31, 37, 64, 0.55);
-    color: var(--app-gold-text);
+    border-color: rgba(212, 176, 106, 0.48);
+    background: rgba(212, 176, 106, 0.15);
+    color: var(--app-ivory);
+    transform: translateY(-1px);
   }
 
   .app-shell.app-shell-with-navigation {
@@ -1908,42 +1913,63 @@
   }
 
   /* CTA buttons */
+  .moon-action-primary,
   .moon-cta-primary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 3.1rem;
-    padding-inline: 1.85rem;
+    min-height: 2.85rem;
+    gap: 0.45rem;
+    padding-inline: 1.45rem;
     border-radius: 9999px;
-    background: var(--app-gold);
+    border: 1px solid rgba(236, 201, 133, 0.58);
+    background: linear-gradient(135deg, var(--app-gold), var(--app-gold-bright));
     color: var(--app-bg);
-    font-size: 0.9375rem;
+    font-size: 0.93rem;
     font-weight: 700;
-    letter-spacing: 0.01em;
-    box-shadow: 0 0 22px rgba(212, 176, 106, 0.35), 0 4px 16px rgba(0, 0, 0, 0.3);
+    line-height: 1.15;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow:
+      0 16px 36px rgba(210, 176, 114, 0.24),
+      0 3px 12px rgba(0, 0, 0, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
     transition:
-      background-color 180ms ease,
+      border-color 180ms ease,
       transform 180ms ease,
       box-shadow 180ms ease;
   }
 
+  .moon-action-primary:hover,
   .moon-cta-primary:hover {
-    background: var(--app-gold-text);
     transform: translateY(-2px);
-    box-shadow: 0 0 36px rgba(212, 176, 106, 0.55), 0 8px 24px rgba(0, 0, 0, 0.35);
+    border-color: rgba(255, 233, 177, 0.78);
+    box-shadow:
+      0 20px 46px rgba(210, 176, 114, 0.34),
+      0 8px 24px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.42);
   }
 
+  .moon-action-secondary,
   .moon-cta-secondary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 3.1rem;
-    padding-inline: 1.85rem;
+    min-height: 2.85rem;
+    gap: 0.45rem;
+    padding-inline: 1.45rem;
     border-radius: 9999px;
-    border: 1px solid rgba(212, 176, 106, 0.3);
-    background: rgba(212, 176, 106, 0.07);
-    color: var(--app-copy);
-    font-size: 0.9375rem;
+    border: 1px solid rgba(212, 176, 106, 0.35);
+    background: rgba(212, 176, 106, 0.12);
+    color: var(--app-gold-text);
+    font-size: 0.93rem;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 10px 28px rgba(0, 0, 0, 0.16);
     backdrop-filter: blur(10px);
     transition:
       border-color 180ms ease,
@@ -1952,11 +1978,149 @@
       transform 180ms ease;
   }
 
+  .moon-action-secondary:hover,
   .moon-cta-secondary:hover {
-    border-color: rgba(212, 176, 106, 0.52);
-    background: rgba(212, 176, 106, 0.13);
+    border-color: rgba(212, 176, 106, 0.58);
+    background: rgba(212, 176, 106, 0.19);
     color: var(--app-ivory);
     transform: translateY(-2px);
+  }
+
+  .moon-action-muted,
+  .moon-action-danger,
+  .moon-action-ghost,
+  .moon-action-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border-radius: 9999px;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    white-space: nowrap;
+    transition:
+      border-color 180ms ease,
+      background-color 180ms ease,
+      color 180ms ease,
+      transform 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .moon-action-muted {
+    min-height: 2.85rem;
+    border: 1px solid var(--app-line);
+    background: var(--app-surface-muted);
+    padding-inline: 1.45rem;
+    color: var(--app-copy);
+    font-size: 0.93rem;
+  }
+
+  .moon-action-muted:hover {
+    border-color: rgba(212, 176, 106, 0.24);
+    background: var(--app-surface-strong);
+    color: var(--app-ivory);
+    transform: translateY(-2px);
+  }
+
+  .moon-action-danger {
+    min-height: 2.55rem;
+    border: 1px solid rgba(251, 113, 133, 0.28);
+    background: rgba(251, 113, 133, 0.1);
+    padding-inline: 1.05rem;
+    color: rgb(255, 205, 213);
+    font-size: 0.82rem;
+  }
+
+  .moon-action-danger:hover {
+    border-color: rgba(251, 113, 133, 0.44);
+    background: rgba(251, 113, 133, 0.16);
+    color: rgb(255, 235, 239);
+    transform: translateY(-1px);
+  }
+
+  .moon-action-ghost {
+    min-height: 2.55rem;
+    border: 1px solid transparent;
+    background: transparent;
+    padding-inline: 0.95rem;
+    color: var(--app-copy-muted);
+    font-size: 0.88rem;
+  }
+
+  .moon-action-ghost:hover {
+    border-color: rgba(212, 176, 106, 0.2);
+    background: rgba(212, 176, 106, 0.08);
+    color: var(--app-gold-text);
+  }
+
+  .moon-action-chip {
+    min-height: 2.3rem;
+    border: 1px solid rgba(212, 176, 106, 0.28);
+    background: rgba(212, 176, 106, 0.08);
+    padding-inline: 0.95rem;
+    color: var(--app-gold-text);
+    font-size: 0.82rem;
+  }
+
+  .moon-action-chip:hover {
+    border-color: rgba(212, 176, 106, 0.48);
+    background: rgba(212, 176, 106, 0.15);
+    color: var(--app-ivory);
+  }
+
+  .moon-action-compact {
+    min-height: 2.4rem;
+    padding-inline: 1rem;
+    font-size: 0.82rem;
+  }
+
+  .moon-action-icon {
+    width: 2.75rem;
+    min-width: 2.75rem;
+    padding-inline: 0;
+  }
+
+  .moon-action-primary:focus-visible,
+  .moon-action-secondary:focus-visible,
+  .moon-action-muted:focus-visible,
+  .moon-action-danger:focus-visible,
+  .moon-action-ghost:focus-visible,
+  .moon-action-chip:focus-visible,
+  .moon-cta-primary:focus-visible,
+  .moon-cta-secondary:focus-visible,
+  .app-top-action-link:focus-visible {
+    outline: 3px solid rgba(236, 201, 133, 0.26);
+    outline-offset: 3px;
+  }
+
+  .moon-action-primary:active,
+  .moon-action-secondary:active,
+  .moon-action-muted:active,
+  .moon-action-danger:active,
+  .moon-action-ghost:active,
+  .moon-action-chip:active,
+  .moon-cta-primary:active,
+  .moon-cta-secondary:active {
+    transform: translateY(0);
+  }
+
+  .moon-action-primary[aria-disabled='true'],
+  .moon-action-secondary[aria-disabled='true'],
+  .moon-action-muted[aria-disabled='true'],
+  .moon-action-danger[aria-disabled='true'],
+  .moon-action-ghost[aria-disabled='true'],
+  .moon-action-chip[aria-disabled='true'],
+  .moon-action-primary:disabled,
+  .moon-action-secondary:disabled,
+  .moon-action-muted:disabled,
+  .moon-action-danger:disabled,
+  .moon-action-ghost:disabled,
+  .moon-action-chip:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
+    transform: none;
+    box-shadow: none;
   }
 
   @media (max-width: 640px) {
@@ -1995,10 +2159,13 @@
       gap: 0.65rem;
     }
 
+    .moon-action-primary,
+    .moon-action-secondary,
+    .moon-action-muted,
     .moon-cta-primary,
     .moon-cta-secondary {
       width: 100%;
-      height: 3rem;
+      min-height: 2.9rem;
       padding-inline: 1.2rem;
       font-size: 0.92rem;
     }

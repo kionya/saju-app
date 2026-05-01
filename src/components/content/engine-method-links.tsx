@@ -35,7 +35,7 @@ export function EngineMethodLinks({
         </div>
         <Link
           href={ctaHref}
-          className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+          className="moon-action-muted moon-action-compact"
         >
           {ctaLabel}
         </Link>

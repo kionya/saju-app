@@ -121,7 +121,7 @@ export default async function DailyTarotPage() {
               <ActionCluster className="mt-4">
                 <button
                   type="submit"
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-plum)] px-6 text-sm font-semibold text-white transition-colors hover:opacity-90"
+                  className="moon-action-primary"
                 >
                   카드 뽑기로 이어가기
                 </button>
@@ -159,7 +159,7 @@ export default async function DailyTarotPage() {
             <ActionCluster className="mt-5">
               <Link
                 href={readingSlug ? `/saju/${readingSlug}` : '/saju/new'}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-plum)]/34 bg-[var(--app-plum)]/12 px-5 text-sm font-semibold text-[var(--app-plum)] transition-colors hover:bg-[var(--app-plum)]/18"
+                className="moon-action-secondary"
               >
                 {readingSlug ? '이 질문을 내 사주 흐름과 함께 보기' : '사주와 함께 보기'}
               </Link>

@@ -701,14 +701,14 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
             <div className="mt-3 flex flex-wrap gap-2">
               <Link
                 href="/login?next=/saju/new"
-                className="inline-flex h-9 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-4 text-sm text-[var(--app-gold-text)]"
+                className="moon-action-secondary moon-action-compact"
               >
                 로그인
               </Link>
               <Button
                 type="button"
                 onClick={() => setActiveIndex(dateStepIndex)}
-                className="h-9 rounded-full bg-[var(--app-gold)] px-4 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+                size="sm"
               >
                 새 정보 입력
               </Button>
@@ -765,8 +765,8 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
           <Button
             type="button"
             onClick={() => setActiveIndex(dateStepIndex)}
-            variant="outline"
-            className="h-9 rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+            variant="secondary"
+            size="sm"
           >
             직접 입력
           </Button>
@@ -936,8 +936,8 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
                 type="button"
                 onClick={goPrev}
                 disabled={activeIndex === 0 || isSubmitting}
-                variant="outline"
-                className="h-12 rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] disabled:opacity-45"
+                variant="secondary"
+                size="lg"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 이전
@@ -946,7 +946,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
                 type="button"
                 onClick={goNext}
                 disabled={isSubmitting}
-                className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[#111827] hover:bg-[#e3c68d]"
+                size="lg"
               >
                 {nextLabel}
                 {!isSubmitting ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
@@ -970,7 +970,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
               </Link>
               <Link
                 href="/guide"
-                className="inline-flex h-9 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                className="moon-action-muted moon-action-compact"
               >
                 입력 기준 보기
               </Link>

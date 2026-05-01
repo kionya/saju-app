@@ -122,7 +122,7 @@ export function TarotCardPicker({ cards, question, sourceLabel }: TarotCardPicke
           type="button"
           onClick={handleRandomDraw}
           disabled={isPending || cards.length === 0}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--app-plum)] px-5 text-sm font-semibold text-white transition-colors hover:bg-[color:rgba(166,124,181,0.88)] disabled:pointer-events-none disabled:opacity-60"
+          className="moon-action-primary"
         >
           <Sparkles className="h-4 w-4" aria-hidden="true" />
           랜덤으로 한 장 뽑기
@@ -131,7 +131,7 @@ export function TarotCardPicker({ cards, question, sourceLabel }: TarotCardPicke
           type="button"
           onClick={reshuffleDeck}
           disabled={isPending || cards.length === 0}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)] disabled:pointer-events-none disabled:opacity-60"
+          className="moon-action-muted"
         >
           <Shuffle className="h-4 w-4" aria-hidden="true" />
           다시 섞기

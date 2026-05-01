@@ -83,7 +83,7 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
                 <ActionCluster>
                   <Link
                     href="/membership"
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                    className="moon-action-secondary"
                   >
                     멤버십으로 돌아가기
                   </Link>

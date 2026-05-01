@@ -628,7 +628,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                     href={`/saju/${slug}/premium/print`}
                     eventName="report_pdf_click"
                     eventParams={{ slug, from: 'result_next_actions', status: 'print_page' }}
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                    className="moon-action-muted"
                   >
                     PDF로 소장하기
                   </TrackedLink>
@@ -636,7 +636,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                     href="/dialogue"
                     eventName="report_dialogue_continue_click"
                     eventParams={{ slug, from: 'result_next_actions' }}
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                    className="moon-action-secondary"
                   >
                     달빛선생에게 이어서 묻기
                   </TrackedLink>

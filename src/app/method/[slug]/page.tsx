@@ -201,13 +201,13 @@ export default async function MethodDetailPage({ params }: Props) {
             <ActionCluster>
               <Link
                 href="/about-engine"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                className="moon-action-secondary"
               >
                 계산 기준서 보기
               </Link>
               <Link
                 href="/sample-report"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                className="moon-action-muted"
               >
                 샘플 리포트 보기
               </Link>
@@ -265,13 +265,13 @@ export default async function MethodDetailPage({ params }: Props) {
                   <ActionCluster>
                     <Link
                       href="/saju/new"
-                      className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                      className="moon-action-primary"
                     >
                       사주 시작하기
                     </Link>
                     <Link
                       href="/membership"
-                      className="inline-flex h-11 items-center justify-center rounded-full border border-white/12 bg-white/6 px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-white/10 hover:text-[var(--app-ivory)]"
+                      className="moon-action-muted"
                     >
                       멤버십 기준 보기
                     </Link>

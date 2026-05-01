@@ -258,7 +258,7 @@ function CreditsPageContent() {
                     <button
                       onClick={() => handlePurchase(pkg)}
                       disabled={loading === pkg.id}
-                      className="inline-flex h-10 min-w-[112px] items-center justify-center rounded-full bg-[var(--app-gold)] px-4 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)] disabled:opacity-60"
+                      className="moon-action-primary moon-action-compact min-w-[112px]"
                     >
                       {loading === pkg.id ? '처리중...' : `${selectedMethod.shortLabel} 구매`}
                     </button>

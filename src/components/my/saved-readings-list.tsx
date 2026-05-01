@@ -130,10 +130,10 @@ export default function SavedReadingsList({
                 </span>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="destructive"
+                  size="sm"
                   disabled={deletingId === reading.id}
                   onClick={() => deleteReading(reading.id)}
-                  className="h-9 rounded-full border-rose-400/25 bg-rose-400/8 px-4 text-xs text-rose-100 hover:bg-rose-400/14"
                 >
                   {deletingId === reading.id ? '삭제 중...' : '삭제'}
                 </Button>

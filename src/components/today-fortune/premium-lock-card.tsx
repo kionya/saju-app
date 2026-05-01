@@ -65,7 +65,7 @@ export function PremiumLockCard({
               });
               onUnlock();
             }}
-            className="h-12 rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] hover:bg-[var(--app-gold-text)]"
+            size="lg"
           >
             <Lock className="mr-2 h-4 w-4" />
             {loading ? '열어보는 중...' : '오늘 심화풀이 1코인으로 열기'}
@@ -74,7 +74,7 @@ export function PremiumLockCard({
             <Button
               type="button"
               variant="outline"
-              className="h-12 rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] px-6 text-sm text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+              size="lg"
             >
               코인 충전 보기
             </Button>

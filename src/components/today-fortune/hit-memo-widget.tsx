@@ -64,7 +64,6 @@ export function HitMemoWidget({ session, onSubmit }: HitMemoWidgetProps) {
               variant="outline"
               disabled={loading !== null}
               onClick={() => void handleSubmit(option.accuracyLabel)}
-              className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
             >
               {loading === option.accuracyLabel ? '저장 중...' : option.label}
             </Button>

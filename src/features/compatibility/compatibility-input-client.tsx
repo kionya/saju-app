@@ -593,7 +593,7 @@ export function CompatibilityInputClient({ initialRelationship }: CompatibilityI
                   </button>
                   <Link
                     href="/compatibility"
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                    className="moon-action-secondary"
                   >
                     궁합 허브로
                   </Link>
@@ -781,7 +781,7 @@ export function CompatibilityInputClient({ initialRelationship }: CompatibilityI
                   <div className="mt-3">
                     <Link
                       href="/login?next=/compatibility/input"
-                      className="inline-flex h-9 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-4 text-sm text-[var(--app-gold-text)]"
+                      className="moon-action-secondary moon-action-compact"
                     >
                       로그인하고 불러오기
                     </Link>
@@ -828,14 +828,14 @@ export function CompatibilityInputClient({ initialRelationship }: CompatibilityI
                           <button
                             type="button"
                             onClick={() => applySavedProfile('self', profile)}
-                            className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-4 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface)]"
+                            className="moon-action-muted moon-action-compact"
                           >
                             내 정보로 채우기
                           </button>
                           <button
                             type="button"
                             onClick={() => applySavedProfile('partner', profile)}
-                            className="inline-flex h-10 items-center justify-center rounded-full bg-[var(--app-jade)] px-4 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
+                            className="moon-action-primary moon-action-compact"
                           >
                             상대 정보로 채우기
                           </button>

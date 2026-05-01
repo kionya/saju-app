@@ -82,7 +82,7 @@ export default function InterpretationPage() {
                   </Link>
                   <Link
                     href="/guide"
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                    className="moon-action-secondary"
                   >
                     이용 안내 보기
                   </Link>
@@ -121,7 +121,7 @@ export default function InterpretationPage() {
             <ActionCluster className="mt-5">
               <Link
                 href={REPORT_SAMPLE_HREF}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                className="moon-action-secondary"
               >
                 샘플 리포트
               </Link>
@@ -216,7 +216,7 @@ export default function InterpretationPage() {
               </Link>
               <Link
                 href="/method"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                className="moon-action-secondary"
               >
                 계산 기준 보기
               </Link>

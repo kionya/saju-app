@@ -555,7 +555,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                   <Link
                     key={step.href}
                     href={step.href}
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-5 text-sm font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                    className="moon-action-secondary"
                   >
                     {step.label} 보기
                   </Link>
@@ -565,7 +565,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                     href={`/saju/${slug}/premium/print`}
                     eventName="report_pdf_click"
                     eventParams={{ slug, from: 'premium_hero', status: 'available' }}
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                    className="moon-action-primary"
                   >
                     PDF로 저장하기
                   </TrackedLink>
@@ -715,13 +715,13 @@ export default async function SajuPremiumPage({ params }: Props) {
                   <div className="mt-5 flex flex-wrap justify-center gap-3">
                     <Link
                       href={`/membership/checkout?plan=lifetime&slug=${encodedSlug}&from=saju-premium`}
-                      className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                      className="moon-action-primary"
                     >
                       기준서 열기
                     </Link>
                     <Link
                       href={`/saju/${slug}`}
-                      className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                      className="moon-action-secondary"
                     >
                       기본 결과로 돌아가기
                     </Link>
@@ -828,19 +828,19 @@ export default async function SajuPremiumPage({ params }: Props) {
               <div className="mt-5 flex flex-wrap justify-center gap-3">
                 <Link
                   href={`/membership/checkout?plan=lifetime&slug=${encodedSlug}&from=saju-premium`}
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                  className="moon-action-primary"
                 >
                   기준서 열기
                 </Link>
                 <Link
                   href={`/membership/checkout?plan=premium&slug=${encodedSlug}&from=saju-premium`}
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                  className="moon-action-secondary"
                 >
                   멤버십으로 먼저 보기
                 </Link>
                 <Link
                   href={REPORT_SAMPLE_HREF}
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                  className="moon-action-muted"
                 >
                   샘플 기준서 다시 보기
                 </Link>

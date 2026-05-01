@@ -102,13 +102,13 @@ export default function TenGodsPage() {
                 <ActionCluster>
                   <Link
                     href="/saju/new"
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                    className="moon-action-primary"
                   >
                     내 사주 시작하기
                   </Link>
                   <Link
                     href="/interpretation"
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                    className="moon-action-muted"
                   >
                     다른 해석 보기
                   </Link>

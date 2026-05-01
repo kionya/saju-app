@@ -381,7 +381,6 @@ export function UnifiedBirthInfoFields({
                 onClick={onLocationSearch}
                 disabled={locationLoading}
                 variant="outline"
-                className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)]"
               >
                 <Search className="mr-2 h-4 w-4" />
                 {locationLoading ? '검색 중...' : '좌표 찾기'}

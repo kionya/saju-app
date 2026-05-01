@@ -60,13 +60,13 @@ export default async function DialoguePage({
                 <ActionCluster>
                   <Link
                     href="/saju/new"
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                    className="moon-action-primary"
                   >
                     기준서 먼저 만들기
                   </Link>
                   <Link
                     href="/sample-report"
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                    className="moon-action-muted"
                   >
                     샘플 리포트 보기
                   </Link>

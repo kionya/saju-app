@@ -57,7 +57,7 @@ function MissingManualState({ relationship }: { relationship: CompatibilityRelat
                 </Link>
                 <Link
                   href="/compatibility"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                  className="moon-action-muted"
                 >
                   궁합 허브로
                 </Link>

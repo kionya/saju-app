@@ -278,13 +278,13 @@ export function CompatibilityResultView({
               <ActionCluster>
                 <Link
                   href="/membership/checkout?plan=premium"
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
+                  className="moon-action-primary"
                 >
                   프리미엄으로 이 관계 이어보기
                 </Link>
                 <Link
                   href={retakeHref}
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                  className="moon-action-muted"
                 >
                   다른 사람 입력하기
                 </Link>

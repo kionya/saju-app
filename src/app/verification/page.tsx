@@ -68,7 +68,7 @@ function JsonLink({ href }: { href: string }) {
   return (
     <Link
       href={href}
-      className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-2 text-sm text-[var(--app-copy)] transition-colors hover:border-[var(--app-gold)]/35 hover:text-[var(--app-ivory)]"
+      className="moon-action-muted moon-action-compact"
     >
       JSON API
     </Link>

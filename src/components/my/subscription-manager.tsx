@@ -45,15 +45,12 @@ export default function SubscriptionManager({ subscription }: SubscriptionManage
     return (
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <Link href="/credits">
-          <Button className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]">
+          <Button>
             라이트 시작하기
           </Button>
         </Link>
         <Link href="/membership">
-          <Button
-            variant="outline"
-            className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-          >
+          <Button variant="outline">
             멤버십 구성 보기
           </Button>
         </Link>
@@ -69,7 +66,6 @@ export default function SubscriptionManager({ subscription }: SubscriptionManage
             onClick={() => handleAction('cancel')}
             disabled={loadingAction !== null}
             variant="outline"
-            className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
           >
             {loadingAction === 'cancel' ? '처리 중..' : '해지 예약'}
           </Button>
@@ -77,23 +73,19 @@ export default function SubscriptionManager({ subscription }: SubscriptionManage
           <Button
             onClick={() => handleAction('resume')}
             disabled={loadingAction !== null}
-            className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]"
           >
             {loadingAction === 'resume' ? '처리 중..' : '해지 예약 취소'}
           </Button>
         ) : (
           <Link href="/credits">
-            <Button className="rounded-full bg-[#d2b072] px-6 text-[#111827] hover:bg-[#e3c68d]">
+            <Button>
               라이트 다시 시작하기
             </Button>
           </Link>
         )}
 
         <Link href="/membership">
-          <Button
-            variant="outline"
-            className="rounded-full border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-          >
+          <Button variant="outline">
             멤버십 구성 보기
           </Button>
         </Link>

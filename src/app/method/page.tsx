@@ -91,13 +91,13 @@ export default function MethodIndexPage() {
             <ActionCluster>
               <Link
                 href="/about-engine"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                className="moon-action-secondary"
               >
                 계산 기준서 보기
               </Link>
               <Link
                 href="/saju/new"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                className="moon-action-primary"
               >
                 사주 시작하기
               </Link>

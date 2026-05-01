@@ -134,13 +134,13 @@ export default async function MyeongriPage() {
                 <ActionCluster>
                   <Link
                     href={`/saju/${readingSlug}`}
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                    className="moon-action-primary"
                   >
                     내 통합 결과 보기
                   </Link>
                   <Link
                     href={`/saju/${readingSlug}/elements`}
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm font-semibold text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                    className="moon-action-muted"
                   >
                     내 오행 바로 보기
                   </Link>

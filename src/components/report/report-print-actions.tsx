@@ -31,7 +31,7 @@ export function ReportPrintActions({ slug, backHref }: ReportPrintActionsProps) 
         <button
           type="button"
           onClick={handlePrint}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+          className="moon-action-primary"
         >
           <Download className="h-4 w-4" aria-hidden="true" />
           PDF로 저장
@@ -39,14 +39,14 @@ export function ReportPrintActions({ slug, backHref }: ReportPrintActionsProps) 
         <button
           type="button"
           onClick={handlePrint}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+          className="moon-action-secondary"
         >
           <Printer className="h-4 w-4" aria-hidden="true" />
           인쇄
         </button>
         <Link
           href={backHref}
-          className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+          className="moon-action-muted"
         >
           기준서로 돌아가기
         </Link>

@@ -691,13 +691,12 @@ export default function FortuneCalendarPanel({
                   <Button
                     onClick={() => void handleUnlock()}
                     disabled={unlocking}
-                    className="rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]"
                   >
                     {unlocking ? '여는 중...' : `${selectedMonth}월 캘린더 2코인으로 열기`}
                   </Button>
                   <Link
                     href={`/credits?from=fortune-calendar&slug=${encodeURIComponent(slug)}`}
-                    className="inline-flex h-8 items-center justify-center rounded-full border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 text-sm text-[var(--app-copy)] transition-colors hover:bg-[rgba(255,255,255,0.06)]"
+                    className="moon-action-muted moon-action-compact"
                   >
                     월간 코인팩 보기
                   </Link>

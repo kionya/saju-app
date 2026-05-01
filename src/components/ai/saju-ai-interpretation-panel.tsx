@@ -342,7 +342,7 @@ export function SajuAiInterpretationPanel({
           type="button"
           onClick={() => void loadInterpretation()}
           disabled={status === 'loading'}
-          className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="moon-action-primary"
         >
           {status === 'loading' ? '불러오는 중' : cacheEnabled ? '저장된 해석 확인' : '해석 정리하기'}
         </button>

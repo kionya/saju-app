@@ -211,7 +211,7 @@ export default function HomePage() {
                 <ActionCluster>
                   <Link
                     href={REPORT_SAMPLE_HREF}
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                    className="moon-action-primary"
                   >
                     샘플 리포트 펼쳐보기
                   </Link>
@@ -289,7 +289,7 @@ export default function HomePage() {
               </Link>
               <Link
                 href={REPORT_SAMPLE_HREF}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                className="moon-action-secondary"
               >
                 샘플 먼저 보기
               </Link>
@@ -313,7 +313,7 @@ export default function HomePage() {
                 </Link>
                 <Link
                   href="/interpretation"
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                  className="moon-action-secondary"
                 >
                   해석 메뉴
                   <ArrowRight className="h-4 w-4" />

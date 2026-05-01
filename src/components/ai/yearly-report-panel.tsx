@@ -842,7 +842,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
         <Button
           onClick={() => setReloadToken((value) => value + 1)}
           variant="outline"
-          className="h-8 rounded-full border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-3 text-xs text-[var(--app-copy)] hover:bg-[rgba(255,255,255,0.06)]"
+          size="xs"
         >
           다시 생성
         </Button>

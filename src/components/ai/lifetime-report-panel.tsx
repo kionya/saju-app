@@ -545,7 +545,7 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
           <Button
             onClick={() => setReloadToken((value) => value + 1)}
             variant="outline"
-            className="h-8 rounded-full border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-3 text-xs text-[var(--app-copy)] hover:bg-[rgba(255,255,255,0.06)]"
+            size="xs"
           >
             다시 생성
           </Button>
@@ -678,7 +678,7 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
         <div className="mt-5 flex flex-wrap gap-3">
           <Link
             href={report.yearlyAppendix.ctaAnchor}
-            className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+            className="moon-action-primary"
           >
             {report.yearlyAppendix.ctaLabel}
           </Link>

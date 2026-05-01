@@ -347,7 +347,7 @@ function DesktopSidebar({
               <button
                 type="button"
                 onClick={onSignOut}
-                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-full border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-3 text-xs font-medium text-[var(--app-copy-muted)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                className="moon-action-muted moon-action-compact w-full"
               >
                 <LogOut className="h-3.5 w-3.5" />
                 로그아웃
@@ -356,7 +356,7 @@ function DesktopSidebar({
               <Link
                 href={authHref}
                 scroll={false}
-                className="inline-flex h-9 w-full items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-strong)] px-3 text-xs font-medium text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface)]"
+                className="moon-action-primary moon-action-compact w-full"
               >
                 로그인
               </Link>
@@ -366,7 +366,7 @@ function DesktopSidebar({
               <Link
                 href="/credits"
                 scroll={false}
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-3 text-xs text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                className="moon-action-muted moon-action-compact"
               >
                 <CreditCard className="h-3.5 w-3.5" />
                 코인 충전
@@ -374,7 +374,7 @@ function DesktopSidebar({
               <Link
                 href="/membership"
                 scroll={false}
-                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-full border border-[var(--app-gold)]/25 bg-[var(--app-gold)]/12 px-3 text-xs font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                className="moon-action-secondary moon-action-compact"
               >
                 <Sparkles className="h-3.5 w-3.5" />
                 프리미엄

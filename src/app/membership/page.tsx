@@ -264,7 +264,7 @@ export default async function MembershipPage({
                         href: report.href,
                         status: report.status,
                       }}
-                      className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                      className="moon-action-primary"
                     >
                       {isReady ? '이 리포트 흐름 보기' : '준비 중인 흐름 보기'}
                     </TrackedLink>
@@ -332,8 +332,8 @@ export default async function MembershipPage({
                       href={guide.href}
                       className={
                         index === 1
-                          ? 'inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]'
-                          : 'inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]'
+                          ? 'moon-action-primary'
+                          : 'moon-action-muted'
                       }
                     >
                       {guide.cta}
@@ -428,7 +428,7 @@ export default async function MembershipPage({
                     </Link>
                     <Link
                       href={REPORT_SAMPLE_HREF}
-                      className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/14 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/20"
+                      className="moon-action-secondary"
                     >
                       샘플 리포트 보기
                     </Link>

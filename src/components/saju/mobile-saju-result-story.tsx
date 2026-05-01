@@ -573,13 +573,13 @@ export function MobileSajuResultStory({
           <div className="grid gap-2">
             <Link
               href={`/saju/${slug}/premium`}
-              className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-4 text-sm font-semibold text-[#111827]"
+              className="moon-action-primary"
             >
               명리 기준서로 이어보기
             </Link>
             <Link
               href="/dialogue"
-              className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-4 text-sm text-[var(--app-copy)]"
+              className="moon-action-muted moon-action-compact"
             >
               달빛선생에게 이어서 묻기
             </Link>
@@ -662,8 +662,8 @@ export function MobileSajuResultStory({
               type="button"
               onClick={() => goTo(activeIndex - 1)}
               disabled={isFirst}
-              variant="outline"
-              className="h-10 rounded-full border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-4 text-sm text-[var(--app-copy)] disabled:opacity-35"
+              variant="secondary"
+              size="sm"
             >
               <ArrowLeft className="mr-1.5 h-4 w-4" />
               이전
@@ -671,7 +671,7 @@ export function MobileSajuResultStory({
             {isLast ? (
               <Link
                 href="/saju/new"
-                className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/12 px-4 text-sm font-semibold text-[var(--app-gold-text)]"
+                className="moon-action-secondary moon-action-compact"
               >
                 새 리포트
               </Link>
@@ -679,7 +679,7 @@ export function MobileSajuResultStory({
               <Button
                 type="button"
                 onClick={() => goTo(activeIndex + 1)}
-                className="h-10 rounded-full bg-[var(--app-gold)] px-4 text-sm font-semibold text-[#111827]"
+                size="sm"
               >
                 다음
                 <ArrowRight className="ml-1.5 h-4 w-4" />

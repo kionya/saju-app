@@ -107,7 +107,7 @@ export default async function MyResultsPage({ searchParams }: MyResultsPageProps
                 {hasPreviousPage ? (
                   <Link
                     href={buildResultsPageHref(currentPage - 1)}
-                    className="rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-2 text-sm text-[var(--app-copy)] transition-colors hover:border-[var(--app-gold)]/35 hover:text-[var(--app-ivory)]"
+                    className="moon-action-muted moon-action-compact"
                   >
                     이전 30개
                   </Link>
@@ -115,7 +115,7 @@ export default async function MyResultsPage({ searchParams }: MyResultsPageProps
                 {hasNextPage ? (
                   <Link
                     href={buildResultsPageHref(currentPage + 1)}
-                    className="rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 px-4 py-2 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/16"
+                    className="moon-action-secondary moon-action-compact"
                   >
                     다음 30개
                   </Link>

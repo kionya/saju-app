@@ -88,7 +88,6 @@ export function SwipeSectionDeck({
               size="icon"
               onClick={() => scrollToIndex(activeIndex - 1)}
               disabled={activeIndex === 0}
-              className="h-10 w-10 rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] disabled:opacity-40"
               aria-label="이전 섹션"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -99,7 +98,6 @@ export function SwipeSectionDeck({
               size="icon"
               onClick={() => scrollToIndex(activeIndex + 1)}
               disabled={activeIndex === lastIndex}
-              className="h-10 w-10 rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)] disabled:opacity-40"
               aria-label="다음 섹션"
             >
               <ArrowRight className="h-4 w-4" />

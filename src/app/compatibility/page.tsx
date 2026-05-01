@@ -128,13 +128,13 @@ export default function CompatibilityPage() {
             <ActionCluster className="mt-5">
               <Link
                 href="/membership"
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
+                className="moon-action-primary"
               >
                 프리미엄 기준 보기
               </Link>
               <Link
                 href="/sample-report"
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                className="moon-action-muted"
               >
                 샘플 리포트 보기
               </Link>
@@ -154,13 +154,13 @@ export default function CompatibilityPage() {
               <ActionCluster>
                 <Link
                   href="/membership"
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--app-jade)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:opacity-90"
+                  className="moon-action-primary"
                 >
                   <Lock className="h-3.5 w-3.5" /> 멤버십으로 열기
                 </Link>
                 <Link
                   href="/compatibility/input?relationship=lover"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                  className="moon-action-muted"
                 >
                   입력 흐름 먼저 보기
                 </Link>

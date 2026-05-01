@@ -228,13 +228,13 @@ export default async function SajuOverviewPage({ params }: Props) {
               <div className="mt-6 flex flex-col gap-2.5">
                 <Link
                   href={`/saju/${slug}/premium`}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)]"
+                  className="moon-action-primary"
                 >
                   명리 기준서 열기 <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
                   href="/membership"
-                  className="inline-flex h-10 items-center justify-center rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/8 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/14"
+                  className="moon-action-secondary moon-action-compact"
                 >
                   플랜 비교 보기
                 </Link>

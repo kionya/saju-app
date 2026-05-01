@@ -166,13 +166,13 @@ export default async function LifetimeReportPrintPage({ params }: Props) {
             <div className="mt-6 flex flex-wrap gap-3">
               <Link
                 href={`/membership/checkout?plan=lifetime&slug=${encodeURIComponent(slug)}&from=pdf-print`}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                className="moon-action-primary"
               >
                 명리 기준서 열기
               </Link>
               <Link
                 href={backHref}
-                className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                className="moon-action-muted"
               >
                 기준서 화면으로 돌아가기
               </Link>

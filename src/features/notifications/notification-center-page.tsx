@@ -676,7 +676,7 @@ export default function NotificationCenterPage({
                       enabled: !current.enabled,
                     }))
                   }
-                  className="mt-5 h-11 w-full rounded-full bg-[var(--app-gold)] text-[#111827] hover:bg-[#e3c68d]"
+                  className="mt-5 w-full"
                 >
                   {preferences.enabled ? '알림 전체 끄기' : '알림 전체 켜기'}
                 </Button>
@@ -724,7 +724,6 @@ export default function NotificationCenterPage({
                   <Button
                     onClick={isCurrentDeviceSubscribed ? disconnectPush : connectPush}
                     disabled={isConnectingPush || !pushReady}
-                    className="h-11 rounded-full bg-[var(--app-gold)] text-[#111827] hover:bg-[#e3c68d]"
                   >
                     {isConnectingPush
                       ? '연결 처리 중...'
@@ -741,7 +740,6 @@ export default function NotificationCenterPage({
                     variant="outline"
                     onClick={sendTestPush}
                     disabled={isSendingTest || !isCurrentDeviceSubscribed}
-                    className="h-11 rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)] hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
                   >
                     {isSendingTest ? '테스트 발송 중...' : '테스트 알림 보내기'}
                   </Button>
@@ -917,7 +915,7 @@ export default function NotificationCenterPage({
                     </p>
                     <Link
                       href={snapshot.latestReading.href}
-                      className="mt-5 inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/28 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18"
+                      className="moon-action-secondary mt-5"
                     >
                       최근 결과 다시 보기
                     </Link>

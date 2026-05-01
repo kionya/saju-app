@@ -157,7 +157,7 @@ export default function TossMembershipCheckout({
         type="button"
         onClick={handlePayment}
         disabled={isLoading || isLoggedIn === null}
-        className="h-12 w-full rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+        className="w-full"
       >
         {isLoading
           ? '결제창 여는 중...'

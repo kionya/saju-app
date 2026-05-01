@@ -79,7 +79,7 @@ function SetupState({
                 </Link>
                 <Link
                   href="/my/profile"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-ivory)] transition-colors hover:bg-[var(--app-surface-strong)]"
+                  className="moon-action-muted"
                 >
                   MY 프로필 열기
                 </Link>

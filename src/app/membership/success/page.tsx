@@ -109,15 +109,12 @@ function ErrorState({ errorMessage }: { errorMessage: string }) {
           actions={
             <ActionCluster>
               <Link href="/membership">
-                <Button className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]">
+                <Button>
                   멤버십으로 돌아가기
                 </Button>
               </Link>
               <Link href="/my/billing">
-                <Button
-                  variant="outline"
-                  className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] hover:bg-[var(--app-surface-strong)]"
-                >
+                <Button variant="outline">
                   결제 상태 확인
                 </Button>
               </Link>
@@ -189,15 +186,12 @@ function SuccessState({
         >
           <ActionCluster>
             <Link href={completeHref}>
-              <Button className="h-12 rounded-full bg-[var(--app-gold)] px-7 text-sm font-semibold text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]">
+              <Button size="lg">
                 다음으로 이동
               </Button>
             </Link>
             <Link href="/membership">
-              <Button
-                variant="outline"
-                className="h-12 rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] px-7 text-sm text-[var(--app-ivory)] hover:bg-[var(--app-surface-strong)]"
-              >
+              <Button variant="outline" size="lg">
                 멤버십 보기
               </Button>
             </Link>

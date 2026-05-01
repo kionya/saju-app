@@ -501,7 +501,8 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
           <Button
             onClick={handleUnlock}
             disabled={state === 'loading'}
-            className="mt-5 h-12 min-w-[200px] rounded-full border border-[var(--app-gold)]/40 bg-[var(--app-gold)]/16 px-10 text-base font-semibold text-[var(--app-gold-text)] shadow-[0_16px_48px_rgba(210,176,114,0.14)] hover:bg-[var(--app-gold)]/22"
+            className="mt-5 min-w-[200px]"
+            size="lg"
           >
             {state === 'loading' ? '처리 중...' : '코인 1개로 지금 열기'}
           </Button>

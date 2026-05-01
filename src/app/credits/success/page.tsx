@@ -103,15 +103,12 @@ function ErrorState({ errorMessage }: { errorMessage: string }) {
           actions={
             <ActionCluster>
               <Link href="/credits">
-                <Button className="rounded-full bg-[var(--app-gold)] px-6 text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]">
+                <Button>
                   코인 센터로 돌아가기
                 </Button>
               </Link>
               <Link href="/my/billing">
-                <Button
-                  variant="outline"
-                  className="rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-ivory)] hover:bg-[var(--app-surface-strong)]"
-                >
+                <Button variant="outline">
                   결제 상태 확인
                 </Button>
               </Link>
@@ -170,15 +167,12 @@ function SuccessState({ coins }: { coins: number }) {
         >
           <ActionCluster>
             <Link href="/credits">
-              <Button className="h-12 rounded-full bg-[var(--app-gold)] px-7 text-sm font-semibold text-[var(--app-bg)] hover:bg-[var(--app-gold-bright)]">
+              <Button size="lg">
                 코인 더 살펴보기
               </Button>
             </Link>
             <Link href="/my/billing">
-              <Button
-                variant="outline"
-                className="h-12 rounded-full border-[var(--app-line)] bg-[var(--app-surface-muted)] px-7 text-sm text-[var(--app-ivory)] hover:bg-[var(--app-surface-strong)]"
-              >
+              <Button variant="outline" size="lg">
                 결제와 보관 상태 보기
               </Button>
             </Link>

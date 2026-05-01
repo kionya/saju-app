@@ -357,7 +357,8 @@ export function DialogueChatPanel({
                     <Button
                       type="button"
                       onClick={() => router.push(message.cta!.href)}
-                      className="rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/14 px-4 py-2 text-sm font-semibold text-[var(--app-gold-text)] hover:bg-[var(--app-gold)]/20"
+                      variant="outline"
+                      size="sm"
                     >
                       {message.cta.label}
                     </Button>
@@ -423,7 +424,7 @@ export function DialogueChatPanel({
           <button
             type="submit"
             disabled={status === 'loading'}
-            className="inline-flex h-12 items-center justify-center rounded-full bg-[var(--app-gold)] px-6 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-text)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="moon-action-primary"
           >
             {status === 'loading' ? '답변 확인 중' : '보내기'}
           </button>

@@ -37,11 +37,11 @@ const DEFAULT_DESCRIPTION =
 function actionClassName(variant: ReportKeepsakeAction['variant']) {
   switch (variant) {
     case 'primary':
-      return 'inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]';
+      return 'moon-action-primary';
     case 'secondary':
-      return 'inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 px-5 text-sm text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/18';
+      return 'moon-action-secondary';
     default:
-      return 'inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]';
+      return 'moon-action-muted';
   }
 }
 

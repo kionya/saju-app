@@ -208,13 +208,13 @@ export default async function SajuElementsPage({ params }: Props) {
             <section className="flex flex-wrap gap-3">
           <Link
             href={`/saju/${slug}/nature`}
-            className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+            className="moon-action-muted"
           >
             이전
           </Link>
           <Link
             href={`/saju/${slug}/premium`}
-            className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-gold)]/35 bg-[var(--app-gold)]/16 px-5 text-sm font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/22"
+            className="moon-action-secondary"
           >
             다음: 명리 기준서
             <ArrowRight className="ml-2 h-4 w-4" />

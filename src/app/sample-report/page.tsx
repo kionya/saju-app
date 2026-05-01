@@ -80,7 +80,7 @@ export default function SampleReportPage() {
                     href="/saju/new"
                     eventName="sample_report_start_click"
                     eventParams={{ from: "sample_report_hero" }}
-                    className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                    className="moon-action-primary"
                   >
                     내 명리 기준서 만들기
                   </TrackedLink>
@@ -88,7 +88,7 @@ export default function SampleReportPage() {
                     href="/about-engine"
                     eventName="sample_report_engine_click"
                     eventParams={{ from: "sample_report_hero" }}
-                    className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                    className="moon-action-muted"
                   >
                     계산 기준서 보기
                   </TrackedLink>
@@ -238,13 +238,13 @@ export default function SampleReportPage() {
               <ActionCluster>
                 <Link
                   href="/saju/new"
-                  className="inline-flex h-11 items-center justify-center rounded-full bg-[var(--app-gold)] px-5 text-sm font-semibold text-[var(--app-bg)] transition-colors hover:bg-[var(--app-gold-bright)]"
+                  className="moon-action-primary"
                 >
                   내 명리 기준서 만들기
                 </Link>
                 <Link
                   href="/membership"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-5 text-sm text-[var(--app-copy)] transition-colors hover:bg-[var(--app-surface-strong)] hover:text-[var(--app-ivory)]"
+                  className="moon-action-muted"
                 >
                   프리미엄 기준 보기
                 </Link>
