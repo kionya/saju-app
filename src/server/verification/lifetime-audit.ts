@@ -52,16 +52,16 @@ export async function getLifetimeVerificationAudit({
         slug,
         targetYear,
         counselorId,
-        errors: ['평생 리포트를 만들 대상 사주 결과를 찾지 못했습니다.'],
+        errors: ['명리 기준서를 만들 대상 사주 결과를 찾지 못했습니다.'],
       };
     }
 
     const checks: LifetimeVerificationCheck[] = [
       {
         key: 'lifetime-api-response',
-        label: '평생 리포트 API 응답',
+        label: '명리 기준서 API 응답',
         ok: true,
-        detail: `${result.targetYear}년 기준 평생 리포트 응답이 생성되었습니다.`,
+        detail: `${result.targetYear}년 기준 명리 기준서 응답이 생성되었습니다.`,
       },
       {
         key: 'lifetime-openai-source',
@@ -69,7 +69,7 @@ export async function getLifetimeVerificationAudit({
         ok: result.source === 'openai',
         detail:
           result.source === 'openai'
-            ? '평생 리포트가 OpenAI 단계 생성으로 완료되었습니다.'
+            ? '명리 기준서가 정밀 해석 단계 생성으로 완료되었습니다.'
             : `현재는 ${result.fallbackReason ?? 'fallback'} 사유로 fallback입니다.`,
       },
       {
@@ -164,7 +164,7 @@ export async function getLifetimeVerificationAudit({
       slug,
       targetYear,
       counselorId,
-      errors: [error instanceof Error ? error.message : '평생 리포트 검증을 만들지 못했습니다.'],
+      errors: [error instanceof Error ? error.message : '명리 기준서 검증을 만들지 못했습니다.'],
     };
   }
 }

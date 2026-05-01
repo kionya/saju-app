@@ -315,7 +315,7 @@ export function renderLifetimeInterpretationReport(
     renderBulletLines(report.yearlyAppendix.goodPeriods),
     '### 조심할 시기',
     renderBulletLines(report.yearlyAppendix.cautionPeriods),
-    '## 평생 리포트 한 줄 총정리',
+    '## 명리 기준서 한 줄 총정리',
     `**${interpretation.oneLineSummary}**`,
   ]
     .filter(Boolean)
@@ -374,7 +374,7 @@ export function createLifetimeInterpretationPrompt(
   return {
     instructions: [
       '너는 평생 사주 기준서를 쓰는 명리 전문 해석가이다.',
-      '이 리포트는 연간 운세가 아니라 원국 중심 평생 소장 리포트다.',
+      '이 리포트는 연간 운세가 아니라 원국 중심 명리 기준서다.',
       counselorInstructions,
       '반드시 JSON만 반환한다. markdown, 코드블록, 설명 문장은 금지한다.',
       '출력 JSON 형식:',

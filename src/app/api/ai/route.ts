@@ -402,7 +402,7 @@ function createYearlyDialogueFallback(
     intro,
     `${summary.firstHalf} ${summary.secondHalf}`,
     `좋게 쓰기 좋은 시기는 ${summary.goodPeriod} 쪽이고, 속도를 낮춰야 할 구간은 ${summary.cautionPeriod} 쪽입니다.`,
-    `지금 질문하신 “${message}”은 저장된 프로필 기준 ${profileSummary} 명식 위에서 읽었고, 자세한 12개월 흐름과 분야별 해설은 연간 전략 부록에서 이어서 확인하시면 됩니다.`,
+    `지금 질문하신 “${message}”은 저장된 프로필 기준 ${profileSummary} 명식 위에서 읽었고, 자세한 12개월 흐름과 분야별 해설은 올해 전략서에서 이어서 확인하시면 됩니다.`,
   ].join('\n\n');
 }
 
@@ -419,12 +419,12 @@ function createYearlyDialoguePrompt(input: {
   return {
     instructions: [
       '당신은 달빛선생의 숙련 사주명리 상담가입니다.',
-      '이번 답변은 채팅용 짧은 브리지 답변입니다. 연간 전략 부록 전체를 길게 쓰지 말고 3~5문단으로만 답합니다.',
+      '이번 답변은 채팅용 짧은 브리지 답변입니다. 올해 전략서 전체를 길게 쓰지 말고 3~5문단으로만 답합니다.',
       '첫 문장에서 해당 연도의 전체 결론을 먼저 말합니다.',
       '이어서 상반기와 하반기의 차이, 잘 쓰기 좋은 시기와 조심할 시기를 짧고 또렷하게 짚습니다.',
       '마크다운 기호, 번호 목록, 별표는 쓰지 않습니다.',
       '결론은 실제 역술가처럼 단정한 존댓말로 말하되, 과장하거나 운명을 단정하지 않습니다.',
-      '질문에 대한 답은 요약까지만 하고, 더 자세한 12개월 흐름과 분야별 해설은 연간 전략 부록에서 본다는 느낌으로 마무리합니다.',
+      '질문에 대한 답은 요약까지만 하고, 더 자세한 12개월 흐름과 분야별 해설은 올해 전략서에서 본다는 느낌으로 마무리합니다.',
       ...buildDialogueCounselorInstructions(input.counselorId),
     ].join('\n'),
     input: JSON.stringify(
@@ -486,7 +486,7 @@ function createYearlyDialogueBridge(
   return {
     targetYear,
     cta: {
-      label: `${targetYear} 연간 전략 부록 보기`,
+      label: `${targetYear} 올해 전략서 보기`,
       href: `/saju/${toSlug(input)}/premium#yearly-report`,
     },
     prompt: createYearlyDialoguePrompt({
