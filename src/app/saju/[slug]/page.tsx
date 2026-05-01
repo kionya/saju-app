@@ -22,6 +22,7 @@ import { ReportKeepsakeSection } from '@/components/report/report-keepsake-secti
 import { ReportOneMinuteSummary } from '@/components/report/report-one-minute-summary';
 import FiveElementOrbitChart from '@/components/saju/five-element-orbit-chart';
 import { GroundingDecisionTrace } from '@/components/saju/grounding-decision-trace';
+import { MobileSajuResultStory } from '@/components/saju/mobile-saju-result-story';
 import { SajuFactEvidencePanel } from '@/components/saju/saju-fact-evidence-panel';
 import { Badge } from '@/components/ui/badge';
 import DetailUnlock from '@/components/detail-unlock';
@@ -442,8 +443,42 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
 
   return (
     <AppShell header={<SiteHeader />}>
-      <AppPage className="space-y-6">
+      <AppPage className="saju-result-page space-y-0 lg:space-y-6">
         <SajuResultViewTracker slug={slug} />
+        <MobileSajuResultStory
+          slug={slug}
+          birthSummary={formatBirthSummary(input)}
+          focusBadge={report.focusBadge}
+          headline={report.headline}
+          dayMasterSummary={report.dayMasterSummary}
+          keyThemes={keyThemes}
+          cautionPatterns={cautionPatterns}
+          favorableChoices={favorableChoices}
+          scores={report.scores}
+          primaryAction={report.primaryAction}
+          cautionAction={report.cautionAction}
+          timeline={report.timeline}
+          pillars={pillars.map(({ label, pillar }) => ({
+            label,
+            stem: pillar?.stem ?? '—',
+            branch: pillar?.branch ?? '—',
+            stemColor: pillar ? ELEMENT_INFO[pillar.stemElement].color : 'var(--app-copy-soft)',
+            branchColor: pillar ? ELEMENT_INFO[pillar.branchElement].color : 'var(--app-copy-soft)',
+          }))}
+          dayMasterLabel={`${sajuData.dayMaster.stem} 일간`}
+          dominantElementLabel={ELEMENT_INFO[sajuData.fiveElements.dominant].name}
+          weakestElementLabel={ELEMENT_INFO[sajuData.fiveElements.weakest].name}
+          supportElements={report.supportElements.map((element) => ELEMENT_INFO[element].name)}
+          evidenceCards={report.evidenceCards.map((card) => ({
+            label: card.label,
+            title: card.title,
+            body: card.body,
+          }))}
+          luckyDates={report.luckyDates}
+          cautionDates={report.cautionDates}
+        />
+
+        <div className="hidden space-y-6 lg:block">
         <SajuScreenNav slug={slug} current="result" />
 
         <SectionSurface surface="lunar" size="lg" className="moon-result-hero">
@@ -1323,6 +1358,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             <ClassicEvidencePanel concept={classicEvidenceConcept} />
           </SwipeSectionSlide>
         </SwipeSectionDeck>
+        </div>
       </AppPage>
     </AppShell>
   );
