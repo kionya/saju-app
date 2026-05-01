@@ -238,11 +238,6 @@ function groupMonthlyFlowsByMomentum(monthlyFlows: YearlyMonthFlow[]) {
   };
 }
 
-function formatMonthList(flows: YearlyMonthFlow[]) {
-  if (flows.length === 0) return '해당 월 없음';
-  return flows.map((flow) => `${flow.month}월`).join(' · ');
-}
-
 function getTopAreaLabel(flow: YearlyMonthFlow) {
   return flow.relatedAreas
     .slice(0, 2)
@@ -250,7 +245,7 @@ function getTopAreaLabel(flow: YearlyMonthFlow) {
     .join(' · ');
 }
 
-function MomentumSummaryCard({
+function MomentumSummaryRow({
   tone,
   flows,
 }: {
@@ -262,16 +257,28 @@ function MomentumSummaryCard({
 
   return (
     <article className={`rounded-[22px] border px-4 py-4 ${meta.panelClassName}`}>
-      <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-current/25 bg-black/10">
+      <div className="grid gap-3 sm:grid-cols-[auto_minmax(8rem,0.42fr)_minmax(0,1fr)] sm:items-center">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-current/25 bg-black/10">
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-[var(--app-ivory)]">{meta.guideLabel}</div>
-          <div className="mt-1 text-2xl font-semibold text-[var(--app-gold-text)]">
-            {flows.length}개월
-          </div>
-          <p className="mt-2 text-sm leading-6 text-[var(--app-copy)]">{formatMonthList(flows)}</p>
+          <div className="whitespace-nowrap text-sm font-semibold text-[var(--app-ivory)]">{meta.guideLabel}</div>
+          <div className="mt-1 text-xl font-semibold text-[var(--app-gold-text)]">{flows.length}개월</div>
+        </div>
+        <div className="flex min-w-0 flex-wrap gap-2">
+          {flows.length ? (
+            flows.map((flow) => (
+              <a
+                key={`${tone}-${flow.month}`}
+                href={`#yearly-month-${flow.month}`}
+                className="inline-flex min-h-8 items-center justify-center rounded-full border border-current/20 bg-black/10 px-3 text-xs font-semibold text-current transition-colors hover:border-[var(--app-gold)]/40 hover:text-[var(--app-gold-text)]"
+              >
+                {flow.month}월
+              </a>
+            ))
+          ) : (
+            <span className="text-sm leading-7 text-[var(--app-copy-muted)]">해당 월 없음</span>
+          )}
         </div>
       </div>
     </article>
@@ -284,7 +291,7 @@ function YearlyVisualMap({ report }: { report: SajuYearlyReport }) {
   const highlightedCaution = report.cautionPeriods[0];
 
   return (
-    <section className="mt-6 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+    <section className="mt-6 grid gap-5 xl:grid-cols-[minmax(24rem,0.85fr)_minmax(0,1.15fr)]">
       <article className="rounded-[28px] border border-[var(--app-gold)]/20 bg-[rgba(210,176,114,0.075)] px-5 py-5">
         <div className="flex items-center gap-2">
           <MapPinned className="h-5 w-5 text-[var(--app-gold-text)]" aria-hidden="true" />
@@ -296,10 +303,10 @@ function YearlyVisualMap({ report }: { report: SajuYearlyReport }) {
         <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
           열두 달을 전부 긴 글로 읽기 전에, 밀어도 되는 달과 한 번 더 확인할 달을 먼저 나눠 봅니다.
         </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-          <MomentumSummaryCard tone="rise" flows={grouped.rise} />
-          <MomentumSummaryCard tone="caution" flows={grouped.caution} />
-          <MomentumSummaryCard tone="steady" flows={grouped.steady} />
+        <div className="mt-5 grid gap-3">
+          <MomentumSummaryRow tone="rise" flows={grouped.rise} />
+          <MomentumSummaryRow tone="caution" flows={grouped.caution} />
+          <MomentumSummaryRow tone="steady" flows={grouped.steady} />
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {highlightedGood ? (
