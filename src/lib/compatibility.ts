@@ -122,6 +122,7 @@ export interface CompatibilityInterpretation {
   relationship: CompatibilityRelationshipSlug;
   label: string;
   score: number;
+  scoreLabel: string;
   selfData: SajuDataV1;
   partnerData: SajuDataV1;
   headline: string;
@@ -523,6 +524,14 @@ function buildHeadline(
   return `${selfName}님과 ${partnerName}님은 결이 달라 조율이 중요하게 작동하는 관계입니다.`;
 }
 
+function buildScoreLabel(score: number) {
+  if (score >= 84) return '잘 맞는 흐름';
+  if (score >= 78) return '편하게 맞춰갈 흐름';
+  if (score >= 70) return '다름을 조율하면 좋아지는 흐름';
+  if (score >= 62) return '속도 조절이 중요한 흐름';
+  return '기준을 세우면 안정되는 흐름';
+}
+
 function buildRelationshipSummaries(
   relationship: CompatibilityRelationshipSlug,
   elementInteraction: ReturnType<typeof summarizeElementInteraction>,
@@ -542,6 +551,35 @@ function buildRelationshipSummaries(
     relationshipLensTitle: lens.title,
     relationshipLensBody,
   };
+}
+
+function buildPlainRelationshipSummary(
+  relationship: CompatibilityRelationshipSlug,
+  selfName: string,
+  partnerName: string,
+  score: number,
+  elementInteraction: ReturnType<typeof summarizeElementInteraction>,
+  branchInteraction: ReturnType<typeof summarizeBranchInteraction>
+) {
+  const relationshipLabel =
+    relationship === 'lover'
+      ? '감정 표현과 연락의 속도'
+      : relationship === 'family'
+        ? '말의 무게와 기대 역할'
+        : relationship === 'partner'
+          ? '책임 분담과 결정 기준'
+          : '편안함과 거리감';
+  const strength =
+    score >= 78
+      ? '처음부터 완전히 같은 방식은 아니어도, 서로의 장점을 살릴 여지가 분명합니다.'
+      : score >= 68
+        ? '잘 맞는 부분과 신경 써야 할 부분이 함께 있어, 기준을 정하면 관계가 훨씬 편해집니다.'
+        : '서로의 속도와 말투가 다르게 느껴질 수 있어, 초반부터 기준을 짧게 맞추는 편이 좋습니다.';
+  const caution = branchInteraction.caution
+    ? '특히 서운함이 생겼을 때 바로 결론을 내리기보다, 어느 장면에서 마음이 걸렸는지부터 나누는 편이 좋습니다.'
+    : '큰 충돌보다 작은 기대 차이가 쌓이지 않게, 연락·돈·약속의 기준을 미리 맞추는 편이 좋습니다.';
+
+  return `${selfName}님과 ${partnerName}님은 ${relationshipLabel}에서 관계의 체감이 크게 달라집니다. ${strength} ${caution} ${elementInteraction.caution}`;
 }
 
 function getReportScore(
@@ -836,16 +874,20 @@ export function buildCompatibilityInterpretation(
   const { supportiveSummary, cautionSummary, relationshipLensTitle, relationshipLensBody } =
     buildRelationshipSummaries(relationship, elementInteraction, branchInteraction, balanceInteraction);
 
-  const summary = [
-    headline,
-    `${self.name}님은 ${selfData.dayMaster.stem} 일간, ${partner.name}님은 ${partnerData.dayMaster.stem} 일간입니다.`,
-    branchInteraction.body,
-  ].join(' ');
+  const summary = buildPlainRelationshipSummary(
+    relationship,
+    self.name,
+    partner.name,
+    score,
+    elementInteraction,
+    branchInteraction
+  );
 
   return {
     relationship,
     label,
     score,
+    scoreLabel: buildScoreLabel(score),
     selfData,
     partnerData,
     headline,

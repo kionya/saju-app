@@ -75,7 +75,7 @@ export function CompatibilityResultView({
           </Badge>,
         ]}
         title={compatibility.headline}
-        description={`${selected.title} 관계를 기준으로 두 사람의 일간, 일지, 오행 보완축을 함께 비교해 읽었습니다.`}
+        description={`${selected.title} 관계에서 먼저 체감되는 말투, 속도, 거리감, 돈의 기준을 중심으로 정리했습니다.`}
       />
 
       <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
@@ -89,18 +89,27 @@ export function CompatibilityResultView({
             descriptionClassName="max-w-3xl text-[var(--app-copy)]"
           />
 
+          <div className="mt-5 flex flex-wrap gap-2">
+            <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
+              {compatibility.scoreLabel}
+            </Badge>
+            <Badge className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]">
+              관계 점수 {compatibility.score}점
+            </Badge>
+          </div>
+
           <div className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
             <FeatureCard
               surface="soft"
               className="text-center"
               eyebrow="내 기준"
-              title={compatibility.selfData.dayMaster.stem}
-              titleClassName="text-5xl text-[var(--app-coral)]"
+              title={compatibility.selfData.dayMaster.metaphor ?? '내 기본 기질'}
+              titleClassName="text-2xl text-[var(--app-coral)]"
               description={
                 <>
                   <span className="block text-[var(--app-copy)]">{selfName} 선생님</span>
                   <span className="mt-2 block text-xs leading-6 text-[var(--app-copy-muted)]">
-                    {compatibility.selfData.dayMaster.metaphor ?? '일간 해석 준비 중'}
+                    {compatibility.selfData.dayMaster.description ?? '기본 기질 설명을 준비하고 있습니다.'}
                   </span>
                 </>
               }
@@ -110,13 +119,13 @@ export function CompatibilityResultView({
               surface="soft"
               className="text-center"
               eyebrow="상대 결"
-              title={compatibility.partnerData.dayMaster.stem}
-              titleClassName="text-5xl text-[var(--app-jade)]"
+              title={compatibility.partnerData.dayMaster.metaphor ?? '상대 기본 기질'}
+              titleClassName="text-2xl text-[var(--app-jade)]"
               description={
                 <>
                   <span className="block text-[var(--app-copy)]">{partnerName}</span>
                   <span className="mt-2 block text-xs leading-6 text-[var(--app-copy-muted)]">
-                    {compatibility.partnerData.dayMaster.metaphor ?? '일간 해석 준비 중'}
+                    {compatibility.partnerData.dayMaster.description ?? '기본 기질 설명을 준비하고 있습니다.'}
                   </span>
                 </>
               }
@@ -126,7 +135,7 @@ export function CompatibilityResultView({
           <FeatureCard
             className="mt-6"
             surface="soft"
-            eyebrow="두 분의 기본 결"
+            eyebrow="관계 한 줄 풀이"
             description={compatibility.summary}
           />
 
@@ -212,10 +221,10 @@ export function CompatibilityResultView({
 
         <SectionSurface surface="panel" size="lg">
           <SectionHeader
-            eyebrow="왜 이렇게 읽었나"
-            title="이 결과를 만든 근거"
+            eyebrow="판정 기준"
+            title="근거는 아래에서 따로 확인합니다"
             titleClassName="text-3xl"
-            description="두 사람의 일간과 관계 축, 표현 리듬, 오행 보완 흐름을 중심으로 실제 비교 근거를 모았습니다."
+            description="앞쪽에서는 관계 풀이를 먼저 읽고, 이 영역에서는 두 사람의 명식에서 어떤 기준을 참고했는지 작게 분리해 보여드립니다."
             descriptionClassName="max-w-3xl text-[var(--app-copy)]"
           />
           <ProductGrid columns={2} className="mt-6">

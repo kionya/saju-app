@@ -44,6 +44,11 @@ test('compatibility interpretation compares two saved people and emits evidence 
 
   assert.match(result.headline, /나님과 큰아들님/);
   assert.ok(result.score >= 52 && result.score <= 92);
+  assert.match(result.scoreLabel, /흐름/);
+  assert.doesNotMatch(
+    result.summary,
+    /일간|일지|육합|천간합|반합|[甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥]/
+  );
   assert.ok(result.evidence.length >= 4);
   assert.equal(result.practicalCards.length, 4);
   assert.deepEqual(
