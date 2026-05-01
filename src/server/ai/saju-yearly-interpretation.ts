@@ -5,7 +5,7 @@ import {
 } from '@/lib/counselors';
 import type { ReadingRecord } from '@/lib/saju/readings';
 
-export const SAJU_YEARLY_INTERPRETATION_PROMPT_VERSION = 'saju-yearly-interpret-v6';
+export const SAJU_YEARLY_INTERPRETATION_PROMPT_VERSION = 'saju-yearly-interpret-v7';
 
 const YEARLY_CATEGORY_ORDER: YearlyCategoryKey[] = [
   'work',
@@ -671,7 +671,7 @@ export function createYearlyInterpretationPrompt(
     instructions: [
       '당신은 연간 운세 전략 리포트를 쓰는 명리 기반 해석가입니다.',
       '제공된 JSON 근거 안에서만 해석하고, 없는 격국·신살·고전 출처·사건을 새로 만들지 않습니다.',
-      '결과물은 짧은 총평이 아니라, 한 해의 흐름과 행동 전략을 제대로 읽어주는 프리미엄 장문 리포트용 데이터여야 합니다.',
+      '결과물은 길게 늘인 장문이 아니라, 한 해의 흐름과 행동 전략이 바로 읽히는 프리미엄 리포트용 데이터여야 합니다.',
       '명리 용어를 쓰더라도 바로 쉬운 한국어 풀이를 붙이고, 추상적인 표현만 반복하지 말고 실제 상황이 떠오르게 설명합니다.',
       '과장, 희망고문, 공포 조장, 운명을 단정하는 표현은 피합니다.',
       '무조건, 반드시, 100% 같은 단정 표현은 쓰지 않습니다.',
@@ -684,8 +684,8 @@ export function createYearlyInterpretationPrompt(
       schemaLine,
       'opening은 제목 없이 바로 시작되는 첫 문단이며, 흡입력 있게 시작해야 합니다.',
       'keywords는 3~5개입니다. 각 항목은 한 해의 핵심 키워드와 그 이유를 함께 담습니다.',
-      'firstHalf와 secondHalf는 각각 2~4개의 짧은 문단 감각으로 쓰고, 기회와 리스크를 함께 설명합니다.',
-      'categories의 6개 분야는 각 분야마다 "무슨 장면이 핵심인지 / 무엇을 조심할지 / 어떻게 행동할지"가 바로 읽히게 2~4문장 안에서 정리합니다.',
+      'firstHalf와 secondHalf는 각각 2~3문장 안에서 쓰고, 기회와 리스크와 첫 행동이 겹치지 않게 나눕니다.',
+      'categories의 6개 분야는 각 분야마다 "무슨 장면이 핵심인지 / 무엇을 조심할지 / 어떻게 행동할지"가 바로 읽히게 2~3문장 안에서 정리합니다.',
       'monthlyFlows는 1월부터 12월까지 서로 다른 질문을 던져야 합니다. 같은 문장 구조, 같은 도입, 같은 결론을 반복하지 않습니다.',
       'monthlyFlows는 사용자가 실제로 궁금해하는 선택 장면, 돈과 일의 판단, 관계 조율, 달력에 표시해 둘 만한 포인트를 우선해서 씁니다.',
       'monthlyFlows는 체감 가능한 변화 중심으로 쓰고, 설명보다 판단 기준이 먼저 보이게 씁니다. 한 달 설명을 장문 단락 하나로 늘리지 않습니다.',

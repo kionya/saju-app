@@ -135,14 +135,6 @@ function splitParagraphs(text: string) {
     .filter(Boolean);
 }
 
-function renderParagraphs(text: string) {
-  return splitParagraphs(text).map((paragraph, index) => (
-    <p key={`${paragraph.slice(0, 24)}-${index}`} className="text-sm leading-8 text-[var(--app-copy)]">
-      {paragraph}
-    </p>
-  ));
-}
-
 function renderCompactParagraphs(text: string, limit = 2) {
   return splitParagraphs(text)
     .slice(0, limit)
@@ -204,39 +196,44 @@ function MonthlyFlowCard({ flow }: { flow: YearlyMonthFlow }) {
   return (
     <article className="rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="app-caption text-[var(--app-gold-soft)]">{flow.month}월</div>
+        <div>
+          <div className="app-caption text-[var(--app-gold-soft)]">{flow.month}월</div>
+          <div className="mt-1 text-xs text-[var(--app-copy-soft)]">{areaLabel}</div>
+        </div>
         <Badge className={momentumMeta.badgeClassName}>{momentumMeta.label}</Badge>
       </div>
 
-      <p className="mt-3 text-sm leading-7 text-[var(--app-ivory)]">{tightenUiLine(flow.summary, 108)}</p>
-      <div className="mt-4 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
-        <div className="app-caption text-[var(--app-gold-soft)]">이번 달 질문</div>
-        <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{flow.focusQuestion}</p>
-      </div>
-
-      <div className="mt-4 grid gap-3">
-        <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
-          <div className="app-caption text-[var(--app-gold-soft)]">먼저 밀어볼 것</div>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(flow.opportunity, 96)}</p>
-        </div>
-        <div className="rounded-[18px] border border-rose-400/18 bg-rose-400/6 px-4 py-3">
-          <div className="app-caption text-rose-100">한 번 더 확인할 장면</div>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(flow.caution, 96)}</p>
-        </div>
-        <div className="rounded-[18px] border border-emerald-400/18 bg-emerald-400/6 px-4 py-3">
-          <div className="app-caption text-emerald-100">이번 달 행동 기준</div>
-          <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(flow.action, 88)}</p>
-        </div>
+      <p className="mt-3 text-sm leading-7 text-[var(--app-ivory)]">{tightenUiLine(flow.summary, 104)}</p>
+      <div className="mt-4 rounded-[18px] border border-emerald-400/18 bg-emerald-400/6 px-4 py-3">
+        <div className="app-caption text-emerald-100">이번 달 행동 기준</div>
+        <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(flow.action, 84)}</p>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]">
           {flow.monthlyGanji ?? `${flow.month}월`}
         </Badge>
-        <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]">
-          {areaLabel}
-        </Badge>
       </div>
+
+      <details className="group mt-4">
+        <summary className="cursor-pointer list-none rounded-xl border border-[var(--app-line)] px-4 py-3 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
+          이 달 자세히 보기
+        </summary>
+        <div className="mt-3 grid gap-3">
+          <div className="rounded-[16px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
+            <div className="app-caption text-[var(--app-gold-soft)]">먼저 볼 질문</div>
+            <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{flow.focusQuestion}</p>
+          </div>
+          <div className="rounded-[16px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-3">
+            <div className="app-caption text-[var(--app-gold-soft)]">밀어볼 것</div>
+            <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(flow.opportunity, 104)}</p>
+          </div>
+          <div className="rounded-[16px] border border-rose-400/18 bg-rose-400/6 px-4 py-3">
+            <div className="app-caption text-rose-100">한 번 더 확인할 것</div>
+            <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{tightenUiLine(flow.caution, 104)}</p>
+          </div>
+        </div>
+      </details>
 
       {flow.basis.length > 0 ? (
         <details className="group mt-4">
@@ -522,7 +519,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
           | null;
 
         if (!response.ok || !payload || !('ok' in payload) || payload.ok !== true) {
-          setError(payload && 'error' in payload && payload.error ? payload.error : '연간 전략 부록을 불러오지 못했습니다.');
+          setError(payload && 'error' in payload && payload.error ? payload.error : '올해 전략서를 불러오지 못했습니다.');
           setState('error');
           return;
         }
@@ -531,7 +528,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
         setState('ready');
       } catch (fetchError) {
         if ((fetchError as Error).name === 'AbortError') return;
-        setError('연간 전략 부록을 불러오는 중 오류가 발생했습니다.');
+        setError('올해 전략서를 불러오는 중 오류가 발생했습니다.');
         setState('error');
       }
     }
@@ -550,9 +547,9 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
     return (
       <section className="moon-lunar-panel p-6">
         <div className="app-starfield" />
-        <div className="app-caption">연간 전략 부록 생성 중</div>
+        <div className="app-caption">올해 전략서 생성 중</div>
         <h2 className="font-display mt-4 text-3xl text-[var(--app-ivory)]">
-          {targetYear}년 올해 전략 부록을 정리하고 있습니다
+          {targetYear}년 올해 전략서를 정리하고 있습니다
         </h2>
         <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
           원국, 세운, 월운, 대운의 근거를 다시 맞추고, 같은 기준 위에서 올해의 선택 포인트를 재구성하고 있습니다.
@@ -572,8 +569,8 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
   if (state === 'error' || !data) {
     return (
       <section className="app-panel space-y-4 border-rose-400/20 p-6">
-        <div className="app-caption text-rose-200/80">연간 전략 부록 오류</div>
-        <p className="font-medium text-rose-200">{error || '연간 전략 부록을 불러오지 못했습니다.'}</p>
+        <div className="app-caption text-rose-200/80">올해 전략서 오류</div>
+        <p className="font-medium text-rose-200">{error || '올해 전략서를 불러오지 못했습니다.'}</p>
         <Button
           onClick={() => setReloadToken((value) => value + 1)}
           variant="outline"
@@ -610,12 +607,12 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
       <div className="app-starfield" />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="app-caption">{targetYear} 연간 전략 부록</div>
+          <div className="app-caption">{targetYear} 올해 전략서</div>
           <h2 className="font-display mt-4 text-3xl text-[var(--app-ivory)]">
-            {targetYear}년 한 해를 월별 판단 기준까지 먼저 정리해드립니다
+            올해 흐름을 바로 읽습니다
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
-            명리 기준서가 평생 기준을 남기는 본문이라면, 이 부록은 같은 근거 위에서 올해의 기회 달, 주의 달, 관계·돈·일의 판단 시점을 읽어드리는 연간 전략편입니다.
+            긴 설명보다 먼저 필요한 결론을 앞에 둡니다. 일, 돈, 관계, 달별 타이밍을 같은 기준으로 이어서 확인하세요.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -623,21 +620,13 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
             {data.counselorId === 'male' ? '달빛 남선생 기준' : '달빛 여선생 기준'}
           </Badge>
           <Badge className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-copy-muted)]">
-            {data.source === 'openai' ? 'OpenAI 생성' : '근거 기반 fallback'}
+            {data.cached ? '저장된 리포트' : '새로 정리'}
           </Badge>
-          {data.cached ? (
-            <Badge className="border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]">
-              캐시 사용
-            </Badge>
-          ) : null}
         </div>
       </div>
 
       <div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-[var(--app-copy-soft)]">
         {updatedAtLabel ? <span>최근 생성: {updatedAtLabel}</span> : null}
-        {data.model ? <span>모델: {data.model}</span> : null}
-        {!data.cached ? <span>생성 시간: {data.generationMs}ms</span> : null}
-        <span>cache key: {data.cacheKeyType}</span>
         <Button
           onClick={() => setReloadToken((value) => value + 1)}
           variant="outline"
@@ -653,31 +642,6 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
           {interpretation.oneLineSummary}
         </p>
         <div className="mt-4 space-y-3">{renderCompactParagraphs(interpretation.opening, 2)}</div>
-      </div>
-
-      <div className="mt-6">
-        <GroundingKasiSummary
-          id="yearly-evidence"
-          grounding={data.grounding}
-          kasiComparison={data.kasiComparison}
-          metadata={data.metadata}
-          title="이 연간 전략 부록이 참고한 실제 계산 근거"
-        />
-      </div>
-
-      <div className="mt-6">
-        <EngineMethodLinks
-          title="연간 흐름을 읽을 때 같이 보면 좋은 기준"
-          description="대운과 세운을 어떻게 같이 읽는지, 시간을 모를 때 어디까지 보수적으로 낮춰야 하는지, 공망과 신살은 어느 선까지 참고해야 하는지를 함께 정리했습니다."
-          slugs={[
-            'how-to-read-daewoon-and-sewoon-together',
-            'what-if-birth-hour-is-unknown',
-            'how-far-to-trust-gongmang-and-shinsal',
-          ]}
-          ctaHref="/method"
-          ctaLabel="관련 기준 더 보기"
-          compact
-        />
       </div>
 
       <div className="mt-6">
@@ -758,6 +722,32 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
           </div>
         </article>
       </div>
+
+      <details className="group mt-6" id="yearly-evidence">
+        <summary className="cursor-pointer list-none rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-4 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
+          판정 기준과 계산 근거 확인
+        </summary>
+        <div className="mt-4 grid gap-4">
+          <GroundingKasiSummary
+            grounding={data.grounding}
+            kasiComparison={data.kasiComparison}
+            metadata={data.metadata}
+            title="이 올해 전략서가 참고한 계산 근거"
+          />
+          <EngineMethodLinks
+            title="올해 흐름을 읽을 때 같이 보면 좋은 기준"
+            description="대운과 세운을 어떻게 같이 읽는지, 시간을 모를 때 어디까지 보수적으로 낮춰야 하는지, 공망과 신살은 어느 선까지 참고해야 하는지를 함께 정리했습니다."
+            slugs={[
+              'how-to-read-daewoon-and-sewoon-together',
+              'what-if-birth-hour-is-unknown',
+              'how-far-to-trust-gongmang-and-shinsal',
+            ]}
+            ctaHref="/method"
+            ctaLabel="관련 기준 더 보기"
+            compact
+          />
+        </div>
+      </details>
     </section>
   );
 }

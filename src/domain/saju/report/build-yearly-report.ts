@@ -102,6 +102,9 @@ const MONTH_AREA_PLAN: Record<
   12: { relatedAreas: ['health', 'work'], theme: '마무리와 재정비가 우선되는 달' },
 };
 
+const DEFAULT_RISE_MONTHS = new Set([2, 3, 7, 8, 9]);
+const DEFAULT_CAUTION_MONTHS = new Set([1, 6, 10, 11, 12]);
+
 const MONTH_DECISION_GUIDE: Record<
   number,
   {
@@ -606,17 +609,28 @@ function getMonthlyMomentum(
   const strongestAreaScore = areaScores[0] ?? 68;
   const weakestAreaScore = areaScores[areaScores.length - 1] ?? 68;
 
-  if (supportMatch && strongestAreaScore >= 70) {
+  if (supportMatch && !cautionMatch) {
     return 'rise';
   }
 
-  if (cautionMatch || weakestAreaScore <= 64) {
+  if (cautionMatch && !supportMatch) {
     return 'caution';
   }
 
-  if (strongestAreaScore >= 75) {
+  if (supportMatch && cautionMatch) {
+    return strongestAreaScore - weakestAreaScore >= 4 ? 'rise' : 'caution';
+  }
+
+  if (strongestAreaScore >= 72 && weakestAreaScore >= 67) {
     return 'rise';
   }
+
+  if (weakestAreaScore <= 66) {
+    return 'caution';
+  }
+
+  if (DEFAULT_RISE_MONTHS.has(monthly.month)) return 'rise';
+  if (DEFAULT_CAUTION_MONTHS.has(monthly.month)) return 'caution';
 
   return 'steady';
 }
@@ -641,10 +655,10 @@ function createMonthlyFlow(
 
   const summary =
     momentum === 'rise'
-      ? `${monthly.month}월은 ${theme}이 강해 ${focusLabel}에서 준비한 것을 앞으로 꺼내기 좋습니다. ${guide.summaryLead}`
+      ? `${guide.summaryLead} ${focusLabel}에서는 준비한 결정을 밖으로 꺼내기 좋습니다.`
       : momentum === 'caution'
-        ? `${monthly.month}월은 ${theme}이 예민하게 작동해 ${focusLabel}에서 속도 조절이 필요합니다. ${guide.summaryLead}`
-        : `${monthly.month}월은 ${theme}을 과하게 흔들기보다 정리와 조율이 우선입니다. ${guide.summaryLead}`;
+        ? `${guide.summaryLead} ${focusLabel}은 확정보다 확인을 먼저 두는 편이 좋습니다.`
+        : `${guide.summaryLead} ${focusLabel}은 새 일을 늘리기보다 기준을 정리할 때입니다.`;
 
   return {
     month: monthly.month,
@@ -653,18 +667,18 @@ function createMonthlyFlow(
     momentum,
     theme,
     focusQuestion: guide.question,
-    summary: tightenCardCopy(summary, { maxSentences: 2, maxLength: 116 }),
-    opportunity: tightenCardCopy(`${guide.opportunityLead} ${primary.opportunity}`, {
+    summary: tightenCardCopy(summary, { maxSentences: 2, maxLength: 112 }),
+    opportunity: tightenCardCopy(`${guide.opportunityLead} ${primary.action}`, {
       maxSentences: 2,
-      maxLength: 108,
+      maxLength: 104,
     }),
     caution: tightenCardCopy(`${guide.cautionLead} ${secondary.caution}`, {
       maxSentences: 2,
-      maxLength: 108,
+      maxLength: 104,
     }),
-    action: tightenCardCopy(`${guide.actionLead} ${primary.action}`, {
+    action: tightenCardCopy(guide.actionLead, {
       maxSentences: 1,
-      maxLength: 92,
+      maxLength: 76,
     }),
     relatedAreas: plan.relatedAreas,
     basis: compactStrings([

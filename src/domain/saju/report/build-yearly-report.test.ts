@@ -64,6 +64,25 @@ test('buildYearlyReport fills all 12 months with actual monthly ganji evidence',
   );
 });
 
+test('buildYearlyReport keeps monthly momentum varied enough for a useful yearly calendar', () => {
+  const data = normalizeToSajuDataV1(birthInput, null);
+  const report = buildYearlyReport(birthInput, data, 2026);
+  const momentumKinds = new Set(report.monthlyFlows.map((flow) => flow.momentum));
+
+  assert.ok(
+    momentumKinds.size >= 2,
+    'monthly flows should not collapse into one repeated average tone'
+  );
+  assert.ok(
+    report.monthlyFlows.some((flow) => flow.momentum === 'rise'),
+    'yearly report should expose at least one month worth pushing'
+  );
+  assert.ok(
+    report.monthlyFlows.some((flow) => flow.momentum === 'caution'),
+    'yearly report should expose at least one month worth checking twice'
+  );
+});
+
 test('buildYearlyReport keeps yearly category opportunity and action distinct for core cards', () => {
   const data = normalizeToSajuDataV1(birthInput, null);
   const report = buildYearlyReport(birthInput, data, 2026);

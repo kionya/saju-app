@@ -51,7 +51,7 @@ function getToneTitle(tone: FortuneCalendarTone) {
       return '주의 날';
     case 'average':
     default:
-      return '평균 흐름';
+      return '보통 날';
   }
 }
 
@@ -259,9 +259,9 @@ export function buildFortuneCalendarMonth(
       ? '결정일과 좋은 날이 분명하게 갈리는 달입니다.'
       : toneCounts.caution >= 5
         ? '서두르기보다 확인 절차를 늘려야 하는 달입니다.'
-        : '평균 흐름 속에서도 밀어도 되는 날과 한 번 더 볼 날이 갈립니다.';
+        : '보통 날 사이에서도 밀어도 되는 날과 한 번 더 볼 날이 갈립니다.';
   const summary = compactStrings([
-    `${getMonthLabel(year, month)}에는 결정일 ${toneCounts.decision}일, 좋은 날 ${toneCounts.good}일, 평균 흐름 ${toneCounts.average}일, 주의 날 ${toneCounts.caution}일로 읽힙니다.`,
+    `${getMonthLabel(year, month)}에는 결정일 ${toneCounts.decision}일, 좋은 날 ${toneCounts.good}일, 보통 날 ${toneCounts.average}일, 주의 날 ${toneCounts.caution}일로 읽힙니다.`,
     days.find((item) => item.tone === 'decision')?.summary ??
       days.find((item) => item.tone === 'good')?.summary ??
       null,

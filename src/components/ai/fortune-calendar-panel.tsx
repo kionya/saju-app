@@ -45,7 +45,7 @@ const TONE_META: Record<
     badgeClassName: 'border-emerald-400/25 bg-emerald-400/10 text-emerald-100',
   },
   average: {
-    label: '평균 흐름',
+    label: '보통 날',
     cellClassName: 'border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] text-[var(--app-copy)]',
     badgeClassName: 'border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]',
   },
@@ -124,6 +124,53 @@ function isFortuneCalendarEntry(
   cell: FortuneCalendarMonthReport['days'][number] | { day: number }
 ): cell is FortuneCalendarMonthReport['days'][number] {
   return 'tone' in cell;
+}
+
+function formatDayLabel(entry: FortuneCalendarMonthReport['days'][number]) {
+  const year = Number(entry.isoDate.slice(0, 4));
+  const month = Number(entry.isoDate.slice(5, 7));
+  return `${year}.${String(month).padStart(2, '0')}.${String(entry.day).padStart(2, '0')}`;
+}
+
+function pickToneEntries(
+  report: FortuneCalendarMonthReport,
+  tones: FortuneCalendarTone[],
+  limit: number,
+  direction: 'high' | 'low'
+) {
+  return [...report.days]
+    .filter((entry) => tones.includes(entry.tone))
+    .sort((left, right) => (direction === 'high' ? right.score - left.score : left.score - right.score))
+    .slice(0, limit);
+}
+
+function CalendarHintGroup({
+  title,
+  tone,
+  entries,
+}: {
+  title: string;
+  tone: FortuneCalendarTone;
+  entries: FortuneCalendarMonthReport['days'];
+}) {
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="app-caption text-[var(--app-gold-soft)]">{title}</div>
+        <Badge className={TONE_META[tone].badgeClassName}>{TONE_META[tone].label}</Badge>
+      </div>
+      <div className="mt-3 grid gap-3">
+        {entries.map((entry) => (
+          <div key={`${title}-${entry.isoDate}`} className="rounded-[14px] bg-[rgba(255,255,255,0.03)] px-3 py-3">
+            <div className="text-sm font-semibold text-[var(--app-ivory)]">{formatDayLabel(entry)}</div>
+            <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{entry.actionHint}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function FortuneCalendarPanel({
@@ -393,6 +440,24 @@ export default function FortuneCalendarPanel({
                     <p className="mt-3 text-sm leading-7 text-rose-50">{data.report.summary.cautionDays.join(' · ')}</p>
                   </div>
                 </div>
+
+                <div className="mt-5 grid gap-3">
+                  <CalendarHintGroup
+                    title="먼저 잡아볼 날"
+                    tone="decision"
+                    entries={pickToneEntries(data.report, ['decision'], 3, 'high')}
+                  />
+                  <CalendarHintGroup
+                    title="가볍게 밀어도 되는 날"
+                    tone="good"
+                    entries={pickToneEntries(data.report, ['good'], 3, 'high')}
+                  />
+                  <CalendarHintGroup
+                    title="한 번 더 확인할 날"
+                    tone="caution"
+                    entries={pickToneEntries(data.report, ['caution'], 3, 'low')}
+                  />
+                </div>
               </>
             ) : (
               <>
@@ -401,7 +466,7 @@ export default function FortuneCalendarPanel({
                   {selectedMonth}월 흐름을 열면 좋은 날과 주의 날이 바로 갈립니다
                 </h3>
                 <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-                  이 달의 캘린더를 열면 결정일, 좋은 날, 평균 흐름, 주의 날이 색으로 정리되고, 각 날짜에 무엇을 밀고 무엇을 늦춰야 하는지 바로 읽을 수 있습니다.
+                  이 달의 캘린더를 열면 결정일, 좋은 날, 보통 날, 주의 날이 색으로 정리되고, 각 날짜에 무엇을 밀고 무엇을 늦춰야 하는지 바로 읽을 수 있습니다.
                 </p>
                 <div className="mt-5 rounded-[20px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
                   <div className="app-caption text-[var(--app-gold-soft)]">열리면 보이는 것</div>
