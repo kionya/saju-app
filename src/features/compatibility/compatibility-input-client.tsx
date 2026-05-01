@@ -235,6 +235,78 @@ function applyUnifiedBirthPatch(
   return next;
 }
 
+function SavedProfileQuickFill({
+  profiles,
+  status,
+  onApply,
+}: {
+  profiles: SavedBirthProfile[];
+  status: ProfileLoadStatus;
+  onApply: (target: PersonKey, profile: SavedBirthProfile) => void;
+}) {
+  if (status === 'loading') {
+    return (
+      <div className="mt-5 rounded-[1.2rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-3 text-sm text-[var(--app-copy-muted)]">
+        저장한 사람을 확인하고 있습니다.
+      </div>
+    );
+  }
+
+  if (profiles.length === 0) return null;
+
+  return (
+    <div className="mt-5 rounded-[1.35rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 p-4 sm:p-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="app-caption text-[var(--app-gold-text)]">빠른 채우기</div>
+          <h3 className="mt-1 text-lg font-semibold text-[var(--app-ivory)]">
+            저장한 이름을 눌러 바로 넣을 수 있습니다
+          </h3>
+        </div>
+        <p className="text-xs leading-5 text-[var(--app-copy-soft)]">
+          자세한 정보 카드는 아래에 그대로 남겨두었습니다.
+        </p>
+      </div>
+
+      <div className="mt-4 grid gap-4">
+        {([
+          { key: 'self' as const, label: '내 정보에 넣기', tone: 'gold' },
+          { key: 'partner' as const, label: '상대 정보에 넣기', tone: 'jade' },
+        ]).map((group) => (
+          <div key={group.key}>
+            <div
+              className={
+                group.tone === 'jade'
+                  ? 'mb-2 text-xs font-semibold text-[var(--app-jade)]'
+                  : 'mb-2 text-xs font-semibold text-[var(--app-gold-text)]'
+              }
+            >
+              {group.label}
+            </div>
+            <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {profiles.map((profile) => (
+                <button
+                  key={`${group.key}-${profile.id}`}
+                  type="button"
+                  onClick={() => onApply(group.key, profile)}
+                  title={profile.detail}
+                  className={
+                    group.tone === 'jade'
+                      ? 'shrink-0 rounded-full border border-[var(--app-jade)]/25 bg-[var(--app-jade)]/10 px-4 py-2 text-sm font-semibold text-[var(--app-jade)] transition-colors hover:bg-[var(--app-jade)]/16'
+                      : 'shrink-0 rounded-full border border-[var(--app-gold)]/25 bg-[rgba(255,255,255,0.035)] px-4 py-2 text-sm font-semibold text-[var(--app-gold-text)] transition-colors hover:bg-[var(--app-gold)]/12'
+                  }
+                >
+                  {profile.nickname}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function formatManualBirthSummary(draft: UnifiedBirthEntryDraft) {
   const parsed = resolveUnifiedBirthInput(draft, { requireGender: false });
   const calendarLabel = draft.calendarType === 'lunar' ? '음력 입력' : '양력 입력';
@@ -582,6 +654,18 @@ export function CompatibilityInputClient({ initialRelationship }: CompatibilityI
             descriptionClassName="max-w-3xl text-[var(--app-copy)]"
           />
 
+          <SavedProfileQuickFill
+            profiles={sortedSavedProfiles}
+            status={profileLoadStatus}
+            onApply={applySavedProfile}
+          />
+
+          {profileLoadMessage && profileLoadStatus !== 'error' ? (
+            <div className="mt-4 rounded-2xl border border-[var(--app-jade)]/20 bg-[var(--app-jade)]/8 px-4 py-3 text-sm leading-6 text-[var(--app-copy)]">
+              {profileLoadMessage}
+            </div>
+          ) : null}
+
           <div className="mt-6 grid gap-6 xl:grid-cols-2">
             <section className="rounded-[1.35rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5 sm:p-6">
               <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
@@ -717,11 +801,6 @@ export function CompatibilityInputClient({ initialRelationship }: CompatibilityI
                 </div>
               ) : null}
 
-              {profileLoadMessage && profileLoadStatus !== 'error' ? (
-                <div className="rounded-2xl border border-[var(--app-jade)]/20 bg-[var(--app-jade)]/8 px-4 py-3 text-sm leading-6 text-[var(--app-copy)]">
-                  {profileLoadMessage}
-                </div>
-              ) : null}
             </div>
 
             {sortedSavedProfiles.length > 0 ? (
