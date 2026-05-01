@@ -2,6 +2,15 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import {
+  AlertTriangle,
+  CalendarDays,
+  CheckCircle2,
+  CircleDot,
+  Clock3,
+  Target,
+  type LucideIcon,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { trackMoonlightEvent } from '@/lib/analytics';
@@ -30,29 +39,44 @@ const TONE_META: Record<
   FortuneCalendarTone,
   {
     label: string;
+    description: string;
     cellClassName: string;
     badgeClassName: string;
+    railClassName: string;
+    icon: LucideIcon;
   }
 > = {
   decision: {
     label: '결정일',
-    cellClassName: 'border-[var(--app-gold)]/40 bg-[rgba(210,176,114,0.16)] text-[var(--app-gold-text)]',
+    description: '계약, 신청, 발표처럼 방향을 정하기 좋은 날',
+    cellClassName: 'border-[var(--app-gold)]/55 bg-[rgba(210,176,114,0.22)] text-[var(--app-gold-text)] shadow-[0_0_18px_rgba(210,176,114,0.14)]',
     badgeClassName: 'border-[var(--app-gold)]/35 bg-[var(--app-gold)]/12 text-[var(--app-gold-text)]',
+    railClassName: 'bg-[var(--app-gold)]',
+    icon: Target,
   },
   good: {
     label: '좋은 날',
-    cellClassName: 'border-emerald-400/24 bg-emerald-400/10 text-emerald-100',
+    description: '가볍게 밀고, 연락하고, 정리해도 좋은 날',
+    cellClassName: 'border-emerald-300/35 bg-emerald-400/14 text-emerald-50',
     badgeClassName: 'border-emerald-400/25 bg-emerald-400/10 text-emerald-100',
+    railClassName: 'bg-emerald-300',
+    icon: CheckCircle2,
   },
   average: {
     label: '보통 날',
-    cellClassName: 'border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] text-[var(--app-copy)]',
+    description: '큰 결정보다 루틴과 확인을 쌓기 좋은 날',
+    cellClassName: 'border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] text-[var(--app-copy)]',
     badgeClassName: 'border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] text-[var(--app-copy-soft)]',
+    railClassName: 'bg-[var(--app-line)]',
+    icon: CircleDot,
   },
   caution: {
     label: '주의 날',
-    cellClassName: 'border-rose-400/24 bg-rose-400/10 text-rose-100',
+    description: '돈, 말, 확답은 한 번 더 확인하는 날',
+    cellClassName: 'border-rose-300/35 bg-rose-400/14 text-rose-50',
     badgeClassName: 'border-rose-400/25 bg-rose-400/10 text-rose-100',
+    railClassName: 'bg-rose-300',
+    icon: AlertTriangle,
   },
 };
 
@@ -132,6 +156,10 @@ function formatDayLabel(entry: FortuneCalendarMonthReport['days'][number]) {
   return `${year}.${String(month).padStart(2, '0')}.${String(entry.day).padStart(2, '0')}`;
 }
 
+function formatCompactDay(entry: FortuneCalendarMonthReport['days'][number]) {
+  return `${entry.day}일`;
+}
+
 function pickToneEntries(
   report: FortuneCalendarMonthReport,
   tones: FortuneCalendarTone[],
@@ -142,6 +170,140 @@ function pickToneEntries(
     .filter((entry) => tones.includes(entry.tone))
     .sort((left, right) => (direction === 'high' ? right.score - left.score : left.score - right.score))
     .slice(0, limit);
+}
+
+function pickDefaultFocusDay(report: FortuneCalendarMonthReport | null | undefined) {
+  if (!report) return null;
+  return (
+    pickToneEntries(report, ['decision'], 1, 'high')[0] ??
+    pickToneEntries(report, ['good'], 1, 'high')[0] ??
+    pickToneEntries(report, ['caution'], 1, 'low')[0] ??
+    report.days[0] ??
+    null
+  );
+}
+
+function ToneSummaryCard({
+  tone,
+  count,
+  entries,
+  onSelect,
+}: {
+  tone: FortuneCalendarTone;
+  count: number;
+  entries: FortuneCalendarMonthReport['days'];
+  onSelect: (day: number) => void;
+}) {
+  const meta = TONE_META[tone];
+  const Icon = meta.icon;
+
+  return (
+    <div className="rounded-[20px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] p-4">
+      <div className="flex items-start gap-3">
+        <div className={`flex size-10 shrink-0 items-center justify-center rounded-full ${meta.badgeClassName}`}>
+          <Icon className="size-4" aria-hidden="true" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-sm font-semibold text-[var(--app-ivory)]">{meta.label}</div>
+            <div className="text-lg font-semibold text-[var(--app-gold-text)]">{count}일</div>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-[var(--app-copy-muted)]">{meta.description}</p>
+        </div>
+      </div>
+      {entries.length ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {entries.map((entry) => (
+            <button
+              key={`${tone}-${entry.isoDate}`}
+              type="button"
+              onClick={() => onSelect(entry.day)}
+              className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-transform active:scale-95 ${meta.badgeClassName}`}
+            >
+              {formatCompactDay(entry)}
+            </button>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function CalendarMonthMap({
+  report,
+  onSelectDay,
+}: {
+  report: FortuneCalendarMonthReport;
+  onSelectDay: (day: number) => void;
+}) {
+  const total = Math.max(1, report.totalDays);
+
+  return (
+    <div className="rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="app-caption text-[var(--app-gold-soft)]">월간 지도</div>
+          <div className="mt-2 text-sm font-semibold text-[var(--app-ivory)]">먼저 볼 날을 색으로 나눴습니다</div>
+        </div>
+        <CalendarDays className="size-5 text-[var(--app-gold-soft)]" aria-hidden="true" />
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-full border border-[var(--app-line)] bg-[rgba(255,255,255,0.04)]">
+        <div className="flex h-3">
+          {(['decision', 'good', 'average', 'caution'] as FortuneCalendarTone[]).map((tone) => (
+            <div
+              key={tone}
+              className={TONE_META[tone].railClassName}
+              style={{
+                width: `${(report.summary.toneCounts[tone] / total) * 100}%`,
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        {(['decision', 'good', 'caution', 'average'] as FortuneCalendarTone[]).map((tone) => (
+          <ToneSummaryCard
+            key={tone}
+            tone={tone}
+            count={report.summary.toneCounts[tone]}
+            entries={pickToneEntries(report, [tone], tone === 'average' ? 2 : 3, tone === 'caution' ? 'low' : 'high')}
+            onSelect={onSelectDay}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DayFocusPanel({ entry }: { entry: FortuneCalendarMonthReport['days'][number] }) {
+  const meta = TONE_META[entry.tone];
+  const Icon = meta.icon;
+
+  return (
+    <div className="rounded-[22px] border border-[var(--app-gold)]/20 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(255,255,255,0.025))] p-4">
+      <div className="flex items-start gap-3">
+        <div className={`flex size-11 shrink-0 items-center justify-center rounded-full ${meta.badgeClassName}`}>
+          <Icon className="size-5" aria-hidden="true" />
+        </div>
+        <div>
+          <div className="app-caption text-[var(--app-gold-soft)]">선택한 날</div>
+          <h3 className="mt-2 text-xl font-semibold text-[var(--app-ivory)]">
+            {formatDayLabel(entry)} · {meta.label}
+          </h3>
+          <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{entry.summary}</p>
+        </div>
+      </div>
+      <div className="mt-4 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] px-4 py-4">
+        <div className="flex items-center gap-2 text-sm font-semibold text-[var(--app-gold-text)]">
+          <Clock3 className="size-4" aria-hidden="true" />
+          오늘의 행동 기준
+        </div>
+        <p className="mt-2 text-sm leading-7 text-[var(--app-copy)]">{entry.actionHint}</p>
+      </div>
+    </div>
+  );
 }
 
 function CalendarHintGroup({
@@ -184,6 +346,7 @@ export default function FortuneCalendarPanel({
   const [data, setData] = useState<FortuneCalendarResponse | null>(null);
   const [unlocking, setUnlocking] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -238,6 +401,15 @@ export default function FortuneCalendarPanel({
           })),
     [data?.report, placeholderWeeks]
   );
+  const focusEntry = useMemo(() => {
+    if (!data?.report) return null;
+    return data.report.days.find((entry) => entry.day === selectedDay) ?? pickDefaultFocusDay(data.report);
+  }, [data?.report, selectedDay]);
+
+  useEffect(() => {
+    const defaultEntry = pickDefaultFocusDay(data?.report);
+    setSelectedDay(defaultEntry?.day ?? null);
+  }, [data?.report, selectedMonth]);
 
   async function handleUnlock() {
     trackMoonlightEvent('unlock_clicked', {
@@ -316,15 +488,15 @@ export default function FortuneCalendarPanel({
             달별로 한눈에 보는 결정일과 주의 날
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-8 text-[var(--app-copy)]">
-            평생 소장권이 있으면 12개월을 자유롭게 보고, 그렇지 않으면 필요한 달만 2코인으로 열어 한 달 흐름을 집중해서 볼 수 있습니다.
+            긴 설명보다 먼저 달력에서 좋은 날, 확인할 날, 결정하기 좋은 날을 색으로 나눠 보여드립니다.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge className={hasLifetimeAccess ? TONE_META.decision.badgeClassName : TONE_META.average.badgeClassName}>
-            {hasLifetimeAccess ? 'Lifetime 무료 열람' : '월 단위 2코인 잠금 해제'}
+            {hasLifetimeAccess ? '소장권 열람' : '월 단위 2코인'}
           </Badge>
           {data?.access === 'month_unlock' ? (
-            <Badge className={TONE_META.good.badgeClassName}>이번 달 해제됨</Badge>
+            <Badge className={TONE_META.good.badgeClassName}>해제된 달</Badge>
           ) : null}
         </div>
       </div>
@@ -358,7 +530,7 @@ export default function FortuneCalendarPanel({
           {error}
         </div>
       ) : (
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.04fr)_minmax(320px,0.96fr)]">
           <article className="rounded-[26px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
@@ -371,6 +543,12 @@ export default function FortuneCalendarPanel({
                 <div className="text-xs text-[var(--app-copy-soft)]">잔여 코인 {remaining}개</div>
               ) : null}
             </div>
+
+            {data?.report ? (
+              <div className="mt-5">
+                <CalendarMonthMap report={data.report} onSelectDay={setSelectedDay} />
+              </div>
+            ) : null}
 
             <div className="mt-5 grid grid-cols-7 gap-2">
               {WEEKDAY_LABELS.map((label) => (
@@ -393,18 +571,40 @@ export default function FortuneCalendarPanel({
                   const tone = data?.report && isFortuneCalendarEntry(cell)
                     ? cell.tone
                     : ('average' as FortuneCalendarTone);
-
-                  return (
-                    <div
-                      key={`${selectedMonth}-${cell.day}-${weekIndex}-${cellIndex}`}
-                      className={`relative aspect-square overflow-hidden rounded-[18px] border px-2 py-2 ${TONE_META[tone].cellClassName}`}
-                    >
+                  const isSelected = data?.report && isFortuneCalendarEntry(cell) && cell.day === selectedDay;
+                  const content = (
+                    <>
                       <div className="text-sm font-semibold">{cell.day}</div>
                       {data?.report && isFortuneCalendarEntry(cell) ? (
                         <div className="mt-2 text-[10px] leading-4 opacity-90">{TONE_META[cell.tone].label}</div>
                       ) : (
                         <div className="mt-2 text-[10px] leading-4 opacity-60">잠금</div>
                       )}
+                    </>
+                  );
+
+                  if (data?.report && isFortuneCalendarEntry(cell)) {
+                    return (
+                      <button
+                        key={`${selectedMonth}-${cell.day}-${weekIndex}-${cellIndex}`}
+                        type="button"
+                        onClick={() => setSelectedDay(cell.day)}
+                        className={`relative aspect-square overflow-hidden rounded-[18px] border px-2 py-2 text-left transition-transform active:scale-95 ${TONE_META[tone].cellClassName} ${
+                          isSelected ? 'ring-2 ring-[var(--app-gold)]/60 ring-offset-2 ring-offset-[var(--app-bg)]' : ''
+                        }`}
+                        aria-label={`${cell.day}일 ${TONE_META[cell.tone].label} 보기`}
+                      >
+                        {content}
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={`${selectedMonth}-${cell.day}-${weekIndex}-${cellIndex}`}
+                      className={`relative aspect-square overflow-hidden rounded-[18px] border px-2 py-2 ${TONE_META[tone].cellClassName}`}
+                    >
+                      {content}
                     </div>
                   );
                 })
@@ -415,49 +615,50 @@ export default function FortuneCalendarPanel({
           <article className="rounded-[26px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] p-5">
             {data?.report ? (
               <>
-                <div className="app-caption">월간 해설</div>
-                <div className="mt-3 space-y-3">
-                  <p className="text-sm leading-8 text-[var(--app-copy)]">{data.report.summary.summary}</p>
-                  <p className="text-sm leading-8 text-[var(--app-copy)]">{data.report.summary.keyStrength}</p>
-                  <p className="text-sm leading-8 text-[var(--app-copy)]">{data.report.summary.cautionLine}</p>
-                </div>
+                <div className="app-caption">월간 판단</div>
+                <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{data.report.summary.summary}</p>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                {focusEntry ? (
+                  <div className="mt-5">
+                    <DayFocusPanel entry={focusEntry} />
+                  </div>
+                ) : null}
+
+                <div className="mt-5 grid gap-3">
                   <div className="rounded-[18px] border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/10 px-4 py-4">
-                    <div className="app-caption text-[var(--app-gold-text)]">결정일</div>
+                    <div className="app-caption text-[var(--app-gold-text)]">이번 달 먼저 움직일 날</div>
                     <p className="mt-3 text-sm leading-7 text-[var(--app-ivory)]">
                       {data.report.summary.decisionDays.join(' · ')}
                     </p>
                   </div>
-                  <div className="rounded-[18px] border border-emerald-400/20 bg-emerald-400/10 px-4 py-4">
-                    <div className="app-caption text-emerald-100">밀어도 되는 날</div>
-                    <p className="mt-3 text-sm leading-7 text-emerald-50">
-                      {data.report.summary.goodDays.join(' · ')}
-                    </p>
-                  </div>
                   <div className="rounded-[18px] border border-rose-400/20 bg-rose-400/10 px-4 py-4">
-                    <div className="app-caption text-rose-100">한 번 더 확인할 날</div>
+                    <div className="app-caption text-rose-100">확답을 늦추면 좋은 날</div>
                     <p className="mt-3 text-sm leading-7 text-rose-50">{data.report.summary.cautionDays.join(' · ')}</p>
                   </div>
                 </div>
 
-                <div className="mt-5 grid gap-3">
-                  <CalendarHintGroup
-                    title="먼저 잡아볼 날"
-                    tone="decision"
-                    entries={pickToneEntries(data.report, ['decision'], 3, 'high')}
-                  />
-                  <CalendarHintGroup
-                    title="가볍게 밀어도 되는 날"
-                    tone="good"
-                    entries={pickToneEntries(data.report, ['good'], 3, 'high')}
-                  />
-                  <CalendarHintGroup
-                    title="한 번 더 확인할 날"
-                    tone="caution"
-                    entries={pickToneEntries(data.report, ['caution'], 3, 'low')}
-                  />
-                </div>
+                <details className="mt-5 rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.025)] px-4 py-4">
+                  <summary className="cursor-pointer text-sm font-semibold text-[var(--app-gold-text)]">
+                    날짜별 행동 힌트 더 보기
+                  </summary>
+                  <div className="mt-4 grid gap-3">
+                    <CalendarHintGroup
+                      title="먼저 잡아볼 날"
+                      tone="decision"
+                      entries={pickToneEntries(data.report, ['decision'], 3, 'high')}
+                    />
+                    <CalendarHintGroup
+                      title="가볍게 밀어도 되는 날"
+                      tone="good"
+                      entries={pickToneEntries(data.report, ['good'], 3, 'high')}
+                    />
+                    <CalendarHintGroup
+                      title="한 번 더 확인할 날"
+                      tone="caution"
+                      entries={pickToneEntries(data.report, ['caution'], 3, 'low')}
+                    />
+                  </div>
+                </details>
               </>
             ) : (
               <>
@@ -470,13 +671,21 @@ export default function FortuneCalendarPanel({
                 </p>
                 <div className="mt-5 rounded-[20px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
                   <div className="app-caption text-[var(--app-gold-soft)]">열리면 보이는 것</div>
-                  <ul className="mt-3 space-y-2 text-sm leading-7 text-[var(--app-copy)]">
-                    <li>• 날짜별 결정일 / 좋은 날 / 주의 날 분류</li>
-                    <li>• 그 달에 바로 밀어도 되는 결정일 4개</li>
-                    <li>• 그 달에 가볍게 밀어도 되는 좋은 날 4개</li>
-                    <li>• 한 번 더 확인해야 할 날 4개</li>
-                    <li>• 날짜별 짧은 행동 힌트</li>
-                  </ul>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {(['decision', 'good', 'caution', 'average'] as FortuneCalendarTone[]).map((tone) => {
+                      const meta = TONE_META[tone];
+                      const Icon = meta.icon;
+                      return (
+                        <div key={tone} className="rounded-[16px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-3 py-3">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-[var(--app-ivory)]">
+                            <Icon className="size-4 text-[var(--app-gold-soft)]" aria-hidden="true" />
+                            {meta.label}
+                          </div>
+                          <p className="mt-2 text-xs leading-5 text-[var(--app-copy-muted)]">{meta.description}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
                 <div className="mt-5 flex flex-wrap gap-3">
                   <Button
