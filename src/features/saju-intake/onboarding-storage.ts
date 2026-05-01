@@ -27,10 +27,17 @@ export interface SajuOnboardingDraft {
 }
 
 export const ONBOARDING_STORAGE_KEY = 'moonlight:saju-onboarding-draft';
+export const ONBOARDING_CONSENT_STORAGE_KEY = 'moonlight:saju-onboarding-consent-v1';
+
+function getRequiredConsentSignature() {
+  return ONBOARDING_CONSENTS.filter((item) => item.required)
+    .map((item) => item.title)
+    .join('|');
+}
 
 function createConsentState() {
   return Object.fromEntries(
-    ONBOARDING_CONSENTS.map((item) => [item.title, item.required])
+    ONBOARDING_CONSENTS.map((item) => [item.title, false])
   ) as Record<string, boolean>;
 }
 
@@ -63,7 +70,7 @@ function mergeConsentState(value: unknown) {
 
   const incoming = value as Record<string, unknown>;
   return Object.fromEntries(
-    ONBOARDING_CONSENTS.map((item) => [item.title, typeof incoming[item.title] === 'boolean' ? incoming[item.title] : item.required])
+    ONBOARDING_CONSENTS.map((item) => [item.title, typeof incoming[item.title] === 'boolean' ? incoming[item.title] : false])
   ) as Record<string, boolean>;
 }
 
@@ -121,6 +128,24 @@ export function saveOnboardingDraft(draft: SajuOnboardingDraft) {
 export function clearOnboardingDraft() {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+}
+
+export function hasAcceptedRequiredConsents() {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return window.localStorage.getItem(ONBOARDING_CONSENT_STORAGE_KEY) === getRequiredConsentSignature();
+  } catch {
+    return false;
+  }
+}
+
+export function saveAcceptedRequiredConsents() {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(ONBOARDING_CONSENT_STORAGE_KEY, getRequiredConsentSignature());
+  } catch {}
 }
 
 export function getHonorificLabel(nickname: string) {
