@@ -70,6 +70,18 @@ export function PremiumLockCard({
             <Lock className="mr-2 h-4 w-4" />
             {loading ? '열어보는 중...' : '오늘 심화풀이 1코인으로 열기'}
           </Button>
+          <Link
+            href={`/membership/checkout?product=today-detail&slug=${encodeURIComponent(sourceSessionId)}&scope=${encodeURIComponent(concernId)}&from=today-fortune`}
+            className="inline-flex"
+          >
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+            >
+              990원으로 바로 열기
+            </Button>
+          </Link>
           <Link href="/credits?from=today-fortune" className="inline-flex">
             <Button
               type="button"

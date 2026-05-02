@@ -20,18 +20,22 @@ const hasSupabaseBrowserEnv = Boolean(
 interface Props {
   packageId: string;
   plan: string;
+  product?: string;
   amount: number;
   orderName: string;
   slug?: string;
+  scope?: string;
   entrySource?: string;
 }
 
 export default function TossMembershipCheckout({
   packageId,
   plan,
+  product,
   amount,
   orderName,
   slug,
+  scope,
   entrySource = 'membership',
 }: Props) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
@@ -42,11 +46,12 @@ export default function TossMembershipCheckout({
   );
 
   const checkoutPath = useMemo(() => {
-    const params = new URLSearchParams({ plan });
+    const params = new URLSearchParams(product ? { product } : { plan });
     if (slug) params.set('slug', slug);
+    if (scope) params.set('scope', scope);
     if (entrySource) params.set('from', entrySource);
     return `/membership/checkout?${params.toString()}`;
-  }, [entrySource, plan, slug]);
+  }, [entrySource, plan, product, scope, slug]);
 
   useEffect(() => {
     if (!hasSupabaseBrowserEnv) {
@@ -61,8 +66,8 @@ export default function TossMembershipCheckout({
   }, []);
 
   async function handlePayment() {
-    if (packageId === 'lifetime_report' && !slug) {
-      setErrorMessage('나의 명리 기준서는 먼저 사주 결과를 만든 뒤 해당 결과 화면에서 결제할 수 있습니다.');
+    if ((packageId === 'lifetime_report' || packageId.startsWith('taste_')) && !slug && packageId !== 'taste_love_question') {
+      setErrorMessage('이 상품은 먼저 결과를 만든 뒤 해당 화면에서 결제할 수 있습니다.');
       return;
     }
 
@@ -94,9 +99,19 @@ export default function TossMembershipCheckout({
         from: entrySource,
       });
 
+      if (product) {
+        successParams.set('product', product);
+        failParams.set('product', product);
+      }
+
       if (slug) {
         successParams.set('slug', slug);
         failParams.set('slug', slug);
+      }
+
+      if (scope) {
+        successParams.set('scope', scope);
+        failParams.set('scope', scope);
       }
 
       if (packageId === 'lifetime_report' && slug) {
@@ -106,6 +121,7 @@ export default function TossMembershipCheckout({
       trackMoonlightEvent('payment_started', {
         from: entrySource,
         packageId,
+        product,
         paymentMethod,
         amount,
         plan,

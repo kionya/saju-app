@@ -24,6 +24,10 @@ import {
 import { toSlug } from '@/lib/saju/pillars';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import {
+  buildReadingProductScopeKey,
+  getTasteProductEntitlement,
+} from '@/lib/product-entitlements';
 import { getLifetimeReportEntitlement } from '@/lib/report-entitlements';
 import { resolveReading } from '@/lib/saju/readings';
 import {
@@ -293,6 +297,23 @@ function canUseSubscriptionForPremiumReport(subscription: Awaited<ReturnType<typ
   );
 }
 
+function getTasteProductHref(productSlug: string, encodedSlug: string, targetYear: number) {
+  if (productSlug === 'monthly-calendar') {
+    const month = String(new Date().getMonth() + 1).padStart(2, '0');
+    return `/membership/checkout?product=monthly-calendar&slug=${encodedSlug}&scope=${targetYear}-${month}&from=saju-premium`;
+  }
+
+  if (productSlug === 'year-core') {
+    return `/membership/checkout?product=year-core&slug=${encodedSlug}&from=saju-premium`;
+  }
+
+  if (productSlug === 'love-question') {
+    return '/membership/checkout?product=love-question&from=saju-premium';
+  }
+
+  return '/today-fortune?concern=general';
+}
+
 type PremiumReadingStep = {
   label: string;
   title: string;
@@ -416,9 +437,10 @@ export default async function SajuPremiumPage({ params }: Props) {
     } = await supabase.auth.getUser();
 
     if (user) {
-      const [entitlement, subscription] = await Promise.all([
+      const [entitlement, subscription, yearCoreEntitlement] = await Promise.all([
         getLifetimeReportEntitlement(user.id, readingKey, [slug]),
         getManagedSubscription(user.id),
+        getTasteProductEntitlement(user.id, 'year-core', buildReadingProductScopeKey(readingKey)),
       ]);
 
       if (entitlement) {
@@ -426,6 +448,8 @@ export default async function SajuPremiumPage({ params }: Props) {
         yearlyAccessLabel = '평생 소장 권한';
       } else if (subscription && canUseSubscriptionForPremiumReport(subscription)) {
         yearlyAccessLabel = subscription.plan === 'premium_monthly' ? 'Premium 이용권' : '라이트 이용권';
+      } else if (yearCoreEntitlement) {
+        yearlyAccessLabel = '올해 핵심 구매';
       }
     }
   }
@@ -650,7 +674,7 @@ export default async function SajuPremiumPage({ params }: Props) {
               {TASTE_PRODUCTS.map((product) => (
                 <Link
                   key={product.slug}
-                  href={product.href}
+                  href={getTasteProductHref(product.slug, encodedSlug, targetYear)}
                   className="rounded-[1.05rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 transition-colors hover:border-[var(--app-gold)]/30 hover:bg-[var(--app-gold)]/8"
                 >
                   <div className="text-xs font-semibold text-[var(--app-gold-text)]">{product.price}</div>

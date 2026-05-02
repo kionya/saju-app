@@ -19,10 +19,11 @@ import {
   toBirthInputFromProfile,
   type BirthProfileFields,
 } from '@/lib/profile';
+import { getTasteProductEntitlement } from '@/lib/product-entitlements';
 import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 interface Props {
-  searchParams: Promise<{ relationship?: string; familyId?: string; source?: string }>;
+  searchParams: Promise<{ relationship?: string; familyId?: string; source?: string; paid?: string }>;
 }
 
 function formatBirthSummary(profile: BirthProfileFields) {
@@ -100,10 +101,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CompatibilityResultPage({ searchParams }: Props) {
-  const { relationship, familyId, source } = await searchParams;
+  const { relationship, familyId, source, paid } = await searchParams;
 
   if (source === 'manual') {
-    return <ManualCompatibilityResultClient relationship={relationship} />;
+    return (
+      <ManualCompatibilityResultClient
+        relationship={relationship}
+        hasLoveQuestionPurchase={paid === 'love-question'}
+      />
+    );
   }
 
   const selectedRelationship = relationship
@@ -111,6 +117,11 @@ export default async function CompatibilityResultPage({ searchParams }: Props) {
     : undefined;
   const redirectPath = `/compatibility/result${relationship || familyId ? `?${new URLSearchParams({ ...(relationship ? { relationship } : {}), ...(familyId ? { familyId } : {}) }).toString()}` : ''}`;
   const data = await getProfileSettingsData(redirectPath);
+  const hasLoveQuestionPurchase =
+    paid === 'love-question' ||
+    (data.user.id
+      ? Boolean(await getTasteProductEntitlement(data.user.id, 'love-question'))
+      : false);
   const displayName = resolveProfileDisplayName(data.profile.displayName, data.user.email);
   const selectedFamily = data.familyProfiles.find((profile) => profile.id === familyId) ?? null;
   const resolvedRelationship =
@@ -170,6 +181,7 @@ export default async function CompatibilityResultPage({ searchParams }: Props) {
           selfBirthSummary={formatBirthSummary(data.profile)}
           partnerBirthSummary={formatBirthSummary(selectedFamily)}
           retakeHref={`/compatibility/input?relationship=${selected.slug}`}
+          hasLoveQuestionPurchase={hasLoveQuestionPurchase}
         />
       </AppPage>
     </AppShell>

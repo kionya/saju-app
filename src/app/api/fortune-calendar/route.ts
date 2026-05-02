@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildFortuneCalendarMonth } from '@/domain/saju/report';
 import { hasFortuneCalendarMonthAccess } from '@/lib/credits/calendar-access';
 import { getFeatureCost } from '@/lib/credits/deduct';
+import {
+  buildMonthlyCalendarScopeKey,
+  getTasteProductEntitlement,
+} from '@/lib/product-entitlements';
 import { getLifetimeReportEntitlement } from '@/lib/report-entitlements';
 import { toSlug } from '@/lib/saju/pillars';
 import { resolveReading } from '@/lib/saju/readings';
 import { createClient, hasSupabaseServerEnv, hasSupabaseServiceEnv } from '@/lib/supabase/server';
 
-type AccessKind = 'lifetime' | 'month_unlock' | 'locked';
+type AccessKind = 'lifetime' | 'month_unlock' | 'product_unlock' | 'locked';
 
 function getCurrentKoreaMonth() {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -62,6 +66,15 @@ async function resolveCalendarAccess(
   const entitlement = await getLifetimeReportEntitlement(user.id, readingKey, [legacyReadingKey]);
   if (entitlement) {
     return { access: 'lifetime', userId: user.id };
+  }
+
+  const productEntitlement = await getTasteProductEntitlement(
+    user.id,
+    'monthly-calendar',
+    buildMonthlyCalendarScopeKey(readingKey, targetYear, month)
+  );
+  if (productEntitlement) {
+    return { access: 'product_unlock', userId: user.id };
   }
 
   const hasMonthAccess = await hasFortuneCalendarMonthAccess(

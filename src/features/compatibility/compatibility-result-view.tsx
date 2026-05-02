@@ -44,6 +44,7 @@ interface CompatibilityResultViewProps {
   selfBirthSummary: string;
   partnerBirthSummary: string;
   retakeHref?: string;
+  hasLoveQuestionPurchase?: boolean;
 }
 
 export function CompatibilityResultView({
@@ -54,6 +55,7 @@ export function CompatibilityResultView({
   selfBirthSummary,
   partnerBirthSummary,
   retakeHref = `/compatibility/input?relationship=${selected.slug}`,
+  hasLoveQuestionPurchase = false,
 }: CompatibilityResultViewProps) {
   const premiumExpansion = COMPATIBILITY_PREMIUM_EXPANSION[selected.slug];
 
@@ -73,6 +75,14 @@ export function CompatibilityResultView({
           >
             {selected.title}
           </Badge>,
+          hasLoveQuestionPurchase ? (
+            <Badge
+              key="purchased"
+              className="border-emerald-400/25 bg-emerald-400/10 text-emerald-100"
+            >
+              연애 질문 구매함
+            </Badge>
+          ) : null,
         ]}
         title={compatibility.headline}
         description={`${selected.title} 관계에서 먼저 체감되는 말투, 속도, 거리감, 돈의 기준을 중심으로 정리했습니다.`}

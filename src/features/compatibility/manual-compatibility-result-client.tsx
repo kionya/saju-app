@@ -19,6 +19,7 @@ import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 interface ManualCompatibilityResultClientProps {
   relationship?: string;
+  hasLoveQuestionPurchase?: boolean;
 }
 
 function resolveRelationship(value: string | undefined): CompatibilityRelationshipSlug {
@@ -70,7 +71,10 @@ function MissingManualState({ relationship }: { relationship: CompatibilityRelat
   );
 }
 
-export function ManualCompatibilityResultClient({ relationship }: ManualCompatibilityResultClientProps) {
+export function ManualCompatibilityResultClient({
+  relationship,
+  hasLoveQuestionPurchase = false,
+}: ManualCompatibilityResultClientProps) {
   const [payload, setPayload] = useState<ManualCompatibilityPayload | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const requestedRelationship = resolveRelationship(relationship);
@@ -135,6 +139,7 @@ export function ManualCompatibilityResultClient({ relationship }: ManualCompatib
           selfBirthSummary={payload.selfBirthSummary}
           partnerBirthSummary={payload.partnerBirthSummary}
           retakeHref={`/compatibility/input?relationship=${selected.slug}`}
+          hasLoveQuestionPurchase={hasLoveQuestionPurchase}
         />
       </AppPage>
     </AppShell>

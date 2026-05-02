@@ -20,6 +20,7 @@ import {
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { ONBOARDING_CONSENTS, QUESTION_ENTRY_POINTS } from '@/content/moonlight';
 import { BIRTH_LOCATION_PRESETS } from '@/lib/saju/birth-location';
+import { isTasteProductId, type TasteProductId } from '@/lib/payments/catalog';
 import { toSlug } from '@/lib/saju/pillars';
 import { cn } from '@/lib/utils';
 import {
@@ -182,6 +183,25 @@ function normalizeEntryFocusParam(value: string | null): OnboardingFocusTopic | 
   return null;
 }
 
+function getCurrentYearMonthScope() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function buildPostSubmitHref(id: string, focusTopic: OnboardingFocusTopic, product: TasteProductId | null) {
+  if (product === 'monthly-calendar' || product === 'year-core') {
+    const params = new URLSearchParams({
+      product,
+      slug: id,
+      from: 'saju-new',
+    });
+    if (product === 'monthly-calendar') params.set('scope', getCurrentYearMonthScope());
+    return `/membership/checkout?${params.toString()}`;
+  }
+
+  return `/saju/${id}?from=saju-new&topic=${focusTopic}`;
+}
+
 function buildUnifiedBirthDraft(form: SajuOnboardingDraft): UnifiedBirthEntryDraft {
   return {
     calendarType: form.calendarType,
@@ -327,6 +347,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
   const [locationSearchResults, setLocationSearchResults] = useState<BirthLocationSearchResult[]>([]);
   const [selectedEntrySlug, setSelectedEntrySlug] =
     useState<(typeof QUESTION_ENTRY_POINTS)[number]['slug']>('today');
+  const [pendingProduct, setPendingProduct] = useState<TasteProductId | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const hasTrackedStartRef = useRef(false);
   const hasTrackedBirthStartRef = useRef(false);
@@ -345,7 +366,15 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
     const draft = loadOnboardingDraft();
     const focusParam =
       typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('focus');
+    const productParam =
+      typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('product');
     const initialFocusTopic = normalizeEntryFocusParam(focusParam);
+    if (isTasteProductId(productParam)) {
+      setPendingProduct(productParam);
+      if (productParam === 'monthly-calendar' || productParam === 'year-core') {
+        setSelectedEntrySlug('year');
+      }
+    }
     if (focusParam && focusParam in ENTRY_FOCUS_TOPIC_BY_SLUG) {
       setSelectedEntrySlug(focusParam as (typeof QUESTION_ENTRY_POINTS)[number]['slug']);
     } else if (initialFocusTopic === 'love') {
@@ -667,7 +696,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
         }).catch(() => undefined);
       }
 
-      router.push(`/saju/${data.id}?from=saju-new&topic=${form.focusTopic}`);
+      router.push(buildPostSubmitHref(data.id, form.focusTopic, pendingProduct));
     } catch {
       const fallbackId = toSlug(parsed.input);
       if (!consentAccepted) {
@@ -683,7 +712,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
         unknownBirthTime: parsed.input.unknownTime,
         layout: 'swipe',
       });
-      router.push(`/saju/${fallbackId}?from=saju-new&topic=${form.focusTopic}`);
+      router.push(buildPostSubmitHref(fallbackId, form.focusTopic, pendingProduct));
     } finally {
       setIsSubmitting(false);
     }

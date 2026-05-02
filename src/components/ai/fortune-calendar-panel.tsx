@@ -24,7 +24,7 @@ interface Props {
 
 interface FortuneCalendarResponse {
   ok: boolean;
-  access: 'lifetime' | 'month_unlock' | 'locked';
+  access: 'lifetime' | 'month_unlock' | 'product_unlock' | 'locked';
   targetYear: number;
   month: number;
   monthLabel: string;
@@ -437,7 +437,7 @@ export default function FortuneCalendarPanel({
       const payload = (await response.json().catch(() => null)) as
         | {
             success: true;
-            access: 'lifetime' | 'month_unlock';
+            access: 'lifetime' | 'month_unlock' | 'product_unlock';
             remaining: number | null;
             report: FortuneCalendarMonthReport;
           }
@@ -497,6 +497,9 @@ export default function FortuneCalendarPanel({
           </Badge>
           {data?.access === 'month_unlock' ? (
             <Badge className={TONE_META.good.badgeClassName}>해제된 달</Badge>
+          ) : null}
+          {data?.access === 'product_unlock' ? (
+            <Badge className={TONE_META.good.badgeClassName}>구매한 달</Badge>
           ) : null}
         </div>
       </div>
@@ -694,6 +697,12 @@ export default function FortuneCalendarPanel({
                   >
                     {unlocking ? '여는 중...' : `${selectedMonth}월 캘린더 2코인으로 열기`}
                   </Button>
+                  <Link
+                    href={`/membership/checkout?product=monthly-calendar&slug=${encodeURIComponent(slug)}&scope=${targetYear}-${String(selectedMonth).padStart(2, '0')}&from=fortune-calendar`}
+                    className="moon-action-secondary moon-action-compact"
+                  >
+                    1,900원으로 열기
+                  </Link>
                   <Link
                     href={`/credits?from=fortune-calendar&slug=${encodeURIComponent(slug)}`}
                     className="moon-action-muted moon-action-compact"

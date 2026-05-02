@@ -40,6 +40,28 @@ function buildPremiumResultHref(plan: string, slug: string | null) {
   return `/saju/${encodeURIComponent(slug)}/premium?${params.toString()}`;
 }
 
+function buildTasteProductHref(product: string | null, slug: string | null, scope: string | null) {
+  if (product === 'today-detail') {
+    const params = new URLSearchParams({ paid: product, concern: scope || 'general' });
+    if (slug) params.set('sourceSessionId', slug);
+    return `/today-fortune?${params.toString()}`;
+  }
+
+  if (product === 'love-question') {
+    return '/compatibility/input?relationship=lover&paid=love-question';
+  }
+
+  if (slug && product === 'monthly-calendar') {
+    return `/saju/${encodeURIComponent(slug)}/premium?payment=confirmed&product=${product}#fortune-calendar`;
+  }
+
+  if (slug && product === 'year-core') {
+    return `/saju/${encodeURIComponent(slug)}/premium?payment=confirmed&product=${product}#yearly-report`;
+  }
+
+  return null;
+}
+
 function LoadingState() {
   return (
     <>
@@ -222,6 +244,8 @@ function SuccessContent() {
     const amount = searchParams.get('amount');
     const packageId = searchParams.get('packageId');
     const plan = searchParams.get('plan') ?? 'premium';
+    const product = searchParams.get('product');
+    const scope = searchParams.get('scope');
     const entrySource = searchParams.get('from') ?? 'membership';
     const storedLifetimeSlug =
       packageId === 'lifetime_report' ? readPendingLifetimeReportSlug() : null;
@@ -244,6 +268,7 @@ function SuccessContent() {
         amount: Number(amount),
         packageId,
         slug,
+        scope,
       }),
     })
       .then((response) => response.json().then((data) => ({ response, data })))
@@ -255,6 +280,8 @@ function SuccessContent() {
         }
 
         const nextPlan = data.plan ?? plan;
+        const nextProduct = data.product ?? product;
+        const productHref = buildTasteProductHref(nextProduct, slug, scope);
         const premiumResultHref = buildPremiumResultHref(nextPlan, slug);
 
         if (typeof data.totalCredits === 'number') {
@@ -268,9 +295,15 @@ function SuccessContent() {
         trackMoonlightEvent('payment_completed', {
           from: entrySource,
           packageId,
+          product: nextProduct,
           amount: Number(amount),
           plan: nextPlan,
         });
+
+        if (productHref) {
+          location.replace(productHref);
+          return;
+        }
 
         if (premiumResultHref) {
           if (packageId === 'lifetime_report') {

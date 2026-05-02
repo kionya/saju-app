@@ -5,8 +5,15 @@ import { createClient } from '@/lib/supabase/server';
 import { getUserProfileById } from '@/lib/profile';
 import { resolveMoonlightCounselor } from '@/lib/counselors';
 import { unlockTodayFortunePremium } from '@/lib/credits/detail-report-access';
-import { buildTodayFortunePremiumResult } from '@/server/today-fortune/build-today-fortune';
+import {
+  buildTodayFortuneFreeResult,
+  buildTodayFortunePremiumResult,
+} from '@/server/today-fortune/build-today-fortune';
 import { normalizeConcernId } from '@/lib/today-fortune/concerns';
+import {
+  buildTodayDetailScopeKey,
+  getTasteProductEntitlement,
+} from '@/lib/product-entitlements';
 
 export const runtime = 'nodejs';
 
@@ -44,12 +51,28 @@ export async function POST(req: NextRequest) {
   const concernId = normalizeConcernId(payload?.concernId);
   const profile = await getUserProfileById(user.id);
   const counselorId = resolveMoonlightCounselor(payload?.counselorId, profile.preferredCounselor);
-  const access = await unlockTodayFortunePremium(user.id, toSlug(reading.input), sourceSessionId);
+  const todayDetailEntitlement = await getTasteProductEntitlement(
+    user.id,
+    'today-detail',
+    buildTodayDetailScopeKey(sourceSessionId)
+  );
+  const access = todayDetailEntitlement
+    ? { success: true, remaining: null, reused: true }
+    : await unlockTodayFortunePremium(user.id, toSlug(reading.input), sourceSessionId);
 
   if (!access.success) {
     return NextResponse.json({ error: '코인이 부족합니다.', remaining: access.remaining }, { status: 402 });
   }
 
+  const freeResult = buildTodayFortuneFreeResult(reading.input, reading.sajuData, {
+    concernId,
+    sourceSessionId,
+    calendarType: 'solar',
+    timeRule: 'standard',
+    counselorId,
+    grounding: reading.grounding,
+    kasiComparison: reading.kasiComparison,
+  });
   const result = buildTodayFortunePremiumResult(
     reading.input,
     reading.sajuData,
@@ -60,9 +83,10 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     ok: true,
+    freeResult,
     result,
     remaining: access.remaining,
-    access: access.reused ? 'reused' : 'charged',
+    access: todayDetailEntitlement ? 'purchased' : access.reused ? 'reused' : 'charged',
     counselorId,
   });
 }

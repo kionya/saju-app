@@ -17,6 +17,7 @@ test('payment confirmation accepts a valid subscription package', () => {
   assert.equal(result.input.pkg.kind, 'subscription');
   assert.equal(result.input.pkg.subscriptionPlan, 'premium_monthly');
   assert.equal(result.input.slug, null);
+  assert.equal(result.input.scope, null);
 });
 
 test('payment confirmation rejects tampered package amount', () => {
@@ -43,7 +44,7 @@ test('lifetime report confirmation requires a reading slug before Toss approval'
 
   assert.deepEqual(result, {
     ok: false,
-    error: '명리 기준서 결제에는 결과 식별자가 필요합니다.',
+    error: '이 상품 결제에는 연결할 결과 식별자가 필요합니다.',
   });
 });
 
@@ -61,4 +62,37 @@ test('lifetime report confirmation trims the reading slug used for entitlement',
 
   assert.equal(result.input.pkg.kind, 'lifetime_report');
   assert.equal(result.input.slug, '1982-1-29-8-male');
+});
+
+test('taste product confirmation accepts product package with slug and scope', () => {
+  const result = validatePaymentConfirmationPayload({
+    paymentKey: 'pay_123',
+    orderId: 'order_123',
+    amount: 1900,
+    packageId: 'taste_monthly_calendar',
+    slug: 'reading-123',
+    scope: '2026-05',
+  });
+
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+
+  assert.equal(result.input.pkg.kind, 'taste_product');
+  assert.equal(result.input.pkg.tasteProductId, 'monthly-calendar');
+  assert.equal(result.input.slug, 'reading-123');
+  assert.equal(result.input.scope, '2026-05');
+});
+
+test('scoped taste product confirmation requires a connected result slug', () => {
+  const result = validatePaymentConfirmationPayload({
+    paymentKey: 'pay_123',
+    orderId: 'order_123',
+    amount: 3900,
+    packageId: 'taste_year_core',
+  });
+
+  assert.deepEqual(result, {
+    ok: false,
+    error: '이 상품 결제에는 연결할 결과 식별자가 필요합니다.',
+  });
 });

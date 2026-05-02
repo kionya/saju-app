@@ -257,8 +257,8 @@ export const TASTE_PRODUCTS: readonly MoonlightTasteProduct[] = [
     price: '2,900원',
     question: '상대와 다시 이어질 가능성',
     result: '감정의 속도, 연락 타이밍, 다시 말 걸기 좋은 지점을 짧게 봅니다.',
-    href: '/compatibility/input?relationship=lover',
-    status: '궁합 입력으로 연결',
+    href: '/membership/checkout?product=love-question&from=taste-product',
+    status: '결제 후 궁합 입력',
   },
   {
     slug: 'year-core',

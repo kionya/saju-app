@@ -101,15 +101,21 @@ interface TodayFortuneApiResponse {
 
 interface TodayFortuneUnlockResponse {
   ok?: boolean;
+  freeResult?: TodayFortuneFreeResult;
   result?: TodayFortunePremiumResult;
   error?: string;
   remaining?: number;
+  access?: 'charged' | 'reused' | 'purchased';
 }
 
 export function TodayFortuneExperience({
   initialConcernId,
+  paidProduct,
+  paidSourceSessionId,
 }: {
   initialConcernId?: string;
+  paidProduct?: string;
+  paidSourceSessionId?: string;
 }) {
   const { counselorId } = usePreferredCounselor();
   const [expanded, setExpanded] = useState(false);
@@ -127,6 +133,7 @@ export function TodayFortuneExperience({
   const [premiumResult, setPremiumResult] = useState<TodayFortunePremiumResult | null>(null);
   const [remainingCredits, setRemainingCredits] = useState<number | null>(null);
   const [pendingHitMemo, setPendingHitMemo] = useState<StoredHitMemoSession | null>(null);
+  const [purchasedNotice, setPurchasedNotice] = useState<string | null>(null);
 
   const relatedLinks = useMemo(() => RELATED_LINKS[concernId], [concernId]);
 
@@ -151,6 +158,54 @@ export function TodayFortuneExperience({
   useEffect(() => {
     setPendingHitMemo(getPendingHitMemoSession());
   }, []);
+
+  useEffect(() => {
+    if (paidProduct !== 'today-detail' || !paidSourceSessionId) return;
+
+    let cancelled = false;
+
+    async function openPurchasedTodayDetail() {
+      setUnlocking(true);
+      setUnlockError(null);
+
+      try {
+        const response = await fetch('/api/today-fortune/unlock', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sourceSessionId: paidSourceSessionId,
+            concernId,
+            counselorId,
+          }),
+        });
+        const data = (await response.json().catch(() => null)) as TodayFortuneUnlockResponse | null;
+
+        if (cancelled) return;
+
+        if (!response.ok || !data?.ok || !data.result) {
+          setUnlockError(data?.error ?? '구매한 오늘운 상세를 여는 중 오류가 있었습니다.');
+          return;
+        }
+
+        if (data.freeResult) setFreeResult(data.freeResult);
+        setPremiumResult(data.result);
+        setRemainingCredits(data.remaining ?? null);
+        if (data.access === 'purchased') {
+          setPurchasedNotice('이미 구매한 오늘운 상세를 다시 열었습니다. 코인은 차감하지 않았습니다.');
+        }
+      } catch {
+        if (!cancelled) setUnlockError('구매한 오늘운 상세를 여는 중 네트워크 오류가 있었습니다.');
+      } finally {
+        if (!cancelled) setUnlocking(false);
+      }
+    }
+
+    void openPurchasedTodayDetail();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [concernId, counselorId, paidProduct, paidSourceSessionId]);
 
   function updateDraft(patch: Partial<TodayFortuneBirthPayload>) {
     setDraft((current) => ({ ...current, ...patch, concernId }));
@@ -234,8 +289,12 @@ export function TodayFortuneExperience({
         return;
       }
 
+      if (data.freeResult) setFreeResult(data.freeResult);
       setPremiumResult(data.result);
       setRemainingCredits(data.remaining ?? null);
+      if (data.access === 'purchased') {
+        setPurchasedNotice('이미 구매한 오늘운 상세를 다시 열었습니다. 코인은 차감하지 않았습니다.');
+      }
       trackMoonlightEvent('premium_result_viewed', {
         from: 'today-fortune',
         concern: freeResult.concernId,
@@ -356,6 +415,11 @@ export function TodayFortuneExperience({
 
         {freeResult ? (
           <>
+            {purchasedNotice ? (
+              <div className="rounded-[1.2rem] border border-emerald-400/25 bg-emerald-400/10 px-4 py-3 text-sm leading-6 text-emerald-50">
+                {purchasedNotice}
+              </div>
+            ) : null}
             <TodayFortuneSummaryCard result={freeResult} />
             <TodayFortuneScoreGrid result={freeResult} />
             <OpportunityRiskCards result={freeResult} />

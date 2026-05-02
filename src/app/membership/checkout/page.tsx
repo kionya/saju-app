@@ -16,11 +16,37 @@ import {
   type PlanSlug,
 } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
-import { getMembershipPackage } from '@/lib/payments/catalog';
+import {
+  getMembershipPackage,
+  getTasteProductPackage,
+  isTasteProductId,
+  isTasteProductPackage,
+  type TasteProductId,
+} from '@/lib/payments/catalog';
+import {
+  buildMonthlyCalendarScopeKey,
+  buildReadingProductScopeKey,
+  buildTodayDetailScopeKey,
+  getTasteProductEntitlement,
+} from '@/lib/product-entitlements';
+import { toSlug } from '@/lib/saju/pillars';
+import { resolveReading } from '@/lib/saju/readings';
+import {
+  createClient,
+  hasSupabaseServerEnv,
+  hasSupabaseServiceEnv,
+} from '@/lib/supabase/server';
 import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 interface Props {
-  searchParams: Promise<{ plan?: string; slug?: string; error?: string; from?: string }>;
+  searchParams: Promise<{
+    plan?: string;
+    product?: string;
+    slug?: string;
+    scope?: string;
+    error?: string;
+    from?: string;
+  }>;
 }
 
 const CHECKOUT_FLOW_POINTS = [
@@ -35,6 +61,87 @@ function normalizePlanSlug(value?: string): PlanSlug {
   return 'premium';
 }
 
+type CheckoutGuide = {
+  title: string;
+  price: string;
+  reassurance: string;
+  nextRange: string;
+  opens: string[];
+  notices: string[];
+};
+
+const TASTE_PRODUCT_GUIDE: Record<TasteProductId, CheckoutGuide> = {
+  'today-detail': {
+    title: '오늘운 상세',
+    price: '990원',
+    reassurance: '오늘 만든 무료 결과에 붙는 심화풀이입니다. 결제 뒤 같은 오늘운을 다시 열 때 중복 차감하지 않습니다.',
+    nextRange: '오늘 핵심, 주의 행동, 바로 할 일까지 짧게 열립니다.',
+    opens: ['오늘 심화풀이 결과', '이미 구매한 오늘운 재열람', '대화로 이어 묻기'],
+    notices: ['오늘운 상세는 현재 결과 식별자와 연결됩니다.', '다시 열 때는 구매 여부를 먼저 확인합니다.'],
+  },
+  'monthly-calendar': {
+    title: '월간 달력',
+    price: '1,900원',
+    reassurance: '선택한 사주 결과와 월에 붙는 달력형 해금입니다. 이미 연 달은 다시 코인을 쓰지 않습니다.',
+    nextRange: '좋은 날, 확인할 날, 결정일을 달력으로 봅니다.',
+    opens: ['선택한 월간 달력', '해당 월 재열람', '명리 기준서 확장 동선'],
+    notices: ['월간 달력은 결과와 월 정보가 있어야 연결됩니다.', '평생 기준서 권한이 있으면 별도 결제 없이 열립니다.'],
+  },
+  'love-question': {
+    title: '연애 질문 1회',
+    price: '2,900원',
+    reassurance: '궁합 입력과 결과 흐름에서 연애 질문을 부담 없이 먼저 열 수 있는 소액 상품입니다.',
+    nextRange: '상대와의 거리감, 연락 타이밍, 다시 말 걸기 좋은 지점을 봅니다.',
+    opens: ['궁합 입력 화면', '연애 질문 구매 상태 표시', '궁합 결과와 대화 연결'],
+    notices: ['로그인하지 않아도 입력은 가능하지만, 구매 저장은 로그인 기준으로 남습니다.', '구매 후에는 checkout에서 중복 결제를 막습니다.'],
+  },
+  'year-core': {
+    title: '올해 핵심 3줄',
+    price: '3,900원',
+    reassurance: '선택한 사주 결과에 붙는 올해 요약 상품입니다. 결제 뒤 올해 전략 흐름으로 바로 이동합니다.',
+    nextRange: '올해 핵심 주제, 주의 패턴, 밀어도 되는 달을 먼저 봅니다.',
+    opens: ['올해 전략 요약', '연간 리포트 진입', '평생 기준서 확장 동선'],
+    notices: ['올해 핵심은 특정 사주 결과에 연결됩니다.', '명리 기준서 전체 소장권과는 별도 상품입니다.'],
+  },
+};
+
+function parseYearMonthScope(scope?: string) {
+  const match = scope?.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) return null;
+
+  return { year, month };
+}
+
+async function resolveTasteScopeKey(product: TasteProductId, slug?: string, scope?: string) {
+  if (product === 'love-question') return null;
+  if (!slug) return null;
+  if (product === 'today-detail') return buildTodayDetailScopeKey(slug);
+
+  const reading = await resolveReading(slug);
+  const readingKey = reading ? toSlug(reading.input) : slug;
+
+  if (product === 'monthly-calendar') {
+    const yearMonth = parseYearMonthScope(scope);
+    return yearMonth
+      ? buildMonthlyCalendarScopeKey(readingKey, yearMonth.year, yearMonth.month)
+      : buildReadingProductScopeKey(readingKey);
+  }
+
+  return buildReadingProductScopeKey(readingKey);
+}
+
+function buildAlreadyPurchasedHref(product: TasteProductId, slug?: string) {
+  if (product === 'today-detail') return `/today-fortune?paid=${product}`;
+  if (product === 'love-question') return '/compatibility/input?relationship=lover&paid=love-question';
+  if (slug && product === 'monthly-calendar') return `/saju/${encodeURIComponent(slug)}/premium#fortune-calendar`;
+  if (slug && product === 'year-core') return `/saju/${encodeURIComponent(slug)}/premium#yearly-report`;
+  return '/membership';
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   return {
     title: '결제',
@@ -43,10 +150,37 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function MembershipCheckoutPage({ searchParams }: Props) {
-  const { plan, slug, error, from } = await searchParams;
+  const { plan, product, slug, scope, error, from } = await searchParams;
+  const selectedProduct = isTasteProductId(product) ? product : null;
   const selectedPlan = normalizePlanSlug(plan);
-  const selected = CHECKOUT_PLAN_GUIDE[selectedPlan] ?? CHECKOUT_PLAN_GUIDE.premium;
-  const paymentPackage = getMembershipPackage(selectedPlan);
+  const selected = selectedProduct
+    ? TASTE_PRODUCT_GUIDE[selectedProduct]
+    : CHECKOUT_PLAN_GUIDE[selectedPlan] ?? CHECKOUT_PLAN_GUIDE.premium;
+  const paymentPackage = selectedProduct
+    ? getTasteProductPackage(selectedProduct)
+    : getMembershipPackage(selectedPlan);
+  let alreadyPurchasedHref: string | null = null;
+
+  if (
+    selectedProduct &&
+    paymentPackage &&
+    isTasteProductPackage(paymentPackage) &&
+    hasSupabaseServerEnv &&
+    hasSupabaseServiceEnv
+  ) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const scopeKey = await resolveTasteScopeKey(selectedProduct, slug, scope);
+      const entitlement = await getTasteProductEntitlement(user.id, selectedProduct, scopeKey);
+      if (entitlement) alreadyPurchasedHref = buildAlreadyPurchasedHref(selectedProduct, slug);
+    }
+  }
+
+  const needsResultFirst = Boolean(paymentPackage?.requiresSlug && !slug);
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-12">
@@ -210,14 +344,62 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
                   </ActionCluster>
                 }
               />
+            ) : needsResultFirst && selectedProduct ? (
+              <FeatureCard
+                className="mt-6"
+                surface="soft"
+                eyebrow="결과 식별자가 필요합니다"
+                description="이 소액 상품은 특정 사주 결과나 오늘운 결과에 연결됩니다. 먼저 결과를 만든 뒤, 해당 화면의 구매 버튼으로 오시면 중복 결제 없이 바로 연결됩니다."
+                footer={
+                  <ActionCluster>
+                    <Link
+                      href={`/saju/new?product=${selectedProduct}`}
+                      className="moon-cta-primary"
+                    >
+                      사주 결과 먼저 만들기
+                    </Link>
+                    <Link
+                      href="/membership"
+                      className="moon-action-muted"
+                    >
+                      상품 목록으로
+                    </Link>
+                  </ActionCluster>
+                }
+              />
+            ) : alreadyPurchasedHref ? (
+              <FeatureCard
+                className="mt-6 border-emerald-400/25 bg-emerald-400/10"
+                surface="soft"
+                eyebrow="이미 구매한 상품"
+                description="이 상품은 이미 구매되어 있습니다. 결제창을 다시 열지 않고 바로 열람 화면으로 이동하실 수 있습니다."
+                footer={
+                  <ActionCluster>
+                    <Link
+                      href={alreadyPurchasedHref}
+                      className="moon-cta-primary"
+                    >
+                      구매한 상품 열기
+                    </Link>
+                    <Link
+                      href="/my/billing"
+                      className="moon-action-muted"
+                    >
+                      결제 상태 확인
+                    </Link>
+                  </ActionCluster>
+                }
+              />
             ) : paymentPackage ? (
               <div className="mt-6">
                 <TossMembershipCheckout
                   packageId={paymentPackage.id}
                   plan={selectedPlan}
+                  product={selectedProduct ?? undefined}
                   amount={paymentPackage.price}
                   orderName={paymentPackage.name}
                   slug={slug}
+                  scope={scope}
                   entrySource={from ?? 'membership'}
                 />
               </div>

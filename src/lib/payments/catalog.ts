@@ -1,7 +1,8 @@
 import type { PlanSlug } from '@/content/moonlight';
 
-export type PaymentPackageKind = 'credits' | 'subscription' | 'lifetime_report';
+export type PaymentPackageKind = 'credits' | 'subscription' | 'lifetime_report' | 'taste_product';
 export type SubscriptionPlan = 'plus_monthly' | 'premium_monthly';
+export type TasteProductId = 'today-detail' | 'monthly-calendar' | 'love-question' | 'year-core';
 
 export interface PaymentPackage {
   id: string;
@@ -11,6 +12,8 @@ export interface PaymentPackage {
   kind: PaymentPackageKind;
   planSlug?: PlanSlug;
   subscriptionPlan?: SubscriptionPlan;
+  tasteProductId?: TasteProductId;
+  requiresSlug?: boolean;
 }
 
 export const PAYMENT_PACKAGES = [
@@ -50,6 +53,42 @@ export const PAYMENT_PACKAGES = [
     price: 49000,
     kind: 'lifetime_report',
     planSlug: 'lifetime',
+    requiresSlug: true,
+  },
+  {
+    id: 'taste_today_detail',
+    name: '오늘운 상세',
+    credits: 0,
+    price: 990,
+    kind: 'taste_product',
+    tasteProductId: 'today-detail',
+    requiresSlug: true,
+  },
+  {
+    id: 'taste_monthly_calendar',
+    name: '월간 달력',
+    credits: 0,
+    price: 1900,
+    kind: 'taste_product',
+    tasteProductId: 'monthly-calendar',
+    requiresSlug: true,
+  },
+  {
+    id: 'taste_love_question',
+    name: '연애 질문 1회',
+    credits: 0,
+    price: 2900,
+    kind: 'taste_product',
+    tasteProductId: 'love-question',
+  },
+  {
+    id: 'taste_year_core',
+    name: '올해 핵심 3줄',
+    credits: 0,
+    price: 3900,
+    kind: 'taste_product',
+    tasteProductId: 'year-core',
+    requiresSlug: true,
   },
 ] as const satisfies readonly PaymentPackage[];
 
@@ -61,7 +100,23 @@ const MEMBERSHIP_PACKAGE_BY_PLAN: Record<PlanSlug, PackageId> = {
   lifetime: 'lifetime_report',
 };
 
-export function getPackage(id: unknown) {
+const TASTE_PACKAGE_BY_PRODUCT: Record<TasteProductId, PackageId> = {
+  'today-detail': 'taste_today_detail',
+  'monthly-calendar': 'taste_monthly_calendar',
+  'love-question': 'taste_love_question',
+  'year-core': 'taste_year_core',
+};
+
+export function isTasteProductId(value: unknown): value is TasteProductId {
+  return (
+    value === 'today-detail' ||
+    value === 'monthly-calendar' ||
+    value === 'love-question' ||
+    value === 'year-core'
+  );
+}
+
+export function getPackage(id: unknown): PaymentPackage | undefined {
   if (typeof id !== 'string') return undefined;
   return PAYMENT_PACKAGES.find((pkg) => pkg.id === id);
 }
@@ -70,8 +125,18 @@ export function getMembershipPackage(plan: PlanSlug) {
   return getPackage(MEMBERSHIP_PACKAGE_BY_PLAN[plan]);
 }
 
+export function getTasteProductPackage(product: TasteProductId) {
+  return getPackage(TASTE_PACKAGE_BY_PRODUCT[product]);
+}
+
 export function isSubscriptionPackage(
   pkg: PaymentPackage
 ): pkg is PaymentPackage & { subscriptionPlan: SubscriptionPlan } {
   return pkg.kind === 'subscription' && Boolean(pkg.subscriptionPlan);
+}
+
+export function isTasteProductPackage(
+  pkg: PaymentPackage
+): pkg is PaymentPackage & { tasteProductId: TasteProductId } {
+  return pkg.kind === 'taste_product' && isTasteProductId(pkg.tasteProductId);
 }

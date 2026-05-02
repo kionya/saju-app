@@ -1,9 +1,15 @@
 import type { Metadata } from 'next';
 import { COMPATIBILITY_RELATIONSHIPS, type CompatibilityRelationshipSlug } from '@/content/moonlight';
 import { CompatibilityInputClient } from '@/features/compatibility/compatibility-input-client';
+import { getTasteProductEntitlement } from '@/lib/product-entitlements';
+import {
+  createClient,
+  hasSupabaseServerEnv,
+  hasSupabaseServiceEnv,
+} from '@/lib/supabase/server';
 
 interface Props {
-  searchParams: Promise<{ relationship?: string }>;
+  searchParams: Promise<{ relationship?: string; paid?: string }>;
 }
 
 function resolveRelationship(value: string | undefined): CompatibilityRelationshipSlug {
@@ -20,7 +26,26 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CompatibilityInputPage({ searchParams }: Props) {
-  const { relationship } = await searchParams;
+  const { relationship, paid } = await searchParams;
+  let hasLoveQuestionPurchase = paid === 'love-question';
 
-  return <CompatibilityInputClient initialRelationship={resolveRelationship(relationship)} />;
+  if (!hasLoveQuestionPurchase && hasSupabaseServerEnv && hasSupabaseServiceEnv) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      hasLoveQuestionPurchase = Boolean(
+        await getTasteProductEntitlement(user.id, 'love-question')
+      );
+    }
+  }
+
+  return (
+    <CompatibilityInputClient
+      initialRelationship={resolveRelationship(relationship)}
+      hasLoveQuestionPurchase={hasLoveQuestionPurchase}
+    />
+  );
 }

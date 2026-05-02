@@ -33,6 +33,7 @@ type LocationSearchStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
 
 interface CompatibilityInputClientProps {
   initialRelationship: CompatibilityRelationshipSlug;
+  hasLoveQuestionPurchase?: boolean;
 }
 
 interface ProfileApiBirthFields {
@@ -329,7 +330,10 @@ function formatManualBirthSummary(draft: UnifiedBirthEntryDraft) {
   return `${calendarLabel} ${dateLabel} · ${timeLabel} · ${genderLabel}${locationLabel}`;
 }
 
-export function CompatibilityInputClient({ initialRelationship }: CompatibilityInputClientProps) {
+export function CompatibilityInputClient({
+  initialRelationship,
+  hasLoveQuestionPurchase = false,
+}: CompatibilityInputClientProps) {
   const router = useRouter();
   const [relationship, setRelationship] = useState<CompatibilityRelationshipSlug>(initialRelationship);
   const [selfName, setSelfName] = useState('나');
@@ -548,7 +552,9 @@ export function CompatibilityInputClient({ initialRelationship }: CompatibilityI
 
     window.sessionStorage.setItem(MANUAL_COMPATIBILITY_SESSION_KEY, JSON.stringify(payload));
     setErrorMessage('');
-    router.push(`/compatibility/result?relationship=${relationship}&source=manual`);
+    const params = new URLSearchParams({ relationship, source: 'manual' });
+    if (hasLoveQuestionPurchase) params.set('paid', 'love-question');
+    router.push(`/compatibility/result?${params.toString()}`);
   }
 
   return (
@@ -572,6 +578,12 @@ export function CompatibilityInputClient({ initialRelationship }: CompatibilityI
           title="두 사람 정보를 바로 입력해 궁합을 봅니다"
           description="저장된 사람을 고르지 않아도 괜찮습니다. 로그인하지 않은 상태에서도 내 정보와 상대 정보를 함께 입력하면 바로 관계의 결을 읽어드립니다."
         />
+
+        {hasLoveQuestionPurchase ? (
+          <div className="rounded-[1.2rem] border border-emerald-400/25 bg-emerald-400/10 px-4 py-3 text-sm leading-6 text-emerald-50">
+            연애 질문 1회 상품이 구매되어 있습니다. 이 화면에서는 추가 결제 없이 두 사람 정보를 넣고 결과로 이어가시면 됩니다.
+          </div>
+        ) : null}
 
         <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
           <SectionSurface surface="lunar" size="lg" className="app-mobile-safe-section">

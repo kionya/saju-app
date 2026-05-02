@@ -12,13 +12,17 @@ export const metadata: Metadata = {
 export default async function TodayFortunePage({
   searchParams,
 }: {
-  searchParams: Promise<{ concern?: string }>;
+  searchParams: Promise<{ concern?: string; paid?: string; sourceSessionId?: string }>;
 }) {
-  const { concern } = await searchParams;
+  const { concern, paid, sourceSessionId } = await searchParams;
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
-      <TodayFortuneExperience initialConcernId={concern} />
+      <TodayFortuneExperience
+        initialConcernId={concern}
+        paidProduct={paid}
+        paidSourceSessionId={sourceSessionId}
+      />
     </AppShell>
   );
 }

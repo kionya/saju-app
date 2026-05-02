@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { buildFortuneCalendarMonth } from '@/domain/saju/report';
 import { unlockFortuneCalendarMonth } from '@/lib/credits/calendar-access';
 import { getFeatureCost } from '@/lib/credits/deduct';
+import {
+  buildMonthlyCalendarScopeKey,
+  getTasteProductEntitlement,
+} from '@/lib/product-entitlements';
 import { getLifetimeReportEntitlement } from '@/lib/report-entitlements';
 import { resolveReading } from '@/lib/saju/readings';
 import { toSlug } from '@/lib/saju/pillars';
@@ -59,6 +63,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       access: 'lifetime',
+      remaining: null,
+      reused: true,
+      coinCost: 0,
+      report,
+    });
+  }
+
+  const productEntitlement = await getTasteProductEntitlement(
+    user.id,
+    'monthly-calendar',
+    buildMonthlyCalendarScopeKey(readingKey, parsed.targetYear, parsed.month)
+  );
+  if (productEntitlement) {
+    const report = buildFortuneCalendarMonth(
+      reading.input,
+      reading.sajuData,
+      parsed.targetYear,
+      parsed.month
+    );
+
+    return NextResponse.json({
+      success: true,
+      access: 'product_unlock',
       remaining: null,
       reused: true,
       coinCost: 0,
