@@ -31,7 +31,10 @@ import {
   loadOnboardingDraft,
 } from '@/features/saju-intake/onboarding-storage';
 import type { NotificationSnapshot } from '@/lib/notifications';
-import { createClient as createSupabaseClient } from '@/lib/supabase/client';
+import {
+  createClient as createSupabaseClient,
+  getCurrentBrowserUser,
+} from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
@@ -228,6 +231,7 @@ export default function NotificationCenterPage({
   const [isHydrated, setIsHydrated] = useState(false);
   const [isConnectingPush, setIsConnectingPush] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
+  const [widgetDateLabel, setWidgetDateLabel] = useState('오늘의 흐름');
   const honorific = useMemo(() => getHonorificLabel(displayName), [displayName]);
 
   useEffect(() => {
@@ -248,6 +252,14 @@ export default function NotificationCenterPage({
     savePreferences(hydratedPreferences);
 
     if (typeof window !== 'undefined') {
+      setWidgetDateLabel(
+        new Intl.DateTimeFormat('ko-KR', {
+          month: 'long',
+          day: 'numeric',
+          weekday: 'short',
+        }).format(new Date())
+      );
+
       setPushSupported(
         'serviceWorker' in navigator &&
           'PushManager' in window &&
@@ -283,9 +295,7 @@ export default function NotificationCenterPage({
 
     async function syncFromServer() {
       const supabase = createSupabaseClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const user = await getCurrentBrowserUser(supabase);
 
       if (!user) {
         setIsLoggedIn(false);
@@ -337,9 +347,11 @@ export default function NotificationCenterPage({
   );
 
   const nextUpcoming = enabledSlots[0]
-    ? computeUpcomingLabel(enabledSlots[0])
+    ? isHydrated
+      ? computeUpcomingLabel(enabledSlots[0])
+      : enabledSlots[0].timeLabel
     : '알림이 모두 꺼져 있습니다.';
-  const retentionCopy = formatVisitedDistance(previousSeenAt);
+  const retentionCopy = isHydrated ? formatVisitedDistance(previousSeenAt) : '방문 기록을 확인하고 있습니다.';
   const widgetBlueprint = HOME_WIDGET_BLUEPRINT.find(
     (item) => item.size === preferences.widgetSize
   );
@@ -798,11 +810,7 @@ export default function NotificationCenterPage({
               <div className="mt-5 grid gap-4 md:grid-cols-2">
                 <div className="rounded-[1.6rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
                   <div className="text-[10px] tracking-[0.2em] text-[var(--app-gold)]/70">
-                    {new Intl.DateTimeFormat('ko-KR', {
-                      month: 'long',
-                      day: 'numeric',
-                      weekday: 'short',
-                    }).format(new Date())}
+                    {widgetDateLabel}
                   </div>
                   <div className="mt-4 font-[var(--font-heading)] text-lg leading-7 text-[var(--app-ivory)]">
                     {snapshot.latestReading?.dailyLine ?? '오늘은 서두르지 않으시는 것이 가장 큰 지혜입니다'}

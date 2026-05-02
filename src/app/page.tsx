@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { ActionCluster } from '@/components/layout/action-cluster';
@@ -60,7 +60,7 @@ const SAJU_FLOW_STEPS = [
 export default function HomePage() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const heroRef = useRef<HTMLElement>(null);
-  const todayLabel = useMemo(() => formatTodayLabel(), []);
+  const [todayLabel, setTodayLabel] = useState('오늘의 흐름');
 
   const handleMouseMove = useCallback((event: MouseEvent) => {
     if (!heroRef.current) return;
@@ -80,6 +80,10 @@ export default function HomePage() {
 
   useEffect(() => {
     trackMoonlightEvent('home_view', { from: 'home' });
+  }, []);
+
+  useEffect(() => {
+    setTodayLabel(formatTodayLabel());
   }, []);
 
   useEffect(() => {

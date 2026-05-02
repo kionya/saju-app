@@ -11,7 +11,7 @@ import {
 } from '@/lib/payments/methods';
 import { trackMoonlightEvent } from '@/lib/analytics';
 import { savePendingLifetimeReportSlug } from '@/lib/payments/lifetime-report';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, getCurrentBrowserUser } from '@/lib/supabase/client';
 
 const hasSupabaseBrowserEnv = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -55,8 +55,8 @@ export default function TossMembershipCheckout({
     }
 
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setIsLoggedIn(Boolean(data.user));
+    void getCurrentBrowserUser(supabase).then((user) => {
+      setIsLoggedIn(Boolean(user));
     });
   }, []);
 

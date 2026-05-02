@@ -20,7 +20,7 @@ import {
 import { buttonVariants } from '@/components/ui/button';
 import { LayoutModeControl } from '@/features/layout-preference/layout-mode-control';
 import { ReadingComfortControl } from '@/features/layout-preference/reading-comfort-control';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, getCurrentBrowserUser } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import {
   HEADER_SECONDARY_NAV_ITEMS,
@@ -699,14 +699,14 @@ export default function SiteHeader() {
     let isActive = true;
     const supabase = createClient();
 
-    supabase.auth.getUser().then(({ data }) => {
+    void getCurrentBrowserUser(supabase).then((user) => {
       if (!isActive) return;
 
-      cachedHeaderUser = data.user;
-      setUser(data.user);
+      cachedHeaderUser = user;
+      setUser(user);
 
-      if (data.user) {
-        const cachedCredits = getCachedCreditSnapshot(data.user.id);
+      if (user) {
+        const cachedCredits = getCachedCreditSnapshot(user.id);
         if (cachedCredits) {
           setCredits(cachedCredits.credits);
         }
@@ -733,16 +733,16 @@ export default function SiteHeader() {
 
         if (!shouldRefreshCreditSnapshot(cachedCredits)) return;
 
-        void refreshCreditSnapshot(data.user.id, async () => {
+        void refreshCreditSnapshot(user.id, async () => {
           const { data: creditRow } = await supabase
             .from('user_credits')
             .select('balance, subscription_balance')
-            .eq('user_id', data.user.id)
+            .eq('user_id', user.id)
             .maybeSingle();
 
           return (creditRow?.balance ?? 0) + (creditRow?.subscription_balance ?? 0);
         }).then((snapshot) => {
-          if (isActive && snapshot?.userId === data.user?.id) {
+          if (isActive && snapshot?.userId === user.id) {
             setCredits(snapshot.credits);
           }
         });

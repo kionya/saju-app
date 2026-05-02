@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { loadTossPayments, ANONYMOUS } from '@tosspayments/tosspayments-sdk';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, getCurrentBrowserUser } from '@/lib/supabase/client';
 import Link from 'next/link';
 import {
   DEFAULT_TOSS_PAYMENT_METHOD,
@@ -72,7 +72,7 @@ function CreditsPageContent() {
       return;
     }
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user));
+    void getCurrentBrowserUser(supabase).then((user) => setIsLoggedIn(Boolean(user)));
   }, []);
 
   async function handlePurchase(pkg: Package) {
