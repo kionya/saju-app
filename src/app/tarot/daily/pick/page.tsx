@@ -22,9 +22,24 @@ interface Props {
 }
 
 const PICKER_POINTS = [
-  '한 번에 정답을 찾기보다, 지금 내 마음이 어디로 기울어 있는지를 보는 장면입니다.',
-  '직접 한 장을 고르셔도 되고, 랜덤 뽑기로 한 장을 맡겨 보셔도 좋습니다.',
-  '카드를 고른 뒤에는 결과 화면에서 질문의 속뜻과 사주 브리지까지 이어집니다.',
+  '질문을 한 번만 천천히 읽고, 한 사람 또는 한 사건만 떠올려 주세요.',
+  '눈이 먼저 머무는 카드가 있으면 직접 고르고, 잘 모르겠으면 랜덤 뽑기를 누르셔도 좋습니다.',
+  '결과 화면에서는 카드의 말, 질문의 속뜻, 사주 흐름과 이어지는 지점을 순서대로 보여드립니다.',
+] as const;
+
+const PICKER_MIND_CUES = [
+  {
+    title: '상대 마음이 궁금하다면',
+    body: '그 사람이 한 말보다, 내가 계속 붙들고 있는 장면 하나를 떠올립니다.',
+  },
+  {
+    title: '선택이 고민이라면',
+    body: '가장 두려운 선택과 가장 끌리는 선택 중 어느 쪽이 더 큰지 먼저 느껴봅니다.',
+  },
+  {
+    title: '오늘 흐름이 궁금하다면',
+    body: '오늘 꼭 조심하고 싶은 말, 돈, 관계 중 하나만 마음에 올려둡니다.',
+  },
 ] as const;
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -63,12 +78,12 @@ export default async function TarotPickPage({ searchParams }: Props) {
               {sourceLabel}
             </Badge>,
           ]}
-          title="질문을 품고, 마음이 머무는 한 장을 고릅니다"
+          title="질문을 한 번 품고, 끌리는 한 장을 고릅니다"
           description={
             <>
               지금 들고 오신 질문은 <span className="text-[var(--app-plum)]">“{currentQuestion}”</span>
-              입니다. 덱은 이 질문에 맞는 결로 섞여 있고, 한 장을 고르면 결과 화면에서
-              카드 의미와 사주 브리지가 함께 이어집니다.
+              입니다. 정답을 맞히려 하기보다, 이 질문에서 마음이 어디에 걸려 있는지
+              먼저 보고 들어갑니다.
             </>
           }
         />
@@ -87,7 +102,19 @@ export default async function TarotPickPage({ searchParams }: Props) {
               surface="soft"
               eyebrow="질문"
               title={currentQuestion}
+              description="이 질문을 바꾸지 말고, 같은 마음으로 한 장을 골라 주세요."
             />
+
+            <div className="mt-4 grid gap-3">
+              {PICKER_MIND_CUES.map((cue) => (
+                <FeatureCard
+                  key={cue.title}
+                  surface="soft"
+                  eyebrow={cue.title}
+                  description={cue.body}
+                />
+              ))}
+            </div>
 
             <SectionHeader
               className="mt-6"

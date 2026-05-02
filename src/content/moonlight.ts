@@ -30,6 +30,9 @@ export interface CompatibilityRelationship {
 export interface MoonlightTarotQuestionOption {
   emoji: string;
   label: string;
+  intent: string;
+  description: string;
+  when: string;
 }
 
 export interface MoonlightTenGodCard {
@@ -817,6 +820,36 @@ export const TAROT_TO_SAJU_BRIDGE = [
   '관계, 재물, 진로처럼 오래 붙드는 질문일수록 타로 뒤에 사주를 붙였을 때 해석의 깊이가 크게 달라집니다.',
 ] as const;
 
+export const TAROT_MIND_ENTRY_POINTS = [
+  {
+    title: '답보다 마음이 먼저 급할 때',
+    body: '상대 마음, 연락, 선택처럼 당장 결론을 알고 싶은 질문은 먼저 감정을 가라앉히는 카드부터 봅니다.',
+  },
+  {
+    title: '같은 생각이 계속 돌아올 때',
+    body: '머리로는 알지만 마음이 멈추지 않는 질문은 카드가 지금 붙들고 있는 장면을 보여줍니다.',
+  },
+  {
+    title: '사주까지 보기엔 아직 가벼울 때',
+    body: '바로 기준서를 열기 전, 오늘 마음의 방향만 먼저 확인하고 싶을 때 타로가 입구가 됩니다.',
+  },
+] as const;
+
+export const TAROT_SAJU_BRIDGE_DETAILS = [
+  {
+    title: '타로는 오늘의 장면',
+    body: '지금 마음이 어디에 걸려 있는지, 어떤 말이나 선택이 크게 느껴지는지를 먼저 보여줍니다.',
+  },
+  {
+    title: '사주는 반복되는 이유',
+    body: '같은 관계나 선택이 왜 자주 돌아오는지, 내 명식의 기질과 운의 흐름에서 더 길게 읽습니다.',
+  },
+  {
+    title: '상담은 다음 행동',
+    body: '카드와 사주를 함께 놓고, 지금 말할지 기다릴지, 밀지 멈출지 같은 현실 행동으로 정리합니다.',
+  },
+] as const;
+
 export const CHECKOUT_PLAN_GUIDE: Record<
   PlanSlug,
   {
@@ -892,10 +925,34 @@ export const COMPLETE_PLAN_GUIDE: Record<
 } as const;
 
 export const TAROT_QUESTION_OPTIONS: readonly MoonlightTarotQuestionOption[] = [
-  { emoji: '💭', label: '오늘 하루 어떤 메시지가 있을까' },
-  { emoji: '🤝', label: '지금 고민 중인 관계에 대하여' },
-  { emoji: '🎯', label: '지금 결정해야 할 선택에 대하여' },
-  { emoji: '🌱', label: '앞으로의 방향에 대하여' },
+  {
+    emoji: '心',
+    label: '오늘 하루 어떤 메시지가 있을까',
+    intent: '마음 정리',
+    description: '딱히 큰 사건은 없지만 오늘 조심할 말, 붙잡을 기회, 마음의 온도를 알고 싶을 때 봅니다.',
+    when: '아침이나 외출 전',
+  },
+  {
+    emoji: '緣',
+    label: '지금 고민 중인 관계에 대하여',
+    intent: '상대와 관계',
+    description: '그 사람 마음, 연락해도 되는지, 관계가 왜 어색해졌는지처럼 마음이 계속 걸릴 때 봅니다.',
+    when: '연락 전이나 대화 후',
+  },
+  {
+    emoji: '決',
+    label: '지금 결정해야 할 선택에 대하여',
+    intent: '결정과 타이밍',
+    description: '밀어도 되는지, 한 번 더 확인해야 하는지, 지금 선택의 수위를 정하고 싶을 때 봅니다.',
+    when: '계약·이직·고백 전',
+  },
+  {
+    emoji: '路',
+    label: '앞으로의 방향에 대하여',
+    intent: '흐름과 방향',
+    description: '앞으로 무엇을 줄이고 무엇을 키워야 할지, 지금 삶의 방향이 맞는지 확인하고 싶을 때 봅니다.',
+    when: '월초나 전환기',
+  },
 ] as const;
 
 export const TAROT_CARD_KEYWORDS = [

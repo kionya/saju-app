@@ -9,7 +9,11 @@ import { SectionHeader } from '@/components/layout/section-header';
 import { SectionSurface } from '@/components/layout/section-surface';
 import { SupportRail } from '@/components/layout/support-rail';
 import { Badge } from '@/components/ui/badge';
-import { TAROT_CARD_KEYWORDS, TAROT_QUESTION_OPTIONS } from '@/content/moonlight';
+import {
+  TAROT_CARD_KEYWORDS,
+  TAROT_MIND_ENTRY_POINTS,
+  TAROT_QUESTION_OPTIONS,
+} from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { getOptionalSignedInProfile } from '@/lib/profile';
 import { buildProfileReadingSlug } from '@/lib/profile-personalization';
@@ -19,9 +23,9 @@ import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 const DAILY_TAROT_QUESTION = '오늘 하루 어떤 메시지가 있을까';
 
 const TAROT_FLOW_POINTS = [
-  '질문을 먼저 고르고, 한 장을 뽑아 지금 마음에 닿는 메시지를 확인합니다.',
-  '필요하면 같은 질문을 사주 흐름과 겹쳐 보거나 대화에서 더 이어 물을 수 있습니다.',
-  '무료 타로는 빠른 탐색 역할에 두고, 더 깊은 해석은 프리미엄 흐름으로 분리합니다.',
+  '타로는 지금 눈앞의 감정과 장면을 빠르게 비춥니다.',
+  '사주는 그 감정이 왜 반복되는지, 내 기질과 시기의 흐름에서 더 길게 설명합니다.',
+  '카드 결과가 마음에 남으면 같은 질문을 사주 결과나 상담으로 이어갈 수 있습니다.',
 ] as const;
 
 export const metadata: Metadata = {
@@ -58,9 +62,31 @@ export default async function DailyTarotPage() {
               빠른 무료 탐색
             </Badge>,
           ]}
-          title="지금 마음에 닿는 질문 한 장부터 펼쳐봅니다"
-          description="타로는 답을 단정하기보다, 지금 어떤 감정선 위에 서 계신지 빠르게 비춰주는 입구입니다. 필요하면 같은 질문을 사주 흐름과 겹쳐 더 길게 이어볼 수 있습니다."
+          title="카드를 고르기 전에, 마음의 질문부터 정합니다"
+          description="타로를 보러 오는 마음은 대부분 답답함, 기대, 망설임에서 시작됩니다. 먼저 질문을 고르고 한 장을 뽑으면, 결과에서는 그 마음이 사주 흐름과 어디에서 만나는지까지 이어서 보여드립니다."
         />
+
+        <SectionSurface surface="panel">
+          <SectionHeader
+            eyebrow="타로를 보는 마음"
+            title="이럴 때는 바로 카드를 고르기보다, 먼저 마음의 결을 정해보세요"
+            titleClassName="text-2xl sm:text-3xl"
+            description="질문이 흐리면 카드도 흐리게 읽힙니다. 지금 내 마음이 어느 쪽에 가까운지 먼저 확인하면, 뽑은 카드의 메시지가 훨씬 또렷해집니다."
+            descriptionClassName="max-w-3xl text-[var(--app-copy)]"
+          />
+          <ProductGrid columns={3} className="mt-5">
+            {TAROT_MIND_ENTRY_POINTS.map((item, index) => (
+              <FeatureCard
+                key={item.title}
+                surface="soft"
+                eyebrow={String(index + 1).padStart(2, '0')}
+                title={item.title}
+                titleClassName="text-xl"
+                description={item.body}
+              />
+            ))}
+          </ProductGrid>
+        </SectionSurface>
 
         <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">
           <SectionSurface surface="panel" size="lg">
@@ -77,8 +103,21 @@ export default async function DailyTarotPage() {
                 <FeatureCard
                   key={question.label}
                   surface="soft"
-                  eyebrow={question.emoji}
+                  eyebrow={
+                    <span className="flex items-center gap-2">
+                      <span className="font-hanja text-base text-[var(--app-gold-text)]">
+                        {question.emoji}
+                      </span>
+                      <span>{question.intent}</span>
+                    </span>
+                  }
                   title={question.label}
+                  description={question.description}
+                  badge={
+                    <span className="rounded-full border border-[var(--app-plum)]/25 bg-[var(--app-plum)]/10 px-2.5 py-1 text-[11px] text-[var(--app-plum)]">
+                      {question.when}
+                    </span>
+                  }
                   footer={
                     <Link
                       href={{
@@ -90,7 +129,7 @@ export default async function DailyTarotPage() {
                       이 질문으로 카드 뽑기
                     </Link>
                   }
-                />
+                  />
               ))}
             </ProductGrid>
 
@@ -132,8 +171,8 @@ export default async function DailyTarotPage() {
           <SupportRail
             surface="lunar"
             eyebrow="타로를 여는 방식"
-            title="타로는 가볍게, 확장은 분명하게 나눕니다"
-            description="무료 타로는 오늘 마음을 먼저 보는 입구 역할에 두고, 더 깊은 흐름은 사주와 프리미엄 리딩으로 분리했습니다."
+            title="타로는 지금 마음, 사주는 반복되는 흐름을 봅니다"
+            description="타로는 오늘의 장면을 빠르게 비추고, 사주는 그 장면이 내 삶에서 왜 반복되는지 길게 설명합니다. 그래서 타로는 입구, 사주는 기준서로 나눠 읽습니다."
           >
             <BulletList items={TAROT_FLOW_POINTS} />
 

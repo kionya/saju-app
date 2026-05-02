@@ -821,11 +821,42 @@ function buildTarotReading({
     psychologyLabel: psychology.label,
     psychology: psychology.summary,
     guidance: `${getDisplayName(card)}은 ${theme.theme}을 말합니다. ${TONE_FOCUS[tone](theme.theme, theme.focus)} ${orientationAdvice}`,
-    sajuBlend: `사주 흐름과 겹쳐 보면, 이 카드는 ${theme.sajuElement}을 통해 지금 질문의 반복되는 이유를 살피게 합니다. 타로가 오늘의 장면을 보여준다면 사주는 그 장면이 왜 익숙하게 느껴지는지를 설명해줍니다.`,
+    sajuBlend: buildSajuBlendCopy(theme, context),
     action: theme.action,
     source,
     meaningExcerpt: compactMeaning(meaning),
   };
+}
+
+function buildSajuBlendCopy(
+  theme: {
+    theme: string;
+    focus: string;
+    sajuElement: string;
+  },
+  context: TarotQuestionContext
+) {
+  const domainLine =
+    context.domain === 'relationship'
+      ? '타로는 지금 관계에서 마음이 어디에 걸려 있는지를 먼저 보여줍니다. 사주로 이어 보면 내가 관계에서 기대하고 물러서는 방식, 반복되는 거리감까지 더 길게 읽을 수 있습니다.'
+      : context.domain === 'career'
+        ? '타로는 오늘 일과 방향 앞에서 느끼는 망설임을 보여줍니다. 사주로 이어 보면 내가 일을 밀어붙이는 방식, 버티는 힘, 바꾸기 좋은 시기를 함께 볼 수 있습니다.'
+        : context.domain === 'money'
+          ? '타로는 지금 돈과 선택 앞에서 생기는 긴장감을 보여줍니다. 사주로 이어 보면 재물을 모으고 쓰는 방식, 무리하기 쉬운 흐름, 지켜야 할 기준을 더 구체적으로 볼 수 있습니다.'
+          : '타로는 오늘 마음에 남은 장면을 보여줍니다. 사주로 이어 보면 그 장면이 내 성향과 운의 리듬에서 왜 익숙하게 반복되는지 확인할 수 있습니다.';
+
+  const moodLine =
+    context.mood === 'anxious'
+      ? '불안이 앞선 질문일수록 결과를 단정하기보다, 같은 불안이 반복되는 구조를 함께 보는 편이 좋습니다.'
+      : context.mood === 'hopeful'
+        ? '기대가 섞인 질문일수록 가능성만 보지 말고, 실제로 움직여도 되는 시기와 수위를 함께 봐야 합니다.'
+        : context.mood === 'tired'
+          ? '지친 상태에서 뽑은 카드라면 더 버티라는 말보다, 무엇을 줄여야 편해지는지를 먼저 살피는 쪽이 맞습니다.'
+          : context.mood === 'urgent'
+            ? '급한 마음이 올라온 질문일수록 바로 결론내기보다, 오늘 할 행동과 미룰 행동을 나누는 것이 안전합니다.'
+            : '차분히 묻는 질문이라도 카드가 남긴 감정이 있다면, 사주에서는 그 감정이 오래 반복되는 이유를 더 넓게 봅니다.';
+
+  return `${domainLine} ${moodLine} 이 카드의 핵심은 ${theme.theme}이며, 사주 상담에서는 ${theme.sajuElement} 관점으로 이어서 풀어볼 수 있습니다.`;
 }
 
 function getCardTheme(card: TarotApiCard) {

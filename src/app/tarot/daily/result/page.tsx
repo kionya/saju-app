@@ -8,7 +8,7 @@ import { SectionHeader } from '@/components/layout/section-header';
 import { SectionSurface } from '@/components/layout/section-surface';
 import { SupportRail } from '@/components/layout/support-rail';
 import { Badge } from '@/components/ui/badge';
-import { TAROT_CARD_KEYWORDS, TAROT_TO_SAJU_BRIDGE } from '@/content/moonlight';
+import { TAROT_CARD_KEYWORDS, TAROT_SAJU_BRIDGE_DETAILS } from '@/content/moonlight';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { getOptionalSignedInProfile } from '@/lib/profile';
 import { buildProfileReadingSlug } from '@/lib/profile-personalization';
@@ -69,7 +69,7 @@ export default async function TarotResultPage({ searchParams }: Props) {
             </Badge>,
           ]}
           title={currentQuestion}
-          description="카드가 전하는 순간의 메시지를 먼저 짚고, 필요하면 그 질문이 사주 흐름과 어디에서 만나는지까지 이어서 읽습니다."
+          description="먼저 카드는 지금 마음에 걸린 장면을 보여주고, 이어서 그 질문이 사주 흐름과 어디에서 만나는지 차분히 연결해드립니다."
         />
 
         <section className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr]">
@@ -120,7 +120,7 @@ export default async function TarotResultPage({ searchParams }: Props) {
             <FeatureCard
               className="mt-4"
               surface="panel"
-              eyebrow="선생님의 사주와 만나면"
+              eyebrow="사주와 이어 읽으면"
               description={reading.sajuBlend}
             />
           </SupportRail>
@@ -153,18 +153,20 @@ export default async function TarotResultPage({ searchParams }: Props) {
           <SectionSurface surface="panel" size="lg">
             <SectionHeader
               eyebrow="타로 뒤에 사주를 붙이면"
-              title="질문이 왜 반복되는지 더 길게 읽을 수 있습니다"
+              title="카드 한 장에서 끝내지 않고, 사주 흐름으로 이어봅니다"
               titleClassName="text-3xl"
-              description="무료 타로는 오늘 마음을 빠르게 비추고, 사주 흐름은 그 질문이 오래 반복되는 이유를 더 길게 설명해 줍니다."
+              description="타로는 오늘의 감정과 장면을 보여주고, 사주는 그 장면이 내 성향과 운의 흐름에서 왜 자주 반복되는지 설명합니다."
               descriptionClassName="max-w-3xl text-[var(--app-copy)]"
             />
             <ProductGrid columns={3} className="mt-6">
-              {TAROT_TO_SAJU_BRIDGE.map((item, index) => (
+              {TAROT_SAJU_BRIDGE_DETAILS.map((item, index) => (
                 <FeatureCard
-                  key={item}
+                  key={item.title}
                   surface="soft"
                   eyebrow={String(index + 1).padStart(2, '0')}
-                  description={item}
+                  title={item.title}
+                  titleClassName="text-xl"
+                  description={item.body}
                 />
               ))}
             </ProductGrid>
