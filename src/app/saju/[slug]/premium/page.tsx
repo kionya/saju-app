@@ -8,9 +8,12 @@ import LifetimeReportPanel from '@/components/ai/lifetime-report-panel';
 import YearlyReportPanel from '@/components/ai/yearly-report-panel';
 import {
   REPORT_SAMPLE_HREF,
+  REPORT_PREVIEW_VALUE_POINTS,
   SAJU_PREMIUM_SECTIONS,
   SAJU_PREMIUM_PREVIEW,
   SAJU_PREMIUM_VALUE_POINTS,
+  TASTE_PRODUCTS,
+  TRUST_SIGNALS,
 } from '@/content/moonlight';
 import { buildSajuReport } from '@/domain/saju/report';
 import {
@@ -612,6 +615,53 @@ export default async function SajuPremiumPage({ params }: Props) {
           steps={readingSteps}
         />
 
+        <section className="app-panel p-5 sm:p-6">
+          <div className="grid gap-6 lg:grid-cols-[0.86fr_1.14fr] lg:items-start">
+            <div>
+              <div className="app-caption">결제 전 확인</div>
+              <h2 className="mt-3 font-display text-2xl text-[var(--app-ivory)] sm:text-3xl">
+                긴 설명보다, 남는 가치부터 확인합니다
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
+                기준서는 상품명이 아니라 실제 질문에 답하는 결과물입니다. 결제 전에는 예시, 답하는 질문, 보관 가치, 대화 연결만 먼저 보셔도 충분합니다.
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {REPORT_PREVIEW_VALUE_POINTS.map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-[1.05rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
+                >
+                  <div className="text-sm font-semibold text-[var(--app-ivory)]">{item.title}</div>
+                  <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">{item.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {!hasLifetimeAccess ? (
+          <section className="app-panel p-5 sm:p-6">
+            <div className="app-caption">작은 맛보기</div>
+            <h2 className="mt-3 font-display text-2xl text-[var(--app-ivory)] sm:text-3xl">
+              기준서가 부담스러우면 작은 질문부터 열어봅니다
+            </h2>
+            <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              {TASTE_PRODUCTS.map((product) => (
+                <Link
+                  key={product.slug}
+                  href={product.href}
+                  className="rounded-[1.05rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 transition-colors hover:border-[var(--app-gold)]/30 hover:bg-[var(--app-gold)]/8"
+                >
+                  <div className="text-xs font-semibold text-[var(--app-gold-text)]">{product.price}</div>
+                  <div className="mt-2 text-base font-semibold leading-6 text-[var(--app-ivory)]">{product.title}</div>
+                  <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">{product.result}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {hasLifetimeAccess ? (
           <>
             <PremiumSectionIntro
@@ -858,6 +908,24 @@ export default async function SajuPremiumPage({ params }: Props) {
         </div>
         </>
         )}
+
+        <section className="app-panel p-5 sm:p-6">
+          <div className="app-caption">달빛선생의 신뢰 기준</div>
+          <h2 className="mt-3 font-display text-2xl text-[var(--app-ivory)] sm:text-3xl">
+            무섭게 맞힌다는 말보다, 다시 확인할 수 있는 기준을 남깁니다
+          </h2>
+          <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            {TRUST_SIGNALS.map((signal) => (
+              <div
+                key={signal.title}
+                className="rounded-[1.05rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4"
+              >
+                <div className="text-sm font-semibold text-[var(--app-ivory)]">{signal.title}</div>
+                <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">{signal.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
       </AppPage>
     </AppShell>
   );

@@ -87,6 +87,25 @@ export interface MoonlightRetentionScenario {
   purpose: string;
 }
 
+export interface MoonlightQuestionEntryPoint {
+  slug: 'love' | 'money' | 'career' | 'family' | 'year' | 'today';
+  label: string;
+  question: string;
+  productName: string;
+  reportAnswer: string;
+  href: string;
+}
+
+export interface MoonlightTasteProduct {
+  slug: string;
+  title: string;
+  price: string;
+  question: string;
+  result: string;
+  href: string;
+  status: string;
+}
+
 export const PRIMARY_TABS: readonly MoonlightNavItem[] = [
   { label: '홈', href: '/' },
   {
@@ -142,6 +161,138 @@ export const HOME_HERO_TOKENS = [
 ] as const;
 
 export const REPORT_SAMPLE_HREF = '/sample-report';
+
+export const QUESTION_ENTRY_POINTS: readonly MoonlightQuestionEntryPoint[] = [
+  {
+    slug: 'love',
+    label: '연애',
+    question: '연애가 자꾸 꼬이는 이유',
+    productName: '관계 패턴 기준서',
+    reportAnswer: '반복되는 서운함, 연락 속도, 다시 이어질 가능성을 사주와 관계 흐름으로 나눠 봅니다.',
+    href: '/saju/new?focus=love',
+  },
+  {
+    slug: 'money',
+    label: '돈',
+    question: '돈이 모이지 않는 패턴',
+    productName: '재물 흐름 기준서',
+    reportAnswer: '돈이 들어오는 방식보다 새는 지점과 지켜야 할 루틴을 먼저 정리합니다.',
+    href: '/saju/new?focus=wealth',
+  },
+  {
+    slug: 'career',
+    label: '일',
+    question: '이직해도 되는 시기',
+    productName: '일과 자리 기준서',
+    reportAnswer: '버텨야 할 때와 옮겨야 할 때를 역할, 대운, 올해 흐름으로 구분합니다.',
+    href: '/saju/new?focus=career',
+  },
+  {
+    slug: 'family',
+    label: '가족',
+    question: '가족과 부딪히는 이유',
+    productName: '가족 관계 기준서',
+    reportAnswer: '부모, 자녀, 배우자 사이에서 반복되는 말과 역할의 엇갈림을 봅니다.',
+    href: '/saju/new?focus=family',
+  },
+  {
+    slug: 'year',
+    label: '올해 흐름',
+    question: '올해 밀어도 되는 달',
+    productName: '올해 전략 기준서',
+    reportAnswer: '좋은 달, 한 번 더 확인할 달, 차분히 정리할 달을 먼저 지도처럼 보여줍니다.',
+    href: '/saju/new?focus=year',
+  },
+  {
+    slug: 'today',
+    label: '오늘 조언',
+    question: '오늘 무엇을 조심하면 좋을까',
+    productName: '오늘 흐름 미리보기',
+    reportAnswer: '오늘의 한 줄, 조심할 패턴, 지금 할 행동 하나를 짧게 정리합니다.',
+    href: '/today-fortune?concern=general',
+  },
+] as const;
+
+export const REPORT_PREVIEW_VALUE_POINTS = [
+  {
+    title: '결과 예시 1장',
+    body: '긴 설명 전에 실제 화면처럼 한 줄 총평, 분야 카드, 다음 행동을 먼저 보여드립니다.',
+  },
+  {
+    title: '답하는 질문',
+    body: '연애, 돈, 일, 가족, 올해 흐름처럼 사용자가 실제로 묻는 질문을 기준으로 리포트를 고릅니다.',
+  },
+  {
+    title: '소장하면 남는 것',
+    body: '명식, 격국, 용신, 대운의 기준을 PDF와 MY 보관함에 남겨 다시 읽을 수 있습니다.',
+  },
+  {
+    title: '대화 연결',
+    body: '리포트를 읽은 뒤 같은 기준 위에서 달빛선생에게 이어서 질문할 수 있습니다.',
+  },
+] as const;
+
+export const TASTE_PRODUCTS: readonly MoonlightTasteProduct[] = [
+  {
+    slug: 'today-detail',
+    title: '오늘운 상세',
+    price: '990원',
+    question: '오늘 무엇을 조심하면 좋을까',
+    result: '오늘 핵심 한 줄, 조심할 패턴, 바로 할 행동을 짧게 봅니다.',
+    href: '/today-fortune?concern=general',
+    status: '오늘운으로 연결',
+  },
+  {
+    slug: 'monthly-calendar',
+    title: '월간 달력',
+    price: '1,900원',
+    question: '이번 달 밀어도 되는 날은 언제일까',
+    result: '좋은 날, 확인할 날, 차분히 정리할 날을 달력형으로 확인합니다.',
+    href: '/saju/new?product=monthly-calendar',
+    status: '명식 입력 후 연결',
+  },
+  {
+    slug: 'love-question',
+    title: '연애 질문 1회',
+    price: '2,900원',
+    question: '상대와 다시 이어질 가능성',
+    result: '감정의 속도, 연락 타이밍, 다시 말 걸기 좋은 지점을 짧게 봅니다.',
+    href: '/compatibility/input?relationship=lover',
+    status: '궁합 입력으로 연결',
+  },
+  {
+    slug: 'year-core',
+    title: '올해 핵심 3줄',
+    price: '3,900원',
+    question: '올해 제일 중요한 선택은 무엇일까',
+    result: '올해 핵심 주제, 조심할 패턴, 밀어도 되는 달을 3줄로 압축합니다.',
+    href: '/saju/new?product=year-core',
+    status: '기준서 전 맛보기',
+  },
+] as const;
+
+export const TRUST_SIGNALS = [
+  {
+    title: '저장됨',
+    body: '한 번 연 결과는 MY 보관함에서 다시 찾을 수 있게 설계합니다.',
+  },
+  {
+    title: '다시 볼 수 있음',
+    body: '해금한 리포트와 달력은 재열람을 전제로 안내합니다.',
+  },
+  {
+    title: '판정 근거 있음',
+    body: '왜 그렇게 읽었는지 근거는 본문과 분리해 펼쳐볼 수 있습니다.',
+  },
+  {
+    title: '시간·출생지 기준',
+    body: '태어난 시간과 출생지 기준은 결과에서 확인 가능한 정보로 남깁니다.',
+  },
+  {
+    title: '공포 표현 없음',
+    body: '대흉, 반드시 실패 같은 단정 대신 참고 흐름과 생활 행동으로 말합니다.',
+  },
+] as const;
 
 export const WISDOM_CARDS: readonly MoonlightWisdomCard[] = [
   {

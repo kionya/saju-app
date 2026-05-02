@@ -13,6 +13,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { TRUST_SIGNALS } from '@/content/moonlight';
 import FiveElementOrbitChart from '@/components/saju/five-element-orbit-chart';
 import { ELEMENT_INFO } from '@/lib/saju/elements';
 import type { Element } from '@/lib/saju/types';
@@ -345,24 +346,27 @@ export function MobileSajuResultStory({
   const slides: StorySlide[] = [
     {
       id: 'summary',
-      label: '통합',
-      title: '통합 결과',
+      label: '요약',
+      title: '1분 요약',
       eyebrow: focusBadge,
-      summary: '결론, 해석 기준, 오늘의 선택 방향이 한 흐름으로 이어집니다.',
+      summary: '핵심 한 줄, 조심할 패턴, 오늘 할 행동을 먼저 봅니다.',
       detailHref: `/saju/${slug}/overview`,
       detailLabel: '사주 전체 보기',
       render: () => (
         <StoryBody className="content-start">
           <div className="rounded-[1.2rem] border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/8 px-4 py-4">
-            <p className="text-[11px] leading-5 text-[var(--app-copy-soft)]">{birthSummary}</p>
+            <p className="text-[11px] font-semibold tracking-[0.14em] text-[var(--app-gold-text)]">
+              지금 핵심 한 줄
+            </p>
             <h1 className="mt-3 text-[1.32rem] font-semibold leading-tight tracking-tight text-[var(--app-ivory)]">
               {headline}
             </h1>
             <p className="mt-3 text-sm leading-6 text-[var(--app-copy)]">{dayMasterSummary}</p>
+            <p className="mt-3 text-[11px] leading-5 text-[var(--app-copy-soft)]">{birthSummary}</p>
           </div>
           <div className="grid gap-2">
             <StoryReadablePanel
-              eyebrow="이번 풀이의 중심"
+              eyebrow="더 깊게 볼 주제"
               title={keyThemes[0] ?? '핵심 흐름'}
               body={keyThemes[1] ?? '오늘의 실행 기준과 오행 균형을 함께 보면 흐름이 더 또렷해집니다.'}
             />
@@ -370,6 +374,11 @@ export function MobileSajuResultStory({
               <StoryInlineFact
                 label="타고난 결"
                 value={`${dayMasterLabel} · ${dayMasterMetaphor}`}
+              />
+              <StoryInlineFact
+                label="오늘 할 행동"
+                value={favorableChoices[0] ?? primaryAction.description}
+                tone="jade"
               />
               <StoryInlineFact
                 label="주의할 패턴"
@@ -538,9 +547,9 @@ export function MobileSajuResultStory({
     {
       id: 'next',
       label: '다음',
-      title: '다음 행동',
-      eyebrow: '소장과 대화',
-      summary: '결과를 읽은 뒤에는 기준서를 보관하거나, 지금 궁금한 질문으로 바로 이어갈 수 있습니다.',
+      title: '소장과 신뢰',
+      eyebrow: '다시 볼 기준',
+      summary: '결과를 읽은 뒤에는 기준서를 보관하고, 판정 근거와 대화로 이어갈 수 있습니다.',
       detailHref: `/saju/${slug}/premium`,
       detailLabel: '명리 기준서 보기',
       render: () => (
@@ -571,6 +580,15 @@ export function MobileSajuResultStory({
             ))}
           </div>
           <div className="grid gap-2">
+            {TRUST_SIGNALS.slice(0, 3).map((signal) => (
+              <div
+                key={signal.title}
+                className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-3 py-2"
+              >
+                <div className="text-xs font-semibold text-[var(--app-ivory)]">{signal.title}</div>
+                <p className="mt-1 text-[11px] leading-5 text-[var(--app-copy-muted)]">{signal.body}</p>
+              </div>
+            ))}
             <Link
               href={`/saju/${slug}/premium`}
               className="moon-action-primary"

@@ -18,7 +18,7 @@ import {
   type UnifiedBirthInfoSection,
 } from '@/components/saju/shared/unified-birth-info-fields';
 import SiteHeader from '@/features/shared-navigation/site-header';
-import { ONBOARDING_CONSENTS } from '@/content/moonlight';
+import { ONBOARDING_CONSENTS, QUESTION_ENTRY_POINTS } from '@/content/moonlight';
 import { BIRTH_LOCATION_PRESETS } from '@/lib/saju/birth-location';
 import { toSlug } from '@/lib/saju/pillars';
 import { cn } from '@/lib/utils';
@@ -30,6 +30,7 @@ import {
   saveAcceptedRequiredConsents,
   saveOnboardingDraft,
   shouldAutoSavePersonalProfile,
+  type OnboardingFocusTopic,
   type SajuOnboardingDraft,
 } from './onboarding-storage';
 import { resolveUnifiedBirthInput, type UnifiedBirthEntryDraft } from '@/lib/saju/unified-birth-entry';
@@ -112,9 +113,9 @@ interface BirthLocationSearchResponse {
 
 const PROFILE_STEP = {
   id: 'profile' as const,
-  eyebrow: '저장 정보',
-  title: '먼저 내 정보나 등록한 사람을 고릅니다',
-  description: '저장된 정보가 있으면 바로 불러오고, 없거나 새로 보려면 직접 입력으로 시작합니다.',
+  eyebrow: '궁금한 문제',
+  title: '먼저 무엇이 제일 궁금한지 고릅니다',
+  description: '연애, 돈, 일, 가족, 올해 흐름 중 지금 마음에 걸리는 주제를 먼저 정하고 입력을 시작합니다.',
 };
 
 const BASE_STEPS: Array<{
@@ -156,9 +157,30 @@ const CONSENT_STEP = {
 
 const STEP_HINTS = [
   '화면을 좌우로 넘기듯 한 단계씩 입력합니다.',
+  '질문 주제를 먼저 고르면 결과 화면이 그 풀이 포커스로 열립니다.',
   '결과 문체는 사주풀이 화면에서 남선생·여선생으로 고릅니다.',
   '동의는 한 번 저장되면 다음 입력부터 자동으로 건너뜁니다.',
 ] as const;
+
+const ENTRY_FOCUS_TOPIC_BY_SLUG = {
+  love: 'love',
+  money: 'wealth',
+  career: 'career',
+  family: 'relationship',
+  year: 'today',
+  today: 'today',
+} as const satisfies Record<(typeof QUESTION_ENTRY_POINTS)[number]['slug'], OnboardingFocusTopic>;
+
+function normalizeEntryFocusParam(value: string | null): OnboardingFocusTopic | null {
+  if (!value) return null;
+  if (value === 'money') return 'wealth';
+  if (value === 'family') return 'relationship';
+  if (value === 'year') return 'today';
+  if (value === 'today' || value === 'love' || value === 'wealth' || value === 'career' || value === 'relationship') {
+    return value;
+  }
+  return null;
+}
 
 function buildUnifiedBirthDraft(form: SajuOnboardingDraft): UnifiedBirthEntryDraft {
   return {
@@ -303,6 +325,8 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
   const [locationSearchStatus, setLocationSearchStatus] = useState<LocationSearchStatus>('idle');
   const [locationSearchMessage, setLocationSearchMessage] = useState('');
   const [locationSearchResults, setLocationSearchResults] = useState<BirthLocationSearchResult[]>([]);
+  const [selectedEntrySlug, setSelectedEntrySlug] =
+    useState<(typeof QUESTION_ENTRY_POINTS)[number]['slug']>('today');
   const touchStartXRef = useRef<number | null>(null);
   const hasTrackedStartRef = useRef(false);
   const hasTrackedBirthStartRef = useRef(false);
@@ -319,7 +343,21 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
 
   useEffect(() => {
     const draft = loadOnboardingDraft();
-    setForm(draft);
+    const focusParam =
+      typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('focus');
+    const initialFocusTopic = normalizeEntryFocusParam(focusParam);
+    if (focusParam && focusParam in ENTRY_FOCUS_TOPIC_BY_SLUG) {
+      setSelectedEntrySlug(focusParam as (typeof QUESTION_ENTRY_POINTS)[number]['slug']);
+    } else if (initialFocusTopic === 'love') {
+      setSelectedEntrySlug('love');
+    } else if (initialFocusTopic === 'wealth') {
+      setSelectedEntrySlug('money');
+    } else if (initialFocusTopic === 'career') {
+      setSelectedEntrySlug('career');
+    } else if (initialFocusTopic === 'relationship') {
+      setSelectedEntrySlug('family');
+    }
+    setForm(initialFocusTopic ? { ...draft, focusTopic: initialFocusTopic } : draft);
     setConsentAccepted(hasAcceptedRequiredConsents());
     setIsHydrated(true);
   }, []);
@@ -596,6 +634,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
       trackMoonlightEvent('birth_form_completed', {
         from: 'saju-new',
         sourceSessionId: data.id,
+        focusTopic: form.focusTopic,
         calendarType: form.calendarType,
         timeRule: form.timeRule,
         unknownBirthTime: parsed.input.unknownTime,
@@ -628,7 +667,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
         }).catch(() => undefined);
       }
 
-      router.push(`/saju/${data.id}?from=saju-new`);
+      router.push(`/saju/${data.id}?from=saju-new&topic=${form.focusTopic}`);
     } catch {
       const fallbackId = toSlug(parsed.input);
       if (!consentAccepted) {
@@ -638,12 +677,13 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
       trackMoonlightEvent('birth_form_completed', {
         from: 'saju-new',
         sourceSessionId: fallbackId,
+        focusTopic: form.focusTopic,
         calendarType: form.calendarType,
         timeRule: form.timeRule,
         unknownBirthTime: parsed.input.unknownTime,
         layout: 'swipe',
       });
-      router.push(`/saju/${fallbackId}?from=saju-new`);
+      router.push(`/saju/${fallbackId}?from=saju-new&topic=${form.focusTopic}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -683,9 +723,64 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
     if (delta > 0) goPrev();
   }
 
+  function selectEntryTopic(entry: (typeof QUESTION_ENTRY_POINTS)[number]) {
+    const focusTopic = ENTRY_FOCUS_TOPIC_BY_SLUG[entry.slug];
+    setSelectedEntrySlug(entry.slug);
+    setForm((current) => ({
+      ...current,
+      focusTopic,
+    }));
+    trackMoonlightEvent('birth_form_started', {
+      from: 'saju-new-question',
+      focus: entry.slug,
+      focusTopic,
+      layout: 'swipe',
+    });
+  }
+
   function renderProfileStep() {
     return (
       <div className="mt-4 space-y-3">
+        <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-3">
+          {QUESTION_ENTRY_POINTS.map((entry) => {
+            const isSelected = selectedEntrySlug === entry.slug;
+
+            return (
+              <button
+                key={entry.slug}
+                type="button"
+                onClick={() => selectEntryTopic(entry)}
+                data-selected={isSelected ? 'true' : 'false'}
+                className={cn(
+                  'group min-h-[6.6rem] rounded-[1.05rem] border px-3 py-3 text-left transition-colors sm:min-h-[8rem] sm:px-4 sm:py-4',
+                  isSelected
+                    ? 'border-[var(--app-gold)]/42 bg-[var(--app-gold)]/10'
+                    : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] hover:border-[var(--app-gold)]/30 hover:bg-[var(--app-gold)]/8'
+                )}
+              >
+                <span className="flex items-center justify-between gap-3">
+                  <span className="rounded-full border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/8 px-2.5 py-1 text-[11px] font-semibold text-[var(--app-gold-text)]">
+                    {entry.label}
+                  </span>
+                  <span className="text-xs text-[var(--app-copy-soft)]">
+                    {isSelected ? '선택됨' : '선택'}
+                  </span>
+                </span>
+                <span className="mt-2.5 block text-sm font-semibold leading-6 text-[var(--app-ivory)] sm:text-base">
+                  {entry.question}
+                </span>
+                <span className="mt-1.5 block text-[11px] leading-5 text-[var(--app-copy-muted)] sm:mt-2 sm:text-xs">
+                  {entry.productName}로 이어집니다.
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="rounded-[1.05rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-3 text-sm leading-6 text-[var(--app-gold-text)]">
+          주제를 먼저 골라도 생년월일, 성별, 출생지는 그대로 필요합니다. 저장된 정보가 있으면 아래 이름만 눌러 바로 채울 수 있습니다.
+        </div>
+
         {profileLoadStatus === 'loading' ? (
           <div className="rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-sm text-[var(--app-copy-muted)]">
             저장된 내 정보와 등록한 사람을 확인하고 있습니다.
@@ -777,7 +872,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
 
   const nextLabel =
     activeStep.id === 'profile'
-      ? '직접 입력하기'
+      ? '이 주제로 입력 시작'
       : activeStep.id === 'location' && consentAccepted
       ? isSubmitting
         ? '결과 준비 중...'
@@ -807,8 +902,8 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
               옆으로 넘기는 입력
             </Badge>,
           ]}
-          title="저장 정보로 시작하거나, 한 화면씩 입력합니다"
-          description="내 정보와 등록한 사람을 먼저 고르고, 필요할 때만 생년월일·성별·출생지와 시간을 직접 입력합니다."
+          title="궁금한 문제를 먼저 고르고, 필요한 정보만 입력합니다"
+          description="연애, 돈, 일, 가족, 올해 흐름처럼 지금 알고 싶은 주제를 먼저 정하면 결과 화면이 그 풀이 포커스로 열립니다."
         />
 
         <section className="grid gap-4 lg:grid-cols-[1.04fr_0.96fr] lg:gap-6">

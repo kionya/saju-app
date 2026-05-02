@@ -54,15 +54,15 @@ export function ReportOneMinuteSummary({
     <SectionSurface surface="panel">
       <SectionHeader
         eyebrow="1분 요약"
-        title="먼저, 이번 사주의 핵심만 짚어드립니다"
+        title="먼저, 지금 필요한 답만 짚어드립니다"
         titleClassName="text-3xl"
-        description="자세한 해석은 아래에서 이어지고, 판정 근거는 별도로 펼쳐볼 수 있습니다."
+        description="전문 설명보다 핵심 한 줄, 조심할 패턴, 오늘 할 행동, 더 깊게 볼 주제를 먼저 보여드립니다."
       />
 
       <FeatureCard
         className="mt-6 border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8"
         surface="soft"
-        eyebrow="한 줄 총평"
+        eyebrow="지금 핵심 한 줄"
         description={headline}
         descriptionClassName="text-base leading-8 text-[var(--app-ivory)] sm:text-lg"
       />
@@ -74,9 +74,9 @@ export function ReportOneMinuteSummary({
       ) : null}
 
       <ProductGrid columns={3} className="mt-4">
-        <SummaryList title="올해 핵심 주제" items={keyThemes} />
         <SummaryList title="조심할 패턴" items={cautionPatterns} tone="caution" />
-        <SummaryList title="유리한 선택 방식" items={favorableChoices} />
+        <SummaryList title="오늘 할 행동" items={favorableChoices} />
+        <SummaryList title="더 깊게 볼 주제" items={keyThemes} />
       </ProductGrid>
     </SectionSurface>
   );

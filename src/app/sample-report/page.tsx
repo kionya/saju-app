@@ -17,6 +17,12 @@ import { SupportRail } from "@/components/layout/support-rail";
 import SiteHeader from "@/features/shared-navigation/site-header";
 import { AppPage, AppShell, PageHero } from "@/shared/layout/app-shell";
 import {
+  QUESTION_ENTRY_POINTS,
+  REPORT_PREVIEW_VALUE_POINTS,
+  TASTE_PRODUCTS,
+  TRUST_SIGNALS,
+} from "@/content/moonlight";
+import {
   SAMPLE_DECISION_TRACE,
   SAMPLE_PREVIEW_GUIDE,
   SAMPLE_REPORT_HERO,
@@ -127,6 +133,66 @@ export default function SampleReportPage() {
         </section>
 
         <SectionSurface surface="panel">
+          <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
+            <div>
+              <SectionHeader
+                eyebrow="결제 전 확인"
+                title="샘플에서는 긴 설명보다 네 가지를 먼저 확인합니다"
+                titleClassName="text-3xl"
+                description="결과 예시 한 장, 어떤 질문에 답하는지, 소장하면 무엇이 남는지, 대화 상담으로 어떻게 이어지는지를 먼저 보실 수 있습니다."
+                descriptionClassName="text-[var(--app-copy)]"
+              />
+              <ActionCluster className="mt-6">
+                <TrackedLink
+                  href="/saju/new"
+                  eventName="sample_report_start_click"
+                  eventParams={{ from: "sample_report_preview_value" }}
+                  className="moon-action-primary"
+                >
+                  질문으로 시작하기
+                </TrackedLink>
+                <Link href="/membership" className="moon-action-secondary">
+                  상품 기준 보기
+                </Link>
+              </ActionCluster>
+            </div>
+            <ProductGrid columns={2} className="gap-3">
+              {REPORT_PREVIEW_VALUE_POINTS.map((item) => (
+                <FeatureCard
+                  key={item.title}
+                  surface="soft"
+                  title={item.title}
+                  titleClassName="text-xl"
+                  description={item.body}
+                />
+              ))}
+            </ProductGrid>
+          </div>
+        </SectionSurface>
+
+        <SectionSurface surface="panel">
+          <SectionHeader
+            eyebrow="어떤 질문에 답하나요"
+            title="사용자는 상품명이 아니라, 자기 문제의 이름으로 들어옵니다"
+            titleClassName="text-3xl"
+            description="명리 기준서라는 상위 브랜드는 유지하되, 샘플에서는 연애, 돈, 일, 가족, 올해 흐름처럼 실제 질문을 먼저 보여줍니다."
+            descriptionClassName="text-[var(--app-copy)]"
+          />
+          <ProductGrid columns={3} className="mt-6">
+            {QUESTION_ENTRY_POINTS.map((entry) => (
+              <FeatureCard
+                key={entry.slug}
+                surface="soft"
+                eyebrow={entry.label}
+                title={entry.question}
+                titleClassName="text-xl"
+                description={entry.reportAnswer}
+              />
+            ))}
+          </ProductGrid>
+        </SectionSurface>
+
+        <SectionSurface surface="panel">
           <SectionHeader
             eyebrow="1분 미리보기"
             title="리포트 첫 1분 안에 무엇을 확인하게 되는지 먼저 보여드립니다"
@@ -226,6 +292,49 @@ export default function SampleReportPage() {
         </section>
 
         <ReportKeepsakeSection />
+
+        <SectionSurface surface="panel">
+          <SectionHeader
+            eyebrow="맛보기에서 기준서까지"
+            title="처음부터 큰 리포트가 부담스러우면 작은 풀이로 먼저 확인합니다"
+            titleClassName="text-3xl"
+            description="오늘운 상세, 월간 달력, 연애 질문, 올해 핵심 3줄은 기준서 전 단계의 부담 없는 체험 상품으로 배치합니다."
+            descriptionClassName="text-[var(--app-copy)]"
+          />
+          <ProductGrid columns={4} className="mt-6">
+            {TASTE_PRODUCTS.map((product) => (
+              <FeatureCard
+                key={product.slug}
+                surface="soft"
+                eyebrow={product.price}
+                title={product.title}
+                titleClassName="text-xl"
+                description={product.result}
+              />
+            ))}
+          </ProductGrid>
+        </SectionSurface>
+
+        <SectionSurface surface="panel">
+          <SectionHeader
+            eyebrow="달빛선생의 신뢰 장치"
+            title="보관, 근거, 안전한 표현을 결과물 안에 남깁니다"
+            titleClassName="text-3xl"
+            description="공포성 단정이나 과장된 적중률 대신, 사용자가 다시 확인할 수 있는 기준을 리포트 안에 남기는 방식입니다."
+            descriptionClassName="text-[var(--app-copy)]"
+          />
+          <ProductGrid columns={3} className="mt-6">
+            {TRUST_SIGNALS.map((signal) => (
+              <FeatureCard
+                key={signal.title}
+                surface="soft"
+                title={signal.title}
+                titleClassName="text-xl"
+                description={signal.body}
+              />
+            ))}
+          </ProductGrid>
+        </SectionSurface>
 
         <SectionSurface surface="hero">
           <SectionHeader

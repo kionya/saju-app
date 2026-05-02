@@ -25,6 +25,7 @@ import { MobileSajuResultStory } from '@/components/saju/mobile-saju-result-stor
 import { SajuFactEvidencePanel } from '@/components/saju/saju-fact-evidence-panel';
 import { Badge } from '@/components/ui/badge';
 import DetailUnlock from '@/components/detail-unlock';
+import { TRUST_SIGNALS } from '@/content/moonlight';
 import { SajuResultViewTracker } from '@/features/saju-detail/saju-result-view-tracker';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
 import SiteHeader from '@/features/shared-navigation/site-header';
@@ -858,6 +859,26 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             />
 
             <ReportKeepsakeSection pdfHref={`/saju/${slug}/premium/print`} />
+
+            <SectionSurface surface="panel">
+              <SectionHeader
+                eyebrow="신뢰 장치"
+                title="결과는 다시 확인할 수 있는 기준으로 남깁니다"
+                titleClassName="text-3xl"
+                description="사주풀이가 한 번 읽고 끝나지 않도록 저장, 재열람, 판정 근거, 시간·출생지 기준, 안전한 표현을 함께 노출합니다."
+              />
+              <ProductGrid columns={3} className="mt-6">
+                {TRUST_SIGNALS.map((signal) => (
+                  <FeatureCard
+                    key={signal.title}
+                    surface="soft"
+                    title={signal.title}
+                    titleClassName="text-xl"
+                    description={signal.body}
+                  />
+                ))}
+              </ProductGrid>
+            </SectionSurface>
           </SwipeSectionSlide>
 
           <SwipeSectionSlide

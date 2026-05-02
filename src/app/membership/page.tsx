@@ -15,7 +15,11 @@ import {
   INTERPRETATION_JOURNEY,
   MEMBERSHIP_REASSURANCE,
   PLAN_BLUEPRINT,
+  QUESTION_ENTRY_POINTS,
+  REPORT_PREVIEW_VALUE_POINTS,
   REPORT_SAMPLE_HREF,
+  TASTE_PRODUCTS,
+  TRUST_SIGNALS,
 } from '@/content/moonlight';
 
 const COLLECTIBLE_REPORTS = [
@@ -181,9 +185,9 @@ export default async function MembershipPage({
             <div>
               <SectionHeader
                 eyebrow="소장형 리포트 · 대화형 멤버십"
-                title="구독은 대화용, 리포트는 소장용입니다"
+                title="질문은 쉽게 고르고, 결과는 기준서처럼 남깁니다"
                 titleClassName="text-4xl leading-[1.3] sm:text-5xl"
-                description="달빛선생은 한 번 보고 사라지는 운세보다, 명식·격국·용신·대운의 기준을 오래 남기는 리포트를 중심에 둡니다. 월간 플랜은 질문을 이어가는 대화용으로, 소장형 리포트는 오래 다시 보는 결과물로 나누어 보시면 됩니다."
+                description="명리 기준서는 상위 브랜드로 두되, 사용자가 고르는 입구는 연애, 돈, 일, 가족, 올해 흐름처럼 실제 고민에 맞춥니다. 월간 플랜은 질문을 이어가는 대화용으로, 소장형 리포트는 오래 다시 보는 결과물로 나누어 보시면 됩니다."
                 descriptionClassName="max-w-3xl text-[var(--app-copy)]"
                 actions={
                   <ActionCluster>
@@ -208,6 +212,36 @@ export default async function MembershipPage({
             </div>
           </div>
         </SectionSurface>
+
+        <section className="mt-8">
+          <SectionHeader
+            eyebrow="질문형 상품 입구"
+            title="어떤 상품인지보다, 어떤 질문에 답하는지 먼저 보이게 정리했습니다"
+            titleClassName="text-3xl"
+            description="같은 명리 기준서라도 사용자는 연애, 돈, 일, 가족, 올해 흐름처럼 자기 문제의 이름으로 들어올 때 훨씬 빠르게 이해합니다."
+            descriptionClassName="max-w-3xl"
+          />
+          <ProductGrid columns={3} className="mt-6">
+            {QUESTION_ENTRY_POINTS.map((entry) => (
+              <FeatureCard
+                key={entry.slug}
+                surface="soft"
+                eyebrow={entry.label}
+                title={entry.question}
+                titleClassName="text-xl"
+                description={entry.reportAnswer}
+                footer={
+                  <Link
+                    href={entry.href}
+                    className="text-sm font-medium text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                  >
+                    {entry.productName}
+                  </Link>
+                }
+              />
+            ))}
+          </ProductGrid>
+        </section>
 
         <section className="mt-8">
           <SectionHeader
@@ -272,6 +306,71 @@ export default async function MembershipPage({
                 </SectionSurface>
               );
             })}
+          </ProductGrid>
+        </section>
+
+        <section className="mt-8">
+          <SectionSurface surface="panel">
+            <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+              <div>
+                <SectionHeader
+                  eyebrow="결제 전 미리보기"
+                  title="긴 설명보다 네 가지만 먼저 확인합니다"
+                  titleClassName="text-3xl"
+                  description="결과 예시 1장, 답하는 질문, 소장하면 남는 것, 대화 연결. 이 네 가지가 기준서 구매 전에 보여야 할 핵심입니다."
+                  descriptionClassName="max-w-2xl"
+                />
+                <ActionCluster className="mt-6">
+                  <Link href={REPORT_SAMPLE_HREF} className="moon-action-primary">
+                    샘플 리포트 보기
+                  </Link>
+                  <Link href="/saju/new" className="moon-action-secondary">
+                    질문으로 시작하기
+                  </Link>
+                </ActionCluster>
+              </div>
+              <ProductGrid columns={2} className="gap-3">
+                {REPORT_PREVIEW_VALUE_POINTS.map((item) => (
+                  <FeatureCard
+                    key={item.title}
+                    surface="soft"
+                    title={item.title}
+                    titleClassName="text-xl"
+                    description={item.body}
+                  />
+                ))}
+              </ProductGrid>
+            </div>
+          </SectionSurface>
+        </section>
+
+        <section className="mt-8">
+          <SectionHeader
+            eyebrow="소액 맛보기"
+            title="처음 결제는 작게, 마음에 남으면 기준서로 이어집니다"
+            titleClassName="text-3xl"
+            description="49,000원 기준서 전 단계의 작은 상품은 사용자가 부담 없이 달빛선생의 풀이 방식을 경험하는 입구입니다."
+            descriptionClassName="max-w-3xl"
+          />
+          <ProductGrid columns={4} className="mt-6">
+            {TASTE_PRODUCTS.map((product) => (
+              <FeatureCard
+                key={product.slug}
+                surface="soft"
+                eyebrow={product.price}
+                title={product.title}
+                titleClassName="text-xl"
+                description={product.result}
+                footer={
+                  <Link
+                    href={product.href}
+                    className="text-sm font-medium text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
+                  >
+                    {product.question}
+                  </Link>
+                }
+              />
+            ))}
           </ProductGrid>
         </section>
 
@@ -449,6 +548,29 @@ export default async function MembershipPage({
           </SectionSurface>
 
           <ReportKeepsakeSection className="mt-8" />
+        </section>
+
+        <section className="mt-8">
+          <SectionSurface surface="panel">
+            <SectionHeader
+              eyebrow="구매 전 신뢰 기준"
+              title="무리한 공포 표현보다, 다시 확인 가능한 기준을 앞에 둡니다"
+              titleClassName="text-3xl"
+              description="달빛선생의 전환 장치는 과장된 적중률이 아니라 저장, 재열람, 판정 근거, 시간·출생지 기준, 안전한 표현입니다."
+              descriptionClassName="max-w-3xl"
+            />
+            <ProductGrid columns={3} className="mt-6">
+              {TRUST_SIGNALS.map((signal) => (
+                <FeatureCard
+                  key={signal.title}
+                  surface="soft"
+                  title={signal.title}
+                  titleClassName="text-xl"
+                  description={signal.body}
+                />
+              ))}
+            </ProductGrid>
+          </SectionSurface>
         </section>
 
         <section className="mt-8">

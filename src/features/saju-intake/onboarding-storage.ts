@@ -4,6 +4,7 @@ import { ONBOARDING_CONSENTS } from '@/content/moonlight';
 
 export type OnboardingSpeechTone = 'friendly' | 'polite' | 'standard';
 export type OnboardingProfileSource = 'manual' | 'self' | 'family';
+export type OnboardingFocusTopic = 'today' | 'love' | 'wealth' | 'career' | 'relationship';
 
 export interface SajuOnboardingDraft {
   calendarType: 'solar' | 'lunar';
@@ -22,6 +23,7 @@ export interface SajuOnboardingDraft {
   gender: string;
   nickname: string;
   loadedProfileSource: OnboardingProfileSource;
+  focusTopic: OnboardingFocusTopic;
   tone: OnboardingSpeechTone;
   consents: Record<string, boolean>;
 }
@@ -59,9 +61,19 @@ export function createInitialOnboardingDraft(): SajuOnboardingDraft {
     gender: '',
     nickname: '',
     loadedProfileSource: 'manual',
+    focusTopic: 'today',
     tone: 'polite',
     consents: createConsentState(),
   };
+}
+
+function normalizeFocusTopic(value: unknown): OnboardingFocusTopic {
+  return value === 'love' ||
+    value === 'wealth' ||
+    value === 'career' ||
+    value === 'relationship'
+    ? value
+    : 'today';
 }
 
 function mergeConsentState(value: unknown) {
@@ -109,6 +121,7 @@ export function loadOnboardingDraft(): SajuOnboardingDraft {
         parsed.loadedProfileSource === 'self' || parsed.loadedProfileSource === 'family'
           ? parsed.loadedProfileSource
           : 'manual',
+      focusTopic: normalizeFocusTopic(parsed.focusTopic),
       tone:
         parsed.tone === 'friendly' || parsed.tone === 'polite' || parsed.tone === 'standard'
           ? parsed.tone
