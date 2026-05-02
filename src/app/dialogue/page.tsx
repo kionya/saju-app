@@ -42,33 +42,33 @@ export default async function DialoguePage({
   const usageItems = [
     ['처음 3회', '무료'],
     ['이후 3회 묶음', '코인 3개'],
-    ['MY 프로필 등록', '명식 자동 적용'],
+    ['MY 프로필', '기준서 입력 없이 자동 적용'],
   ] as const;
 
   return (
     <AppShell header={<SiteHeader />} className="pb-24 md:pb-0">
       <AppPage className="space-y-6">
-        <SectionSurface surface="hero" size="lg">
+        <SectionSurface surface="hero" size="md">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <SectionHeader
               eyebrow="달빛선생과 대화"
-              title="기준은 고정한 채, 질문은 계속 이어갑니다"
+              title="궁금한 것만 바로 물어보세요"
               titleClassName="text-3xl sm:text-4xl"
-              description="달빛선생과의 대화는 이미 계산된 명식과 운의 구조를 바탕으로 이어집니다. AI가 대화 중에 격국이나 용신을 새로 추측하지 않으며, 질문에 맞춰 설명의 우선순위만 다시 정리합니다."
+              description="로그인되어 있고 MY 프로필에 생년월일이 저장되어 있으면, 상담에서 명리 기준서를 다시 입력하지 않아도 됩니다. 질문만 남기면 저장된 내 정보 기준으로 이어갑니다."
               descriptionClassName="text-[var(--app-copy)]"
               actions={
                 <ActionCluster>
                   <Link
-                    href="/saju/new"
+                    href="#dialogue-input"
                     className="moon-action-primary"
                   >
-                    기준서 먼저 만들기
+                    바로 질문하기
                   </Link>
                   <Link
-                    href="/sample-report"
+                    href="/my/profile"
                     className="moon-action-muted"
                   >
-                    샘플 리포트 보기
+                    내 정보 확인하기
                   </Link>
                 </ActionCluster>
               }
@@ -84,27 +84,9 @@ export default async function DialoguePage({
               ))}
             </div>
           </div>
-
-          <ProductGrid columns={3} className="mt-6">
-            <FeatureCard
-              surface="soft"
-              eyebrow="명식 기준"
-              description="대화 중에도 이미 계산된 명식과 운의 구조를 바꾸지 않고, 질문에 맞춰 설명의 층만 다시 정리합니다."
-            />
-            <FeatureCard
-              surface="soft"
-              eyebrow="가벼운 시작"
-              description="처음 3회 대화는 무료로 이어지고, 자주 묻는 질문을 바로 불러와 시작하실 수 있습니다."
-            />
-            <FeatureCard
-              surface="soft"
-              eyebrow="더 깊은 질문"
-              description="MY 프로필이나 기준서가 있으면, 원국과 운의 흐름을 이미 불러온 상태에서 더 구체적으로 이어갈 수 있습니다."
-            />
-          </ProductGrid>
         </SectionSurface>
 
-        <section>
+        <section id="dialogue-chat" className="scroll-mt-24">
           <DialogueChatPanel
             presets={DIALOGUE_PRESETS.map((p) => ({
               category: p.category,

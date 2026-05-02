@@ -367,7 +367,7 @@ export const DIALOGUE_GUARDRAILS = [
     body: '듣기 좋은 말로 끝내지 않고, 오늘 바로 해보실 수 있는 작은 실천 하나까지 함께 정리합니다.',
   },
   {
-    title: 'SAFE_REDIRECT',
+    title: '위험한 질문은 안전 안내로',
     body: '자해·극단 선택·응급 의료·법률·투자처럼 더 안전한 도움이 필요한 문제는 선을 넘지 않고 알맞은 도움처로 모십니다.',
   },
 ] as const;

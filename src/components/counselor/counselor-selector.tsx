@@ -41,7 +41,7 @@ export function CounselorSelector({
         </div>
       ) : null}
 
-      <div className={cn('grid gap-3', compact ? 'sm:grid-cols-2' : 'lg:grid-cols-2')}>
+      <div className={cn('grid gap-3', compact ? 'grid-cols-2' : 'lg:grid-cols-2')}>
         {Object.values(MOONLIGHT_COUNSELORS).map((counselor) => {
           const selected = counselor.id === value;
 
@@ -54,7 +54,7 @@ export function CounselorSelector({
               className={cn(
                 'group relative overflow-hidden border text-left transition-[transform,border-color,background-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-gold)]/70',
                 compact
-                  ? 'rounded-[1.25rem] bg-[rgba(8,10,18,0.52)] p-3 hover:-translate-y-0.5'
+                  ? 'rounded-[1.1rem] bg-[rgba(8,10,18,0.52)] p-2.5 hover:-translate-y-0.5 sm:rounded-[1.25rem] sm:p-3'
                   : 'rounded-[1.6rem] bg-[rgba(8,10,18,0.45)] p-4 hover:-translate-y-1',
                 selected
                   ? `${counselor.borderClassName} ${counselor.surfaceClassName} shadow-[0_18px_44px_rgba(0,0,0,0.28)]`
@@ -62,7 +62,7 @@ export function CounselorSelector({
               )}
             >
               <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent_24%,rgba(255,255,255,0.02))]" />
-              <div className={cn('relative z-10 grid items-center gap-3', compact ? 'grid-cols-[4.4rem_1fr]' : 'grid-cols-[6rem_1fr]')}>
+              <div className={cn('relative z-10 grid items-center gap-2 sm:gap-3', compact ? 'grid-cols-[3.1rem_1fr] sm:grid-cols-[4.4rem_1fr]' : 'grid-cols-[6rem_1fr]')}>
                 <div className={cn('relative overflow-hidden rounded-[1rem] border border-white/10 bg-[rgba(255,255,255,0.04)]', compact ? 'aspect-[4/5]' : 'aspect-[4/5]')}>
                   <Image
                     src={counselor.imagePath}
@@ -95,7 +95,7 @@ export function CounselorSelector({
                   <div className={cn('mt-2 font-semibold text-[var(--app-ivory)]', compact ? 'text-sm leading-6' : 'text-lg leading-7')}>
                     {counselor.title}
                   </div>
-                  <p className={cn('mt-2 text-[var(--app-copy)]', compact ? 'text-xs leading-6' : 'text-sm leading-7')}>
+                  <p className={cn('mt-2 text-[var(--app-copy)]', compact ? 'hidden text-xs leading-6 sm:block' : 'text-sm leading-7')}>
                     {compact ? counselor.focus : counselor.description}
                   </p>
                   {!compact ? (

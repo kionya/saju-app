@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, startTransition, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AiSourceBadge } from '@/components/ai/ai-source-badge';
@@ -45,6 +46,7 @@ interface ChatMessage {
   id: string;
   role: 'assistant' | 'user';
   text: string;
+  animate?: boolean;
   source?: AiSource;
   model?: string | null;
   configured?: boolean;
@@ -71,6 +73,26 @@ interface DialogueChatPanelProps {
   autoStart?: boolean;
 }
 
+interface ProfileApiProfile {
+  displayName: string;
+  calendarType: 'solar' | 'lunar';
+  timeRule: 'standard' | 'trueSolarTime' | 'nightZi' | 'earlyZi';
+  birthYear: number | null;
+  birthMonth: number | null;
+  birthDay: number | null;
+  birthHour: number | null;
+  birthMinute: number | null;
+  birthLocationLabel: string;
+  gender: 'male' | 'female' | null;
+}
+
+type ProfileConnectionState =
+  | { status: 'checking'; summary: string; detail: string }
+  | { status: 'guest'; summary: string; detail: string }
+  | { status: 'ready'; summary: string; detail: string }
+  | { status: 'partial'; summary: string; detail: string }
+  | { status: 'error'; summary: string; detail: string };
+
 const INITIAL_MESSAGE: ChatMessage = {
   id: 'assistant-intro',
   role: 'assistant',
@@ -79,7 +101,7 @@ const INITIAL_MESSAGE: ChatMessage = {
   model: null,
   errorMessage: null,
   text:
-    '편하게 물으세요. 로그인되어 있고 MY 프로필에 생년월일, 성별, 태어난 시간, 출생지가 저장돼 있으면 그 명식을 먼저 놓고 바로 풀어드립니다. 처음 3회는 무료이고, 이후에는 3회 묶음마다 3코인으로 이어집니다.',
+    '편하게 물으세요. 로그인되어 있고 MY 프로필에 생년월일이 저장돼 있으면 명리 기준서를 다시 입력하지 않아도 그 정보를 먼저 놓고 바로 풀어드립니다. 처음 3회는 무료이고, 이후에는 3회 묶음마다 3코인으로 이어집니다.',
 };
 
 function createMessageId(prefix: string) {
@@ -138,11 +160,11 @@ function getConnectionSummary(
   status: ChatStatus
 ) {
   if (status === 'loading') {
-    return '로그인과 코인을 확인한 뒤 정밀 답변을 이어갈 수 있는지 살피고 있습니다.';
+    return '저장된 내 정보와 상담 가능 횟수를 확인한 뒤 답변을 준비하고 있습니다.';
   }
 
   if (!latestAssistant || latestAssistant.id === INITIAL_MESSAGE.id) {
-    return '처음 3회는 무료입니다. 이후에는 정밀 답변 기준으로 3회 묶음마다 3코인이 차감되고, 기본 답변과 안전 안내는 횟수에도 포함되지 않습니다. 오늘 결과에서 이어진 첫 질문은 코인 차감 없이 먼저 답합니다.';
+    return 'MY 프로필에 생년월일이 있으면 상담에서 다시 입력하지 않습니다. 처음 3회는 무료이고, 이후에는 정밀 답변 기준으로 3회 묶음마다 3코인이 차감됩니다.';
   }
 
   if (latestAssistant.source === 'openai') {
@@ -151,17 +173,117 @@ function getConnectionSummary(
       latestAssistant.profileContext?.used && latestAssistant.profileContext.summary
         ? ` 저장 프로필 기준: ${latestAssistant.profileContext.summary}`
         : '';
-    return `최근 답변은 정밀 답변으로 정리되었습니다.${billingLabel ? ` ${billingLabel}` : ''}${profileLabel}`;
+    return `최근 답변은 상담 답변으로 정리되었습니다.${billingLabel ? ` ${billingLabel}` : ''}${profileLabel}`;
   }
 
   if (latestAssistant.source === 'fallback') {
     const profileLabel = latestAssistant.profileContext?.summary
       ? ` ${latestAssistant.profileContext.used ? '저장 프로필 기준으로' : ''} ${latestAssistant.profileContext.summary}`
       : '';
-    return `최근 답변은 기본 답변으로 표시되었습니다.${latestAssistant.configured === false ? ' 정밀 답변 연결 전입니다.' : ''}${profileLabel}`;
+    return `최근 답변은 기본 답변으로 표시되었습니다.${latestAssistant.configured === false ? ' 상담 답변 연결 전입니다.' : ''}${profileLabel}`;
   }
 
   return '안전 안내 기준으로 일반 대화를 중단했습니다.';
+}
+
+function hasBirthProfile(
+  profile: ProfileApiProfile | null | undefined
+): profile is ProfileApiProfile & {
+  birthYear: number;
+  birthMonth: number;
+  birthDay: number;
+} {
+  return Boolean(profile?.birthYear && profile.birthMonth && profile.birthDay);
+}
+
+function formatProfileConnection(profile: ProfileApiProfile | null): ProfileConnectionState {
+  if (!hasBirthProfile(profile)) {
+    return {
+      status: 'partial',
+      summary: '저장된 내 정보가 아직 부족합니다',
+      detail: 'MY 프로필에 생년월일을 저장하면 상담에서 기준서를 다시 입력하지 않아도 됩니다.',
+    };
+  }
+
+  const dateLabel = `${profile.calendarType === 'lunar' ? '음력' : '양력'} ${profile.birthYear}.${profile.birthMonth}.${profile.birthDay}`;
+  const genderLabel =
+    profile.gender === 'female' ? '여성' : profile.gender === 'male' ? '남성' : '성별 미입력';
+  const timeLabel =
+    profile.birthHour === null
+      ? '태어난 시간 미입력'
+      : `${profile.birthHour}시${
+          profile.birthMinute === null ? '' : ` ${String(profile.birthMinute).padStart(2, '0')}분`
+        }`;
+  const locationLabel = profile.birthLocationLabel || '출생지 미입력';
+  const timeRuleLabel =
+    profile.timeRule === 'trueSolarTime'
+      ? '진태양시 기준'
+      : profile.timeRule === 'nightZi'
+        ? '야자시 기준'
+        : profile.timeRule === 'earlyZi'
+          ? '조자시 기준'
+          : '표준시 기준';
+  const nameLabel = profile.displayName.trim() || '내 정보';
+
+  return {
+    status: 'ready',
+    summary: `${nameLabel} 정보 연결됨`,
+    detail: [dateLabel, genderLabel, timeLabel, locationLabel, timeRuleLabel].join(' · '),
+  };
+}
+
+function getProfileStateClass(status: ProfileConnectionState['status']) {
+  if (status === 'ready') {
+    return 'border-[var(--app-jade)]/30 bg-[var(--app-jade)]/10 text-[var(--app-jade)]';
+  }
+
+  if (status === 'checking') {
+    return 'border-[var(--app-gold)]/28 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]';
+  }
+
+  return 'border-[var(--app-line)] bg-[var(--app-surface-soft)] text-[var(--app-copy)]';
+}
+
+function DialogueMessageText({
+  text,
+  animate,
+}: {
+  text: string;
+  animate?: boolean;
+}) {
+  const [visibleText, setVisibleText] = useState(animate ? '' : text);
+
+  useEffect(() => {
+    if (!animate) {
+      setVisibleText(text);
+      return;
+    }
+
+    let index = 0;
+    setVisibleText('');
+    const charactersPerTick = text.length > 520 ? 7 : text.length > 260 ? 5 : 3;
+    const timer = window.setInterval(() => {
+      index = Math.min(text.length, index + charactersPerTick);
+      setVisibleText(text.slice(0, index));
+
+      if (index >= text.length) {
+        window.clearInterval(timer);
+      }
+    }, 18);
+
+    return () => window.clearInterval(timer);
+  }, [animate, text]);
+
+  const isTyping = animate && visibleText.length < text.length;
+
+  return (
+    <p className="whitespace-pre-line text-[0.95rem] leading-8">
+      {visibleText}
+      {isTyping ? (
+        <span className="ml-1 inline-block h-4 w-1 translate-y-0.5 animate-pulse rounded-full bg-[var(--app-gold)]/70" />
+      ) : null}
+    </p>
+  );
 }
 
 export function DialogueChatPanel({
@@ -174,12 +296,18 @@ export function DialogueChatPanel({
 }: DialogueChatPanelProps) {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const autoStartedRef = useRef(false);
   const { counselorId, selectCounselor } = usePreferredCounselor();
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<ChatStatus>('idle');
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [profileConnection, setProfileConnection] = useState<ProfileConnectionState>({
+    status: 'checking',
+    summary: '내 정보 확인 중',
+    detail: '로그인 상태와 MY 프로필 저장 여부를 확인하고 있습니다.',
+  });
 
   const latestAssistant = messages.findLast((message) => message.role === 'assistant');
   const badgeState = getBadgeState(status, latestAssistant);
@@ -201,6 +329,51 @@ export function DialogueChatPanel({
     if (!initialQuestion || input.trim()) return;
     setInput(initialQuestion);
   }, [initialQuestion, input]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProfileConnection() {
+      try {
+        const response = await fetch('/api/profile', { cache: 'no-store' });
+        if (!response.ok) throw new Error('profile_failed');
+        const payload = (await response.json()) as {
+          authenticated?: boolean;
+          profile?: ProfileApiProfile | null;
+        };
+
+        if (cancelled) return;
+
+        if (!payload.authenticated) {
+          setProfileConnection({
+            status: 'guest',
+            summary: '로그인하면 내 정보가 자동 연결됩니다',
+            detail: 'MY 프로필을 저장해두면 상담에서 생년월일을 다시 입력하지 않습니다.',
+          });
+          return;
+        }
+
+        setProfileConnection(formatProfileConnection(payload.profile ?? null));
+      } catch {
+        if (cancelled) return;
+        setProfileConnection({
+          status: 'error',
+          summary: '내 정보 확인을 잠시 불러오지 못했습니다',
+          detail: '질문은 보낼 수 있습니다. 저장 프로필은 답변 생성 단계에서 다시 확인합니다.',
+        });
+      }
+    }
+
+    void loadProfileConnection();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+  }, [messages.length, status]);
 
   async function submitDialogueMessage(rawInput: string, via: 'manual' | 'auto') {
     const trimmedInput = rawInput.trim();
@@ -255,6 +428,7 @@ export function DialogueChatPanel({
       const assistantMessage: ChatMessage = {
         id: createMessageId('assistant'),
         role: 'assistant',
+        animate: true,
         source: payload.source ?? 'fallback',
         text: payload.text ?? '기본 안내를 불러왔습니다.',
         model: payload.model ?? null,
@@ -300,18 +474,18 @@ export function DialogueChatPanel({
   }
 
   return (
-    <article className="app-panel overflow-hidden p-0">
+    <article className="app-panel overflow-hidden p-0 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
       <div className="border-b border-[var(--app-line)] bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(10,18,36,0.96))] p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="app-caption">AI 대화</div>
             <h2 className="mt-3 font-[var(--font-heading)] text-3xl text-[var(--app-ivory)]">
-              질문을 남기면 안전 감지 후 답변을 이어갑니다
+              내 정보를 불러와 바로 상담합니다
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy)]">
-              현재 대화는 비스트리밍 응답입니다. 위기·의료·법률·투자 판단은
-              답변 생성 전에 SAFE_REDIRECT로 전환하고, OpenAI 연결 전에는 기본
-              해석 fallback으로 안전하게 내려갑니다.
+              로그인되어 있고 MY 프로필에 생년월일이 저장되어 있으면
+              명리 기준서를 다시 입력하지 않아도 됩니다. 질문만 남기시면
+              저장된 기준을 먼저 놓고 상담하듯 답변을 이어갑니다.
             </p>
             {sourceSessionId && concernId ? (
               <p className="mt-3 max-w-3xl text-xs leading-6 text-[var(--app-gold-text)]">
@@ -327,6 +501,26 @@ export function DialogueChatPanel({
                 description="고르신 선생의 말투로 질문을 받아드립니다. 명식 계산 기준은 그대로 유지됩니다."
               />
             </div>
+            <div className={`mt-4 rounded-[1.15rem] border px-4 py-3 ${getProfileStateClass(profileConnection.status)}`}>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="text-sm font-semibold">{profileConnection.summary}</div>
+                  <p className="mt-1 text-xs leading-6 opacity-85">{profileConnection.detail}</p>
+                </div>
+                {profileConnection.status === 'ready' ? (
+                  <span className="w-fit rounded-full border border-current/20 px-3 py-1 text-[11px] font-medium">
+                    자동 적용
+                  </span>
+                ) : (
+                  <Link
+                    href="/my/profile"
+                    className="w-fit rounded-full border border-[var(--app-gold)]/30 bg-[var(--app-gold)]/10 px-3 py-1 text-[11px] font-medium text-[var(--app-gold-text)] transition hover:border-[var(--app-gold)]/55 hover:bg-[var(--app-gold)]/16"
+                  >
+                    MY 정보 저장
+                  </Link>
+                )}
+              </div>
+            </div>
             <p className="mt-3 max-w-3xl text-xs leading-6 text-[var(--app-copy-soft)]">
               {connectionSummary}
             </p>
@@ -335,7 +529,10 @@ export function DialogueChatPanel({
         </div>
       </div>
 
-      <div className="max-h-[32rem] space-y-4 overflow-y-auto px-5 py-5 sm:px-6">
+      <div
+        className="h-[min(42vh,28rem)] min-h-[16rem] space-y-4 overflow-y-auto scroll-smooth px-5 py-5 sm:h-[min(54vh,38rem)] sm:min-h-[22rem] sm:px-6 lg:h-[min(62vh,46rem)]"
+        aria-live="polite"
+      >
         {messages.map((message) => {
           const isUser = message.role === 'user';
 
@@ -351,7 +548,7 @@ export function DialogueChatPanel({
                     : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy)]'
                 }`}
               >
-                <p className="whitespace-pre-line text-sm leading-8">{message.text}</p>
+                <DialogueMessageText text={message.text} animate={!isUser && message.animate} />
                 {!isUser && message.cta ? (
                   <div className="mt-4">
                     <Button
@@ -396,13 +593,23 @@ export function DialogueChatPanel({
         {status === 'loading' ? (
           <div className="flex justify-start">
             <div className="rounded-[1.25rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-              답변을 확인하고 있습니다. 안전 감지를 먼저 통과한 뒤 응답합니다.
+              <span>달빛선생이 답변을 정리하고 있습니다</span>
+              <span className="ml-2 inline-flex gap-1 align-middle">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--app-gold)]/70" />
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--app-gold)]/55 [animation-delay:120ms]" />
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--app-gold)]/40 [animation-delay:240ms]" />
+              </span>
             </div>
           </div>
         ) : null}
+        <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5 sm:p-6">
+      <form
+        id="dialogue-input"
+        onSubmit={handleSubmit}
+        className="scroll-mt-24 border-t border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5 sm:p-6"
+      >
         <label className="block text-sm font-medium text-[var(--app-gold-text)]">
           지금 묻고 싶은 말
         </label>
