@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -115,7 +115,40 @@ export default function DetailUnlock({ slug }: Props) {
   const [content, setContent] = useState<DetailContent | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [remaining, setRemaining] = useState<number | null>(null);
-  const [access, setAccess] = useState<'charged' | 'daily_reuse' | null>(null);
+  const [access, setAccess] = useState<'charged' | 'reused' | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function checkExistingAccess() {
+      try {
+        const params = new URLSearchParams({
+          feature: 'detail_report',
+          slug,
+        });
+        const res = await fetch(`/api/credits/use?${params.toString()}`, {
+          cache: 'no-store',
+        });
+
+        if (!active || !res.ok) return;
+
+        const data = await res.json();
+        if (data.unlocked && data.content) {
+          setContent(data.content);
+          setAccess('reused');
+          setState('unlocked');
+        }
+      } catch {
+        // 해금 상태 확인 실패는 결제 흐름을 막지 않습니다.
+      }
+    }
+
+    checkExistingAccess();
+
+    return () => {
+      active = false;
+    };
+  }, [slug]);
 
   async function handleUnlock() {
     setState('loading');
@@ -148,7 +181,7 @@ export default function DetailUnlock({ slug }: Props) {
           })
         );
       }
-      setAccess(data.access === 'daily_reuse' ? 'daily_reuse' : 'charged');
+      setAccess(data.access === 'daily_reuse' || data.access === 'reused' ? 'reused' : 'charged');
       setState('unlocked');
     } catch {
       setErrorMsg('서버 오류가 발생했습니다.');
@@ -161,14 +194,14 @@ export default function DetailUnlock({ slug }: Props) {
       <section className="app-panel space-y-5 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="app-caption">상세 해석 리포트</div>
+            <div className="app-caption">분야별 깊이보기</div>
             <h2 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
-              확장 해석이 열렸습니다
+              분야별 해석이 열려 있습니다
             </h2>
           </div>
           <div className="flex items-center gap-2">
             <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-              {access === 'daily_reuse' ? '오늘 재열람' : '해금 완료'}
+              {access === 'reused' ? '이미 구매함' : '해금 완료'}
             </Badge>
             {remaining !== null ? (
               <span className="text-xs text-[var(--app-copy-soft)]">잔여 코인 {remaining}개</span>
@@ -177,8 +210,8 @@ export default function DetailUnlock({ slug }: Props) {
         </div>
 
         <p className="app-body-copy text-sm">
-          {access === 'daily_reuse'
-            ? '오늘 이미 열어본 상세 해석이라 코인 차감 없이 다시 보여드립니다.'
+          {access === 'reused'
+            ? '이전에 열었던 같은 결과라 코인 차감 없이 다시 보여드립니다.'
             : '재물, 애정, 직업, 건강 흐름을 현재 명식과 운세 문맥에 맞춰 확장해서 읽은 결과입니다.'}
         </p>
 
@@ -240,7 +273,7 @@ export default function DetailUnlock({ slug }: Props) {
   if (state === 'error') {
     return (
       <section className="app-panel space-y-4 border-rose-400/20 p-6 text-center">
-        <div className="app-caption text-rose-200/80">상세 해석 오류</div>
+        <div className="app-caption text-rose-200/80">분야별 깊이보기 오류</div>
         <p className="font-medium text-rose-200">{errorMsg}</p>
         {errorMsg.includes('부족') ? (
           <>
@@ -272,9 +305,9 @@ export default function DetailUnlock({ slug }: Props) {
       <div className="relative z-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="app-caption">상세 해석 잠금</div>
+            <div className="app-caption">선택 심화</div>
             <h2 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
-              저장된 명식을 더 깊게 읽어보세요
+              필요한 분야만 1코인으로 더 읽어보세요
             </h2>
           </div>
           <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
@@ -283,14 +316,14 @@ export default function DetailUnlock({ slug }: Props) {
         </div>
 
         <p className="app-body-copy mt-4 max-w-2xl text-sm">
-          재물, 애정, 직업, 건강 흐름을 현재 대운·세운 문맥과 함께 더 구체적으로 풀이합니다.
+          기본 결과를 먼저 읽고, 재물·관계·일·생활 리듬 중 더 궁금한 장면만 선택해서 펼칩니다. 명리 기준서에는 이 흐름이 더 넓게 포함됩니다.
         </p>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           {[
-            '현재 대운과 세운을 붙여 “왜 지금 이런가”를 읽습니다.',
-            '재물·애정·직업·건강을 분야별로 나눠 바로 이해하기 쉽게 풉니다.',
-            '행운 키워드까지 함께 열려 오늘 바로 실천할 포인트가 남습니다.',
+            '이미 충분하면 열지 않아도 되는 선택형 심화입니다.',
+            '한 번 연 같은 결과는 다시 코인이 차감되지 않습니다.',
+            '더 큰 흐름은 명리 기준서에서 한 번에 이어집니다.',
           ].map((item) => (
             <div
               key={item}
@@ -316,19 +349,19 @@ export default function DetailUnlock({ slug }: Props) {
         </div>
 
         <div className="relative z-20 mt-6 rounded-[24px] border border-[var(--app-line)] bg-[rgba(2,8,23,0.56)] p-5 text-center backdrop-blur-sm">
-          <p className="font-semibold text-[var(--app-ivory)]">상세 해석 열기</p>
+          <p className="font-semibold text-[var(--app-ivory)]">분야별 깊이보기</p>
           <p className="mt-2 text-sm text-[var(--app-copy-muted)]">
-            재물·애정·직업·건강 4개 영역을 한 번에 열고, 같은 결과는 오늘 하루 동안 재차감 없이 다시 볼 수 있습니다
+            재물·애정·직업·건강 4개 영역을 한 번에 열고, 같은 결과는 이후에도 다시 차감하지 않습니다.
           </p>
           <Button
             onClick={handleUnlock}
             disabled={state === 'loading'}
             className="mt-5 h-12 min-w-[200px] rounded-full border border-[var(--app-gold)]/40 bg-[var(--app-gold)]/16 px-10 text-base font-semibold text-[var(--app-gold-text)] shadow-[0_16px_48px_rgba(210,176,114,0.14)] hover:bg-[var(--app-gold)]/22"
           >
-            {state === 'loading' ? '처리 중...' : '코인 1개로 지금 열기'}
+            {state === 'loading' ? '처리 중...' : '1코인으로 분야별 보기'}
           </Button>
           <p className="mt-3 text-xs text-[var(--app-copy-soft)]">
-            오늘 이미 열었던 같은 결과는 코인 차감 없이 다시 열립니다.
+            이미 열었던 결과라면 이 버튼을 눌러도 코인이 다시 빠지지 않습니다.
           </p>
         </div>
       </div>

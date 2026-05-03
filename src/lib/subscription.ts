@@ -90,6 +90,13 @@ export async function getManagedSubscription(userId: string): Promise<ManagedSub
   return mapSubscription(normalized);
 }
 
+export function canUseSubscriptionForPremiumReport(subscription: ManagedSubscription | null | undefined) {
+  return (
+    subscription?.status === 'active' &&
+    (subscription.plan === 'plus_monthly' || subscription.plan === 'premium_monthly')
+  );
+}
+
 export async function activatePlusSubscription(
   userId: string,
   options: { customerKey?: string | null; billingKey?: string | null } = {}

@@ -219,7 +219,7 @@ export default function CreditsPage() {
               <div className="text-sm uppercase tracking-[0.22em] text-white/45">Unlock Examples</div>
               <div className="mt-4 space-y-3">
                 {[
-                  '1코인: 오늘의 심화 풀이 한 번 열기',
+                  '1코인: 분야별 깊이보기 한 번 열기',
                   '3코인: 연애·재물·직장 세 주제를 이어서 보기',
                   '7코인: 월간 테마나 상세 해석을 넉넉히 펼쳐보기',
                 ].map((item) => (

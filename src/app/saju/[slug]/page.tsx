@@ -14,9 +14,19 @@ import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
 import SiteHeader from '@/features/shared-navigation/site-header';
 import { ELEMENT_INFO } from '@/lib/saju/elements';
 import type { Element } from '@/lib/saju/types';
+import { getLifetimeReportEntitlement } from '@/lib/report-entitlements';
 import { resolveReading } from '@/lib/saju/readings';
 import { buildSajuReport, FOCUS_TOPIC_META, FOCUS_TOPIC_OPTIONS } from '@/domain/saju/report';
 import { cn } from '@/lib/utils';
+import {
+  createClient,
+  hasSupabaseServerEnv,
+  hasSupabaseServiceEnv,
+} from '@/lib/supabase/server';
+import {
+  canUseSubscriptionForPremiumReport,
+  getManagedSubscription,
+} from '@/lib/subscription';
 import { AppPage, AppShell } from '@/shared/layout/app-shell';
 
 interface Props {
@@ -152,6 +162,29 @@ function buildAiFallbackText(report: ReturnType<typeof buildSajuReport>) {
   ].filter(Boolean).join('\n\n');
 }
 
+async function getPremiumReportAccessLabel(slug: string) {
+  if (!hasSupabaseServerEnv || !hasSupabaseServiceEnv) return null;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const [entitlement, subscription] = await Promise.all([
+    getLifetimeReportEntitlement(user.id, slug),
+    getManagedSubscription(user.id),
+  ]);
+
+  if (entitlement) return '평생 소장 권한';
+  if (canUseSubscriptionForPremiumReport(subscription)) {
+    return subscription?.plan === 'premium_monthly' ? '프리미엄 이용권' : 'Plus 이용권';
+  }
+
+  return null;
+}
+
 export default async function SajuResultPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { topic } = await searchParams;
@@ -170,6 +203,8 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
   ];
   const majorLuckPreview = sajuData.majorLuck?.slice(0, 6) ?? [];
   const currentMajorIndex = sajuData.currentLuck?.currentMajorLuck?.index ?? null;
+  const premiumAccessLabel = await getPremiumReportAccessLabel(slug);
+  const premiumHref = `/saju/${encodeURIComponent(slug)}/premium`;
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -704,9 +739,45 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           </div>
         </section>
 
-        <div>
-          <DetailUnlock slug={slug} />
-        </div>
+        {premiumAccessLabel ? (
+          <section className="app-panel overflow-hidden p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="max-w-2xl">
+                <div className="app-caption">이미 포함된 심층 해석</div>
+                <h2 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
+                  명리 기준서에서 이어서 보시면 됩니다
+                </h2>
+                <p className="app-body-copy mt-3 text-sm">
+                  이 결과는 {premiumAccessLabel}으로 전체 리포트 열람이 가능합니다. 기본 결과 아래에서
+                  1코인을 다시 쓰게 하지 않고, 명리 기준서로 바로 이어가도록 정리했습니다.
+                </p>
+              </div>
+              <Badge className="border-emerald-400/20 bg-emerald-400/10 text-emerald-200">
+                추가 차감 없음
+              </Badge>
+            </div>
+            <Link
+              href={premiumHref}
+              className="mt-5 inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--app-gold)]/38 bg-[var(--app-gold)]/14 px-6 text-sm font-semibold text-[var(--app-gold-text)] shadow-[0_16px_42px_rgba(210,176,114,0.12)] transition hover:bg-[var(--app-gold)]/20"
+            >
+              명리 기준서 이어보기
+            </Link>
+          </section>
+        ) : (
+          <section className="space-y-3">
+            <div>
+              <div className="app-caption">선택 심화</div>
+              <h2 className="mt-2 text-xl font-semibold text-[var(--app-ivory)]">
+                더 궁금한 분야만 따로 펼쳐보세요
+              </h2>
+              <p className="app-body-copy mt-2 text-sm">
+                기본 결과를 읽은 뒤 부족한 분야가 있을 때만 여는 소액 심화입니다. 명리 기준서 구매 전
+                가볍게 확인하는 용도로 둡니다.
+              </p>
+            </div>
+            <DetailUnlock slug={slug} />
+          </section>
+        )}
 
         <div className="text-center">
           <Link

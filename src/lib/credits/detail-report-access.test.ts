@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {
+  DETAIL_REPORT_ACCESS_KIND,
   DETAIL_REPORT_DAILY_ACCESS_KIND,
   getKoreaAccessDay,
   validateCreditUsePayload,
@@ -18,7 +19,7 @@ test('detail report credit payload requires a slug before charging', () => {
   });
 });
 
-test('detail report credit payload trims slug used for daily reuse', () => {
+test('detail report credit payload trims slug used for reuse', () => {
   const result = validateCreditUsePayload({
     feature: 'detail_report',
     slug: '  1982-1-29-8-male  ',
@@ -43,9 +44,10 @@ test('credit payload rejects unsupported feature names', () => {
   });
 });
 
-test('daily detail report access key uses Korea calendar day', () => {
+test('detail report access keeps legacy daily key for old records', () => {
   const utcAfternoon = new Date('2026-04-18T16:30:00.000Z');
 
   assert.equal(getKoreaAccessDay(utcAfternoon), '2026-04-19');
+  assert.equal(DETAIL_REPORT_ACCESS_KIND, 'detail_report_access');
   assert.equal(DETAIL_REPORT_DAILY_ACCESS_KIND, 'detail_report_daily_access');
 });

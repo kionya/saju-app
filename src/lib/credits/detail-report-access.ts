@@ -6,7 +6,12 @@ import {
   type Feature,
 } from './deduct';
 
+export const DETAIL_REPORT_ACCESS_KIND = 'detail_report_access';
 export const DETAIL_REPORT_DAILY_ACCESS_KIND = 'detail_report_daily_access';
+const DETAIL_REPORT_ACCESS_KINDS = [
+  DETAIL_REPORT_ACCESS_KIND,
+  DETAIL_REPORT_DAILY_ACCESS_KIND,
+];
 
 export interface CreditUsePayload {
   feature: Feature;
@@ -77,34 +82,51 @@ async function getRemainingCredits(userId: string) {
 
 export async function hasDailyDetailReportAccess(
   userId: string,
-  readingKey: string,
-  accessDay = getKoreaAccessDay()
+  readingKey: string
+) {
+  return hasDetailReportAccess(userId, readingKey);
+}
+
+export async function hasDetailReportAccess(
+  userId: string,
+  readingKey: string
 ) {
   const service = await createServiceClient();
   const { data, error } = await service
     .from('credit_transactions')
-    .select('id')
+    .select('id, metadata')
     .eq('user_id', userId)
     .eq('type', 'use')
     .eq('feature', 'detail_report')
-    .contains('metadata', {
-      kind: DETAIL_REPORT_DAILY_ACCESS_KIND,
-      readingKey,
-      accessDay,
-    })
-    .limit(1);
+    .contains('metadata', { readingKey })
+    .limit(100);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return Boolean(data && data.length > 0);
+  return Boolean(
+    data?.some((row) => {
+      const metadata = row.metadata as Record<string, unknown> | null;
+      return (
+        metadata?.readingKey === readingKey &&
+        typeof metadata.kind === 'string' &&
+        DETAIL_REPORT_ACCESS_KINDS.includes(metadata.kind)
+      );
+    })
+  );
 }
 
 export async function recordDailyDetailReportAccess(
   userId: string,
-  readingKey: string,
-  accessDay = getKoreaAccessDay()
+  readingKey: string
+) {
+  return recordDetailReportAccess(userId, readingKey);
+}
+
+export async function recordDetailReportAccess(
+  userId: string,
+  readingKey: string
 ) {
   const service = await createServiceClient();
   const { error } = await service.from('credit_transactions').insert({
@@ -113,9 +135,8 @@ export async function recordDailyDetailReportAccess(
     type: 'use',
     feature: 'detail_report',
     metadata: {
-      kind: DETAIL_REPORT_DAILY_ACCESS_KIND,
+      kind: DETAIL_REPORT_ACCESS_KIND,
       readingKey,
-      accessDay,
     },
   });
 
@@ -126,10 +147,16 @@ export async function recordDailyDetailReportAccess(
 
 export async function unlockDailyDetailReport(
   userId: string,
-  readingKey: string,
-  accessDay = getKoreaAccessDay()
+  readingKey: string
 ): Promise<DetailReportUnlockResult> {
-  if (await hasDailyDetailReportAccess(userId, readingKey, accessDay)) {
+  return unlockDetailReport(userId, readingKey);
+}
+
+export async function unlockDetailReport(
+  userId: string,
+  readingKey: string
+): Promise<DetailReportUnlockResult> {
+  if (await hasDetailReportAccess(userId, readingKey)) {
     return {
       success: true,
       remaining: await getRemainingCredits(userId),
@@ -148,7 +175,7 @@ export async function unlockDailyDetailReport(
     };
   }
 
-  await recordDailyDetailReportAccess(userId, readingKey, accessDay);
+  await recordDetailReportAccess(userId, readingKey);
 
   return {
     success: true,
