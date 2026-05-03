@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { ActionCluster } from '@/components/layout/action-cluster';
-import { EvidenceStrip } from '@/components/layout/evidence-strip';
 import { FeatureCard } from '@/components/layout/feature-card';
 import { ProductGrid } from '@/components/layout/product-grid';
 import { SectionHeader } from '@/components/layout/section-header';
@@ -15,7 +14,6 @@ import { trackMoonlightEvent } from '@/lib/analytics';
 import { AppShell } from '@/shared/layout/app-shell';
 import {
   QUESTION_ENTRY_POINTS,
-  REPORT_PREVIEW_VALUE_POINTS,
   REPORT_SAMPLE_HREF,
   TRUST_SIGNALS,
 } from '@/content/moonlight';
@@ -36,24 +34,6 @@ const PREMIUM_HERO_TOKENS = [
   { label: '기준서 핵심', value: '원국 · 격국 · 용신 · 대운' },
   { label: '풀이 흐름', value: '명식 · 격국 · 용신 · 운' },
   { label: '소장 방식', value: 'PDF · MY 보관함 · 대화' },
-] as const;
-
-const SAJU_FLOW_STEPS = [
-  {
-    eyebrow: 'STEP 1',
-    title: '출생 정보를 입력합니다',
-    body: '연월일, 시간, 출생지를 기준으로 명식과 운의 구조를 먼저 계산합니다.',
-  },
-  {
-    eyebrow: 'STEP 2',
-    title: '1분 요약을 먼저 봅니다',
-    body: '긴 풀이 전에 핵심 한 줄, 올해 주제, 조심할 패턴부터 확인합니다.',
-  },
-  {
-    eyebrow: 'STEP 3',
-    title: '상세 풀이로 내려갑니다',
-    body: '궁금한 영역부터 보고, 필요할 때 풀이 흐름과 PDF 보관으로 이어갑니다.',
-  },
 ] as const;
 
 export default function HomePage() {
@@ -137,11 +117,11 @@ export default function HomePage() {
 
           <div className="moon-hero-headline-wrap">
             <div className="app-caption mb-4">프리미엄 사주풀이</div>
-            <h1 className="moon-hero-h1">지금 궁금한 문제를 명리 기준서로 정리합니다.</h1>
+            <h1 className="moon-hero-h1">지금 마음에 걸리는 질문부터 골라보세요.</h1>
             <p className="moon-hero-sub">
-              연애, 돈, 일, 가족, 올해 흐름처럼 마음에 걸리는 질문부터 고르세요.
+              연애, 돈, 일, 가족, 올해 흐름처럼 지금 제일 궁금한 것부터 시작합니다.
               <br className="hidden sm:block" />
-              달빛선생은 생년월일 입력 전에 먼저 무엇이 궁금한지 묻습니다.
+              달빛선생은 생년월일을 묻기 전에 먼저 선생님의 질문을 듣습니다.
             </p>
           </div>
 
@@ -189,18 +169,18 @@ export default function HomePage() {
                 })
               }
             >
-              궁금한 주제 고르기
+              사주풀이 시작하기
             </Link>
             <Link
-              href={REPORT_SAMPLE_HREF}
+              href="/today-fortune?concern=general"
               className="moon-cta-secondary w-full sm:w-auto"
               onClick={() =>
-                trackMoonlightEvent('premium_home_sample_click', {
-                  from: 'home_hero',
+                trackMoonlightEvent('premium_home_hero_primary_click', {
+                  from: 'home_hero_today',
                 })
               }
             >
-              샘플 리포트 보기
+              오늘 조언 먼저 보기
             </Link>
           </ActionCluster>
 
@@ -242,70 +222,11 @@ export default function HomePage() {
                     {entry.reportAnswer}
                   </p>
                   <div className="mt-4 text-xs text-[var(--app-gold-text)]">
-                    {entry.productName}
+                    이 질문으로 시작하기
                   </div>
                 </Link>
               ))}
             </ProductGrid>
-          </SectionSurface>
-
-          <SectionSurface
-            surface="hero"
-            size="lg"
-            className="w-full max-w-5xl border-[var(--app-gold)]/22 bg-[linear-gradient(135deg,rgba(210,176,114,0.1),rgba(8,15,30,0.9))] text-left backdrop-blur"
-          >
-            <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
-              <div className="space-y-5">
-                <SectionHeader
-                  eyebrow="결과 예시"
-                  title="내 풀이가 어떤 모습으로 나오는지 먼저 봅니다"
-                  titleClassName="text-2xl"
-                  description="긴 설명보다 실제 결과 예시, 답하는 질문, 다시 볼 수 있는 기록, 대화로 이어지는 흐름을 먼저 확인합니다."
-                  descriptionClassName="max-w-2xl text-[var(--app-copy)]"
-                />
-                <ActionCluster>
-                  <Link
-                    href={REPORT_SAMPLE_HREF}
-                    className="moon-action-primary"
-                  >
-                    샘플 리포트 펼쳐보기
-                  </Link>
-                  <Link
-                    href="/saju/new"
-                    className="inline-flex items-center gap-2 px-1 py-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-                  >
-                    바로 입력하기
-                  </Link>
-                </ActionCluster>
-                <div className="rounded-[1.05rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]">
-                  결과 화면은 핵심 요약, 상세 풀이, 풀이 흐름, 보관으로 이어집니다.
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <ProductGrid columns={2} className="gap-3">
-                  {REPORT_PREVIEW_VALUE_POINTS.map((item, index) => (
-                    <FeatureCard
-                      key={item.title}
-                      surface="soft"
-                      className={index === REPORT_PREVIEW_VALUE_POINTS.length - 1 ? 'md:col-span-2' : undefined}
-                      eyebrow={`미리보기 ${index + 1}`}
-                      title={item.title}
-                      titleClassName="text-xl"
-                      description={item.body}
-                    />
-                  ))}
-                </ProductGrid>
-                <EvidenceStrip
-                  items={[
-                    {
-                      title: '홈에서는 시작만 가볍게',
-                      body: '오늘운세, 타로, 궁합, 도움말은 결과를 본 뒤 필요할 때 자연스럽게 이어지도록 낮게 배치합니다.',
-                    },
-                  ]}
-                />
-              </div>
-            </div>
           </SectionSurface>
         </div>
 
@@ -318,37 +239,59 @@ export default function HomePage() {
 
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <section className="reveal-on-scroll mb-12">
-          <SectionSurface surface="panel">
+          <SectionSurface surface="hero" size="lg">
             <SectionHeader
               align="center"
-              eyebrow="사주풀이 시작"
-              title="궁금한 문제에서 시작해, 내 풀이로 바로 이어집니다"
-              description="연애, 돈, 일, 가족, 오늘의 마음처럼 지금 걸리는 질문을 먼저 고르고 필요한 출생 정보만 입력합니다."
+              eyebrow="이렇게 정리해드립니다"
+              title="긴 설명보다 먼저, 내 상황이 한눈에 들어오게"
+              description="결과 예시는 첫 화면에서 길게 밀지 않고, 실제로 어떤 식으로 정리되는지만 한 장으로 보여드립니다."
               className="mb-8 max-w-3xl"
             />
 
-            <ProductGrid columns={3}>
-              {SAJU_FLOW_STEPS.map((step) => (
-                <FeatureCard
-                  key={step.title}
-                  surface="soft"
-                  eyebrow={step.eyebrow}
-                  title={step.title}
-                  titleClassName="text-2xl"
-                  description={step.body}
-                />
-              ))}
-            </ProductGrid>
+            <div className="mx-auto max-w-4xl rounded-[1.4rem] border border-[var(--app-gold)]/22 bg-[linear-gradient(135deg,rgba(210,176,114,0.12),rgba(255,255,255,0.035))] p-5 shadow-[0_22px_70px_rgba(0,0,0,0.24)] sm:p-6">
+              <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+                <div className="rounded-[1.15rem] border border-[var(--app-line)] bg-[rgba(2,8,23,0.36)] p-4">
+                  <div className="app-caption text-[var(--app-gold-text)]">사주풀이 카드</div>
+                  <h2 className="mt-3 font-display text-2xl leading-8 text-[var(--app-ivory)]">
+                    올해는 넓히기보다 이미 잡은 것을 정리하는 흐름입니다.
+                  </h2>
+                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
+                    돈은 새는 지점을 줄이고, 일은 역할을 좁힐수록 편합니다. 관계는 급하게 결론내기보다 말의 온도를 낮추는 쪽이 좋습니다.
+                  </p>
+                </div>
+
+                <div className="grid gap-3">
+                  {[
+                    ['오늘 핵심', '오늘은 결정보다 확인이 먼저입니다.'],
+                    ['조심할 패턴', '마음이 급해질수록 같은 말을 반복하기 쉽습니다.'],
+                    ['바로 할 행동', '중요한 연락은 한 번 적어보고 보내세요.'],
+                  ].map(([label, body]) => (
+                    <div
+                      key={label}
+                      className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-4 py-3"
+                    >
+                      <div className="text-xs font-semibold text-[var(--app-gold-text)]">{label}</div>
+                      <div className="mt-1.5 text-sm leading-6 text-[var(--app-copy)]">{body}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             <ActionCluster align="center" className="mt-8">
               <Link href="/saju/new" className="moon-cta-primary">
-                질문으로 시작하기
+                내 사주풀이 시작
               </Link>
               <Link
                 href={REPORT_SAMPLE_HREF}
                 className="moon-action-secondary"
+                onClick={() =>
+                  trackMoonlightEvent('premium_home_sample_click', {
+                    from: 'home_one_card_preview',
+                  })
+                }
               >
-                샘플 먼저 보기
+                샘플 리포트 보기
               </Link>
             </ActionCluster>
           </SectionSurface>
