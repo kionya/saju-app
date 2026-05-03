@@ -544,32 +544,6 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           </div>
         </SectionSurface>
 
-        <SectionSurface surface="panel" className="space-y-4">
-          <SectionHeader
-            eyebrow="읽는 순서"
-            title="좌우로 넘기지 않고 아래로 편하게 읽습니다"
-            titleClassName="text-2xl sm:text-3xl"
-            description="요약, 분야, 운 흐름, 근거, 상세 해석을 한 화면의 세로 흐름으로 정리했습니다. 필요한 부분은 아래로 내려가며 자연스럽게 확인하시면 됩니다."
-          />
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
-            {[
-              ['#result-summary', '요약'],
-              ['#result-topics', '분야'],
-              ['#result-flow', '운 흐름'],
-              ['#result-evidence', '근거'],
-              ['#result-detail', '상세'],
-            ].map(([href, label]) => (
-              <a
-                key={href}
-                href={href}
-                className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-center text-sm font-semibold text-[var(--app-copy)] transition-colors hover:border-[var(--app-gold)]/35 hover:bg-[var(--app-gold)]/10 hover:text-[var(--app-gold-text)]"
-              >
-                {label}
-              </a>
-            ))}
-          </div>
-        </SectionSurface>
-
         <section id="result-summary" className="space-y-4 scroll-mt-24">
           <SectionHeader
             eyebrow="요약"
