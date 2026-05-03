@@ -882,10 +882,10 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
 
         <section id="result-detail" className="space-y-4 scroll-mt-24">
           <SectionHeader
-            eyebrow="상세"
-            title="상세 해석과 사주 명반"
+            eyebrow="기본 계산과 선택 심화"
+            title="사주 명반은 먼저 보여드리고, 깊이보기는 선택으로 둡니다"
             titleClassName="text-2xl sm:text-3xl"
-            description="더 깊은 풀이, AI 해석, 현재 운과 대운 흐름은 이 화면에서 열어봅니다."
+            description="명반, 오행, 현재 운 흐름은 기본 계산 결과로 먼저 확인하고, 재물·연애·직업·건강의 분야별 풀이만 필요할 때 1코인으로 펼칩니다."
           />
             <div>
           <DetailUnlock

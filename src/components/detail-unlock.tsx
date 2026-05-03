@@ -519,12 +519,15 @@ export default function DetailUnlock({
   }
 
   return (
-    <section className="relative overflow-hidden rounded-[28px] border border-[var(--app-line-strong)] bg-[linear-gradient(180deg,rgba(7,19,39,0.92),rgba(4,10,24,0.98))] p-6">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(210,176,114,0.16),transparent_42%)]" />
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(2,8,23,0.72))]" />
+    <section className="space-y-5">
+      {children ? <div className="space-y-5">{children}</div> : null}
 
-      <div className="relative z-10">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="relative overflow-hidden rounded-[28px] border border-[var(--app-line-strong)] bg-[linear-gradient(180deg,rgba(7,19,39,0.92),rgba(4,10,24,0.98))] p-6">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(210,176,114,0.16),transparent_42%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(2,8,23,0.72))]" />
+
+        <div className="relative z-10">
+          <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="app-caption">선택 심화</div>
             <h2 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
@@ -590,8 +593,11 @@ export default function DetailUnlock({
           <p className="mt-3 text-xs text-[var(--app-copy-soft)]">
             이미 열었던 같은 결과는 코인 차감 없이 다시 열립니다.
           </p>
+          </div>
         </div>
       </div>
+
+      {referenceChildren ? <div className="space-y-5">{referenceChildren}</div> : null}
     </section>
   );
 }
