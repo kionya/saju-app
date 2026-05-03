@@ -17,7 +17,6 @@ import {
   QUESTION_ENTRY_POINTS,
   REPORT_PREVIEW_VALUE_POINTS,
   REPORT_SAMPLE_HREF,
-  TASTE_PRODUCTS,
   TRUST_SIGNALS,
 } from '@/content/moonlight';
 
@@ -250,22 +249,6 @@ export default function HomePage() {
             </ProductGrid>
           </SectionSurface>
 
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-[var(--app-copy-muted)]">
-            <Link
-              href="/guide"
-              className="inline-flex items-center gap-2 text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
-            >
-              이용 안내 보기
-            </Link>
-            <span className="hidden h-1 w-1 rounded-full bg-[var(--app-copy-soft)] md:block" />
-            <Link
-              href="/interpretation"
-              className="inline-flex items-center gap-2 hover:text-[var(--app-ivory)]"
-            >
-              다른 해석 메뉴 보기
-            </Link>
-          </div>
-
           <SectionSurface
             surface="hero"
             size="lg"
@@ -274,10 +257,10 @@ export default function HomePage() {
             <div className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr] lg:items-start">
               <div className="space-y-5">
                 <SectionHeader
-                  eyebrow="샘플 기준서 미리보기"
-                  title="결제 전에는 결과 예시 한 장만 먼저 봅니다"
+                  eyebrow="결과 예시"
+                  title="내 풀이가 어떤 모습으로 나오는지 먼저 봅니다"
                   titleClassName="text-2xl"
-                  description="긴 설명보다 어떤 질문에 답하는지, 소장하면 무엇이 남는지, PDF와 대화가 어떻게 이어지는지를 먼저 확인합니다."
+                  description="긴 설명보다 실제 결과 예시, 답하는 질문, 다시 볼 수 있는 기록, 대화로 이어지는 흐름을 먼저 확인합니다."
                   descriptionClassName="max-w-2xl text-[var(--app-copy)]"
                 />
                 <ActionCluster>
@@ -316,8 +299,8 @@ export default function HomePage() {
                 <EvidenceStrip
                   items={[
                     {
-                      title: '홈 구성',
-                      body: '오늘운세, 타로, 궁합, 도움말은 해석 메뉴와 안내 페이지에서 가볍게 볼 수 있습니다.',
+                      title: '홈에서는 시작만 가볍게',
+                      body: '오늘운세, 타로, 궁합, 도움말은 결과를 본 뒤 필요할 때 자연스럽게 이어지도록 낮게 배치합니다.',
                     },
                   ]}
                 />
@@ -374,46 +357,6 @@ export default function HomePage() {
         <section className="reveal-on-scroll mb-12">
           <SectionSurface surface="panel">
             <SectionHeader
-              eyebrow="부담 없는 첫 결제"
-              title="49,000원 기준서 전에는 작은 맛보기부터 열 수 있게 합니다"
-              titleClassName="text-3xl"
-              description="오늘운 상세, 월간 달력, 연애 질문, 올해 핵심 3줄처럼 부담 없는 첫 결제 상품을 기준서 입구 앞에 배치합니다."
-              descriptionClassName="max-w-3xl"
-            />
-            <ProductGrid columns={4} className="mt-6">
-              {TASTE_PRODUCTS.map((product) => (
-                <Link
-                  key={product.slug}
-                  href={product.href}
-                  className="group app-feature-card-soft min-h-[14rem] transition-colors hover:border-[var(--app-gold)]/36 hover:bg-[var(--app-gold)]/8"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="rounded-full border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-3 py-1 text-xs font-semibold text-[var(--app-gold-text)]">
-                      {product.price}
-                    </span>
-                    <ArrowRight className="h-4 w-4 text-[var(--app-copy-soft)] transition-transform group-hover:translate-x-1 group-hover:text-[var(--app-gold-text)]" />
-                  </div>
-                  <h2 className="mt-4 font-display text-xl leading-7 text-[var(--app-ivory)]">
-                    {product.title}
-                  </h2>
-                  <p className="mt-3 text-sm font-medium leading-6 text-[var(--app-gold-text)]">
-                    {product.question}
-                  </p>
-                  <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-                    {product.result}
-                  </p>
-                  <div className="mt-4 text-xs text-[var(--app-copy-soft)]">
-                    {product.status}
-                  </div>
-                </Link>
-              ))}
-            </ProductGrid>
-          </SectionSurface>
-        </section>
-
-        <section className="reveal-on-scroll mb-12">
-          <SectionSurface surface="panel">
-            <SectionHeader
               eyebrow="신뢰 장치"
               title="무섭게 맞힌다는 말보다, 다시 확인할 수 있는 기준을 남깁니다"
               titleClassName="text-3xl"
@@ -431,6 +374,29 @@ export default function HomePage() {
                 />
               ))}
             </ProductGrid>
+          </SectionSurface>
+        </section>
+
+        <section className="reveal-on-scroll mb-12">
+          <SectionSurface surface="lunar">
+            <div className="app-starfield" />
+            <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+              <SectionHeader
+                eyebrow="더 깊게 보고 싶을 때"
+                title="가격은 결과를 본 뒤, 한눈보기에서 천천히 비교하시면 됩니다"
+                titleClassName="text-3xl text-[var(--app-gold-text)]"
+                description="홈에서는 결제를 앞세우지 않습니다. 먼저 내 풀이를 확인하고, 더 자세히 남기고 싶을 때 소액 풀이, 소장형 리포트, 대화 멤버십을 한 화면에서 비교하실 수 있습니다."
+                descriptionClassName="max-w-3xl"
+              />
+              <ActionCluster className="lg:justify-end">
+                <Link href="/pricing" className="moon-action-secondary">
+                  가격 한눈보기
+                </Link>
+                <Link href="/saju/new" className="moon-cta-primary">
+                  사주풀이 시작
+                </Link>
+              </ActionCluster>
+            </div>
           </SectionSurface>
         </section>
 
