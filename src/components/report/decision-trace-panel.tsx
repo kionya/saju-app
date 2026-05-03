@@ -37,17 +37,17 @@ const FALLBACK_DECISION_TRACE: DecisionTraceItem[] = [
   {
     step: '03',
     title: '격국 후보 검토',
-    rule: '월령, 투출, 강약 순서로 격국 후보 검토',
+    rule: '월령, 투출, 강약을 함께 보고 중심 후보 정리',
     result:
-      '격국은 한 가지 이름만 바로 고정하지 않고, 월령과 투출, 강약 순서를 놓고 먼저 후보를 정리합니다.',
+      '격국은 한 가지 이름만 바로 고정하지 않고, 월령과 투출, 강약을 함께 보며 먼저 후보를 정리합니다.',
     confidence: 'orthodox',
   },
   {
     step: '04',
-    title: '용신 판단',
-    rule: '격국·강약·계절성을 묶어 용신/희신/기신 판정',
+    title: '보완 기운 확인',
+    rule: '격국·강약·계절성을 묶어 보완하면 좋은 기운 확인',
     result:
-      '용신은 부족한 오행을 기계적으로 채우는 방식보다, 격국 유지와 계절 균형을 함께 보는 순서로 판단합니다.',
+      '용신은 부족한 오행을 기계적으로 채우기보다, 격국 유지와 계절 균형을 함께 보며 정리합니다.',
     confidence: 'orthodox',
   },
   {
@@ -63,7 +63,7 @@ const FALLBACK_DECISION_TRACE: DecisionTraceItem[] = [
     title: '참고 단계 분리',
     rule: '논쟁적 해석은 참고 단계로 낮춰 표시',
     result:
-      '학파 차이가 큰 구간이나 보조 해석은 중심 판정과 분리해 두고, 참고 단계로 낮춰 보여드립니다.',
+      '학파 차이가 큰 구간이나 보조 해석은 중심 해석과 분리해 두고, 참고 단계로 낮춰 보여드립니다.',
     confidence: 'disputed',
   },
 ];
@@ -73,19 +73,19 @@ const CONFIDENCE_META: Record<
   { label: string; className: string }
 > = {
   orthodox: {
-    label: '정통 기준',
+    label: '중심 기준',
     className: 'border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]',
   },
   disputed: {
-    label: '논쟁 기준',
+    label: '참고 관점',
     className: 'border-[var(--app-coral)]/24 bg-[var(--app-coral)]/10 text-[var(--app-coral)]',
   },
   reference: {
-    label: '참고 기준',
+    label: '보조 단서',
     className: 'border-[var(--app-jade)]/24 bg-[var(--app-jade)]/10 text-[var(--app-jade)]',
   },
   input_limited: {
-    label: '입력 제한',
+    label: '조심해서 읽기',
     className: 'border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] text-[var(--app-copy-soft)]',
   },
 };
@@ -94,7 +94,7 @@ function buildMetaLine({
   timeRule,
   isTimeUnknown,
 }: Pick<DecisionTracePanelProps, 'timeRule' | 'isTimeUnknown'>) {
-  const parts = ['계산 기준 확인됨'];
+  const parts = ['현재 풀이 기준'];
 
   if (timeRule) parts.push(timeRule);
   if (isTimeUnknown) parts.push('출생시각 미입력은 보수적으로 반영');
@@ -107,8 +107,8 @@ export function DecisionTracePanel({
   metadata,
   timeRule,
   isTimeUnknown = false,
-  title = '판정 근거 보기',
-  description = '아래 내용은 달빛선생이 어떤 순서로 명식과 운의 구조를 검토했는지 요약한 것입니다.',
+  title = '왜 이렇게 보았나요',
+  description = '아래 내용은 이 풀이가 어떤 단서를 중요하게 본 것인지 짧게 정리한 것입니다.',
   compact = false,
 }: DecisionTracePanelProps) {
   const hasTrackedOpenRef = useRef(false);
@@ -164,12 +164,12 @@ export function DecisionTracePanel({
 
                   {item.input ? (
                     <div className="mt-3 rounded-[14px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-3 py-2 text-xs leading-6 text-[var(--app-copy-soft)]">
-                      입력 기준 · {item.input}
+                      입력 정보 · {item.input}
                     </div>
                   ) : null}
 
                   {item.rule ? (
-                    <div className="mt-2 text-xs leading-6 text-[var(--app-gold-text)]">검토 기준 · {item.rule}</div>
+                    <div className="mt-2 text-xs leading-6 text-[var(--app-gold-text)]">판단 메모 · {item.rule}</div>
                   ) : null}
 
                   <p className="mt-3 text-sm leading-7 text-[var(--app-copy)]">{item.result}</p>
@@ -185,7 +185,7 @@ export function DecisionTracePanel({
       </div>
 
       <div className="mt-4 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4">
-        <div className="app-caption text-[var(--app-gold-soft)]">읽기 기준</div>
+        <div className="app-caption text-[var(--app-gold-soft)]">풀이 기준</div>
         <p className="mt-3 text-xs leading-6 text-[var(--app-copy-soft)]">
           {buildMetaLine({
             timeRule,

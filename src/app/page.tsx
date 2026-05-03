@@ -35,7 +35,7 @@ function formatTodayLabel() {
 
 const PREMIUM_HERO_TOKENS = [
   { label: '기준서 핵심', value: '원국 · 격국 · 용신 · 대운' },
-  { label: '판정 흐름', value: '명식 · 격국 · 용신 · 운' },
+  { label: '풀이 흐름', value: '명식 · 격국 · 용신 · 운' },
   { label: '소장 방식', value: 'PDF · MY 보관함 · 대화' },
 ] as const;
 
@@ -53,7 +53,7 @@ const SAJU_FLOW_STEPS = [
   {
     eyebrow: 'STEP 3',
     title: '상세 풀이로 내려갑니다',
-    body: '궁금한 영역부터 읽고, 필요할 때 판정 흐름과 PDF 보관으로 이어갑니다.',
+    body: '궁금한 영역부터 보고, 필요할 때 풀이 흐름과 PDF 보관으로 이어갑니다.',
   },
 ] as const;
 
@@ -295,7 +295,7 @@ export default function HomePage() {
                   </Link>
                 </ActionCluster>
                 <div className="rounded-[1.05rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.04)] px-4 py-3 text-sm leading-7 text-[var(--app-copy)]">
-                  결과 화면은 핵심 요약, 상세 풀이, 판정 흐름, 보관으로 이어집니다.
+                  결과 화면은 핵심 요약, 상세 풀이, 풀이 흐름, 보관으로 이어집니다.
                 </div>
               </div>
 
@@ -317,7 +317,7 @@ export default function HomePage() {
                   items={[
                     {
                       title: '홈 구성',
-                      body: '오늘운세, 타로, 궁합, 사용법 안내는 가이드와 해석 메뉴로 분리했습니다.',
+                      body: '오늘운세, 타로, 궁합, 도움말은 해석 메뉴와 안내 페이지에서 가볍게 볼 수 있습니다.',
                     },
                   ]}
                 />
@@ -338,9 +338,9 @@ export default function HomePage() {
           <SectionSurface surface="panel">
             <SectionHeader
               align="center"
-              eyebrow="사주풀이 흐름"
-              title="질문에서 시작해, 결과는 기준서처럼 남깁니다"
-              description="사용자는 먼저 궁금한 일을 고르고, 달빛선생은 필요한 출생 정보만 받은 뒤 핵심 요약과 상세 풀이로 이어갑니다."
+              eyebrow="사주풀이 시작"
+              title="궁금한 문제에서 시작해, 내 풀이로 바로 이어집니다"
+              description="연애, 돈, 일, 가족, 오늘의 마음처럼 지금 걸리는 질문을 먼저 고르고 필요한 출생 정보만 입력합니다."
               className="mb-8 max-w-3xl"
             />
 
@@ -417,7 +417,7 @@ export default function HomePage() {
               eyebrow="신뢰 장치"
               title="무섭게 맞힌다는 말보다, 다시 확인할 수 있는 기준을 남깁니다"
               titleClassName="text-3xl"
-              description="구매 수를 억지로 만들기보다 저장, 재열람, 판정 근거, 시간·출생지 기준, 안전한 표현을 전면에 둡니다."
+              description="구매 수를 억지로 만들기보다 저장, 재열람, 판단 단서, 시간·출생지 기준, 안전한 표현을 전면에 둡니다."
               descriptionClassName="max-w-3xl"
             />
             <ProductGrid columns={3} className="mt-6">
@@ -440,13 +440,13 @@ export default function HomePage() {
             <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
               <SectionHeader
                 eyebrow="안내 메뉴로 이동"
-                title="다른 운세와 사용법은 가이드에 모았습니다"
+                title="가벼운 운세와 도움말은 따로 모았습니다"
                 titleClassName="text-3xl text-[var(--app-gold-text)]"
-                description="오늘운세, 타로, 궁합, 선생 말투, PDF 보관 방식, 계산 기준은 홈에서 길게 설명하지 않고 안내 페이지에서 차분히 보실 수 있습니다."
+                description="오늘운세, 타로, 궁합, 선생 말투, PDF 보관 방식은 홈에서 길게 설명하지 않고 필요한 곳에서 바로 볼 수 있게 나눴습니다."
               />
               <ActionCluster className="lg:justify-end">
                 <Link href="/guide" className="moon-cta-primary">
-                  가이드 보기
+                  도움말 보기
                 </Link>
                 <Link
                   href="/interpretation"

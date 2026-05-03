@@ -227,7 +227,7 @@ export function SajuAiInterpretationPanel({
           </h2>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy)]">
             {status === 'loading'
-              ? '계산 근거를 바탕으로 해석 문장을 정리하는 중입니다.'
+              ? '계산된 기준을 바탕으로 해석 문장을 정리하는 중입니다.'
               : interpretation.summary}
           </p>
           <div className="mt-4 max-w-4xl">
@@ -266,7 +266,7 @@ export function SajuAiInterpretationPanel({
       <div className="mt-6">
         <div className="app-caption">두 선생 비교 리딩</div>
         <p className="mt-2 text-sm leading-7 text-[var(--app-copy-soft)]">
-          같은 명식 근거를 두 선생의 말결로 나란히 읽습니다. 계산 기준은 같고, 설명의 결만 다르게 정리됩니다.
+          같은 명식 기준을 두 선생의 말결로 나란히 봅니다. 계산 기준은 같고, 설명의 결만 다르게 정리됩니다.
         </p>
         <div className="mt-4 grid gap-4 xl:grid-cols-2">
           {comparisonOrder.map((compareCounselorId) => {

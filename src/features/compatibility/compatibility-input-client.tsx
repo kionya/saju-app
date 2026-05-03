@@ -590,7 +590,7 @@ export function CompatibilityInputClient({
             <div className="app-starfield" />
             <SectionHeader
               eyebrow="관계 렌즈"
-              title={`${selected.title} 궁합은 이 장면부터 먼저 읽습니다`}
+              title={`${selected.title} 궁합은 이 장면부터 풀어봅니다`}
               titleClassName="text-3xl text-[var(--app-gold-text)]"
               description={RELATIONSHIP_GUIDE[selected.slug]}
               descriptionClassName="max-w-3xl text-[var(--app-copy)]"
@@ -865,7 +865,7 @@ export function CompatibilityInputClient({
               eyebrow="궁합에 필요한 데이터"
               title="결과 화면에 들어가기 전에 이 정보들이 준비돼 있으면 좋습니다"
               titleClassName="text-3xl"
-              description="궁합은 단순한 찬반 판정보다, 두 사람의 결이 어디에서 맞고 어긋나는지를 읽는 데 집중합니다."
+              description="궁합은 단순히 좋다/나쁘다를 가르는 것보다, 두 사람의 결이 어디에서 맞고 어긋나는지를 읽는 데 집중합니다."
               descriptionClassName="max-w-3xl text-[var(--app-copy)]"
             />
 

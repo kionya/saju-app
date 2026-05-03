@@ -98,7 +98,7 @@ const DETAIL_SECTION_META: Record<
 
 const TONE_LABELS: Record<NonNullable<DetailTopicBlock['tone']>, string> = {
   core: '핵심',
-  basis: '근거',
+  basis: '단서',
   action: '실천',
   caution: '주의',
   flow: '운 흐름',

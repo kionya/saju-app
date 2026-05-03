@@ -528,7 +528,7 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
               내 사주의 원본 해설서를 평생 기준서로 정리했습니다
             </h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
-              어려운 계산 항목은 뒤로 빼고, 먼저 “나는 어떤 환경에서 잘 살아나는가”를 읽을 수 있게 정리했습니다.
+              어려운 계산 항목은 뒤로 빼고, “나는 어떤 환경에서 잘 살아나는가”가 먼저 보이도록 정리했습니다.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -595,8 +595,8 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
               필요한 장으로 바로 이동합니다
             </h3>
             <p className="mt-3 text-sm leading-7 text-[var(--app-copy-muted)]">
-              먼저 전체 기준을 읽고, 다시 볼 때는 돈·일·관계처럼 필요한 장만 골라 들어가도 됩니다.
-              계산 근거와 세부 기준은 각 장 아래의 접힌 영역으로 분리했습니다.
+              처음에는 전체 기준을 훑고, 다시 볼 때는 돈·일·관계처럼 필요한 장만 골라 들어가도 됩니다.
+              세부 단서와 기준은 각 장 아래의 접힌 영역으로 분리했습니다.
             </p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -687,14 +687,14 @@ export default function LifetimeReportPanel({ slug, targetYear }: Props) {
 
       <details className="group" id="lifetime-evidence">
         <summary className="cursor-pointer list-none rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-4 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-          판정 기준과 계산 근거 확인
+          세부 단서 확인
         </summary>
         <div className="mt-4 grid gap-4">
           <GroundingKasiSummary
             grounding={data.grounding}
             kasiComparison={data.kasiComparison}
             metadata={data.metadata}
-            title="이 명리 기준서가 참고한 계산 근거"
+            title="이 명리 기준서가 참고한 세부 단서"
           />
           <EngineMethodLinks
             title="명리 기준서를 읽을 때 같이 보면 좋은 글"

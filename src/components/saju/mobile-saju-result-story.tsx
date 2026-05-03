@@ -492,9 +492,9 @@ export function MobileSajuResultStory({
             />
           </div>
           <StoryReadablePanel
-            eyebrow="읽는 순서"
-            title="먼저 카드로 보고, 필요한 분야만 자세히 봅니다"
-            body="긴 글을 전부 읽기보다 지금 고민과 가까운 카드 하나를 고르는 방식이 덜 피곤합니다."
+            eyebrow="분야 선택"
+            title="지금 고민과 가까운 카드부터 보세요"
+            body="재물, 일, 관계, 생활 리듬 중 오늘 가장 신경 쓰이는 장면을 먼저 확인하면 됩니다."
             tone="jade"
           />
         </StoryBody>
@@ -549,7 +549,7 @@ export function MobileSajuResultStory({
       label: '다음',
       title: '소장과 신뢰',
       eyebrow: '다시 볼 기준',
-      summary: '결과를 읽은 뒤에는 기준서를 보관하고, 판정 근거와 대화로 이어갈 수 있습니다.',
+      summary: '결과를 본 뒤에는 기준서를 보관하고, 판단 단서와 대화로 이어갈 수 있습니다.',
       detailHref: `/saju/${slug}/premium`,
       detailLabel: '명리 기준서 보기',
       render: () => (

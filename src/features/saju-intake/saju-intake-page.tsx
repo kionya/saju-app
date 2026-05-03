@@ -1105,7 +1105,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
               surface="soft"
               eyebrow="말투 선택"
               title="결과 화면에서 남선생·여선생으로 선택합니다"
-              description="입력 중에는 말투 선택을 묻지 않습니다. 같은 명식 근거를 결과 화면에서 두 선생의 말결로 비교할 수 있습니다."
+              description="입력 중에는 말투 선택을 묻지 않습니다. 같은 명식 기준을 결과 화면에서 두 선생의 말결로 비교할 수 있습니다."
             />
           </SectionSurface>
         </section>

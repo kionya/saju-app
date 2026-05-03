@@ -29,7 +29,7 @@ function formatBirthInputLine(grounding: SajuInterpretationGrounding) {
 export function GroundingDecisionTrace({
   grounding,
   kasiComparison,
-  title = '판정 근거 보기',
+  title = '왜 이렇게 보았나요',
   compact = false,
 }: {
   grounding: SajuInterpretationGrounding;
@@ -56,7 +56,7 @@ export function GroundingDecisionTrace({
           : index === 2
             ? '월령, 투출, 강약 순서로 격국 후보 검토'
             : index === 3
-              ? '격국·강약·계절성을 묶어 용신/희신/기신 판정'
+              ? '격국·강약·계절성을 묶어 보완 기운 확인'
               : index === 4
                 ? '대운·세운·월운을 현재 질문과 연결'
                 : undefined;

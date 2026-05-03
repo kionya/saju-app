@@ -59,14 +59,14 @@ const NAV_META: Record<string, { glyph: string; accent: string; description: str
   궁합: { glyph: '宮', accent: 'var(--app-jade)', description: '두 사람의 결' },
   별자리: { glyph: '星', accent: 'var(--app-sky)', description: '별빛의 오늘' },
   띠운세: { glyph: '支', accent: 'var(--app-coral)', description: '한 해의 리듬' },
-  안내: { glyph: '問', accent: 'var(--app-gold-text)', description: '읽는 법과 기준' },
+  안내: { glyph: '問', accent: 'var(--app-gold-text)', description: '도움말과 기준' },
 };
 
 const MOBILE_SHORTCUT_LABEL_ORDER = ['사주', '궁합', '명리', '타로', '별자리', '띠운세', '안내'] as const;
 const MOBILE_SHORTCUT_GROUPS = [
   { title: '핵심 해석', labels: ['사주', '궁합', '명리'] as const },
   { title: '가벼운 탐색', labels: ['타로', '별자리', '띠운세'] as const },
-  { title: '읽는 법', labels: ['안내'] as const },
+  { title: '도움말', labels: ['안내'] as const },
 ] as const;
 const MOBILE_DOCK_LABELS: Record<string, string> = {
   홈: '홈',

@@ -380,7 +380,7 @@ function CardLinkedClassicEvidence({
             <p className="mt-3 text-sm leading-7 text-[var(--app-ivory)]">
               {item.passage.commentaryKo ??
                 item.passage.literalKo ??
-                `${item.work.titleKo} ${item.section.titleKo} 문단을 현재 ${item.provenance.verificationStatus === 'reviewed' ? '검수된' : '검수 전'} 고전 근거로 연결했습니다.`}
+                `${item.work.titleKo} ${item.section.titleKo} 문단을 현재 ${item.provenance.verificationStatus === 'reviewed' ? '검수된' : '검수 전'} 고전 참고자료로 연결했습니다.`}
             </p>
             <details className="mt-3">
               <summary className="cursor-pointer list-none text-xs font-medium text-[var(--app-gold-text)]">
@@ -547,7 +547,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
         <section id="result-summary" className="space-y-4 scroll-mt-24">
           <SectionHeader
             eyebrow="요약"
-            title="먼저 핵심과 판정 근거를 봅니다"
+            title="먼저 핵심과 오늘의 선택을 봅니다"
             titleClassName="text-2xl sm:text-3xl"
             description="결과를 처음 열었을 때 꼭 봐야 하는 한 줄, 조심할 패턴, 이어볼 행동만 먼저 모았습니다."
           />
@@ -567,7 +567,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
               <div>
                 <SectionHeader
                   eyebrow="다음 단계"
-                  title="핵심과 근거를 확인하셨다면, 필요한 깊이만 바로 이어보실 수 있습니다"
+                  title="핵심을 확인하셨다면, 필요한 깊이만 바로 이어보실 수 있습니다"
                   titleClassName="text-3xl"
                   description="심층 리포트는 더 긴 기준서로, 대화는 지금 막 확인한 결과를 이어 묻는 흐름으로 연결됩니다. PDF 저장은 명리 기준서 소장권에서 바로 이어집니다."
                 />
@@ -612,7 +612,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                   eyebrow="PDF 소장"
                   title="다시 읽을 기준 남기기"
                   titleClassName="text-2xl"
-                  description="명리 기준서 소장권을 열면 표지, 요약, 판정 근거, 본문을 인쇄용 화면에서 PDF로 저장할 수 있습니다."
+                  description="명리 기준서 소장권을 열면 표지, 요약, 판단 단서, 본문을 인쇄용 화면에서 PDF로 저장할 수 있습니다."
                 />
                 <FeatureCard
                   surface="soft"
@@ -804,10 +804,10 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
 
         <section id="result-evidence" className="space-y-4 scroll-mt-24">
           <SectionHeader
-            eyebrow="근거와 보관"
-            title="계산 근거와 다시 읽을 가치"
+            eyebrow="단서와 보관"
+            title="왜 이렇게 보았는지와 다시 읽을 가치"
             titleClassName="text-2xl sm:text-3xl"
-            description="판정의 바탕과 PDF·보관함 가치를 별도 화면으로 모았습니다."
+            description="풀이의 바탕이 된 단서와 PDF·보관함 가치를 별도 화면으로 모았습니다."
           />
             <SajuFactEvidencePanel
               grounding={grounding}
@@ -823,7 +823,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 eyebrow="신뢰 장치"
                 title="결과는 다시 확인할 수 있는 기준으로 남깁니다"
                 titleClassName="text-3xl"
-                description="사주풀이가 한 번 읽고 끝나지 않도록 저장, 재열람, 판정 근거, 시간·출생지 기준, 안전한 표현을 함께 노출합니다."
+                description="사주풀이가 한 번 읽고 끝나지 않도록 저장, 재열람, 판단 단서, 시간·출생지 기준, 안전한 표현을 함께 노출합니다."
               />
               <ProductGrid columns={3} className="mt-6">
                 {TRUST_SIGNALS.map((signal) => (
@@ -855,7 +855,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                   <div>
                     <div className="app-caption">왜 이렇게 읽는지</div>
                     <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[var(--app-ivory)]">
-                      처음에는 쉬운 풀이만 읽고, 필요할 때만 전문 근거를 펼쳐보세요.
+                      처음에는 쉬운 풀이만 보고, 필요할 때만 자세한 단서를 펼쳐보세요.
                     </h2>
                   </div>
                   <p className="max-w-xl text-sm leading-7 text-[var(--app-copy-muted)]">
@@ -886,7 +886,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
 
                       <details className="mt-4 rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3">
                         <summary className="cursor-pointer list-none text-sm font-medium text-[var(--app-gold-text)]">
-                          전문 근거 펼치기
+                          자세한 단서 보기
                         </summary>
 
                         <div className="mt-4 space-y-4">
@@ -1330,7 +1330,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             eyebrow="안내"
             title="안전 안내와 다음 리포트"
             titleClassName="text-2xl sm:text-3xl"
-            description="의료·건강 판단 안내와 고전 근거 확인, 새 리포트 생성 링크를 마지막에 모았습니다."
+            description="의료·건강 안내와 고전 참고자료, 새 리포트 생성 링크를 마지막에 모았습니다."
           />
             <SafetyNotice variant="health" />
 

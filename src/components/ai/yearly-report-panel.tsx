@@ -629,7 +629,7 @@ function buildMonthlySectionDescription(report: SajuYearlyReport) {
     .slice(0, 4)
     .join(' · ');
 
-  return `좋은 말만 길게 적지 않고, 사람들이 실제로 궁금해하는 ${repeatedAreas} 중심으로 “이번 달 밀어도 되는 일 / 한 번 더 확인할 일 / 행동 기준”을 먼저 읽게 정리했습니다.`;
+  return `좋은 말만 길게 적지 않고, 사람들이 실제로 궁금해하는 ${repeatedAreas} 중심으로 “이번 달 밀어도 되는 일 / 한 번 더 확인할 일 / 행동 기준”이 먼저 보이게 정리했습니다.`;
 }
 
 function YearlyMonthlySection({
@@ -764,7 +764,7 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
           {targetYear}년 올해 전략서를 정리하고 있습니다
         </h2>
         <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
-          원국, 세운, 월운, 대운의 근거를 다시 맞추고, 같은 기준 위에서 올해의 선택 포인트를 재구성하고 있습니다.
+          원국, 세운, 월운, 대운의 단서를 다시 맞추고, 같은 기준 위에서 올해의 선택 포인트를 재구성하고 있습니다.
         </p>
         <div className="mt-6 grid gap-3 lg:grid-cols-3">
           {Array.from({ length: 3 }, (_, index) => (
@@ -939,14 +939,14 @@ export default function YearlyReportPanel({ slug, targetYear }: Props) {
 
       <details className="group mt-6" id="yearly-evidence">
         <summary className="cursor-pointer list-none rounded-[22px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-4 text-sm font-semibold text-[var(--app-copy)] transition-colors group-open:border-[var(--app-gold)]/25 group-open:text-[var(--app-ivory)]">
-          판정 기준과 계산 근거 확인
+          세부 단서 확인
         </summary>
         <div className="mt-4 grid gap-4">
           <GroundingKasiSummary
             grounding={data.grounding}
             kasiComparison={data.kasiComparison}
             metadata={data.metadata}
-            title="이 올해 전략서가 참고한 계산 근거"
+            title="이 올해 전략서가 참고한 세부 단서"
           />
           <EngineMethodLinks
             title="올해 흐름을 읽을 때 같이 보면 좋은 기준"

@@ -126,7 +126,7 @@ export default async function ZodiacDetailPage({ params }: Props) {
             <FeatureCard
               className="mt-4"
               surface="panel"
-              eyebrow="연운과 월운 읽는 법"
+              eyebrow="연운과 월운 흐름"
               description="띠별 운세는 연운으로 큰 방향을 보고, 월운으로 당장 조정할 생활 리듬을 읽는 데 잘 어울립니다. 큰 결정보다 관계, 일정, 소비의 우선순위를 고를 때 특히 더 도움이 됩니다."
             />
           </SupportRail>

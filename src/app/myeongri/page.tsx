@@ -81,10 +81,10 @@ export default async function MyeongriPage() {
           <SectionSurface surface="lunar" size="lg">
             <div className="app-starfield" />
             <SectionHeader
-              eyebrow="명리 읽는 순서"
-              title="먼저 바탕을 보고, 그다음 반복되는 장면을 해석합니다"
+              eyebrow="내 패턴의 바탕"
+              title="반복되는 장면의 이유를 내 사주 위에서 확인합니다"
               titleClassName="text-3xl text-[var(--app-gold-text)]"
-              description="일간과 오행은 바탕을, 십신은 사람과 역할의 패턴을 설명합니다. 달빛선생에서는 이 셋을 따로 떼지 않고, 결과 화면과 연결되는 순서로 읽게 두었습니다."
+              description="일간과 오행은 내 기운의 바탕을, 십신은 사람과 역할의 반복을 보여줍니다. 설명을 외우기보다 내 결과와 바로 이어서 봅니다."
               descriptionClassName="max-w-3xl text-[var(--app-copy)]"
             />
 
@@ -103,7 +103,7 @@ export default async function MyeongriPage() {
 
           <SupportRail
             surface="panel"
-            eyebrow="읽기 기준"
+            eyebrow="풀이 기준"
             title="명리는 겁을 주는 말이 아니라 반복되는 이유를 설명하는 언어입니다"
             description="개념을 많이 보여주는 것보다, 왜 그 판단이 나왔는지와 내 선택에 어떻게 연결되는지를 더 먼저 보이도록 정리했습니다."
           >

@@ -43,7 +43,7 @@ interface VerificationPageProps {
 
 export const metadata: Metadata = {
   title: '검증 대시보드',
-  description: '고전 원문 적재와 사주 계산 근거를 확인하는 내부 검증 화면입니다.',
+  description: '고전 원문 적재와 사주 계산 단서를 확인하는 내부 검증 화면입니다.',
   robots: {
     index: false,
     follow: false,
@@ -70,7 +70,7 @@ function JsonLink({ href }: { href: string }) {
       href={href}
       className="moon-action-muted moon-action-compact"
     >
-      JSON API
+      진단 원문
     </Link>
   );
 }
@@ -601,7 +601,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
                     {todayFortuneAudit.freeResultSummary.bodyPreview}
                   </p>
                   <div className="mt-3 text-xs text-[var(--app-copy-soft)]">
-                    근거: {todayFortuneAudit.freeResultSummary.reasonSnippet}
+                    단서: {todayFortuneAudit.freeResultSummary.reasonSnippet}
                   </div>
                 </div>
 
@@ -772,9 +772,9 @@ export default async function VerificationPage({ searchParams }: VerificationPag
                   </div>
                 </div>
                 <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
-                  <div className="app-caption">격국 근거</div>
+                  <div className="app-caption">격국 단서</div>
                   <div className="mt-3 text-sm leading-7 text-[var(--app-copy)]">
-                    <p>{sajuAudit.calculation.pattern?.rationale.join(' ') ?? '격국 근거 없음'}</p>
+                    <p>{sajuAudit.calculation.pattern?.rationale.join(' ') ?? '격국 단서 없음'}</p>
                   </div>
                 </div>
                 <div className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-4">
@@ -804,7 +804,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
                           <th className="whitespace-nowrap py-2 pr-4">방식</th>
                           <th className="whitespace-nowrap py-2 pr-4">후보</th>
                           <th className="whitespace-nowrap py-2 pr-4">점수</th>
-                          <th className="min-w-80 py-2">근거</th>
+                          <th className="min-w-80 py-2">단서</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--app-line)] text-[var(--app-copy)]">
@@ -827,7 +827,7 @@ export default async function VerificationPage({ searchParams }: VerificationPag
                   </div>
                   <div className="mt-4 grid gap-3 text-sm leading-7 text-[var(--app-copy)] lg:grid-cols-2">
                     <p>{sajuAudit.calculation.yongsin?.plainSummary ?? '용신 쉬운 풀이 없음'}</p>
-                    <p>{sajuAudit.calculation.yongsin?.technicalSummary ?? '용신 전문 근거 없음'}</p>
+                    <p>{sajuAudit.calculation.yongsin?.technicalSummary ?? '용신 세부 단서 없음'}</p>
                   </div>
                 </div>
               </div>

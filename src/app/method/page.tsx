@@ -13,16 +13,16 @@ import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 import { ENGINE_METHOD_ENTRIES } from '@/lib/engine-method-pages';
 
 export const metadata: Metadata = {
-  title: '계산 기준 읽을거리 | 달빛선생',
+  title: '풀이가 달라지는 이유 | 달빛선생',
   description:
-    'AI 사주가 왜 흔들리는지, 진태양시가 무엇인지, 용신 계산이 왜 어려운지 달빛선생 기준으로 풀어낸 읽을거리 모음입니다.',
+    'AI 사주가 왜 다르게 보이는지, 출생지와 시간 기준이 왜 중요한지 생활 언어로 풀어낸 도움말입니다.',
   alternates: {
     canonical: '/method',
   },
   openGraph: {
-    title: '달빛선생 계산 기준 읽을거리',
+    title: '달빛선생 풀이 도움말',
     description:
-      '계산 기준서와 함께 읽으면 좋은 AI 사주·진태양시·용신 해설 글을 모았습니다.',
+      '결과가 다르게 보일 때 확인하면 좋은 AI 사주·진태양시·용신 도움말을 모았습니다.',
     url: 'https://saju-app-lac.vercel.app/method',
     siteName: '달빛선생',
     locale: 'ko_KR',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
 const READING_GUIDE = [
   '같은 생년월일인데 AI마다 결과가 달라 혼란스러웠던 경우',
   '출생지와 분 단위 시간을 왜 묻는지 납득이 잘 안 갔던 경우',
-  '긴 리포트보다 먼저 계산 기준과 판정 근거를 확인하고 싶은 경우',
+  '내 결과가 왜 그렇게 나왔는지만 짧게 확인하고 싶은 경우',
 ] as const;
 
 const READING_ORDER = [
@@ -52,23 +52,23 @@ export default function MethodIndexPage() {
               key="method-guide"
               className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]"
             >
-              계산 기준 읽을거리
+              풀이 기준 도움말
             </Badge>,
             <Badge key="seo" className="border-white/10 bg-white/5 text-white/70">
               AI 사주 · 진태양시 · 용신 해설
             </Badge>,
           ]}
-          title="기준서를 읽고 나면, 다음 질문이 더 선명해집니다"
-          description="달빛선생 계산 기준서를 바탕으로, 실제 사용자들이 가장 많이 궁금해하는 지점을 따로 풀어낸 읽을거리입니다. 왜 AI마다 결과가 다른지, 왜 출생지와 분 단위 시간이 필요한지를 일반 사용자 언어로 정리했습니다."
+          title="결과가 왜 달라지는지 궁금할 때만 보세요"
+          description="사주를 공부하기 위한 글이 아니라, 내 결과가 왜 다른 앱과 다르게 보이는지 이해하고 싶을 때 보는 도움말입니다."
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
           <SectionSurface surface="panel">
             <SectionHeader
-              eyebrow="이런 분께 먼저 권합니다"
-              title="읽는 순서를 조금만 잡아도 기준이 훨씬 덜 흔들립니다"
+              eyebrow="헷갈릴 때 확인"
+              title="결과가 다르게 보이는 이유만 짧게 정리합니다"
               titleClassName="text-3xl"
-              description="먼저 왜 결과가 갈리는지 보고, 그다음 시간과 용신 같은 민감한 축을 읽으면 각 글이 훨씬 덜 따로 놀게 됩니다."
+              description="출생 시간, 출생지, 용신처럼 결과에 영향을 주는 부분만 생활 언어로 풀었습니다."
               descriptionClassName="text-[var(--app-copy)]"
             />
 
@@ -76,7 +76,7 @@ export default function MethodIndexPage() {
               <BulletList items={READING_GUIDE} />
 
               <div className="rounded-[20px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-5 py-5">
-                <div className="app-caption mb-3">먼저 읽기 좋은 순서</div>
+                <div className="app-caption mb-3">궁금할 때 볼 주제</div>
                 <BulletList items={READING_ORDER} />
               </div>
             </div>
@@ -85,15 +85,15 @@ export default function MethodIndexPage() {
           <SupportRail
             surface="lunar"
             eyebrow="바로 이어보기"
-            title="읽은 기준을 실제 결과 화면에서 바로 확인해보세요"
-            description="이 글들은 설명의 문을 여는 역할입니다. 실제 결과 화면에서는 같은 기준이 판정 근거, 절기 확인, 저장과 재확인 흐름으로 이어집니다."
+            title="설명보다 내 풀이가 먼저입니다"
+            description="도움말은 궁금할 때만 확인하고, 실제 결과 화면에서는 핵심 요약과 분야별 조언을 먼저 보시면 됩니다."
           >
             <ActionCluster>
               <Link
                 href="/about-engine"
                 className="moon-action-secondary"
               >
-                계산 기준서 보기
+                풀이 기준 보기
               </Link>
               <Link
                 href="/saju/new"

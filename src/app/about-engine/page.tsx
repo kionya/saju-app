@@ -14,21 +14,21 @@ import { ENGINE_METHOD_ENTRIES } from '@/lib/engine-method-pages';
 import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 export const metadata: Metadata = {
-  title: '달빛선생 계산 기준서 | AI 사주 계산 기준',
+  title: '달빛선생 풀이 기준 | AI 사주 기준',
   description:
-    '달빛선생이 AI 사주를 어떻게 계산하고 설명하는지, 진태양시·격국·용신·대운 판정 기준과 리포트 근거 구조를 쉽게 정리한 계산 기준서입니다.',
+    '달빛선생이 사주풀이를 어떻게 더 안정적으로 보여주는지, 진태양시·격국·용신·대운 기준을 쉽게 정리한 안내입니다.',
   keywords: [
     'AI 사주',
     '사주 계산 기준',
     '진태양시 사주',
-    '격국 판정',
+    '격국 해석',
     '용신 계산',
     '대운 세운',
-    '달빛선생 계산 기준서',
+    '달빛선생 풀이 기준',
   ],
   alternates: { canonical: '/about-engine' },
   openGraph: {
-    title: '달빛선생 계산 기준서',
+    title: '달빛선생 풀이 기준',
     description:
       '명식 계산을 먼저 고정하고, AI는 계산된 구조를 설명하는 역할만 한다는 달빛선생의 기준을 정리했습니다.',
     url: 'https://saju-app-lac.vercel.app/about-engine',
@@ -41,14 +41,14 @@ export const metadata: Metadata = {
 const ENGINE_BADGES = [
   'AI 사주 계산 기준',
   '진태양시 · 절기 · 자시 규칙',
-  '격국 · 용신 · 대운 판정',
-  '판정 근거 · KASI 대조 · 저장 기준',
+  '격국 · 용신 · 대운 해석',
+  '판단 단서 · 음양력 대조 · 재열람',
 ] as const;
 
 const PAGE_SECTIONS = [
   { href: '#why-not-just-ai', label: '왜 AI만으로 보지 않나' },
   { href: '#time-precision', label: '출생시각·출생지 정밀도' },
-  { href: '#decision-trace', label: '판정 근거 펼치기' },
+  { href: '#decision-trace', label: '왜 그렇게 보았나' },
   { href: '#report-ux', label: '리포트에서 무엇이 보이나' },
   { href: '#metadata', label: '저장과 재확인' },
   { href: '#faq', label: '자주 묻는 질문' },
@@ -66,9 +66,9 @@ const ENGINE_PRINCIPLES = [
       '선생의 말투는 이미 계산된 구조를 이해하기 쉬운 문장으로 풀어내는 역할만 합니다. 그래서 여선생과 남선생은 표현의 결만 다르고, 계산 기준은 같습니다.',
   },
   {
-    title: '판정 기준은 리포트 안에 드러나야 합니다',
+    title: '판단 단서는 필요할 때 확인할 수 있어야 합니다',
     body:
-      '좋은 사주 리포트는 길이보다 기준이 중요합니다. 달빛선생은 강약 점수, 격국 후보, 용신 후보, KASI 대조, 참고 해석 여부를 함께 보여주는 쪽을 택합니다.',
+      '좋은 사주 리포트는 길이보다 납득이 중요합니다. 달빛선생은 강약, 격국 후보, 용신 후보, 공식 음양력 대조, 참고 해석 여부를 필요한 때 확인할 수 있게 둡니다.',
   },
 ] as const;
 
@@ -81,7 +81,7 @@ const COMPARISON_ROWS = [
   [
     '격국·용신',
     '프롬프트 길이와 모델 스타일에 따라 설명이 흔들릴 수 있습니다.',
-    '월령, 투출, 강약, 계절성을 같이 보고 고정된 순서로 판정합니다.',
+    '월령, 투출, 강약, 계절성을 같이 보고 풀이 기준을 흔들리지 않게 잡습니다.',
   ],
   [
     '시간 처리',
@@ -89,9 +89,9 @@ const COMPARISON_ROWS = [
     '출생지, 진태양시, 야자시, 조자시를 분리해 적용합니다.',
   ],
   [
-    '리포트 근거',
+    '풀이 단서',
     '긴 문장은 많아도 왜 그렇게 읽었는지 숨겨질 수 있습니다.',
-    '판정 근거, KASI 대조, 참고 해석 여부를 함께 보여줍니다.',
+    '판단 단서, 공식 음양력 대조, 참고 해석 여부를 함께 보여줍니다.',
   ],
 ] as const;
 
@@ -114,17 +114,17 @@ const DECISION_STEPS = [
   '양력/음력 변환과 절기 기준 확인',
   '출생지와 시간 규칙에 따른 시각 보정',
   '월령, 투출, 강약 순서로 격국 후보 검토',
-  '격국·강약·계절성을 묶어 용신/희신/기신 판정',
+  '격국·강약·계절성을 묶어 보완 기운 확인',
   '대운·세운·월운을 현재 질문과 연결',
   '논쟁적 해석은 참고 단계로 낮춰 표시',
 ] as const;
 
 const REPORT_VISIBLE_ITEMS = [
-  '강약 점수와 판정 근거',
+  '강약과 판단 단서',
   '격국 후보와 최종 격국',
   '용신 / 희신 / 기신',
   '대운 · 세운 · 월운 연결',
-  'KASI 대조 여부',
+  '공식 음양력 대조 여부',
   '참고 해석 / 논쟁적 해석 표시',
 ] as const;
 
@@ -153,9 +153,9 @@ const FAQS = [
       '두 선생은 같은 계산 결과를 보고 말투만 다르게 설명합니다. 표현의 결은 달라도 격국, 용신, 현재 운의 뼈대는 같아야 신뢰가 유지된다고 보기 때문입니다.',
   },
   {
-    question: '리포트의 긴 글이 정말 계산 근거를 반영한 것인지 어떻게 확인하나요?',
+    question: '리포트의 긴 글이 실제 명식과 연결되어 있는지 어떻게 확인하나요?',
     answer:
-      '리포트 안에는 강약 점수, 격국 후보, 용신 후보, KASI 대조, 참고 해석 여부가 함께 보입니다. 달빛선생은 긴 글보다 먼저 판정 근거를 펼쳐보는 UX를 유지합니다.',
+      '리포트 안에는 강약, 격국 후보, 용신 후보, 공식 음양력 대조, 참고 해석 여부가 함께 보입니다. 결론을 먼저 보고, 더 궁금할 때 판단 단서를 펼쳐볼 수 있습니다.',
   },
   {
     question: '사주 리포트만으로 투자나 의료 판단을 해도 되나요?',
@@ -203,10 +203,10 @@ export default function AboutEnginePage() {
           <SectionSurface surface="lunar">
             <div className="app-starfield" />
             <SectionHeader
-              eyebrow="계산 기준서 요약"
-              title="이 문서는 계산과 설명이 어디서 갈리는지 먼저 보여드립니다"
+              eyebrow="풀이 기준 요약"
+              title="이 문서는 결과가 왜 달라질 수 있는지만 쉽게 정리합니다"
               titleClassName="text-3xl text-[var(--app-gold-text)]"
-              description="명식 계산, 시간 보정, 격국·용신 판정, 리포트 저장 기준이 어떤 순서로 이어지는지 문서형으로 정리한 페이지입니다."
+              description="명식 계산, 시간 보정, 격국·용신 판단, 다시 열람할 때의 기준을 사용자가 이해할 수 있는 말로 정리한 페이지입니다."
               descriptionClassName="text-[var(--app-copy)]"
             />
 
@@ -226,9 +226,9 @@ export default function AboutEnginePage() {
 
           <SupportRail
             surface="muted"
-            eyebrow="문서 길잡이"
-            title="이 순서로 읽으시면 기준이 훨씬 빠르게 잡힙니다"
-            description="처음에는 AI만으로 보지 않는 이유와 시간 기준을 먼저 보고, 그다음 실제 리포트에서 무엇이 드러나는지 확인하시면 좋습니다."
+            eyebrow="궁금한 항목"
+            title="필요한 항목만 골라 확인하시면 됩니다"
+            description="사주풀이 화면에서는 결과를 먼저 보고, 이 페이지는 출생 시간이나 음양력 기준이 궁금할 때만 확인하시면 됩니다."
           >
             <nav className="app-reading-nav">
               <div className="app-caption mb-3">섹션 이동</div>
@@ -257,8 +257,7 @@ export default function AboutEnginePage() {
             </ActionCluster>
 
             <div className="rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4 text-sm leading-7 text-[var(--app-copy-soft)]">
-              이 기준서는 홈, 입력 화면, 결과 화면, 대화, 멤버십까지 같은 메시지로 이어지도록
-              설계된 문서입니다.
+              이 안내는 홈, 입력 화면, 결과 화면, 대화, 멤버십에서 같은 기준으로 이어집니다.
             </div>
           </SupportRail>
         </section>
@@ -268,9 +267,9 @@ export default function AboutEnginePage() {
             <SectionSurface id="why-not-just-ai" surface="panel" className="scroll-mt-28">
               <SectionHeader
                 eyebrow="왜 AI만으로 보지 않나"
-                title="일반 AI 사주와 달빛선생의 차이는 말투보다 판정 순서에 있습니다"
+                title="일반 AI 사주와 달빛선생의 차이는 말투보다 풀이 기준에 있습니다"
                 titleClassName="text-3xl"
-                description="일반적인 대화형 AI는 설명을 잘 쓰지만, 명식 계산과 격국·용신 판정은 입력 방식과 프롬프트 길이에 따라 흔들릴 수 있습니다. 달빛선생은 계산과 설명을 분리해, 흔들리기 쉬운 부분을 먼저 고정합니다."
+                description="일반적인 대화형 AI는 설명을 잘 쓰지만, 명식 계산과 격국·용신 해석은 입력 방식과 프롬프트 길이에 따라 흔들릴 수 있습니다. 달빛선생은 계산과 설명을 분리해, 흔들리기 쉬운 부분을 먼저 고정합니다."
                 descriptionClassName="app-reading-prose text-[var(--app-copy)]"
               />
 
@@ -330,10 +329,10 @@ export default function AboutEnginePage() {
 
             <SectionSurface id="decision-trace" surface="panel" className="scroll-mt-28">
               <SectionHeader
-                eyebrow="판정 근거 펼치기"
-                title="리포트에서는 이 순서대로 근거를 펼쳐드립니다"
+                eyebrow="판단 단서"
+                title="왜 그렇게 보았는지 필요할 때만 펼쳐봅니다"
                 titleClassName="text-3xl"
-                description="달빛선생의 명리 기준서는 긴 글보다 먼저, 어떤 기준으로 검토했는지를 보여주고 그 위에 설명이 따라오도록 설계합니다."
+                description="달빛선생의 명리 기준서는 결론을 먼저 보여주고, 더 알고 싶은 분만 판단 단서를 펼쳐볼 수 있게 구성합니다."
                 descriptionClassName="app-reading-prose text-[var(--app-copy)]"
               />
 
@@ -357,9 +356,9 @@ export default function AboutEnginePage() {
             <SectionSurface id="report-ux" surface="panel" className="scroll-mt-28">
               <SectionHeader
                 eyebrow="리포트에서 무엇이 보이나"
-                title="긴 글보다 먼저, 무엇을 근거로 읽었는지가 보여야 합니다"
+                title="긴 설명보다 먼저, 내게 필요한 답이 보여야 합니다"
                 titleClassName="text-3xl"
-                description="실제 결과 화면에서는 강약 점수, 격국 후보, 용신, 현재 운 연결, KASI 대조, 참고 해석 여부가 본문보다 먼저 드러나도록 구성합니다."
+                description="실제 결과 화면에서는 핵심 요약, 분야별 조언, 현재 운 연결을 먼저 보고, 강약·격국·용신·공식 음양력 대조는 필요할 때 확인하도록 구성합니다."
                 descriptionClassName="app-reading-prose text-[var(--app-copy)]"
               />
 
@@ -375,7 +374,7 @@ export default function AboutEnginePage() {
                 eyebrow="저장과 재확인"
                 title="다시 열어도 같은 기준으로 확인할 수 있게 남깁니다"
                 titleClassName="text-3xl"
-                description="리포트는 입력값과 판정 흐름을 내부적으로 함께 보관합니다. 화면에는 복잡한 저장 항목을 드러내지 않고, 사용자가 다시 열었을 때 같은 기준으로 확인할 수 있게 관리합니다."
+                description="리포트는 입력값과 풀이 흐름을 내부적으로 함께 보관합니다. 화면에는 복잡한 저장 항목을 드러내지 않고, 사용자가 다시 열었을 때 같은 기준으로 확인할 수 있게 관리합니다."
                 descriptionClassName="app-reading-prose text-[var(--app-copy)]"
               />
 
@@ -385,14 +384,14 @@ export default function AboutEnginePage() {
                   <BulletList
                     items={[
                       '복잡한 내부 버전명은 일반 화면에 노출하지 않습니다.',
-                      '입력한 출생 정보와 판정 흐름은 재열람을 위해 내부 기준으로만 관리합니다.',
-                      '리포트 화면에는 사용자가 이해할 수 있는 계산 순서와 근거만 보여드립니다.',
+                      '입력한 출생 정보와 풀이 흐름은 재열람을 위해 내부 기준으로만 관리합니다.',
+                      '리포트 화면에는 사용자가 이해할 수 있는 판단 단서만 보여드립니다.',
                     ]}
                   />
                 </div>
 
                 <div className="space-y-3">
-                  <div className="app-caption">고전 근거와 안전 원칙</div>
+                  <div className="app-caption">고전 참고자료와 안전 원칙</div>
                   <BulletList items={SAFETY_RULES} />
                 </div>
               </div>
@@ -401,7 +400,7 @@ export default function AboutEnginePage() {
             <SectionSurface id="faq" surface="panel" className="scroll-mt-28">
               <SectionHeader
                 eyebrow="FAQ"
-                title="계산 기준서에서 가장 자주 묻는 질문"
+                title="풀이 기준에서 가장 자주 묻는 질문"
                 titleClassName="text-3xl"
               />
               <div className="mt-6 space-y-3">
@@ -426,7 +425,7 @@ export default function AboutEnginePage() {
                 eyebrow="핵심 문장"
                 title="좋은 해석은 말맛보다 기준에서 먼저 갈립니다"
                 titleClassName="text-2xl"
-                description="달빛선생은 명식, 절기, 격국, 용신, 대운의 판정을 고정된 계산 기준으로 먼저 잡고, 선생의 말투는 그 결과를 이해하기 쉽게 풀어주는 설명 레이어로만 사용합니다."
+                description="달빛선생은 명식, 절기, 격국, 용신, 대운의 풀이 기준을 먼저 잡고, 선생의 말투는 그 결과를 이해하기 쉽게 풀어주는 설명 레이어로만 사용합니다."
                 descriptionClassName="text-[var(--app-copy)]"
               />
             </SectionSurface>
@@ -434,8 +433,8 @@ export default function AboutEnginePage() {
             <SupportRail
               surface="panel"
               eyebrow="바로 이어보기"
-              title="기준을 읽었다면, 이제 결과 화면에서 같은 눈으로 확인해보세요"
-              description="샘플 리포트와 실제 결과 화면에서는 이 기준이 판정 근거와 계산 순서로 이어집니다."
+              title="궁금증을 확인했다면, 이제 실제 풀이로 돌아가세요"
+              description="샘플 리포트와 실제 결과 화면에서는 이 기준이 더 쉬운 말과 생활 조언으로 이어집니다."
             >
               <ActionCluster>
                 <Link
@@ -460,7 +459,7 @@ export default function AboutEnginePage() {
             eyebrow="다음으로 읽으면 좋은 글"
             title="기준을 읽고 나면, 보통 이 주제들로 질문이 이어집니다"
             titleClassName="text-3xl"
-            description="비슷한 말만 반복되는 목록보다, 판정 흐름이 자연스럽게 이어지는 순서로 읽는 편이 이해가 훨씬 쉽습니다."
+            description="비슷한 말만 반복되는 목록보다, 궁금한 주제별로 바로 들어갈 수 있게 정리했습니다."
             descriptionClassName="text-[var(--app-copy)]"
           />
           <ProductGrid columns={3} className="mt-6">

@@ -89,7 +89,7 @@ const COMPARISON_ROWS = [
   {
     label: '격국·용신',
     ai: '프롬프트에 따라 해석 결이 흔들릴 수 있습니다.',
-    moonlight: '격국 후보, 강약, 용신 판단 근거를 함께 남깁니다.',
+    moonlight: '격국 후보, 강약, 용신의 판단 단서를 함께 남깁니다.',
   },
   {
     label: '시간 처리',
@@ -98,8 +98,8 @@ const COMPARISON_ROWS = [
   },
   {
     label: '설명 방식',
-    ai: '말은 자연스럽지만 근거가 화면에 남지 않을 수 있습니다.',
-    moonlight: '판정 근거와 설명 레이어를 나눠서 보여드립니다.',
+    ai: '말은 자연스럽지만 왜 그렇게 보았는지가 화면에 남지 않을 수 있습니다.',
+    moonlight: '판단 단서와 쉬운 설명을 나눠서 보여드립니다.',
   },
   {
     label: '보관 방식',
@@ -124,7 +124,7 @@ const CATALOG_PROOF_GROUPS = [
     ],
   },
   {
-    eyebrow: '보관과 근거',
+    eyebrow: '보관과 재확인',
     title: '읽고 끝나는 결과가 아니라 남는 기준서',
     points: [
       COMPARISON_ROWS[3].moonlight,
@@ -136,7 +136,7 @@ const CATALOG_PROOF_GROUPS = [
     title: '질문은 리포트 기준 위에서 이어집니다',
     points: [
       COMPARISON_ROWS[5].moonlight,
-      '샘플 리포트와 판정 근거 예시를 먼저 보고 결정하셔도 됩니다.',
+      '샘플 리포트와 판단 단서 예시를 먼저 보고 결정하셔도 됩니다.',
     ],
   },
 ] as const;
@@ -148,12 +148,12 @@ const PRE_PURCHASE_LINKS = [
     href: REPORT_SAMPLE_HREF,
   },
   {
-    title: '계산 기준서 보기',
-    body: '달빛선생이 어떤 계산 기준과 판정 순서를 쓰는지 정리해둔 문서입니다.',
+    title: '풀이 기준 보기',
+    body: '달빛선생이 어떤 기준으로 결과를 안정적으로 보여주는지 정리해둔 문서입니다.',
     href: '/about-engine',
   },
   {
-    title: '판정 근거 예시 보기',
+    title: '판단 단서 예시 보기',
     body: '격국 후보, 용신 판단, 시간 기준이 화면에서 어떻게 보이는지 먼저 확인합니다.',
     href: '/about-engine#decision-trace',
   },
@@ -450,9 +450,9 @@ export default async function MembershipPage({
               <div>
                 <SectionHeader
                   eyebrow="3. 결정 전에 확인할 것"
-                  title="비교와 읽을거리도 상품 결정에 필요한 만큼만 남겼습니다"
+                  title="비교와 도움말도 상품 결정에 필요한 만큼만 남겼습니다"
                   titleClassName="text-3xl"
-                  description="일반 AI 사주와 다른 지점, 결제 전에 먼저 봐도 좋은 샘플/계산 기준서, 그리고 어떤 순서로 고르면 덜 흔들리는지를 한곳에 모았습니다."
+                  description="일반 AI 사주와 다른 지점, 결제 전에 먼저 봐도 좋은 샘플과 풀이 기준, 그리고 어떤 상품이 내 질문에 맞는지를 한곳에 모았습니다."
                   descriptionClassName="max-w-3xl"
                 />
 
@@ -472,7 +472,7 @@ export default async function MembershipPage({
                 <FeatureCard
                   className="mt-6"
                   surface="soft"
-                  eyebrow="플랜을 고르는 순서"
+                  eyebrow="플랜 선택"
                   children={
                     <div className="grid gap-3">
                       {INTERPRETATION_JOURNEY.map((step) => (
@@ -556,7 +556,7 @@ export default async function MembershipPage({
               eyebrow="구매 전 신뢰 기준"
               title="무리한 공포 표현보다, 다시 확인 가능한 기준을 앞에 둡니다"
               titleClassName="text-3xl"
-              description="달빛선생의 전환 장치는 과장된 적중률이 아니라 저장, 재열람, 판정 근거, 시간·출생지 기준, 안전한 표현입니다."
+              description="달빛선생의 전환 장치는 과장된 적중률이 아니라 저장, 재열람, 판단 단서, 시간·출생지 기준, 안전한 표현입니다."
               descriptionClassName="max-w-3xl"
             />
             <ProductGrid columns={3} className="mt-6">

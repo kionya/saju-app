@@ -73,8 +73,8 @@ function buildMethodFaqs(item: EngineMethodEntry) {
     {
       question: '달빛선생에서는 이 주제를 어떤 방식으로 보여주나요?',
       answer: secondSection
-        ? `${secondSection.body} 결과 화면에서는 판정 근거와 체크 포인트를 같이 보여주고, 필요한 경우 계산 기준서와 명리 기준서로 이어서 확인할 수 있습니다.`
-        : '결과 화면에서는 판정 근거와 체크 포인트를 같이 보여주고, 필요한 경우 계산 기준서와 명리 기준서로 이어서 확인할 수 있습니다.',
+        ? `${secondSection.body} 결과 화면에서는 판단 단서와 체크 포인트를 같이 보여주고, 필요한 경우 풀이 기준과 명리 기준서로 이어서 확인할 수 있습니다.`
+        : '결과 화면에서는 판단 단서와 체크 포인트를 같이 보여주고, 필요한 경우 풀이 기준과 명리 기준서로 이어서 확인할 수 있습니다.',
     },
   ];
 }
@@ -160,7 +160,7 @@ export default async function MethodDetailPage({ params }: Props) {
               <Badge className="border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
                 {item.eyebrow}
               </Badge>
-              <Badge className="border-white/10 bg-white/5 text-white/68">계산 기준서 연계 글</Badge>
+              <Badge className="border-white/10 bg-white/5 text-white/68">풀이 기준 글</Badge>
             </div>
 
             <SectionHeader
@@ -180,12 +180,12 @@ export default async function MethodDetailPage({ params }: Props) {
 
           <SupportRail
             surface="muted"
-            eyebrow="읽기 길잡이"
-            title="이 글은 이런 순서로 읽으시면 좋습니다"
-            description="본문은 하나의 질문을 몇 개의 큰 단락으로 나누어 설명하고, 옆 레일에서는 체크 포인트와 다음 글로 이어지는 흐름만 짧게 정리합니다."
+            eyebrow="도움말"
+            title="궁금한 부분만 가볍게 확인하세요"
+            description="내 결과를 보다가 낯선 기준이 나올 때, 필요한 단락만 짧게 확인할 수 있도록 정리했습니다."
           >
             <nav className="app-reading-nav">
-              <div className="app-caption mb-3">본문 이동</div>
+              <div className="app-caption mb-3">바로 보기</div>
               <div className="app-reading-nav-list">
                 {sectionAnchors.map((section) => (
                   <Link key={section.href} href={section.href} className="app-reading-nav-link">
@@ -203,7 +203,7 @@ export default async function MethodDetailPage({ params }: Props) {
                 href="/about-engine"
                 className="moon-action-secondary"
               >
-                계산 기준서 보기
+                풀이 기준 보기
               </Link>
               <Link
                 href="/sample-report"

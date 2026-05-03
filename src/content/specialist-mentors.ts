@@ -15,10 +15,10 @@ export const SPECIALIST_MENTORS: readonly SpecialistMentorCardData[] = [
     hanja: '月令',
     title: '월령 선생',
     specialty: '격국·용신·원국 분석',
-    description: '사주의 구조와 판정 근거를 학술적으로 정리합니다.',
+    description: '사주의 구조와 판단 단서를 차분하게 정리합니다.',
     href: '/about-engine',
     statusLabel: '리포트에서 먼저 보기',
-    ctaLabel: '계산 기준 먼저 보기',
+    ctaLabel: '풀이 기준 보기',
   },
   {
     slug: 'sewoon',

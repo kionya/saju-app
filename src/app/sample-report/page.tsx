@@ -36,7 +36,7 @@ import {
 export const metadata: Metadata = {
   title: "샘플 리포트",
   description:
-    "달빛선생의 프리미엄 명리 리포트가 어떤 구조와 판정 근거로 펼쳐지는지 결제 전에 먼저 확인해보세요.",
+    "달빛선생의 프리미엄 명리 리포트가 어떤 깊이와 판단 단서로 이어지는지 결제 전에 먼저 확인해보세요.",
   alternates: {
     canonical: "/sample-report",
   },
@@ -96,15 +96,15 @@ export default function SampleReportPage() {
                     eventParams={{ from: "sample_report_hero" }}
                     className="moon-action-muted"
                   >
-                    계산 기준서 보기
+                    풀이 기준 보기
                   </TrackedLink>
                 </ActionCluster>
               }
             />
 
             <p className="app-body-copy mt-6 max-w-3xl">
-              이 미리보기는 계산 정확도 시연보다, 실제로 받게 될 결과물이 어떤 순서와 밀도로
-              펼쳐지는지 먼저 보여드리는 브로셔형 예시입니다.
+              이 미리보기는 계산 정확도 시연보다, 실제로 받게 될 결과물이 어느 정도 깊이와 밀도로
+              남는지 먼저 보여드리는 브로셔형 예시입니다.
             </p>
 
             <ProductGrid columns={3} className="mt-6">
@@ -121,8 +121,8 @@ export default function SampleReportPage() {
 
           <SupportRail
             eyebrow="이 미리보기에서 먼저 보는 것"
-            title="결과 흐름을 먼저 짧게 훑어보실 수 있습니다"
-            description="달빛선생 리포트는 한 줄 요약에서 끝나지 않고, 판정 근거와 소장 가치까지 한 번에 이어지는 구조로 설계했습니다."
+            title="결과의 깊이를 먼저 짧게 훑어보실 수 있습니다"
+            description="달빛선생 리포트는 한 줄 요약에서 끝나지 않고, 판단 단서와 소장 가치까지 함께 남깁니다."
           >
             <BulletList items={SAMPLE_PREVIEW_GUIDE} />
             <div className="mt-5 rounded-[18px] border border-[var(--app-line)] bg-[rgba(255,255,255,0.03)] px-4 py-4 text-sm leading-7 text-[var(--app-copy-soft)]">
@@ -222,7 +222,7 @@ export default function SampleReportPage() {
             eyebrow="기준서 구성"
             title="한 권의 기준서가 어떻게 펼쳐지는지, 14개 대섹션으로 압축해 보여드립니다"
             titleClassName="text-3xl"
-            description="샘플 기준서는 한 줄 총평에서 시작해 원국, 운의 흐름, 실행 전략, 판정 로그까지 한 번의 해석을 순서대로 이어가도록 설계했습니다."
+            description="샘플 기준서는 한 줄 총평에서 시작해 원국, 운의 흐름, 실행 전략, 판단 단서까지 한 번의 해석으로 이어지도록 설계했습니다."
             descriptionClassName="text-[var(--app-copy)]"
           />
 
@@ -254,10 +254,10 @@ export default function SampleReportPage() {
         <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
           <SectionSurface as="article" surface="panel">
             <SectionHeader
-              eyebrow="판정 근거 미리보기"
-              title="왜 이렇게 읽는지, 결과 옆에서 바로 펼쳐볼 수 있습니다"
+              eyebrow="판단 단서 미리보기"
+              title="왜 이렇게 보았는지, 필요한 때만 펼쳐볼 수 있습니다"
               titleClassName="text-3xl"
-              description="달빛선생은 중심 결론만 보여드리지 않고, 어떤 순서로 검토했는지를 결과 화면 안에서 함께 남겨둡니다."
+              description="달빛선생은 중심 결론을 먼저 보여주고, 더 알고 싶을 때만 판단 단서를 따로 펼쳐볼 수 있게 남깁니다."
               descriptionClassName="text-[var(--app-copy)]"
             />
             <div className="mt-6">
@@ -318,7 +318,7 @@ export default function SampleReportPage() {
         <SectionSurface surface="panel">
           <SectionHeader
             eyebrow="달빛선생의 신뢰 장치"
-            title="보관, 근거, 안전한 표현을 결과물 안에 남깁니다"
+            title="보관, 판단 단서, 안전한 표현을 결과물 안에 남깁니다"
             titleClassName="text-3xl"
             description="공포성 단정이나 과장된 적중률 대신, 사용자가 다시 확인할 수 있는 기준을 리포트 안에 남기는 방식입니다."
             descriptionClassName="text-[var(--app-copy)]"
@@ -341,7 +341,7 @@ export default function SampleReportPage() {
             eyebrow="다음 단계"
             title="샘플 구조가 마음에 드셨다면, 이제 선생님의 기준서를 직접 만들어보셔도 좋습니다"
             titleClassName="text-3xl"
-            description="실제 결과는 입력하신 출생 정보, 시간 기준, 판정 근거에 따라 개별적으로 계산됩니다. 어떤 질문을 먼저 풀고 싶은지에 따라 전문 선생과 리포트의 방향도 함께 고르실 수 있습니다."
+            description="실제 결과는 입력하신 출생 정보, 시간 기준, 판단 단서에 따라 개별적으로 계산됩니다. 어떤 질문을 먼저 풀고 싶은지에 따라 전문 선생과 리포트의 방향도 함께 고르실 수 있습니다."
             descriptionClassName="text-[var(--app-copy)]"
             actions={
               <ActionCluster>

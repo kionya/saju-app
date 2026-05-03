@@ -241,8 +241,8 @@ export default async function MembershipCheckoutPage({ searchParams }: Props) {
 
             <SectionHeader
               className="mt-8"
-              eyebrow="결제 뒤 열리는 흐름"
-              title="이 상품을 고르면 먼저 이런 순서로 이어집니다"
+              eyebrow="결제 뒤 바로 확인"
+              title="이 상품으로 바로 열리는 내용입니다"
               titleClassName="text-2xl text-[var(--app-ivory)]"
             />
 

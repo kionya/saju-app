@@ -336,7 +336,7 @@ function PremiumReadingMap({
     <section className="app-panel p-5 sm:p-6">
       <div className="grid gap-5 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
         <div>
-          <div className="app-caption">읽기 지도</div>
+          <div className="app-caption">리포트 핵심</div>
           <h2 className="mt-3 font-display text-2xl text-[var(--app-ivory)]">
             {title}
           </h2>
@@ -466,16 +466,16 @@ export default async function SajuPremiumPage({ params }: Props) {
       ? `${targetYear} 올해 전략서`
       : '내 명리 기준서 미리보기';
   const heroDescription = hasLifetimeAccess
-    ? '원국 기준을 먼저 읽고, 같은 기준 위에서 올해 흐름과 월간 달력을 이어봅니다.'
+    ? '원국 기준을 먼저 확인하고, 같은 기준 위에서 올해 흐름과 월간 달력을 이어봅니다.'
     : yearlyAccessLabel
-      ? '올해 흐름과 월간 타이밍을 먼저 읽고, 필요하면 평생 소장 기준서로 확장합니다.'
-      : '결제 전에는 기준서가 어떤 순서로 읽히는지 먼저 보여드리고, 필요한 경우 소장권으로 이어집니다.';
+      ? '올해 흐름과 월간 타이밍을 먼저 확인하고, 필요하면 평생 소장 기준서로 확장합니다.'
+      : '결제 전에는 실제로 어떤 답을 얻을 수 있는지 먼저 보고, 필요한 경우 소장권으로 이어집니다.';
   const readingSteps: PremiumReadingStep[] = hasLifetimeAccess
     ? [
         {
           label: '기준서',
           title: '명리 기준서 본문',
-          description: '타고난 구조와 평생 흐름을 먼저 읽습니다.',
+          description: '타고난 구조와 평생 흐름을 먼저 확인합니다.',
           href: '#premium-lifetime',
           status: '열림',
           note: '처음 읽는 장입니다.',
@@ -502,7 +502,7 @@ export default async function SajuPremiumPage({ params }: Props) {
           {
             label: '올해',
             title: `${targetYear} 올해 전략서`,
-            description: '구독 권한으로 열린 올해 흐름을 먼저 읽습니다.',
+            description: '구독 권한으로 열린 올해 흐름을 먼저 확인합니다.',
             href: '#premium-yearly',
             status: '열림',
             note: '올해의 큰 주제부터 봅니다.',
@@ -531,7 +531,7 @@ export default async function SajuPremiumPage({ params }: Props) {
             description: '결제 전 본문 구성과 소장 가치를 확인합니다.',
             href: '#premium-preview',
             status: '공개',
-            note: '구매 전 읽기 흐름을 봅니다.',
+          note: '구매 전 결과의 밀도를 봅니다.',
           },
           {
             label: '달별',
@@ -544,17 +544,17 @@ export default async function SajuPremiumPage({ params }: Props) {
           {
             label: '샘플',
             title: '샘플 기준서',
-            description: '완성형 리포트의 읽기 방식을 봅니다.',
+            description: '완성형 리포트의 실제 풀이를 봅니다.',
             href: REPORT_SAMPLE_HREF,
             status: '보기',
             note: '완성본의 밀도를 비교합니다.',
           },
         ];
   const readingMapDescription = hasLifetimeAccess
-    ? '명리 기준서는 원국을 먼저 읽고, 올해 전략과 달별 실행으로 내려오는 순서가 가장 자연스럽습니다.'
+    ? '명리 기준서는 원국의 바탕, 올해 전략, 달별 실행이 한 흐름으로 이어지도록 정리했습니다.'
     : yearlyAccessLabel
       ? '구독 권한에서는 올해 전략과 달별 흐름을 먼저 보고, 필요한 경우 원국 기준서를 별도 소장으로 확장합니다.'
-      : '아직 결제 전이라면 미리보기, 달별 흐름, 샘플 기준서 순서로 화면의 역할을 빠르게 확인하시면 됩니다.';
+      : '아직 결제 전이라면 미리보기, 달별 흐름, 샘플 기준서에서 실제로 남는 내용을 먼저 확인하시면 됩니다.';
 
   return (
     <AppShell header={<SiteHeader />}>
@@ -575,7 +575,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                 {heroDescription}
               </p>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--app-copy-muted)]">
-                긴 설명을 앞에 쌓지 않고, 실제 풀이를 기준서 본문과 올해 전략서, 달별 흐름 순서로 이어 읽게 정리했습니다.
+                지금 궁금한 선택, 올해 흐름, 다시 볼 기준을 한 화면에서 바로 확인할 수 있게 정리했습니다.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 {readingSteps.map((step) => (
@@ -600,7 +600,7 @@ export default async function SajuPremiumPage({ params }: Props) {
               </div>
             </div>
             <aside className="rounded-[1.35rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] p-5">
-              <div className="app-caption">현재 읽는 순서</div>
+              <div className="app-caption">지금 바로 볼 내용</div>
               <div className="mt-4 grid gap-3">
                 {readingSteps.map((step, index) => (
                   <Link
@@ -634,7 +634,7 @@ export default async function SajuPremiumPage({ params }: Props) {
         </section>
 
         <PremiumReadingMap
-          title="기준서처럼 읽고, 달력처럼 다시 봅니다"
+          title="핵심은 바로 보고, 필요한 내용만 깊게 봅니다"
           description={readingMapDescription}
           steps={readingSteps}
         />
@@ -690,9 +690,9 @@ export default async function SajuPremiumPage({ params }: Props) {
           <>
             <PremiumSectionIntro
               eyebrow="1장 · 평생 기준"
-              title="먼저 내 사주의 원본 기준을 읽습니다"
+              title="내 사주의 원본 기준을 먼저 확인합니다"
               description="원국, 강약, 격국, 용신, 관계와 일의 결을 한 번에 훑은 뒤 올해 운으로 넘어가면 같은 문장도 덜 흩어져 보입니다."
-              aside="긴 본문 안의 판단 근거는 각 장의 접힌 영역으로 분리했습니다."
+              aside="긴 본문 안의 판단 단서는 각 장의 접힌 영역으로 분리했습니다."
             />
             <div id="premium-lifetime" className="scroll-mt-28">
               <LifetimeReportPanel slug={slug} targetYear={targetYear} />
@@ -770,7 +770,7 @@ export default async function SajuPremiumPage({ params }: Props) {
                 </div>
                 <p className="mt-4 text-sm leading-8 text-[var(--app-copy)]">
                   올해 전략서가 “올해의 흐름”이라면, 평생 소장 기준서는 “내 사주의 원본 해설서”입니다.
-                  같은 근거를 쓰더라도 역할이 다르기 때문에, 원국 중심 기준서는 별도의 보관형 본문으로
+                  같은 단서를 쓰더라도 역할이 다르기 때문에, 원국 중심 기준서는 별도의 보관형 본문으로
                   나뉘어야 합니다.
                 </p>
                 <div className="mt-5 grid gap-3">
@@ -808,8 +808,8 @@ export default async function SajuPremiumPage({ params }: Props) {
         <>
         <PremiumSectionIntro
           eyebrow="미리보기 · 결제 전"
-          title="기준서가 어떤 순서로 읽히는지 먼저 확인합니다"
-          description="잠긴 본문을 길게 보여주기보다, 첫 섹션의 톤과 소장 상품의 구성을 빠르게 확인하도록 정리했습니다."
+          title="기준서에서 실제로 무엇이 남는지 먼저 확인합니다"
+          description="잠긴 본문을 길게 보여주기보다, 첫 섹션의 톤과 소장 상품의 핵심을 빠르게 확인하도록 정리했습니다."
           aside="결제 링크와 상품 ID는 변경하지 않았습니다."
         />
         <section id="premium-preview" className="grid scroll-mt-28 gap-6 lg:grid-cols-[0.9fr_1.1fr]">
@@ -883,7 +883,7 @@ export default async function SajuPremiumPage({ params }: Props) {
               <div className="app-caption">소장 가치</div>
               <div className="mt-4 grid gap-3">
                 {[
-                  '판정 근거와 본문이 함께 남는 PDF 저장본',
+                  '판단 단서와 본문이 함께 남는 PDF 저장본',
                   'MY 보관함에서 다시 여는 기준서 본문',
                   '업데이트 반영본을 나중에 다시 확인하는 재열람 구조',
                 ].map((item) => (

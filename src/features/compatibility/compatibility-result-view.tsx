@@ -231,10 +231,10 @@ export function CompatibilityResultView({
 
         <SectionSurface surface="panel" size="lg">
           <SectionHeader
-            eyebrow="판정 기준"
-            title="근거는 아래에서 따로 확인합니다"
+            eyebrow="판단 단서"
+            title="왜 이렇게 보았는지는 작게 분리했습니다"
             titleClassName="text-3xl"
-            description="앞쪽에서는 관계 풀이를 먼저 읽고, 이 영역에서는 두 사람의 명식에서 어떤 기준을 참고했는지 작게 분리해 보여드립니다."
+            description="앞쪽에서는 관계 풀이를 먼저 보고, 이 영역에서는 두 사람의 명식에서 참고한 단서만 짧게 보여드립니다."
             descriptionClassName="max-w-3xl text-[var(--app-copy)]"
           />
           <ProductGrid columns={2} className="mt-6">

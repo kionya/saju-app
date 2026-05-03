@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 };
 
 const TEN_GOD_RULES = [
-  '십신은 좋고 나쁨을 바로 판정하는 카드가 아니라, 사람과 역할이 반복되는 방식을 읽는 언어입니다.',
+  '십신은 좋고 나쁨을 바로 가르는 카드가 아니라, 사람과 역할이 반복되는 방식을 읽는 언어입니다.',
   '정재·편재는 돈의 구조를, 정관·편관은 책임과 압박의 구조를, 비견·겁재는 사람 사이 거리 조절을 드러냅니다.',
   '십신 하나만 떼어 보지 말고, 일간과 오행 균형, 대운 흐름 위에 얹어 읽어야 실제 삶의 장면과 맞물립니다.',
 ] as const;
@@ -52,7 +52,7 @@ export default function TenGodsPage() {
           <SectionSurface surface="lunar" size="lg">
             <div className="app-starfield" />
             <SectionHeader
-              eyebrow="십신 읽는 법"
+              eyebrow="십신으로 보는 반복 패턴"
               title="좋고 나쁨보다, 어떤 관계와 역할이 반복되는지를 먼저 봅니다"
               titleClassName="text-3xl text-[var(--app-gold-text)]"
               description="십신은 한 장짜리 성격 해석이 아니라, 돈과 자리, 사람과 책임이 내 삶에 들어오는 방식을 읽는 언어입니다. 달빛선생에서는 겁을 주는 말보다 실제로 반복되는 장면을 설명하는 데 더 가깝게 씁니다."

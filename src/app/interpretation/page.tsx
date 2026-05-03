@@ -74,7 +74,7 @@ export default function InterpretationPage() {
               eyebrow="빠른 시작"
               title="가장 많이 찾는 세 가지 길"
               titleClassName="text-3xl text-[var(--app-gold-text)]"
-              description="처음이라면 아래 셋 중 하나만 고르셔도 충분합니다. 더 자세한 읽는 법은 안내 페이지에서 따로 보실 수 있습니다."
+              description="처음이라면 아래 셋 중 하나만 고르셔도 충분합니다. 더 자세한 도움말은 안내 페이지에서 따로 보실 수 있습니다."
               actions={
                 <ActionCluster>
                   <Link href="/saju/new" className="moon-cta-primary">
@@ -129,7 +129,7 @@ export default function InterpretationPage() {
                 href="/guide"
                 className="inline-flex items-center gap-2 px-1 py-2 text-sm text-[var(--app-gold-text)] underline underline-offset-4 hover:text-[var(--app-ivory)]"
               >
-                읽는 법 보기
+                도움말 보기
               </Link>
             </ActionCluster>
           </SupportRail>
@@ -173,8 +173,8 @@ export default function InterpretationPage() {
         <section className="grid gap-6 lg:grid-cols-[1.02fr_0.98fr]">
           <SectionSurface surface="panel">
             <SectionHeader
-              eyebrow="시작 가이드"
-              title="막막할 때는 이 순서만 보세요"
+              eyebrow="시작 추천"
+              title="막막할 때는 이 셋 중 하나만 고르세요"
               titleClassName="text-3xl"
               description="긴 설명 대신, 가장 자주 쓰는 시작점만 남겼습니다."
             />
@@ -205,9 +205,9 @@ export default function InterpretationPage() {
             <div className="app-starfield" />
             <SectionHeader
               eyebrow="개념과 기준"
-              title="읽는 법은 별도 안내에서 확인하세요"
+              title="도움말은 별도 안내에서 확인하세요"
               titleClassName="text-3xl text-[var(--app-gold-text)]"
-              description="서비스 화면을 길게 만들던 개념 설명, 계산 기준, 판정 흐름은 안내 페이지에 모았습니다."
+              description="서비스 화면을 길게 만들던 개념 설명, 계산 기준, 판단 흐름은 안내 페이지에 모았습니다."
             />
 
             <ActionCluster className="mt-6">

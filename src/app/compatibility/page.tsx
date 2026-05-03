@@ -66,8 +66,8 @@ export default function CompatibilityPage() {
               </span>
             </>
           }
-          title="관계 기준서를 보기 전에, 어떤 관계를 먼저 풀고 싶은지 고르세요"
-          description="궁합은 한 사람의 운세를 더하는 기능보다, 두 사람의 결이 어디에서 맞고 어긋나는지 구조를 읽는 입구에 가깝습니다. 먼저 관계를 고르고, 그다음 질문의 결을 좁혀가시면 됩니다."
+          title="관계 기준서를 보기 전에, 어떤 관계를 풀고 싶은지 고르세요"
+          description="궁합은 한 사람의 운세를 더하는 기능보다, 두 사람의 결이 어디에서 맞고 어긋나는지 보는 입구에 가깝습니다. 관계를 고른 뒤 질문의 결을 좁혀가시면 됩니다."
         />
 
         <section className="grid gap-6 lg:grid-cols-[1.08fr_0.92fr]">
@@ -76,7 +76,7 @@ export default function CompatibilityPage() {
               eyebrow="관계 선택"
               title="질문이 분명할수록 궁합 기준서도 더 선명해집니다"
               titleClassName="text-3xl"
-              description="연인·배우자, 부모·자녀, 형제·친구, 동업·파트너처럼 먼저 관계의 결을 고르면, 같은 궁합이라도 어디에 초점을 맞춰 읽을지가 훨씬 또렷해집니다."
+              description="연인·배우자, 부모·자녀, 형제·친구, 동업·파트너처럼 관계의 결을 고르면, 같은 궁합이라도 어디에 초점을 둘지가 훨씬 또렷해집니다."
               descriptionClassName="text-[var(--app-copy)]"
             />
 

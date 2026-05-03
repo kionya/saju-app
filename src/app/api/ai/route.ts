@@ -372,7 +372,7 @@ function buildDialogueFallback(
       : `저장된 프로필 기준으로 읽어보면, ${profileGrounding.reports.focus.headline}`,
     profileGrounding.reports.focus.summary,
     `기본 명식은 ${profileGrounding.saju.dayMaster}, ${profileGrounding.saju.strength}, ${profileGrounding.saju.pattern} 흐름으로 읽습니다. 용신 보완축은 ${profileGrounding.saju.yongsin} 쪽으로 먼저 봅니다.`,
-    evidenceSummary ? `핵심 근거는 ${evidenceSummary}입니다.` : null,
+    evidenceSummary ? `핵심 단서는 ${evidenceSummary}입니다.` : null,
     `질문하신 “${message}”은 ${profileGrounding.reports.focus.action} 쪽으로 정리해서 움직이시는 편이 맞습니다.`,
     `${counselor.label} 기준의 기본 풀이로 먼저 말씀드렸고, 저장된 명식 기준은 그대로 반영했습니다. 이 답변은 횟수와 코인을 차감하지 않습니다.`,
   ]
@@ -546,16 +546,16 @@ function createDialoguePrompt(
       '말끝마다 가능성만 늘어놓지 말고, 지금 명식에서 어디가 강하고 어디를 조절해야 하는지 힘있게 짚어줍니다.',
       '명리 용어는 필요한 만큼만 쓰고, 처음 나올 때는 한자 또는 쉬운 풀이를 함께 덧붙입니다.',
       '저장 프로필 명식이 제공되면 그 명식을 기본값으로 사용합니다. 다만 사용자가 다른 사람의 사주를 따로 묻는 문맥이면 저장 프로필을 섞지 말고 필요한 출생 정보를 먼저 확인합니다.',
-      'recentFeedbackSummary가 있으면 최근 반응을 참고해 단정 표현 강도만 조절하고, 계산 근거보다 앞세우지 않습니다.',
+      'recentFeedbackSummary가 있으면 최근 반응을 참고해 단정 표현 강도만 조절하고, 명식 기준보다 앞세우지 않습니다.',
       '의료, 법률, 투자 판단은 해석으로 대신하지 않습니다.',
       '출생 정보나 명식 데이터가 없는 경우 빈말로 얼버무리지 말고, 어떤 정보가 필요한지 짧게 요청합니다.',
-      '고전 원문이나 출처는 제공된 근거가 없으면 인용하지 않습니다.',
+      '고전 원문이나 출처는 제공된 참고자료가 없으면 인용하지 않습니다.',
       '다음과 같은 표현은 피합니다: 결론적으로, 분석해보면, 참고로, AI로서, 표로 정리하면, 1번 2번 3번.',
       ...buildDialogueCounselorInstructions(counselorId),
     ].join('\n'),
     input: [
       profileGrounding
-        ? `기본 사용자 명식 JSON:\n${JSON.stringify(profileGrounding, null, 2)}`
+        ? `기본 사용자 명식 데이터:\n${JSON.stringify(profileGrounding, null, 2)}`
         : '기본 사용자 명식 없음. 저장 프로필이 비어 있으면 필요한 출생 정보를 짧게 요청합니다.',
       recentFeedbackSummary
         ? `최근 사용자 피드백 요약:\n${recentFeedbackSummary}`
@@ -594,8 +594,8 @@ function buildReportFallback(report: SajuReport) {
     highlights,
     `오늘의 행동 제안: ${report.primaryAction.title} - ${report.primaryAction.description}`,
     `주의 포인트: ${report.cautionAction.title} - ${report.cautionAction.description}`,
-    evidence ? `근거 요약:\n${evidence}` : '',
-    'AI 해석이 연결되면 위 근거를 바탕으로 더 자연스러운 개인화 문장으로 확장됩니다.',
+    evidence ? `핵심 단서:\n${evidence}` : '',
+    'AI 해석이 연결되면 위 단서를 바탕으로 더 자연스러운 개인화 문장으로 확장됩니다.',
   ]
     .filter(Boolean)
     .join('\n\n');
@@ -663,18 +663,18 @@ function createReportPrompt(
   return {
     instructions: [
       '당신은 한국어 사주 서비스 달빛선생의 AI 해석 보조자입니다.',
-      '반드시 제공된 JSON 근거 안에서만 해석하고, 없는 명리 정보나 고전 인용을 지어내지 않습니다.',
-      '고전 원문은 별도 classic evidence API에서 제공된 passage가 있을 때만 인용합니다. 현재 JSON에 고전 원문 passage가 없으면 고전 출처를 지어내지 않습니다.',
+      '반드시 제공된 명식 데이터 안에서만 해석하고, 없는 명리 정보나 고전 인용을 지어내지 않습니다.',
+      '고전 원문은 별도 참고자료가 제공됐을 때만 인용합니다. 현재 참고자료가 없으면 고전 출처를 지어내지 않습니다.',
       '문장은 차분하고 고급스럽게 쓰되, 첫 문장에서 결론을 먼저 전하고 사용자가 바로 읽기 쉽도록 4~6개의 짧은 단락으로 나눕니다.',
       '명리 용어는 필요한 만큼만 쓰고, 처음 나올 때는 쉬운 한국어 풀이를 짧게 덧붙입니다.',
       '점수나 계산값을 복붙하듯 나열하지 말고, 현재 흐름의 핵심과 생활 적용으로 자연스럽게 풀어 설명합니다.',
-      '강약, 격국, 용신, 합충/공망/신살 중 제공된 근거가 있으면 자연스럽게 반영합니다.',
+      '강약, 격국, 용신, 합충/공망/신살 중 제공된 단서가 있으면 자연스럽게 반영합니다.',
       '의료·법률·투자 결론은 피하고, 필요한 경우 전문가 확인을 권합니다.',
       ...buildReportCounselorInstructions(counselorId),
     ].join('\n'),
     input: [
       question ? `사용자 추가 질문:\n${question}` : null,
-      `명식/리포트 근거 JSON:\n${JSON.stringify(createReportGrounding(record, report), null, 2)}`,
+      `명식/리포트 참고 데이터:\n${JSON.stringify(createReportGrounding(record, report), null, 2)}`,
     ]
       .filter(Boolean)
       .join('\n\n'),

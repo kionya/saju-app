@@ -20,13 +20,13 @@ import {
 
 export const metadata: Metadata = {
   title: '이용 안내',
-  description: '달빛선생의 사주, 명리, 궁합, 타로, 리포트와 판정 근거를 어떤 순서로 읽으면 좋은지 한곳에 모았습니다.',
+  description: '달빛선생의 사주, 명리, 궁합, 타로, 리포트 보관과 상담 연결을 한곳에 모았습니다.',
   alternates: { canonical: '/guide' },
 };
 
 const READING_FLOW = [
   '처음 1분은 한 줄 총평과 핵심 주제만 확인합니다.',
-  '왜 그렇게 봤는지는 판정 근거에서 따로 펼쳐봅니다.',
+  '왜 그렇게 봤는지는 판단 단서에서 따로 펼쳐봅니다.',
   '본문은 재물, 관계, 일, 생활 리듬처럼 궁금한 영역부터 읽습니다.',
   '오래 볼 내용은 PDF와 MY 보관함에 남기고, 추가 질문은 대화로 이어갑니다.',
 ] as const;
@@ -34,7 +34,7 @@ const READING_FLOW = [
 const GUIDE_LINKS = [
   {
     title: '샘플 리포트',
-    body: '실제 기준서가 어떤 화면 순서로 읽히는지 먼저 봅니다.',
+    body: '결제 전 실제 리포트가 어느 정도 깊이로 나오는지 먼저 봅니다.',
     href: REPORT_SAMPLE_HREF,
     cta: '샘플 보기',
     icon: <FileText className="h-5 w-5" />,
@@ -47,8 +47,8 @@ const GUIDE_LINKS = [
     icon: <Compass className="h-5 w-5" />,
   },
   {
-    title: '판정 흐름',
-    body: '명식, 격국, 용신, 대운을 어떤 순서로 검토하는지 정리해 둔 안내입니다.',
+    title: '풀이 흐름',
+    body: '명식, 격국, 용신, 대운을 어떻게 생활 조언으로 바꾸는지 정리해 둔 안내입니다.',
     href: '/about-engine#decision-trace',
     cta: '흐름 보기',
     icon: <BookOpenText className="h-5 w-5" />,
@@ -88,14 +88,14 @@ const HOME_MOVED_GUIDES = [
     cta: '상품 보기',
   },
   {
-    title: '계산 기준과 판정 흐름',
-    body: '절기, 출생지, 시간 보정, 판정 근거처럼 설명이 필요한 기준은 별도 문서에서 확인합니다.',
+    title: '풀이 기준과 판단 흐름',
+    body: '절기, 출생지, 시간 보정, 판단 단서처럼 설명이 필요한 기준은 별도 문서에서 확인합니다.',
     href: '/method',
     cta: '기준 보기',
   },
   {
     title: '샘플 리포트',
-    body: '실제 결제 전 어떤 순서의 리포트를 받게 되는지 샘플 화면으로 먼저 살펴봅니다.',
+    body: '실제 결제 전 어떤 내용이 남는지 샘플 화면으로 먼저 살펴봅니다.',
     href: REPORT_SAMPLE_HREF,
     cta: '샘플 보기',
   },
@@ -117,10 +117,10 @@ export default function GuidePage() {
               key="light"
               className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
             >
-              읽는 법과 기준
+              도움말과 기준
             </Badge>,
           ]}
-          title="개념과 사용법은 여기서만 차분히 보세요"
+          title="풀이에 방해되는 설명은 여기서만 따로 보세요"
           description="풀이 화면에서는 결과와 행동을 먼저 보여드리고, 설명이 필요한 내용은 이 안내 페이지에 모았습니다."
         />
 
@@ -171,10 +171,10 @@ export default function GuidePage() {
 
           <SectionSurface surface="panel" size="lg">
             <SectionHeader
-              eyebrow="결과 읽는 순서"
-              title="긴 글을 처음부터 끝까지 읽지 않아도 됩니다"
+              eyebrow="결과 활용"
+              title="궁금한 영역부터 바로 보시면 됩니다"
               titleClassName="text-3xl"
-              description="달빛선생 리포트는 먼저 핵심을 확인하고, 필요할 때 근거와 본문으로 내려가도록 정리합니다."
+              description="달빛선생 리포트는 한 줄 요약, 재물·관계·일 같은 분야, 오늘 할 행동을 먼저 보도록 정리합니다."
             />
             <BulletList items={READING_FLOW} className="mt-6" />
           </SectionSurface>
@@ -185,7 +185,7 @@ export default function GuidePage() {
             eyebrow="홈에서 분리한 정보"
             title="사주풀이 외의 안내는 이곳에서 찾으시면 됩니다"
             titleClassName="text-3xl"
-            description="홈은 명리 기준서 시작에 집중하고, 여러 서비스와 사용법은 안내 페이지에 모았습니다."
+            description="홈은 명리 기준서 시작에 집중하고, 여러 서비스와 도움말은 안내 페이지에 모았습니다."
           />
 
           <ProductGrid columns={3} className="mt-6">
@@ -248,7 +248,7 @@ export default function GuidePage() {
         <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
           <SectionSurface surface="panel">
             <SectionHeader
-              eyebrow="읽는 깊이"
+              eyebrow="풀이 깊이"
               title="가벼운 운세와 소장 리포트는 구분해서 봅니다"
               titleClassName="text-3xl"
               description="무료 탐색은 오늘의 감을 잡는 입구이고, 명리 기준서는 오래 남겨 다시 읽는 리포트입니다."
@@ -272,7 +272,7 @@ export default function GuidePage() {
               eyebrow="더 자세한 안내"
               title="기준과 예시는 필요할 때만 펼쳐보세요"
               titleClassName="text-3xl text-[var(--app-gold-text)]"
-              description="계산 기준이나 판정 흐름은 일반 풀이 화면에서 길게 반복하지 않고, 아래 페이지로 분리했습니다."
+              description="계산 기준이나 풀이 흐름은 일반 풀이 화면에서 길게 반복하지 않고, 아래 페이지로 분리했습니다."
             />
 
             <ProductGrid columns={2} className="mt-6">

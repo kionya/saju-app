@@ -208,7 +208,7 @@ export function buildDialogueFallback(
       : `저장된 프로필 기준으로 읽어보면, ${profileGrounding.reports.focus.headline}`,
     profileGrounding.reports.focus.summary,
     `기본 명식은 ${profileGrounding.saju.dayMaster}, ${profileGrounding.saju.strength}, ${profileGrounding.saju.pattern} 흐름으로 읽습니다. 용신 보완축은 ${profileGrounding.saju.yongsin} 쪽으로 먼저 봅니다.`,
-    evidenceSummary ? `핵심 근거는 ${evidenceSummary}입니다.` : null,
+    evidenceSummary ? `핵심 단서는 ${evidenceSummary}입니다.` : null,
     `질문하신 “${message}”은 ${profileGrounding.reports.focus.action} 쪽으로 정리해서 움직이시는 편이 맞습니다.`,
     `${counselor.label} 기준의 기본 풀이로 먼저 말씀드렸고, 저장된 명식 기준은 그대로 반영했습니다. 이 답변은 횟수와 코인을 차감하지 않습니다.`,
   ]
@@ -255,7 +255,7 @@ export function createDialoguePrompt(
       '말끝마다 가능성만 늘어놓지 말고, 지금 명식에서 어디가 강하고 어디를 조절해야 하는지 힘있게 짚어줍니다.',
       '명리 용어는 필요한 만큼만 쓰고, 처음 나올 때는 한자 또는 쉬운 풀이를 함께 덧붙입니다.',
       '저장 프로필 명식이 제공되면 그 명식을 기본값으로 사용합니다. 다만 사용자가 다른 사람의 사주를 따로 묻는 문맥이면 저장 프로필을 섞지 말고 필요한 출생 정보를 먼저 확인합니다.',
-      'recentFeedbackSummary가 있으면 최근 반응을 참고해 단정 표현 강도만 조절하고, 계산 근거보다 앞세우지 않습니다.',
+      'recentFeedbackSummary가 있으면 최근 반응을 참고해 단정 표현 강도만 조절하고, 명식 기준보다 앞세우지 않습니다.',
       '의료, 법률, 투자 판단은 해석으로 대신하지 않습니다.',
       '출생 정보나 명식 데이터가 없는 경우 빈말로 얼버무리지 말고, 어떤 정보가 필요한지 짧게 요청합니다.',
       buildDialogueCounselorInstructions(counselorId),
@@ -278,7 +278,7 @@ export function createDialoguePrompt(
             `주제 리포트 행동 제안: ${profileGrounding.reports.focus.action}`,
             `주제 리포트 주의점: ${profileGrounding.reports.focus.caution}`,
             profileGrounding.reports.focus.evidence.length > 0
-              ? `핵심 근거: ${profileGrounding.reports.focus.evidence
+              ? `핵심 단서: ${profileGrounding.reports.focus.evidence
                   .map((item) => `${item.label} ${item.title}`)
                   .join(' · ')}`
               : null,
@@ -301,7 +301,7 @@ export function createDialoguePrompt(
       '',
       '[답변 방식]',
       '질문에 대한 결론을 첫 문단에서 먼저 말합니다.',
-      '그다음 근거가 되는 명식 구조, 현재 운의 흐름, 행동 제안을 차례로 붙입니다.',
+      '그다음 명식 구조, 현재 운의 흐름, 행동 제안을 차례로 붙입니다.',
       '짧은 문단으로 답하고, 사족을 길게 붙이지 않습니다.',
     ]
       .filter(Boolean)

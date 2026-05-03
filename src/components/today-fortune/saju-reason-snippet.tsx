@@ -7,7 +7,7 @@ export function SajuReasonSnippet({
 }) {
   return (
     <section className="rounded-[1.45rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] p-5">
-      <div className="app-caption">사주 근거 1줄</div>
+      <div className="app-caption">사주 단서 1줄</div>
       <div className="mt-2 text-xs tracking-[0.18em] text-[var(--app-gold-soft)]">
         핵심 기준 · {result.groundingSummary.primaryConcept}
       </div>

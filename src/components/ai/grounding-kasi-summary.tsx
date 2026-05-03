@@ -5,12 +5,12 @@ import type { SajuReportRuntimeMetadata } from '@/lib/saju/report-metadata';
 
 function buildKasiLine(kasiComparison: KasiSingleInputComparison | null | undefined) {
   if (!kasiComparison) {
-    return '역법 대조 정보가 아직 함께 저장되지 않았습니다.';
+    return '음양력 대조 정보가 아직 함께 저장되지 않았습니다.';
   }
 
   const lunarDate = `${kasiComparison.kasi.lunYear}.${kasiComparison.kasi.lunMonth}.${kasiComparison.kasi.lunDay}${kasiComparison.kasi.lunLeapmonth === '윤' ? ' 윤달' : ''}`;
   if (kasiComparison.issues.length === 0) {
-    return `KASI 대조 기준 음력일 ${lunarDate}, 일진 ${kasiComparison.kasi.lunIljin ?? '미제공'}과 현재 계산이 일치합니다.`;
+    return `공식 음양력 기준 음력일 ${lunarDate}, 일진 ${kasiComparison.kasi.lunIljin ?? '미제공'}과 현재 계산이 일치합니다.`;
   }
 
   const issueSummary = kasiComparison.issues
@@ -18,7 +18,7 @@ function buildKasiLine(kasiComparison: KasiSingleInputComparison | null | undefi
     .map((issue) => issue.field)
     .join(', ');
 
-  return `KASI 대조 기준 음력일 ${lunarDate}, 일진 ${kasiComparison.kasi.lunIljin ?? '미제공'}과 비교했을 때 ${issueSummary} 차이가 감지되었습니다.`;
+  return `공식 음양력 기준 음력일 ${lunarDate}, 일진 ${kasiComparison.kasi.lunIljin ?? '미제공'}과 비교했을 때 ${issueSummary} 차이가 감지되었습니다.`;
 }
 
 function buildFactLines(grounding: SajuInterpretationGrounding) {
@@ -44,7 +44,7 @@ function buildFactLines(grounding: SajuInterpretationGrounding) {
 export function GroundingKasiSummary({
   grounding,
   kasiComparison,
-  title = '이 리포트가 보는 실제 근거',
+  title = '이 풀이가 보는 핵심 단서',
   id,
   metadata,
 }: {
@@ -88,14 +88,14 @@ export function GroundingKasiSummary({
       <p className="mt-4 text-xs leading-6 text-[var(--app-copy-soft)]">{buildKasiLine(kasiComparison)}</p>
       {metadata ? (
         <p className="mt-2 text-xs leading-6 text-[var(--app-copy-soft)]">
-          계산 기준과 판정 흐름을 저장해 같은 리포트를 다시 열어도 같은 기준으로 확인할 수 있습니다.
+          저장된 기준으로 다시 열어도 같은 풀이 흐름을 확인할 수 있습니다.
         </p>
       ) : null}
       <div className="mt-4">
         <GroundingDecisionTrace
           grounding={grounding}
           kasiComparison={kasiComparison}
-          title="판정 근거 보기"
+          title="왜 이렇게 보았나요"
           compact
         />
       </div>
