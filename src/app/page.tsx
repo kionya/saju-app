@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { ActionCluster } from '@/components/layout/action-cluster';
-import { FeatureCard } from '@/components/layout/feature-card';
 import { ProductGrid } from '@/components/layout/product-grid';
 import { SectionHeader } from '@/components/layout/section-header';
 import { SectionSurface } from '@/components/layout/section-surface';
@@ -15,7 +14,6 @@ import { AppShell } from '@/shared/layout/app-shell';
 import {
   QUESTION_ENTRY_POINTS,
   REPORT_SAMPLE_HREF,
-  TRUST_SIGNALS,
 } from '@/content/moonlight';
 
 function formatTodayLabel() {
@@ -30,11 +28,7 @@ function formatTodayLabel() {
   return `${values.year}년 ${values.month} ${values.day} · ${values.weekday}`;
 }
 
-const PREMIUM_HERO_TOKENS = [
-  { label: '기준서 핵심', value: '원국 · 격국 · 용신 · 대운' },
-  { label: '풀이 흐름', value: '명식 · 격국 · 용신 · 운' },
-  { label: '소장 방식', value: 'PDF · MY 보관함 · 대화' },
-] as const;
+const HERO_TRUST_LINE = '저장 가능 · 다시 보기 가능 · 공포성 단정 없음';
 
 export default function HomePage() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -148,14 +142,6 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="hidden flex-wrap justify-center gap-2 sm:flex">
-            {PREMIUM_HERO_TOKENS.map((token) => (
-              <span key={token.label} className="moon-pill text-sm">
-                {token.label} · {token.value}
-              </span>
-            ))}
-          </div>
-
           <ActionCluster
             align="center"
             className="moon-hero-actions w-full max-w-sm sm:max-w-none"
@@ -183,6 +169,10 @@ export default function HomePage() {
               오늘 조언 먼저 보기
             </Link>
           </ActionCluster>
+
+          <div className="rounded-full border border-[var(--app-gold)]/18 bg-[rgba(8,10,18,0.42)] px-4 py-2 text-center text-xs font-medium leading-5 text-[var(--app-gold-text)] backdrop-blur sm:text-sm">
+            {HERO_TRUST_LINE}
+          </div>
 
           <SectionSurface
             surface="panel"
@@ -294,29 +284,6 @@ export default function HomePage() {
                 샘플 리포트 보기
               </Link>
             </ActionCluster>
-          </SectionSurface>
-        </section>
-
-        <section className="reveal-on-scroll mb-12">
-          <SectionSurface surface="panel">
-            <SectionHeader
-              eyebrow="신뢰 장치"
-              title="무섭게 맞힌다는 말보다, 다시 확인할 수 있는 기준을 남깁니다"
-              titleClassName="text-3xl"
-              description="구매 수를 억지로 만들기보다 저장, 재열람, 판단 단서, 시간·출생지 기준, 안전한 표현을 전면에 둡니다."
-              descriptionClassName="max-w-3xl"
-            />
-            <ProductGrid columns={3} className="mt-6">
-              {TRUST_SIGNALS.map((signal) => (
-                <FeatureCard
-                  key={signal.title}
-                  surface="soft"
-                  title={signal.title}
-                  titleClassName="text-xl"
-                  description={signal.body}
-                />
-              ))}
-            </ProductGrid>
           </SectionSurface>
         </section>
 
