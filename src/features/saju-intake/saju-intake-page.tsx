@@ -5,8 +5,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { ActionCluster } from '@/components/layout/action-cluster';
-import { BulletList } from '@/components/layout/bullet-list';
-import { FeatureCard } from '@/components/layout/feature-card';
 import { ProductGrid } from '@/components/layout/product-grid';
 import { SectionHeader } from '@/components/layout/section-header';
 import { SectionSurface } from '@/components/layout/section-surface';
@@ -43,7 +41,7 @@ import { trackMoonlightEvent } from '@/lib/analytics';
 import { AppPage, AppShell, PageHero } from '@/shared/layout/app-shell';
 
 export type OnboardingStep = 'empathy' | 'birth' | 'nickname' | 'consent';
-type SwipeStepId = 'profile' | 'date' | 'gender' | 'location' | 'consent';
+type SwipeStepId = 'profile' | 'birth' | 'location' | 'consent';
 type ProfileLoadStatus = 'idle' | 'loading' | 'ready' | 'anonymous' | 'empty' | 'error';
 type LocationSearchStatus = 'idle' | 'loading' | 'ready' | 'empty' | 'error';
 
@@ -128,28 +126,21 @@ const BASE_STEPS: Array<{
   eyebrow: string;
   title: string;
   description: string;
-  section: UnifiedBirthInfoSection;
+  sections: readonly UnifiedBirthInfoSection[];
 }> = [
   {
-    id: 'date',
-    eyebrow: '생년월일',
-    title: '태어난 날짜를 고릅니다',
-    description: '양력과 음력을 정하고 연·월·일을 선택합니다.',
-    section: 'date',
-  },
-  {
-    id: 'gender',
-    eyebrow: '성별',
-    title: '성별을 선택합니다',
-    description: '사주 계산에 필요한 기본 구분만 받습니다.',
-    section: 'gender',
+    id: 'birth',
+    eyebrow: '기본 정보',
+    title: '생년월일과 성별을 한 번에 고릅니다',
+    description: '양력·음력, 연·월·일, 성별을 같은 화면에서 선택합니다.',
+    sections: ['date', 'gender'],
   },
   {
     id: 'location',
     eyebrow: '출생지와 시간',
-    title: '출생지와 시간을 맞춥니다',
-    description: '출생지는 시간 보정에 쓰입니다. 시간을 모르면 시간 모름으로 진행할 수 있습니다.',
-    section: 'location-time',
+    title: '시간과 출생지를 맞추면 바로 열립니다',
+    description: '시간을 모르면 시간 모름으로 진행할 수 있고, 출생지는 지역 버튼으로 빠르게 고를 수 있습니다.',
+    sections: ['location-time'],
   },
 ];
 
@@ -161,10 +152,16 @@ const CONSENT_STEP = {
 };
 
 const STEP_HINTS = [
-  '비로그인 최근 정보는 이 기기에만 남고, 원하시면 바로 지울 수 있습니다.',
-  '질문 주제를 먼저 고르면 결과 화면이 그 풀이 포커스로 열립니다.',
-  '결과 문체는 사주풀이 화면에서 남선생·여선생으로 고릅니다.',
+  '생년월일과 성별을 한 화면에서 같이 선택합니다.',
+  '저장된 정보나 최근 입력이 있으면 이름만 눌러 건너뜁니다.',
+  '비로그인 최근 정보는 이 기기에만 남고 바로 지울 수 있습니다.',
   '동의는 한 번 저장되면 다음 입력부터 자동으로 건너뜁니다.',
+] as const;
+
+const FAST_PATH_STEPS = [
+  ['1', '질문 선택', '지금 궁금한 문제를 먼저 고릅니다.'],
+  ['2', '기본 정보', '생년월일과 성별을 한 번에 입력합니다.'],
+  ['3', '시간·출생지', '시간을 모르면 시간 모름으로 열 수 있습니다.'],
 ] as const;
 
 const ENTRY_FOCUS_TOPIC_BY_SLUG = {
@@ -379,8 +376,10 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
   const activeStep = steps[activeIndex] ?? steps[0];
   const progressLabel = `${activeIndex + 1} / ${steps.length}`;
   const recentGuestDetail = recentGuestDraft ? formatRecentGuestDetail(recentGuestDraft) : '';
-  const dateStepIndex = 1;
-  const locationStepIndex = 3;
+  const selectedEntryPoint =
+    QUESTION_ENTRY_POINTS.find((entry) => entry.slug === selectedEntrySlug) ?? QUESTION_ENTRY_POINTS[0];
+  const birthStepIndex = Math.max(1, steps.findIndex((item) => item.id === 'birth'));
+  const locationStepIndex = Math.max(0, steps.findIndex((item) => item.id === 'location'));
   const consentStepIndex = steps.findIndex((item) => item.id === 'consent');
 
   useEffect(() => {
@@ -615,23 +614,18 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
     setProfileLoadMessage('이 기기에 남아 있던 최근 정보를 지웠습니다.');
   }
 
-  function validateDateStep() {
+  function validateBirthStep() {
+    if (form.gender !== 'male' && form.gender !== 'female') {
+      setErrorMessage('성별까지 선택해 주세요.');
+      return false;
+    }
+
     const parsed = resolveUnifiedBirthInput(buildUnifiedBirthDraft(form), {
-      requireGender: false,
+      requireGender: true,
     });
 
     if (!parsed.ok) {
       setErrorMessage(parsed.error);
-      return false;
-    }
-
-    setErrorMessage('');
-    return true;
-  }
-
-  function validateGenderStep() {
-    if (form.gender !== 'male' && form.gender !== 'female') {
-      setErrorMessage('성별을 선택해 주세요.');
       return false;
     }
 
@@ -771,8 +765,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
   }
 
   function goNext() {
-    if (activeStep.id === 'date' && !validateDateStep()) return;
-    if (activeStep.id === 'gender' && !validateGenderStep()) return;
+    if (activeStep.id === 'birth' && !validateBirthStep()) return;
     if (activeStep.id === 'location' && !validateLocationStep()) return;
 
     if (activeStep.id === 'location' && consentAccepted) {
@@ -822,7 +815,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
   function renderProfileStep() {
     return (
       <div className="mt-4 space-y-3">
-        <div className="grid grid-cols-2 gap-2.5 xl:grid-cols-3">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
           {QUESTION_ENTRY_POINTS.map((entry) => {
             const isSelected = selectedEntrySlug === entry.slug;
 
@@ -833,33 +826,34 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
                 onClick={() => selectEntryTopic(entry)}
                 data-selected={isSelected ? 'true' : 'false'}
                 className={cn(
-                  'group min-h-[6.6rem] rounded-[1.05rem] border px-3 py-3 text-left transition-colors sm:min-h-[8rem] sm:px-4 sm:py-4',
+                  'group rounded-full border px-3 py-2 text-center text-sm font-semibold transition-colors sm:px-4 sm:py-2.5',
                   isSelected
                     ? 'border-[var(--app-gold)]/42 bg-[var(--app-gold)]/10'
                     : 'border-[var(--app-line)] bg-[var(--app-surface-muted)] hover:border-[var(--app-gold)]/30 hover:bg-[var(--app-gold)]/8'
                 )}
               >
-                <span className="flex items-center justify-between gap-3">
-                  <span className="rounded-full border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/8 px-2.5 py-1 text-[11px] font-semibold text-[var(--app-gold-text)]">
-                    {entry.label}
-                  </span>
-                  <span className="text-xs text-[var(--app-copy-soft)]">
-                    {isSelected ? '선택됨' : '선택'}
-                  </span>
-                </span>
-                <span className="mt-2.5 block text-sm font-semibold leading-6 text-[var(--app-ivory)] sm:text-base">
-                  {entry.question}
-                </span>
-                <span className="mt-1.5 block text-[11px] leading-5 text-[var(--app-copy-muted)] sm:mt-2 sm:text-xs">
-                  {entry.productName}로 이어집니다.
+                <span className={isSelected ? 'text-[var(--app-ivory)]' : 'text-[var(--app-copy)]'}>
+                  {entry.label}
                 </span>
               </button>
             );
           })}
         </div>
 
-        <div className="rounded-[1.05rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-3 text-sm leading-6 text-[var(--app-gold-text)]">
-          주제를 먼저 골라도 생년월일, 성별, 출생지는 그대로 필요합니다. 저장된 정보가 있으면 아래 이름만 눌러 바로 채울 수 있습니다.
+        <div className="rounded-[1.05rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-[var(--app-ivory)]">
+                {selectedEntryPoint.question}
+              </div>
+              <p className="mt-1.5 text-sm leading-6 text-[var(--app-copy)]">
+                {selectedEntryPoint.reportAnswer}
+              </p>
+            </div>
+            <span className="shrink-0 rounded-full border border-[var(--app-gold)]/22 bg-[var(--app-gold)]/10 px-2.5 py-1 text-[11px] font-semibold text-[var(--app-gold-text)]">
+              선택됨
+            </span>
+          </div>
         </div>
 
         {recentGuestDraft ? (
@@ -880,7 +874,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               <Button type="button" onClick={applyRecentGuestInput} size="sm">
-                최근 정보로 채우기
+                최근 정보로 이어보기
               </Button>
               <Button
                 type="button"
@@ -902,26 +896,26 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
 
         {profileLoadStatus === 'anonymous' ? (
           <div className="rounded-[1.1rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-4">
-            <div className="text-sm font-medium text-[var(--app-ivory)]">로그인하면 저장 정보로 바로 시작할 수 있습니다</div>
+            <div className="text-sm font-medium text-[var(--app-ivory)]">비로그인으로도 바로 볼 수 있습니다</div>
             <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
               {recentGuestDraft
                 ? '지금은 새 정보를 직접 입력하거나, 이 기기에 남아 있는 최근 정보를 불러올 수 있습니다.'
-                : '지금은 새 정보를 직접 입력해 사주풀이를 열 수 있습니다.'}
+                : '저장은 나중에 해도 됩니다. 먼저 사주풀이를 열어보세요.'}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                onClick={() => setActiveIndex(birthStepIndex)}
+                size="sm"
+              >
+                새 정보 입력
+              </Button>
               <Link
                 href="/login?next=/saju/new"
                 className="moon-action-secondary moon-action-compact"
               >
                 로그인
               </Link>
-              <Button
-                type="button"
-                onClick={() => setActiveIndex(dateStepIndex)}
-                size="sm"
-              >
-                새 정보 입력
-              </Button>
             </div>
           </div>
         ) : null}
@@ -974,7 +968,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
           <span className="text-sm leading-6 text-[var(--app-copy-muted)]">새 생년월일로 보려면 직접 입력하세요.</span>
           <Button
             type="button"
-            onClick={() => setActiveIndex(dateStepIndex)}
+            onClick={() => setActiveIndex(birthStepIndex)}
             variant="secondary"
             size="sm"
           >
@@ -987,11 +981,15 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
 
   const nextLabel =
     activeStep.id === 'profile'
-      ? '이 주제로 입력 시작'
+      ? '바로 입력 시작'
+      : activeStep.id === 'birth'
+        ? '시간·출생지 입력'
       : activeStep.id === 'location' && consentAccepted
       ? isSubmitting
         ? '결과 준비 중...'
         : '사주풀이 열기'
+      : activeStep.id === 'location'
+        ? '마지막 동의 확인'
       : activeStep.id === 'consent'
         ? isSubmitting
           ? '결과 준비 중...'
@@ -1014,11 +1012,11 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
               key="layout"
               className="border-[var(--app-line)] bg-[var(--app-surface-muted)] text-[var(--app-copy-muted)]"
             >
-              옆으로 넘기는 입력
+              3단계 빠른 입력
             </Badge>,
           ]}
-          title="궁금한 문제를 먼저 고르고, 필요한 정보만 입력합니다"
-          description="연애, 돈, 일, 가족, 올해 흐름처럼 지금 알고 싶은 주제를 먼저 정하면 결과 화면이 그 풀이 포커스로 열립니다."
+          title="질문을 고르고, 필요한 정보만 빠르게 입력합니다"
+          description="생년월일과 성별을 한 화면에서 받고, 저장된 정보나 최근 입력이 있으면 더 빨리 결과로 이어집니다."
         />
 
         <section className="grid gap-4 lg:grid-cols-[1.04fr_0.96fr] lg:gap-6">
@@ -1122,7 +1120,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
                       onChange={(patch) => setForm((current) => applyUnifiedBirthPatch(current, patch))}
                       onStarted={() => markBirthStarted('manual')}
                       dateInputVariant="select"
-                      visibleSections={[activeStep.section]}
+                      visibleSections={activeStep.sections}
                       locationLoading={locationSearchStatus === 'loading'}
                       locationMessage={locationSearchMessage}
                       locationResults={locationSearchResults}
@@ -1167,12 +1165,34 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
           <SectionSurface surface="lunar" size="lg">
             <div className="app-starfield" />
             <SectionHeader
-              eyebrow="입력 가이드"
-              title="사주풀이 화면으로 가기 전 필요한 정보만 받습니다"
+              eyebrow="빠른 시작"
+              title="입력은 짧게, 풀이는 바로 이어갑니다"
               titleClassName="text-3xl text-[var(--app-gold-text)]"
-              description="설명 말투는 결과 화면에서 고르게 하고, 입력 단계에서는 계산에 필요한 정보와 필수 동의만 남겼습니다."
+              description="저장된 정보가 없을 때도 세 흐름만 지나면 결과 화면으로 넘어갑니다."
             />
-            <BulletList items={STEP_HINTS} className="mt-6" />
+
+            <div className="mt-6 grid gap-2.5">
+              {FAST_PATH_STEPS.map(([number, title, body]) => (
+                <div
+                  key={title}
+                  className="rounded-[1rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-4 py-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 text-xs font-semibold text-[var(--app-gold-text)]">
+                      {number}
+                    </span>
+                    <span>
+                      <span className="block text-sm font-semibold text-[var(--app-ivory)]">{title}</span>
+                      <span className="mt-1 block text-xs leading-5 text-[var(--app-copy-muted)]">{body}</span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 rounded-[1rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-3 text-xs leading-5 text-[var(--app-gold-text)]">
+              {STEP_HINTS[1]} {STEP_HINTS[2]}
+            </div>
 
             <div className="mt-5 flex flex-wrap gap-2">
               <Link href="/my/profile" className="app-top-action-link shrink-0">
@@ -1185,14 +1205,6 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
                 입력 기준 보기
               </Link>
             </div>
-
-            <FeatureCard
-              className="mt-6"
-              surface="soft"
-              eyebrow="말투 선택"
-              title="결과 화면에서 남선생·여선생으로 선택합니다"
-              description="입력 중에는 말투 선택을 묻지 않습니다. 같은 명식 기준을 결과 화면에서 두 선생의 말결로 비교할 수 있습니다."
-            />
           </SectionSurface>
         </section>
       </AppPage>
