@@ -16,12 +16,10 @@ import { FeatureCard } from '@/components/layout/feature-card';
 import { ProductGrid } from '@/components/layout/product-grid';
 import { SectionHeader } from '@/components/layout/section-header';
 import { SectionSurface } from '@/components/layout/section-surface';
-import { SwipeSectionDeck, SwipeSectionSlide } from '@/components/layout/swipe-section-deck';
 import { ReportKeepsakeSection } from '@/components/report/report-keepsake-section';
 import { ReportOneMinuteSummary } from '@/components/report/report-one-minute-summary';
 import FiveElementOrbitChart from '@/components/saju/five-element-orbit-chart';
 import { GroundingDecisionTrace } from '@/components/saju/grounding-decision-trace';
-import { MobileSajuResultStory } from '@/components/saju/mobile-saju-result-story';
 import { SajuFactEvidencePanel } from '@/components/saju/saju-fact-evidence-panel';
 import { Badge } from '@/components/ui/badge';
 import DetailUnlock from '@/components/detail-unlock';
@@ -443,50 +441,10 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
 
   return (
     <AppShell header={<SiteHeader />}>
-      <AppPage className="saju-result-page space-y-0 lg:space-y-6">
+      <AppPage className="saju-result-page space-y-5 sm:space-y-6">
         <SajuResultViewTracker slug={slug} />
-        <MobileSajuResultStory
-          slug={slug}
-          birthSummary={formatBirthSummary(input)}
-          focusBadge={report.focusBadge}
-          headline={report.headline}
-          dayMasterSummary={report.dayMasterSummary}
-          keyThemes={keyThemes}
-          cautionPatterns={cautionPatterns}
-          favorableChoices={favorableChoices}
-          scores={report.scores}
-          primaryAction={report.primaryAction}
-          cautionAction={report.cautionAction}
-          timeline={report.timeline}
-          pillars={pillars.map(({ label, pillar }) => ({
-            label,
-            stem: pillar?.stem ?? '—',
-            branch: pillar?.branch ?? '—',
-            stemColor: pillar ? ELEMENT_INFO[pillar.stemElement].color : 'var(--app-copy-soft)',
-            branchColor: pillar ? ELEMENT_INFO[pillar.branchElement].color : 'var(--app-copy-soft)',
-          }))}
-          dayMasterLabel={`${sajuData.dayMaster.stem} 일간`}
-          dayMasterElement={sajuData.dayMaster.element}
-          dayMasterMetaphor={sajuData.dayMaster.metaphor ?? '자연의 상징'}
-          dayMasterDescription={
-            sajuData.dayMaster.description ??
-            '타고난 기질은 한 가지 단어보다 상황 속에서 어떻게 드러나는지 함께 읽어야 더 자연스럽습니다.'
-          }
-          dayMasterTraits={ELEMENT_INFO[sajuData.dayMaster.element].traits}
-          fiveElementsByElement={sajuData.fiveElements.byElement}
-          dominantElement={sajuData.fiveElements.dominant}
-          weakestElement={sajuData.fiveElements.weakest}
-          supportElements={report.supportElements.map((element) => ELEMENT_INFO[element].name)}
-          evidenceCards={report.evidenceCards.map((card) => ({
-            label: card.label,
-            title: card.title,
-            body: card.body,
-          }))}
-          luckyDates={report.luckyDates}
-          cautionDates={report.cautionDates}
-        />
 
-        <div className="hidden space-y-6 lg:block">
+        <div className="space-y-5 sm:space-y-6">
         <SajuScreenNav slug={slug} current="result" />
 
         <SectionSurface surface="lunar" size="lg" className="moon-result-hero">
@@ -586,16 +544,39 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           </div>
         </SectionSurface>
 
-        <SwipeSectionDeck
-          title="사주풀이 결과를 한 화면씩 넘겨 봅니다"
-          description="긴 결과 본문을 요약, 분야, 운 흐름, 근거, 상세 해석으로 나눴습니다. 모바일에서는 좌우로 밀고, 데스크톱에서는 상단 버튼과 칩으로 바로 이동할 수 있습니다."
-        >
-          <SwipeSectionSlide
-            eyebrow="첫 화면"
-            title="1분 요약과 판정 근거"
-            description="결과를 처음 열었을 때 꼭 봐야 하는 핵심과 다음 행동만 먼저 모았습니다."
-            navLabel="요약"
-          >
+        <SectionSurface surface="panel" className="space-y-4">
+          <SectionHeader
+            eyebrow="읽는 순서"
+            title="좌우로 넘기지 않고 아래로 편하게 읽습니다"
+            titleClassName="text-2xl sm:text-3xl"
+            description="요약, 분야, 운 흐름, 근거, 상세 해석을 한 화면의 세로 흐름으로 정리했습니다. 필요한 부분은 아래로 내려가며 자연스럽게 확인하시면 됩니다."
+          />
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            {[
+              ['#result-summary', '요약'],
+              ['#result-topics', '분야'],
+              ['#result-flow', '운 흐름'],
+              ['#result-evidence', '근거'],
+              ['#result-detail', '상세'],
+            ].map(([href, label]) => (
+              <a
+                key={href}
+                href={href}
+                className="rounded-2xl border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-3 text-center text-sm font-semibold text-[var(--app-copy)] transition-colors hover:border-[var(--app-gold)]/35 hover:bg-[var(--app-gold)]/10 hover:text-[var(--app-gold-text)]"
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+        </SectionSurface>
+
+        <section id="result-summary" className="space-y-4 scroll-mt-24">
+          <SectionHeader
+            eyebrow="요약"
+            title="먼저 핵심과 판정 근거를 봅니다"
+            titleClassName="text-2xl sm:text-3xl"
+            description="결과를 처음 열었을 때 꼭 봐야 하는 한 줄, 조심할 패턴, 이어볼 행동만 먼저 모았습니다."
+          />
             <section className="space-y-4">
               <ReportOneMinuteSummary
                 headline={report.headline}
@@ -685,14 +666,15 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             </div>
               </SectionSurface>
             </section>
-          </SwipeSectionSlide>
+        </section>
 
-          <SwipeSectionSlide
+        <section id="result-topics" className="space-y-4 scroll-mt-24">
+          <SectionHeader
             eyebrow="분야"
             title="분야별 흐름과 올해 전략서"
+            titleClassName="text-2xl sm:text-3xl"
             description="오늘, 연애, 재물, 직장, 관계를 고르고 올해 전략으로 이어지는 화면입니다."
-            navLabel="분야"
-          >
+          />
             <section className="app-panel p-6 sm:p-7">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -813,14 +795,15 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           </div>
         </section>
 
-          </SwipeSectionSlide>
+        </section>
 
-          <SwipeSectionSlide
+        <section id="result-flow" className="space-y-4 scroll-mt-24">
+          <SectionHeader
             eyebrow="운 흐름"
             title="오늘과 이번 달, 대운 흐름"
+            titleClassName="text-2xl sm:text-3xl"
             description="현재 시점에서 이어지는 시간 흐름을 한 화면으로 묶었습니다."
-            navLabel="운 흐름"
-          >
+          />
             <section className="grid gap-4 lg:grid-cols-3">
           {report.timeline.map((item) => (
             <article key={item.label} className="app-panel p-6">
@@ -843,14 +826,15 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
           ))}
         </section>
 
-          </SwipeSectionSlide>
+        </section>
 
-          <SwipeSectionSlide
+        <section id="result-evidence" className="space-y-4 scroll-mt-24">
+          <SectionHeader
             eyebrow="근거와 보관"
             title="계산 근거와 다시 읽을 가치"
+            titleClassName="text-2xl sm:text-3xl"
             description="판정의 바탕과 PDF·보관함 가치를 별도 화면으로 모았습니다."
-            navLabel="근거"
-          >
+          />
             <SajuFactEvidencePanel
               grounding={grounding}
               kasiComparison={kasiComparison}
@@ -879,14 +863,15 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
                 ))}
               </ProductGrid>
             </SectionSurface>
-          </SwipeSectionSlide>
+        </section>
 
-          <SwipeSectionSlide
+        <section id="result-detail" className="space-y-4 scroll-mt-24">
+          <SectionHeader
             eyebrow="상세"
             title="상세 해석과 사주 명반"
+            titleClassName="text-2xl sm:text-3xl"
             description="더 깊은 풀이, AI 해석, 현재 운과 대운 흐름은 이 화면에서 열어봅니다."
-            navLabel="상세"
-          >
+          />
             <div>
           <DetailUnlock
             slug={slug}
@@ -1364,14 +1349,15 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             </section>
           </DetailUnlock>
             </div>
-          </SwipeSectionSlide>
+        </section>
 
-          <SwipeSectionSlide
-            eyebrow="마무리"
-            title="안전 안내와 고전 근거"
-            description="의료·건강 판단 안내와 고전 근거 확인, 새 리포트 생성 링크를 마지막 화면에 모았습니다."
-            navLabel="안내"
-          >
+        <section id="result-next" className="space-y-4 scroll-mt-24">
+          <SectionHeader
+            eyebrow="안내"
+            title="안전 안내와 다음 리포트"
+            titleClassName="text-2xl sm:text-3xl"
+            description="의료·건강 판단 안내와 고전 근거 확인, 새 리포트 생성 링크를 마지막에 모았습니다."
+          />
             <SafetyNotice variant="health" />
 
             <div className="text-center">
@@ -1384,8 +1370,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             </div>
 
             <ClassicEvidencePanel concept={classicEvidenceConcept} />
-          </SwipeSectionSlide>
-        </SwipeSectionDeck>
+        </section>
         </div>
       </AppPage>
     </AppShell>
