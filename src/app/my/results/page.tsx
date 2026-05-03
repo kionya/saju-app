@@ -67,7 +67,7 @@ export default async function MyResultsPage({ searchParams }: MyResultsPageProps
           </Badge>,
         ]}
         title="결과보관함"
-        description="저장된 결과를 다시 보고, 질문 포커스를 바꿔 비교하면서 이어 읽을 수 있게 구성했습니다. 필요 없어진 결과는 보관함에서 삭제할 수 있고, 이미 해금한 상세 해석은 같은 항목으로 다시 코인이 나가지 않도록 처리합니다."
+        description="저장된 결과를 다시 보고, 질문 포커스를 바꿔 비교하면서 이어 읽을 수 있게 구성했습니다. 필요 없어진 결과는 보관함에서 삭제할 수 있고, 이미 연 분야별 깊이보기는 같은 항목으로 다시 코인이 나가지 않도록 처리합니다."
       />
 
       <section className="grid gap-6 lg:grid-cols-[1.04fr_0.96fr]">

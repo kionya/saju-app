@@ -50,7 +50,7 @@ export default function DreamInterpretationPage() {
                 <p className="mt-2 text-sm leading-7 text-white/68">{item.meaning}</p>
               </div>
               <p className="mt-4 text-sm leading-7 text-white/58">{item.action}</p>
-              <div className="mt-5 text-sm font-medium text-[#d2b072]">상세 해석 보기</div>
+              <div className="mt-5 text-sm font-medium text-[#d2b072]">꿈 풀이 자세히 보기</div>
             </Link>
           ))}
         </section>

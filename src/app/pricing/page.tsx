@@ -172,7 +172,7 @@ export default function PricingPage() {
             eyebrow="코인팩"
             title="필요한 기능만 열어볼 때 쓰는 충전권"
             titleClassName="text-3xl"
-            description="코인은 상세해석, 달력, 일부 기능을 작게 열어볼 때 사용합니다. 이미 해금한 항목은 재열람 기준을 먼저 확인하도록 설계되어 있습니다."
+            description="코인은 분야별 깊이보기, 달력, 일부 기능을 작게 열어볼 때 사용합니다. 이미 해금한 항목은 재열람 기준을 먼저 확인하도록 설계되어 있습니다."
             descriptionClassName="max-w-3xl"
           />
           <ProductGrid columns={4} className="mt-6">
