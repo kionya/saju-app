@@ -25,11 +25,15 @@ import { toSlug } from '@/lib/saju/pillars';
 import { cn } from '@/lib/utils';
 import {
   clearOnboardingDraft,
+  clearRecentGuestInput,
   createInitialOnboardingDraft,
   hasAcceptedRequiredConsents,
+  hasCompleteRecentGuestInput,
   loadOnboardingDraft,
+  loadRecentGuestInput,
   saveAcceptedRequiredConsents,
   saveOnboardingDraft,
+  saveRecentGuestInput,
   shouldAutoSavePersonalProfile,
   type OnboardingFocusTopic,
   type SajuOnboardingDraft,
@@ -157,7 +161,7 @@ const CONSENT_STEP = {
 };
 
 const STEP_HINTS = [
-  '화면을 좌우로 넘기듯 한 단계씩 입력합니다.',
+  '비로그인 최근 정보는 이 기기에만 남고, 원하시면 바로 지울 수 있습니다.',
   '질문 주제를 먼저 고르면 결과 화면이 그 풀이 포커스로 열립니다.',
   '결과 문체는 사주풀이 화면에서 남선생·여선생으로 고릅니다.',
   '동의는 한 번 저장되면 다음 입력부터 자동으로 건너뜁니다.',
@@ -277,6 +281,21 @@ function formatSavedProfileDetail(profile: ProfileApiBirthFields) {
   return `${calendarLabel} ${dateLabel} · ${hourLabel} · ${genderLabel}${locationLabel}`;
 }
 
+function formatRecentGuestDetail(draft: SajuOnboardingDraft) {
+  const calendarLabel = draft.calendarType === 'lunar' ? '음력' : '양력';
+  const dateLabel = `${draft.year}.${draft.month}.${draft.day}`;
+  const hourLabel = draft.hour
+    ? `${draft.hour}시${draft.minute ? ` ${draft.minute.padStart(2, '0')}분` : ''}`
+    : '시간 미입력';
+  const genderLabel =
+    draft.gender === 'male' ? '남성' : draft.gender === 'female' ? '여성' : '성별 미선택';
+  const locationLabel = draft.birthLocationLabel
+    ? ` · ${draft.birthLocationLabel}${draft.solarTimeMode === 'longitude' ? ' 진태양시' : ''}`
+    : '';
+
+  return `${calendarLabel} ${dateLabel} · ${hourLabel} · ${genderLabel}${locationLabel}`;
+}
+
 function buildSavedProfileOptions(data: ProfileApiResponse): SavedBirthProfile[] {
   const options: SavedBirthProfile[] = [];
 
@@ -340,6 +359,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
   const [activeIndex, setActiveIndex] = useState(0);
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [savedProfileOptions, setSavedProfileOptions] = useState<SavedBirthProfile[]>([]);
+  const [recentGuestDraft, setRecentGuestDraft] = useState<SajuOnboardingDraft | null>(null);
   const [profileLoadStatus, setProfileLoadStatus] = useState<ProfileLoadStatus>('idle');
   const [profileLoadMessage, setProfileLoadMessage] = useState('');
   const [locationSearchStatus, setLocationSearchStatus] = useState<LocationSearchStatus>('idle');
@@ -358,12 +378,14 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
   );
   const activeStep = steps[activeIndex] ?? steps[0];
   const progressLabel = `${activeIndex + 1} / ${steps.length}`;
+  const recentGuestDetail = recentGuestDraft ? formatRecentGuestDetail(recentGuestDraft) : '';
   const dateStepIndex = 1;
   const locationStepIndex = 3;
   const consentStepIndex = steps.findIndex((item) => item.id === 'consent');
 
   useEffect(() => {
     const draft = loadOnboardingDraft();
+    const recent = loadRecentGuestInput();
     const focusParam =
       typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('focus');
     const productParam =
@@ -387,6 +409,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
       setSelectedEntrySlug('family');
     }
     setForm(initialFocusTopic ? { ...draft, focusTopic: initialFocusTopic } : draft);
+    setRecentGuestDraft(recent);
     setConsentAccepted(hasAcceptedRequiredConsents());
     setIsHydrated(true);
   }, []);
@@ -453,7 +476,7 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
     };
   }, [isHydrated]);
 
-  function markBirthStarted(source: 'manual' | 'profile') {
+  function markBirthStarted(source: 'manual' | 'profile' | 'recent') {
     if (hasTrackedBirthStartRef.current) return;
     trackMoonlightEvent('birth_form_started', {
       from: 'saju-new',
@@ -570,6 +593,28 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
     setActiveIndex(consentAccepted ? locationStepIndex : Math.max(consentStepIndex, locationStepIndex));
   }
 
+  function applyRecentGuestInput() {
+    if (!recentGuestDraft || !hasCompleteRecentGuestInput(recentGuestDraft)) return;
+
+    markBirthStarted('recent');
+    setForm((current) => ({
+      ...recentGuestDraft,
+      focusTopic: current.focusTopic,
+      tone: current.tone,
+      consents: current.consents,
+      loadedProfileSource: 'manual',
+    }));
+    setErrorMessage('');
+    setProfileLoadMessage('이 기기에 남아 있던 최근 정보를 입력칸에 불러왔습니다.');
+    setActiveIndex(consentAccepted ? locationStepIndex : Math.max(consentStepIndex, locationStepIndex));
+  }
+
+  function removeRecentGuestInput() {
+    clearRecentGuestInput();
+    setRecentGuestDraft(null);
+    setProfileLoadMessage('이 기기에 남아 있던 최근 정보를 지웠습니다.');
+  }
+
   function validateDateStep() {
     const parsed = resolveUnifiedBirthInput(buildUnifiedBirthDraft(form), {
       requireGender: false,
@@ -670,6 +715,9 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
         layout: 'swipe',
       });
 
+      if (form.loadedProfileSource !== 'family') {
+        saveRecentGuestInput(form);
+      }
       clearOnboardingDraft();
       if (shouldAutoSavePersonalProfile(form.loadedProfileSource)) {
         void fetch('/api/profile', {
@@ -712,6 +760,10 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
         unknownBirthTime: parsed.input.unknownTime,
         layout: 'swipe',
       });
+      if (form.loadedProfileSource !== 'family') {
+        saveRecentGuestInput(form);
+      }
+      clearOnboardingDraft();
       router.push(buildPostSubmitHref(fallbackId, form.focusTopic, pendingProduct));
     } finally {
       setIsSubmitting(false);
@@ -810,6 +862,38 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
           주제를 먼저 골라도 생년월일, 성별, 출생지는 그대로 필요합니다. 저장된 정보가 있으면 아래 이름만 눌러 바로 채울 수 있습니다.
         </div>
 
+        {recentGuestDraft ? (
+          <div className="rounded-[1.1rem] border border-[var(--app-gold)]/28 bg-[linear-gradient(135deg,rgba(210,176,114,0.14),rgba(255,255,255,0.035))] px-4 py-4 shadow-[0_18px_48px_rgba(0,0,0,0.22)]">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-sm font-semibold text-[var(--app-ivory)]">최근 입력한 정보가 있어요</div>
+                <p className="mt-1.5 text-sm leading-6 text-[var(--app-copy-muted)]">
+                  로그인하지 않아도 같은 브라우저에서는 다시 입력하지 않도록 이 기기에만 기억합니다.
+                </p>
+              </div>
+              <span className="rounded-full border border-[var(--app-gold)]/24 bg-[var(--app-gold)]/10 px-2.5 py-1 text-[11px] font-semibold text-[var(--app-gold-text)]">
+                로컬 저장
+              </span>
+            </div>
+            <div className="mt-3 rounded-[0.9rem] border border-[var(--app-line)] bg-[rgba(255,255,255,0.035)] px-3 py-2.5 text-xs leading-6 text-[var(--app-copy)]">
+              {recentGuestDetail}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button type="button" onClick={applyRecentGuestInput} size="sm">
+                최근 정보로 채우기
+              </Button>
+              <Button
+                type="button"
+                onClick={removeRecentGuestInput}
+                variant="secondary"
+                size="sm"
+              >
+                이 기기에서 지우기
+              </Button>
+            </div>
+          </div>
+        ) : null}
+
         {profileLoadStatus === 'loading' ? (
           <div className="rounded-[1.1rem] border border-[var(--app-line)] bg-[var(--app-surface-muted)] px-4 py-4 text-sm text-[var(--app-copy-muted)]">
             저장된 내 정보와 등록한 사람을 확인하고 있습니다.
@@ -820,7 +904,9 @@ export default function SajuIntakePage({ step: _step }: { step?: OnboardingStep 
           <div className="rounded-[1.1rem] border border-[var(--app-gold)]/18 bg-[var(--app-gold)]/8 px-4 py-4">
             <div className="text-sm font-medium text-[var(--app-ivory)]">로그인하면 저장 정보로 바로 시작할 수 있습니다</div>
             <p className="mt-2 text-sm leading-6 text-[var(--app-copy-muted)]">
-              지금은 새 정보를 직접 입력해 사주풀이를 열 수 있습니다.
+              {recentGuestDraft
+                ? '지금은 새 정보를 직접 입력하거나, 이 기기에 남아 있는 최근 정보를 불러올 수 있습니다.'
+                : '지금은 새 정보를 직접 입력해 사주풀이를 열 수 있습니다.'}
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Link

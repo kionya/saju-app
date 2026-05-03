@@ -30,6 +30,7 @@ export interface SajuOnboardingDraft {
 
 export const ONBOARDING_STORAGE_KEY = 'moonlight:saju-onboarding-draft';
 export const ONBOARDING_CONSENT_STORAGE_KEY = 'moonlight:saju-onboarding-consent-v1';
+export const RECENT_GUEST_INPUT_STORAGE_KEY = 'moonlight:saju-recent-guest-input-v1';
 
 function getRequiredConsentSignature() {
   return ONBOARDING_CONSENTS.filter((item) => item.required)
@@ -86,6 +87,41 @@ function mergeConsentState(value: unknown) {
   ) as Record<string, boolean>;
 }
 
+function normalizeOnboardingDraft(parsed: Partial<SajuOnboardingDraft>): SajuOnboardingDraft {
+  return {
+    calendarType: parsed.calendarType === 'lunar' ? 'lunar' : 'solar',
+    timeRule:
+      parsed.timeRule === 'trueSolarTime' ||
+      parsed.timeRule === 'nightZi' ||
+      parsed.timeRule === 'earlyZi'
+        ? parsed.timeRule
+        : 'standard',
+    year: typeof parsed.year === 'string' ? parsed.year : '',
+    month: typeof parsed.month === 'string' ? parsed.month : '',
+    day: typeof parsed.day === 'string' ? parsed.day : '',
+    hour: typeof parsed.hour === 'string' ? parsed.hour : '',
+    minute: typeof parsed.minute === 'string' ? parsed.minute : '',
+    jasiMethod: parsed.jasiMethod === 'split' ? 'split' : 'unified',
+    birthLocationCode: typeof parsed.birthLocationCode === 'string' ? parsed.birthLocationCode : '',
+    birthLocationLabel: typeof parsed.birthLocationLabel === 'string' ? parsed.birthLocationLabel : '',
+    birthLatitude: typeof parsed.birthLatitude === 'string' ? parsed.birthLatitude : '',
+    birthLongitude: typeof parsed.birthLongitude === 'string' ? parsed.birthLongitude : '',
+    solarTimeMode: parsed.solarTimeMode === 'longitude' ? 'longitude' : 'standard',
+    gender: typeof parsed.gender === 'string' ? parsed.gender : '',
+    nickname: typeof parsed.nickname === 'string' ? parsed.nickname : '',
+    loadedProfileSource:
+      parsed.loadedProfileSource === 'self' || parsed.loadedProfileSource === 'family'
+        ? parsed.loadedProfileSource
+        : 'manual',
+    focusTopic: normalizeFocusTopic(parsed.focusTopic),
+    tone:
+      parsed.tone === 'friendly' || parsed.tone === 'polite' || parsed.tone === 'standard'
+        ? parsed.tone
+        : 'polite',
+    consents: mergeConsentState(parsed.consents),
+  };
+}
+
 export function loadOnboardingDraft(): SajuOnboardingDraft {
   if (typeof window === 'undefined') {
     return createInitialOnboardingDraft();
@@ -96,38 +132,7 @@ export function loadOnboardingDraft(): SajuOnboardingDraft {
     if (!raw) return createInitialOnboardingDraft();
 
     const parsed = JSON.parse(raw) as Partial<SajuOnboardingDraft>;
-    return {
-      calendarType: parsed.calendarType === 'lunar' ? 'lunar' : 'solar',
-      timeRule:
-        parsed.timeRule === 'trueSolarTime' ||
-        parsed.timeRule === 'nightZi' ||
-        parsed.timeRule === 'earlyZi'
-          ? parsed.timeRule
-          : 'standard',
-      year: typeof parsed.year === 'string' ? parsed.year : '',
-      month: typeof parsed.month === 'string' ? parsed.month : '',
-      day: typeof parsed.day === 'string' ? parsed.day : '',
-      hour: typeof parsed.hour === 'string' ? parsed.hour : '',
-      minute: typeof parsed.minute === 'string' ? parsed.minute : '',
-      jasiMethod: parsed.jasiMethod === 'split' ? 'split' : 'unified',
-      birthLocationCode: typeof parsed.birthLocationCode === 'string' ? parsed.birthLocationCode : '',
-      birthLocationLabel: typeof parsed.birthLocationLabel === 'string' ? parsed.birthLocationLabel : '',
-      birthLatitude: typeof parsed.birthLatitude === 'string' ? parsed.birthLatitude : '',
-      birthLongitude: typeof parsed.birthLongitude === 'string' ? parsed.birthLongitude : '',
-      solarTimeMode: parsed.solarTimeMode === 'longitude' ? 'longitude' : 'standard',
-      gender: typeof parsed.gender === 'string' ? parsed.gender : '',
-      nickname: typeof parsed.nickname === 'string' ? parsed.nickname : '',
-      loadedProfileSource:
-        parsed.loadedProfileSource === 'self' || parsed.loadedProfileSource === 'family'
-          ? parsed.loadedProfileSource
-          : 'manual',
-      focusTopic: normalizeFocusTopic(parsed.focusTopic),
-      tone:
-        parsed.tone === 'friendly' || parsed.tone === 'polite' || parsed.tone === 'standard'
-          ? parsed.tone
-          : 'polite',
-      consents: mergeConsentState(parsed.consents),
-    };
+    return normalizeOnboardingDraft(parsed);
   } catch {
     return createInitialOnboardingDraft();
   }
@@ -141,6 +146,48 @@ export function saveOnboardingDraft(draft: SajuOnboardingDraft) {
 export function clearOnboardingDraft() {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+}
+
+export function hasCompleteRecentGuestInput(draft: SajuOnboardingDraft) {
+  return Boolean(
+    draft.year.trim() &&
+      draft.month.trim() &&
+      draft.day.trim() &&
+      (draft.gender === 'male' || draft.gender === 'female') &&
+      draft.birthLocationCode.trim()
+  );
+}
+
+export function loadRecentGuestInput(): SajuOnboardingDraft | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = window.localStorage.getItem(RECENT_GUEST_INPUT_STORAGE_KEY);
+    if (!raw) return null;
+
+    const draft = normalizeOnboardingDraft(JSON.parse(raw) as Partial<SajuOnboardingDraft>);
+    return hasCompleteRecentGuestInput(draft) ? draft : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveRecentGuestInput(draft: SajuOnboardingDraft) {
+  if (typeof window === 'undefined') return;
+  if (!hasCompleteRecentGuestInput(draft)) return;
+
+  const snapshot: SajuOnboardingDraft = {
+    ...draft,
+    loadedProfileSource: 'manual',
+    consents: createConsentState(),
+  };
+
+  window.localStorage.setItem(RECENT_GUEST_INPUT_STORAGE_KEY, JSON.stringify(snapshot));
+}
+
+export function clearRecentGuestInput() {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(RECENT_GUEST_INPUT_STORAGE_KEY);
 }
 
 export function hasAcceptedRequiredConsents() {
