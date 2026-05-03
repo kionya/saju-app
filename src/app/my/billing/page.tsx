@@ -30,7 +30,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 const FEATURE_LABELS: Record<string, string> = {
-  detail_report: '상세 해석 열기',
+  detail_report: '분야별 깊이보기',
   calendar: '월간 달력 열기',
   lifetime_report: '명리 기준서 열람',
   yearly_report: '올해 전략서 열람',
@@ -53,9 +53,9 @@ function getTransactionFeatureLabel(
     const kind = readMetadataString(transaction, 'kind');
     if (kind === 'today_fortune_premium_access') return '오늘운세 심화풀이';
     if (kind === 'today_result_followup') return '오늘운세 후속 대화';
-    if (kind === 'detail_report_access') return '상세 해석 열기';
-    if (kind === 'detail_report_daily_access') return '상세 해석 열기';
-    return '상세 해석 이용';
+    if (kind === 'detail_report_access') return '분야별 깊이보기';
+    if (kind === 'detail_report_daily_access') return '분야별 깊이보기';
+    return '분야별 심화 이용';
   }
 
   if (transaction.feature === 'calendar') {

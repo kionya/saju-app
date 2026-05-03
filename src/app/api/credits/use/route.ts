@@ -7,6 +7,7 @@ import {
 import { createClient } from '@/lib/supabase/server';
 import { deductCredits } from '@/lib/credits/deduct';
 import {
+  hasDetailReportAccess,
   unlockDetailReport,
   validateCreditUsePayload,
 } from '@/lib/credits/detail-report-access';
@@ -34,6 +35,62 @@ interface DetailTopicReportContent {
   scoreLabel?: string;
   highlights: string[];
   blocks: DetailReportBlock[];
+}
+
+export async function GET(req: NextRequest) {
+  const feature = req.nextUrl.searchParams.get('feature');
+  const slug = req.nextUrl.searchParams.get('slug');
+  const counselorIdParam = req.nextUrl.searchParams.get('counselorId');
+
+  const validation = validateCreditUsePayload({
+    feature,
+    slug,
+  });
+
+  if (!validation.ok) {
+    return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+
+  if (validation.payload.feature !== 'detail_report' || !validation.payload.slug) {
+    return NextResponse.json({ unlocked: false });
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ authenticated: false, unlocked: false });
+  }
+
+  const reading = await resolveReading(validation.payload.slug);
+
+  if (!reading) {
+    return NextResponse.json({ error: '사주 결과를 찾지 못했습니다.' }, { status: 404 });
+  }
+
+  if (reading.userId && reading.userId !== user.id) {
+    return NextResponse.json({ error: '본인의 결과만 열 수 있습니다.' }, { status: 403 });
+  }
+
+  const readingKey = toSlug(reading.input);
+  const unlocked = await hasDetailReportAccess(user.id, readingKey);
+
+  if (!unlocked) {
+    return NextResponse.json({ authenticated: true, unlocked: false });
+  }
+
+  const profile = await getUserProfileById(user.id);
+  const counselorId = resolveMoonlightCounselor(counselorIdParam, profile.preferredCounselor);
+
+  return NextResponse.json({
+    authenticated: true,
+    unlocked: true,
+    content: buildDetailReportContent(reading, counselorId),
+    counselorId,
+    access: 'reused',
+  });
 }
 
 export async function POST(req: NextRequest) {

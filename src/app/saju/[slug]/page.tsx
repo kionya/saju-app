@@ -27,7 +27,9 @@ import { TRUST_SIGNALS } from '@/content/moonlight';
 import { SajuResultViewTracker } from '@/features/saju-detail/saju-result-view-tracker';
 import SajuScreenNav from '@/features/saju-detail/saju-screen-nav';
 import SiteHeader from '@/features/shared-navigation/site-header';
+import { getLifetimeReportEntitlement } from '@/lib/report-entitlements';
 import { ELEMENT_INFO } from '@/lib/saju/elements';
+import { toSlug } from '@/lib/saju/pillars';
 import type { Branch, Element, Stem } from '@/lib/saju/types';
 import { isReadingId, resolveReading } from '@/lib/saju/readings';
 import { buildSajuInterpretationGrounding, buildSajuReport, FOCUS_TOPIC_META } from '@/domain/saju/report';
@@ -39,6 +41,12 @@ import {
   getClassicEvidenceBundle,
   type ClassicEvidenceItem,
 } from '@/server/classics/evidence';
+import {
+  createClient,
+  hasSupabaseServerEnv,
+  hasSupabaseServiceEnv,
+} from '@/lib/supabase/server';
+import { getManagedSubscription } from '@/lib/subscription';
 import { cn } from '@/lib/utils';
 import { AppPage, AppShell } from '@/shared/layout/app-shell';
 
@@ -400,6 +408,36 @@ function CardLinkedClassicEvidence({
   );
 }
 
+function canUseSubscriptionForPremiumReport(subscription: Awaited<ReturnType<typeof getManagedSubscription>>) {
+  return (
+    subscription?.status === 'active' &&
+    (subscription.plan === 'plus_monthly' || subscription.plan === 'premium_monthly')
+  );
+}
+
+async function getPremiumReportAccessLabel(slug: string, readingKey: string) {
+  if (!hasSupabaseServerEnv || !hasSupabaseServiceEnv) return null;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const [entitlement, subscription] = await Promise.all([
+    getLifetimeReportEntitlement(user.id, readingKey, [slug]),
+    getManagedSubscription(user.id),
+  ]);
+
+  if (entitlement) return '평생 소장 권한';
+  if (canUseSubscriptionForPremiumReport(subscription)) {
+    return subscription?.plan === 'premium_monthly' ? 'Premium 이용권' : '라이트 이용권';
+  }
+
+  return null;
+}
+
 export default async function SajuResultPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { topic } = await searchParams;
@@ -408,6 +446,7 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
   if (!reading) notFound();
 
   const { input, sajuData } = reading;
+  const readingKey = toSlug(input);
   const report = buildSajuReport(input, sajuData, topic);
   const grounding = reading.grounding ?? buildSajuInterpretationGrounding(input, sajuData, report);
 
@@ -425,6 +464,8 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
     limit: 1,
   });
   const primaryClassicItems = classicEvidenceBundle[classicEvidenceConcept]?.items ?? [];
+  const premiumAccessLabel = await getPremiumReportAccessLabel(slug, readingKey);
+  const premiumHref = `/saju/${encodeURIComponent(slug)}/premium`;
   let kasiComparison = reading.kasiComparison;
   if (!kasiComparison && process.env.KASI_SERVICE_KEY) {
     try {
@@ -849,6 +890,8 @@ export default async function SajuResultPage({ params, searchParams }: Props) {
             <div>
           <DetailUnlock
             slug={slug}
+            premiumAccessLabel={premiumAccessLabel}
+            premiumHref={premiumHref}
             referenceChildren={
               <section className="space-y-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">

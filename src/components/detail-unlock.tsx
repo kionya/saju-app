@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { usePreferredCounselor } from '@/features/counselor/use-preferred-counselor';
@@ -37,6 +37,8 @@ interface Props {
   slug: string;
   children?: ReactNode;
   referenceChildren?: ReactNode;
+  premiumAccessLabel?: string | null;
+  premiumHref?: string;
 }
 
 const SECTIONS = [
@@ -292,13 +294,56 @@ function getTopicContent(
   return fallbackTopicContent(content[topic]);
 }
 
-export default function DetailUnlock({ slug, children, referenceChildren }: Props) {
+export default function DetailUnlock({
+  slug,
+  children,
+  referenceChildren,
+  premiumAccessLabel,
+  premiumHref,
+}: Props) {
   const { counselorId } = usePreferredCounselor();
   const [state, setState] = useState<'locked' | 'loading' | 'unlocked' | 'error'>('locked');
   const [content, setContent] = useState<DetailContent | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [remaining, setRemaining] = useState<number | null>(null);
   const [access, setAccess] = useState<'charged' | 'reused' | null>(null);
+  const isIncludedInPremium = Boolean(premiumAccessLabel);
+
+  useEffect(() => {
+    if (isIncludedInPremium) return;
+
+    let active = true;
+
+    async function checkExistingAccess() {
+      try {
+        const params = new URLSearchParams({
+          feature: 'detail_report',
+          slug,
+          counselorId,
+        });
+        const res = await fetch(`/api/credits/use?${params.toString()}`, {
+          cache: 'no-store',
+        });
+
+        if (!active || !res.ok) return;
+
+        const data = await res.json();
+        if (data.unlocked && data.content) {
+          setContent(data.content);
+          setAccess('reused');
+          setState('unlocked');
+        }
+      } catch {
+        // 기존 해금 확인 실패는 사용자가 직접 여는 흐름을 막지 않습니다.
+      }
+    }
+
+    checkExistingAccess();
+
+    return () => {
+      active = false;
+    };
+  }, [counselorId, isIncludedInPremium, slug]);
 
   async function handleUnlock() {
     setState('loading');
@@ -345,14 +390,14 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(210,176,114,0.62),transparent)]" />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="app-caption">상세 해석 리포트</div>
+            <div className="app-caption">분야별 깊이보기</div>
             <h2 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
-              재물·연애·직업·생활 리듬 심화 해석이 열렸습니다
+              재물·연애·직업·생활 리듬 해석이 열려 있습니다
             </h2>
           </div>
           <div className="flex items-center gap-2">
             <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
-              {access === 'reused' ? '재열람' : '해금 완료'}
+              {access === 'reused' ? '이미 구매함' : '해금 완료'}
             </Badge>
             <Badge className="border-[var(--app-line)] bg-[var(--app-surface-strong)] text-[var(--app-copy-muted)]">
               {counselorId === 'male' ? '달빛 남선생 기준' : '달빛 여선생 기준'}
@@ -365,7 +410,7 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
 
         <p className="app-body-copy text-sm">
           {access === 'reused'
-            ? '이미 열어본 상세 해석이라 코인 차감 없이 다시 보여드립니다.'
+            ? '이전에 열었던 같은 결과라 코인 차감 없이 다시 보여드립니다.'
             : '좋은 말만 길게 나열하지 않고, 지금 실제로 궁금한 장면부터 읽을 수 있게 분야별 핵심과 주의 포인트를 먼저 정리했습니다.'}
         </p>
 
@@ -414,7 +459,7 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
   if (state === 'error') {
     return (
       <section className="app-panel space-y-4 border-rose-400/20 p-6 text-center">
-        <div className="app-caption text-rose-200/80">상세 해석 오류</div>
+        <div className="app-caption text-rose-200/80">분야별 깊이보기 오류</div>
         <p className="font-medium text-rose-200">{errorMsg}</p>
         {errorMsg.includes('부족') ? (
           <>
@@ -438,6 +483,41 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
     );
   }
 
+  if (isIncludedInPremium) {
+    return (
+      <section className="relative overflow-hidden rounded-[32px] border border-emerald-400/20 bg-[linear-gradient(180deg,rgba(10,25,31,0.94),rgba(5,10,22,0.98))] p-5 sm:p-7">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(52,211,153,0.55),transparent)]" />
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-2xl">
+            <div className="app-caption text-emerald-200/80">이미 포함된 심층 해석</div>
+            <h2 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
+              명리 기준서에서 이어서 보시면 됩니다
+            </h2>
+            <p className="app-body-copy mt-3 text-sm">
+              이 결과는 {premiumAccessLabel}으로 전체 리포트 열람이 가능합니다. 기본 결과 아래에서
+              1코인을 다시 쓰게 하지 않고, 포함된 해석을 그대로 이어 보여드립니다.
+            </p>
+          </div>
+          <Badge className="border-emerald-400/20 bg-emerald-400/10 text-emerald-200">
+            추가 차감 없음
+          </Badge>
+        </div>
+
+        {premiumHref ? (
+          <Link
+            href={premiumHref}
+            className="mt-5 inline-flex min-h-12 items-center justify-center rounded-full border border-[var(--app-gold)]/38 bg-[var(--app-gold)]/14 px-6 text-sm font-semibold text-[var(--app-gold-text)] shadow-[0_16px_42px_rgba(210,176,114,0.12)] transition hover:bg-[var(--app-gold)]/20"
+          >
+            명리 기준서 이어보기
+          </Link>
+        ) : null}
+
+        {children ? <div className="mt-6 space-y-5">{children}</div> : null}
+        {referenceChildren ? <div className="mt-6 space-y-5">{referenceChildren}</div> : null}
+      </section>
+    );
+  }
+
   return (
     <section className="relative overflow-hidden rounded-[28px] border border-[var(--app-line-strong)] bg-[linear-gradient(180deg,rgba(7,19,39,0.92),rgba(4,10,24,0.98))] p-6">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(210,176,114,0.16),transparent_42%)]" />
@@ -446,9 +526,9 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
       <div className="relative z-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="app-caption">상세 해석 잠금</div>
+            <div className="app-caption">선택 심화</div>
             <h2 className="mt-3 text-xl font-semibold text-[var(--app-ivory)]">
-              지금 더 궁금한 장면만 1코인으로 깊게 펼쳐보세요
+              필요한 분야만 1코인으로 더 읽어보세요
             </h2>
           </div>
           <Badge className="border-[var(--app-gold)]/25 bg-[var(--app-gold)]/10 text-[var(--app-gold-text)]">
@@ -457,7 +537,8 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
         </div>
 
         <p className="app-body-copy mt-4 max-w-2xl text-sm">
-          재물, 애정, 직업, 건강 흐름을 현재 대운·세운 문맥과 함께 더 구체적으로 풀이합니다.
+          기본 결과를 먼저 읽고, 재물·연애·직업·생활 리듬 중 더 궁금한 장면만 선택해서 펼칩니다.
+          명리 기준서에는 이 흐름이 더 넓게 포함됩니다.
           {' '}
           {counselorId === 'male'
             ? '선택한 달빛 남선생 기준으로 결론, 보류, 확인 순서를 먼저 잡아드립니다.'
@@ -466,9 +547,9 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
 
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           {[
-            '현재 대운과 세운을 붙여 “왜 지금 이런가”를 읽습니다.',
-            '재물·애정·직업·건강을 분야별로 나눠 바로 필요한 장면부터 읽게 풉니다.',
-            '무엇을 밀고, 무엇을 보류하고, 무엇을 확인할지까지 함께 정리합니다.',
+            '이미 충분하면 열지 않아도 되는 선택형 심화입니다.',
+            '한 번 연 같은 결과는 다시 코인이 차감되지 않습니다.',
+            '더 큰 흐름은 명리 기준서에서 한 번에 이어집니다.',
           ].map((item) => (
             <div
               key={item}
@@ -494,9 +575,9 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
         </div>
 
         <div className="relative z-20 mt-6 rounded-[24px] border border-[var(--app-line)] bg-[rgba(2,8,23,0.56)] p-5 text-center backdrop-blur-sm">
-          <p className="font-semibold text-[var(--app-ivory)]">상세 해석 열기</p>
+          <p className="font-semibold text-[var(--app-ivory)]">분야별 깊이보기</p>
           <p className="mt-2 text-sm text-[var(--app-copy-muted)]">
-            재물·애정·직업·건강 4개 영역을 한 번에 열고, 같은 결과는 다시 코인 차감 없이 볼 수 있습니다
+            재물·연애·직업·건강 4개 영역을 한 번에 열고, 같은 결과는 이후에도 다시 차감하지 않습니다.
           </p>
           <Button
             onClick={handleUnlock}
@@ -504,7 +585,7 @@ export default function DetailUnlock({ slug, children, referenceChildren }: Prop
             className="mt-5 min-w-[200px]"
             size="lg"
           >
-            {state === 'loading' ? '처리 중...' : '코인 1개로 지금 열기'}
+            {state === 'loading' ? '처리 중...' : '1코인으로 분야별 보기'}
           </Button>
           <p className="mt-3 text-xs text-[var(--app-copy-soft)]">
             이미 열었던 같은 결과는 코인 차감 없이 다시 열립니다.
